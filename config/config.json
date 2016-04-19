@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "filename": "permissions"
+  },
+  "modules": {
+    "warframe": "./modules/warframe.js"
+  },
+  "default": {
+    "prefix": ["!!", "//"]
+  },
+  "serverid": {
+    "prefix": ["!!"]
+  }
+}

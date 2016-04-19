@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "path": "./config/permissions.json"
+  },
+  "modules": {
+    "warframe": true
+  }
+}
