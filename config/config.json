@@ -6,9 +6,6 @@
     "warframe": "./modules/warframe.js"
   },
   "default": {
-    "prefix": ["!!", "//"]
-  },
-  "serverid": {
-    "prefix": ["!!"]
+    "prefix": ["//"]
   }
 }
