@@ -3,7 +3,7 @@
  */
 
 var Discord = require("discord.js");
-var client = new Discord.Client();
+var client = new Discord.Client({forceFetchUsers: true, autoReconnect: true});
 
 var Configs = require("./lib/config.js");
 console.log(Configs);
@@ -32,27 +32,48 @@ var name;
 var id;
 
 client.on('message', (msg)=> {
-    if(msg.author.id === id) return;
+    if (msg.author.id === id) return;
     var t1 = now();
     var l;
-    if(msg.channel.server) {
+    if (msg.channel.server) {
         l = config.get(msg.channel.server.id, defaults).prefix;
+        if(l == null) {
+            l = defaults.prefix;
+        }
     } else {
-        l = defaults.prefix
+        l = defaults.prefix;
     }
     var command = Parse.command(l, msg, {"allowMention": mention, "botName": name});
-    if(command) {
-        //console.log("value is".blue);
-        for(var mod in moduleList) {
+    if (command) {
+        console.log("value is".blue);
+        for (var mod in moduleList) {
             //console.log(command.command);
             //console.log(moduleList[mod].commands);
             //console.log(moduleList[mod].commands.indexOf(command.command));
-            if(moduleList[mod].commands.indexOf(command.commandnos)>-1) {
+            if (moduleList[mod].commands.indexOf(command.commandnos) > -1) {
                 try {
                     if (moduleList[mod].callback(msg, command, perms, l) === true) {
                         break;
                     }
-                } catch(error) {
+                } catch (error) {
+                    console.log(error);
+                    console.log(error.stack);
+                }
+            }
+        }
+    }
+    else {
+        //apply misc responses.
+        for (var mod in moduleList) {
+            //console.log(command.command);
+            //console.log(moduleList[mod].commands);
+            //console.log(moduleList[mod].commands.indexOf(command.command));
+            if (moduleList[mod].misc) {
+                try {
+                    if (moduleList[mod].misc(msg, perms, l) === true) {
+                        break;
+                    }
+                } catch (error) {
                     console.log(error);
                     console.log(error.stack);
                 }
@@ -71,15 +92,20 @@ function reload() {
     moduleList = [];
     var modules = config.get("modules");
     console.log(modules);
-    for(var module in modules) {
-        var Module = require(modules[module]);
-        var mod = new Module(client);
-        moduleList.push({"commands": mod.getCommands(), "callback": mod.onMessage})
+    for (var module in modules) {
+        var Modul = require(modules[module]);
+        var mod = new Modul(client, config);
+        if (mod.checkMisc) {
+            moduleList.push({"commands": mod.getCommands(), "misc": mod.checkMisc, "callback": mod.onCommand})
+        }
+        else {
+            moduleList.push({"commands": mod.getCommands(), "misc": false, "callback": mod.onCommand})
+        }
     }
     console.log(moduleList);
 }
 
-client.on('ready', ()=>{
+client.on('ready', ()=> {
     id = client.user.id;
     mention = "<@" + id + ">";
     name = client.user.name;
@@ -91,7 +117,9 @@ client.on('ready', ()=>{
 client.loginWithToken(require('../auth.json').token);
 
 process.on('SIGINT', ()=> {
-    setTimeout(() => {process.exit(1)}, 5000);
+    setTimeout(() => {
+        process.exit(1)
+    }, 5000);
     console.log("Logging out.");
     client.logout(()=> {
         console.log("Bye");
@@ -102,11 +130,15 @@ process.on('SIGINT', ()=> {
 function updateCarbon() {
     request.post(
         'https://www.carbonitex.net/discord/data/botdata.php',
-        {form:{ key: key, servercount: client.servers.length}},
+        {form: {key: key, servercount: client.servers.length}},
         function (error, response, body) {
             if (!error && response.statusCode == 200) {
                 console.log(body)
             }
         }
     );
+}
+
+function processM() {
+
 }

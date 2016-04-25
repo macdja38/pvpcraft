@@ -3,9 +3,17 @@
     "filename": "permissions"
   },
   "modules": {
-    "warframe": "./modules/warframe.js"
+    "warframe": "./modules/warframe.js",
+    "permissionControls": "./modules/permissionControls.js",
+    "moderation": "./modules/moderation.js"
   },
   "default": {
     "prefix": ["//"]
+  },
+  "97069403178278912": {
+    "msgLog": "174015839895420930"
+  },
+  "77176186148499456": {
+    "msgLog": "157338540252987392"
   }
 }

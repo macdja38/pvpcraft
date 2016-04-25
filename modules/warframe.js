@@ -20,7 +20,21 @@ var Warframe = function (cl) {
     Warframe.client = cl;
 };
 
-Warframe.prototype.onMessage = function(msg, command, perms, l) {
+var commands = ["deal", "darvo", "trader", "voidtrader", "baro", "trial", "raid", "trialstat", "wiki", "sortie", "farm", "damage", "primeacces", "acces", "update", "update", "armorstat", "armourstat", "armor", "armour"];
+
+Warframe.prototype.getCommands = function() {
+    return commands
+};
+
+Warframe.prototype.checkMisc = function(msg, perms, l) {
+    if(msg.content.toLowerCase().indexOf("soon") == 0 && msg.content.indexOf(":tm:") < 0 && perms.check(msg, "warframe.misc")){
+        msg.reply("Soon:tm:");
+        return true;
+    }
+    return false;
+};
+
+Warframe.prototype.onCommand = function(msg, command, perms, l) {
     console.log("WARFRAME initiated");
     //console.log(command);
     if ((command.commandnos === 'deal' || command.command === 'darvo') && perms.check(msg, "warframe.deal")) {
@@ -43,7 +57,7 @@ Warframe.prototype.onMessage = function(msg, command, perms, l) {
                 var rep = "```xl\nBaro leaving " + state.VoidTraders[0].Node + " in " +
                    utils.secondsToTime(state.VoidTraders[0].Expiry.sec - state.Time) + "\n";
                 for (var item of state.VoidTraders[0].Manifest) {
-                    rep += "item: " + parseState.getName(itemsg.ItemType) + " - price:" + itemsg.PrimePrice + " ducats " + itemsg.RegularPrice + "cr\n";
+                    rep += "item: " + parseState.getName(item.ItemType) + " - price:" + item.PrimePrice + " ducats " + item.RegularPrice + "cr\n";
                 }
                 rep += "```"
                 Warframe.client.sendMessage(msg.channel, rep);
@@ -174,10 +188,6 @@ Warframe.prototype.onMessage = function(msg, command, perms, l) {
         return true;
     }
     return false;
-};
-
-Warframe.prototype.getCommands = function() {
-    return ["deal", "darvo", "trader", "voidtrader", "baro", "trial", "raid", "trialstat", "wiki", "sortie", "farm", "damage", "primeacces", "acces", "update", "update", "armorstat", "armourstat", "armor", "armour"];
 };
 
 module.exports = Warframe;
