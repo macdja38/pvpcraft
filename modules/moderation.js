@@ -170,8 +170,8 @@ var Mod = class Mod {
         if (command.command == "setlog") {
             console.log(command);
             if(/<#\d+>/.test(command.options.channel) && perms.check(msg, "moderation.tools.setlog")) {
-                console.log(this.getLogging());
-                this.setLogging(this.getLogging()[msg.channel.server.id] = command.options.channel.match(/<#\d+>/));
+                console.log(this.logging);
+                this.logging[msg.channel.server.id] = command.options.channel.match(/<#\d+>/);
                 //config.get()
                 return true;
             } else {
