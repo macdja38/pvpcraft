@@ -12,6 +12,8 @@ var config = new Configs("config");
 var now = require("performance-now");
 var Parse = require("./lib/newParser.js");
 
+var colors = require('colors');
+
 var Permissions = require("./lib/permissions.js");
 console.log(Permissions);
 var perms = new Permissions(config);
@@ -23,7 +25,6 @@ var key = require('../auth.json').key;
 var defaults = {
     "prefix": []
 };
-
 
 var moduleList;
 
@@ -37,7 +38,7 @@ client.on('message', (msg)=> {
     var l;
     if (msg.channel.server) {
         l = config.get(msg.channel.server.id, defaults).prefix;
-        if(l == null) {
+        if (l == null) {
             l = defaults.prefix;
         }
     } else {
@@ -56,8 +57,8 @@ client.on('message', (msg)=> {
                         break;
                     }
                 } catch (error) {
-                    console.log(error);
-                    console.log(error.stack);
+                    console.error(error);
+                    console.error(error.stack);
                 }
             }
         }
@@ -74,8 +75,8 @@ client.on('message', (msg)=> {
                         break;
                     }
                 } catch (error) {
-                    console.log(error);
-                    console.log(error.stack);
+                    console.error(error);
+                    console.error(error.stack);
                 }
             }
         }
@@ -95,15 +96,26 @@ function reload() {
     for (var module in modules) {
         var Modul = require(modules[module]);
         var mod = new Modul(client, config);
+        var item = {"commands": mod.getCommands(), "callback": mod.onCommand};
         if (mod.checkMisc) {
-            moduleList.push({"commands": mod.getCommands(), "misc": mod.checkMisc, "callback": mod.onCommand})
+            item["misc"] = mod.checkMisc;
         }
-        else {
-            moduleList.push({"commands": mod.getCommands(), "misc": false, "callback": mod.onCommand})
+        if (mod.onDisconnect) {
+            item["onDisconnect"] = mod.onDisconnect;
         }
+        moduleList.push(item);
     }
     console.log(moduleList);
 }
+
+client.on('disconnect', ()=>{
+    console.log("Disconnect".red);
+    for(var i in moduleList) {
+        if(moduleList[i].hasOwnProperty("onDisconnect")) {
+            moduleList[i].onDisconnect();
+        }
+    }
+});
 
 client.on('ready', ()=> {
     id = client.user.id;
