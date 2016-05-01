@@ -8,7 +8,7 @@ var utils = new Utils();
 
 var colors = require('colors');
 
-var Mod = class Mod {
+class Mod {
     constructor(cl, config) {
         this.client = cl;
         this.logging = {};
@@ -19,32 +19,31 @@ var Mod = class Mod {
             }
         }
 
-        this.getLogging = function() {
-            return this.logging;
-        };
-
-        this.setLogging = function(log) {
-            this.logging = log;
-        };
-
         this.logDelete = (message, channel) => {
+            //check to see if it's a pm
             if (!channel.server) return;
             if (this.logging[channel.server.id]) {
-                if (message && message.content) {
+                if (message) {
+                    //grab url's to the message's attachments
                     console.log("Message Delete");
-                    if (message.content.length > 144 || /[^0-9a-zA-Z\s\.!\?]/.test(message.content)) {
-                        this.client.sendMessage(this.logging[channel.server.id], utils.clean(channel.name) + " | " +
-                            utils.fullNameB(message.author) +
-                            " deleted:\n" + utils.bubble(message.content), (error)=> {
-                            console.error(error)
-                        });
-                    } else {
-                        this.client.sendMessage(this.logging[channel.server.id], utils.clean(channel.name) + " | " +
-                            utils.fullNameB(message.author) +
-                            "\n```diff\n-" + utils.clean(message.content) + "\n```", (error)=> {
-                            console.error(error)
-                        });
+                    var string = utils.clean(channel.name) + " | " + utils.fullNameB(message.author) + " deleted:\n";
+                    if (message.content) {
+                        if (message.content.length > 144 || /[^0-9a-zA-Z\s\.!\?]/.test(message.content)) {
+                            string += utils.bubble(message.content);
+                        } else {
+                            string += "\n```diff\n-" + utils.clean(message.content) + "\n```";
+                        }
                     }
+                    if (message.attachments) {
+                        for (var i in message.attachments) {
+                            string += message.attachments[i].proxy_url;
+                            console.log("url: " + message.attachments[i].url);
+                            console.log("proxy url: " + message.attachments[i].proxy_url);
+                        }
+                    }
+                    this.client.sendMessage(this.logging[channel.server.id], string, (error)=> {
+                        console.error(error)
+                    });
                 }
                 else {
                     this.client.sendMessage(this.logging[channel.server.id], "An un-cached message in " +
@@ -55,7 +54,6 @@ var Mod = class Mod {
                 }
             }
         };
-
 
         this.logUpdate = (message, newMessage) => {
             if (!newMessage.channel.server) return;
@@ -147,7 +145,7 @@ var Mod = class Mod {
         this.client.on("messageDeleted", this.logDelete);
         this.client.on("messageUpdated", this.logUpdate);
     }
-    
+
     onDisconnect() {
         this.client.removeListener("presence", this.logPresence);
         this.client.removeListener("serverRoleUpdated", this.logRole);
@@ -168,11 +166,15 @@ var Mod = class Mod {
         msg.reply("ahh");
         console.log("ahh".red);
         if (command.command == "setlog") {
-            console.log(command);
-            if(/<#\d+>/.test(command.options.channel) && perms.check(msg, "moderation.tools.setlog")) {
-                console.log(this.logging);
-                this.logging[msg.channel.server.id] = command.options.channel.match(/<#\d+>/);
-                //config.get()
+            if (/<#\d+>/.test(command.options.channel) && perms.check(msg, "moderation.tools.setlog")) {
+                console.log(this.config);
+                this.logging[msg.channel.server.id] = this.client.channels.get("id", command.options.channel.match(/<#(\d+)>/)[1]);
+                if (this.config.data[msg.channel.server.id]) {
+                    this.config.data[msg.channel.server.id].msgLog = this.logging[msg.channel.server.id].id;
+                } else {
+                    this.config.data[msg.channel.server.id] = {msgLog: this.logging[msg.channel.server.id].id};
+                }
+                this.config.save();
                 return true;
             } else {
                 msg.reply("please properly define a channel to log using --channel #channelmention")
@@ -180,6 +182,6 @@ var Mod = class Mod {
         }
         return false;
     }
-};
+}
 
 module.exports = Mod;

@@ -20,21 +20,21 @@ var Warframe = function (cl) {
     Warframe.client = cl;
 };
 
-var commands = ["deal", "darvo", "trader", "voidtrader", "baro", "trial", "raid", "trialstat", "wiki", "sortie", "farm", "damage", "primeacces", "acces", "update", "update", "armorstat", "armourstat", "armor", "armour"];
+var commands = ["alert", "deal", "darvo", "trader", "voidtrader", "baro", "trial", "raid", "trialstat", "wiki", "sortie", "farm", "damage", "primeacces", "acces", "update", "update", "armorstat", "armourstat", "armor", "armour"];
 
-Warframe.prototype.getCommands = function() {
+Warframe.prototype.getCommands = function () {
     return commands
 };
 
-Warframe.prototype.checkMisc = function(msg, perms, l) {
-    if(msg.content.toLowerCase().indexOf("soon") == 0 && msg.content.indexOf(":tm:") < 0 && perms.check(msg, "warframe.misc")){
+Warframe.prototype.checkMisc = function (msg, perms, l) {
+    if (msg.content.toLowerCase().indexOf("soon") == 0 && msg.content.indexOf(":tm:") < 0 && perms.check(msg, "warframe.misc")) {
         msg.reply("Soon:tm:");
         return true;
     }
     return false;
 };
 
-Warframe.prototype.onCommand = function(msg, command, perms, l) {
+Warframe.prototype.onCommand = function (msg, command, perms, l) {
     console.log("WARFRAME initiated");
     //console.log(command);
     if ((command.commandnos === 'deal' || command.command === 'darvo') && perms.check(msg, "warframe.deal")) {
@@ -51,11 +51,11 @@ Warframe.prototype.onCommand = function(msg, command, perms, l) {
         return true;
     }
 
-    else if ((command.commandnos ==='trader' || command.commandnos ==='voidtrader' || command.commandnos ==='baro') && perms.check(msg, "warframe.trader")) {
+    else if ((command.commandnos === 'trader' || command.commandnos === 'voidtrader' || command.commandnos === 'baro') && perms.check(msg, "warframe.trader")) {
         worldState.get(function (state) {
             if (state.VoidTraders[0].Manifest) {
                 var rep = "```xl\nBaro leaving " + state.VoidTraders[0].Node + " in " +
-                   utils.secondsToTime(state.VoidTraders[0].Expiry.sec - state.Time) + "\n";
+                    utils.secondsToTime(state.VoidTraders[0].Expiry.sec - state.Time) + "\n";
                 for (var item of state.VoidTraders[0].Manifest) {
                     rep += "item: " + parseState.getName(item.ItemType) + " - price:" + item.PrimePrice + " ducats " + item.RegularPrice + "cr\n";
                 }
@@ -70,31 +70,81 @@ Warframe.prototype.onCommand = function(msg, command, perms, l) {
         return true;
     }
 
-    else if ((command.commandnos ==='trial' || command.commandnos ==='raid' || command.commandnos ==='trialstat') && perms.check(msg, "warframe.trial")) {
+    else if ((command.commandnos === 'trial' || command.commandnos === 'raid' || command.commandnos === 'trialstat') && perms.check(msg, "warframe.trial")) {
         Warframe.client.sendMessage(msg.channel,
             "Hek: \<http://tinyurl.com/qb752oj\> Nightmare: \<http://tinyurl.com/p8og6xf\> Jordas: \<http://tinyurl.com/prpebzh\>");
         return true;
     }
-    else if (command.command ==='wiki' && command.arguments.length > 0 && perms.check(msg, "warframe.wiki")) {
-        // check if page exists, kinda
-        var url = 'https://warframe.wikia.com/wiki/';
-        url += _.map(command.arguments, function (n) {
-            return n[0].toUpperCase() + n.substring(1);
-        }).join('_');
-        request.head(url, function (error, response) {
-            if (error || response.statusCode !== 200) {
-                Warframe.client.sendMessage(msg.channel, "could not find **" + command.arguments.join(" ") + "**.");
-                return true;
+
+    else if (command.commandnos === 'alert' && perms.check(msg, "warframe.trial")) {
+        worldState.get(function (state) {
+            if(state.Alerts) {
+                for(var alert of state.Alerts) {
+                    var rewards = "";
+                    if(alert.MissionInfo.missionReward) {
+                        if(alert.MissionInfo.missionReward.items) {
+                            for (var reward of alert.MissionInfo.missionReward.items) {
+                                if (rewards != "") rewards += " + ";
+                                rewards += parseState.getName(reward);
+                            }
+                        }
+                        if(alert.MissionInfo.missionReward.countedItems) {
+                            for (var reward of alert.MissionInfo.missionReward.countedItems) {
+                                if (rewards != "") rewards += " + ";
+                                rewards += reward.itemCount + " " + parseState.getName(reward.itemType);
+                            }
+                        }
+                        if(rewards != "") rewards += " + ";
+                        if(alert.MissionInfo.missionReward.credits) rewards += alert.MissionInfo.missionReward.credits + " credits";
+                    }
+                    Warframe.client.sendMessage(msg.channel,
+                        "```xl\n" +
+                        alert.MissionInfo.location + " levels " + alert.MissionInfo.minEnemyLevel + "-" + alert.MissionInfo.maxEnemyLevel + "\n" +
+                        parseState.getLevel(alert.MissionInfo.descText) + "\n" +
+                        parseState.getFaction(alert.MissionInfo.faction) + " " + parseState.getMissionType(alert.MissionInfo.missionType) + "\n" +
+                        rewards +
+                        "\nExpires in " + utils.secondsToTime(alert.Expiry.sec-state.Time) +
+                        "\n```"
+                    );
+                }
+
             }
-            Warframe.client.sendMessage(msg.channel, url);
         });
         return true;
     }
+        
+    else if (command.command === 'wiki' && perms.check(msg, "warframe.wiki")) {
+        //use wikia's api to search for the item.
+        if(command.arguments.length > 0) {
+            Warframe.client.sendMessage(msg.channel, "Please provide something to search for!");
+        }
+        request.post("http://warframe.wikia.com/api/v1/Search/List", {
+            form: {
+                query: command.arguments.join(' '),
+                limit: 1
+            }
+        }, function (err, response, body) {
+            if (err || response.statusCode === 404) {
+                Warframe.client.sendMessage(msg.channel, "Could not find **" + utils.clean(command.arguments.join(' ')) + "**");
+            } else if (response.statusCode !== 200) {
+                console.error(' returned HTTP status ' + response.statusCode);
+            } else {
+                try {
+                    Warframe.client.sendMessage(msg.channel, JSON.parse(body).items[0].url);
+                } catch (e) {
+                    console.error('Invalid JSON from http://warframe.wikia.com/api/v1/Search/List while searching the wiki');
+                }
+            }
+            return true;
+        });
+        return true;
 
-    else if (command.commandnos ==='sortie' && perms.check(msg, "warframe.sortie")) {
+    }
+
+    else if (command.commandnos === 'sortie' && perms.check(msg, "warframe.sortie")) {
         worldState.get(function (state) {
             var boss = parseState.getBoss(state.Sorties[0].Variants[0].bossIndex);
-            var text = "```xl\n" +utils.secondsToTime(state.Sorties[0].Expiry.sec - state.Time) + " left to defeat " +
+            var text = "```xl\n" + utils.secondsToTime(state.Sorties[0].Expiry.sec - state.Time) + " left to defeat " +
                 boss.name + " of the " + boss.faction + "\n";
             for (var Variant of state.Sorties[0].Variants) {
                 var Region = parseState.getRegion(Variant.regionIndex);
@@ -124,13 +174,13 @@ Warframe.prototype.onCommand = function(msg, command, perms, l) {
         return true;
     }
 
-    else if ((command.command === 'primeaccess' || command.command === 'access')  && perms.check(msg, "warframe.access")) {
+    else if ((command.command === 'primeaccess' || command.command === 'access') && perms.check(msg, "warframe.access")) {
         worldState.get(function (state) {
             var text = "```xl\n";
             for (var event of state.Events) {
                 if (event.Messages[0].Message.toLowerCase().indexOf("access") > -1) {
                     text += event.Messages[0].Message.toUpperCase()
-                        + " since " +utils.secondsToTime(state.Time - event.Date.sec) + " ago\n";
+                        + " since " + utils.secondsToTime(state.Time - event.Date.sec) + " ago\n";
                 }
             }
             if (text != "```xl\n") {
@@ -146,15 +196,15 @@ Warframe.prototype.onCommand = function(msg, command, perms, l) {
             var String = "```xl\n";
             var checks = ["update", "hotfix"];
             for (var event of state.Events) {
-                for(var l of checks) {
+                for (var l of checks) {
                     if (event.Messages[0].Message.toLowerCase().indexOf(l) > -1) {
                         String += event.Messages[0].Message.toUpperCase() + " since " +
-                           utils.secondsToTime(state.Time - event.Date.sec) + " ago \n learn more here: " + event.Prop + "\n";
+                            utils.secondsToTime(state.Time - event.Date.sec) + " ago \n learn more here: " + event.Prop + "\n";
                         checks.slice(l);
                     }
                 }
             }
-            if(String !== "```xl\n") {
+            if (String !== "```xl\n") {
                 Warframe.client.sendMessage(msg.channel, String + "```");
             }
         });
@@ -162,24 +212,24 @@ Warframe.prototype.onCommand = function(msg, command, perms, l) {
     }
 
     else if ((command.commandnos === 'armorstat' || command.commandnos === 'armor' ||
-             command.commandnos === 'armourstat' || command.commandnos === 'armour')  && perms.check(msg, "warframe.armor")) {
-        (function() {
-            if(command.arguments.length < 1 || command.arguments.length == 2 || command.arguments.length > 3) {
+        command.commandnos === 'armourstat' || command.commandnos === 'armour') && perms.check(msg, "warframe.armor")) {
+        (function () {
+            if (command.arguments.length < 1 || command.arguments.length == 2 || command.arguments.length > 3) {
                 Warframe.client.sendMessage(msg.channel, "```xl\npossible uses include:\n" +
                     command.prefix + "armor (Base Armor) (Base Level) (Current Level) calculate armor and stats.\n" +
                     command.prefix + "armor (Current Armor)\n```");
                 return true;
             }
             var text = "```xl\n";
-            if(command.arguments.length == 3) {
-                if((parseInt(command.arguments[2]) - parseInt(command.arguments[1])) < 0) {
+            if (command.arguments.length == 3) {
+                if ((parseInt(command.arguments[2]) - parseInt(command.arguments[1])) < 0) {
                     Warframe.client.sendMessage(msg.channel, "```xl\nPlease check your input values\n```");
                     return true;
                 }
-                var armor = parseInt(command.arguments[0]) * (1 + (Math.pow((parseInt(command.arguments[2]) - parseInt(command.arguments[1])),1.75) / 200));
+                var armor = parseInt(command.arguments[0]) * (1 + (Math.pow((parseInt(command.arguments[2]) - parseInt(command.arguments[1])), 1.75) / 200));
                 text += "at level " + command.arguments[2] + " your enemy would have " + armor + " Armor\n";
             }
-            else{
+            else {
                 var armor = parseInt(command.arguments[0]);
             }
             text += armor / (armor + 300) * 100 + "% damage reduction\n";

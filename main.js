@@ -53,7 +53,7 @@ client.on('message', (msg)=> {
             //console.log(moduleList[mod].commands.indexOf(command.command));
             if (moduleList[mod].commands.indexOf(command.commandnos) > -1) {
                 try {
-                    if (moduleList[mod].callback(msg, command, perms, l) === true) {
+                    if (moduleList[mod].module.onCommand(msg, command, perms, l) === true) {
                         break;
                     }
                 } catch (error) {
@@ -69,9 +69,9 @@ client.on('message', (msg)=> {
             //console.log(command.command);
             //console.log(moduleList[mod].commands);
             //console.log(moduleList[mod].commands.indexOf(command.command));
-            if (moduleList[mod].misc) {
+            if (moduleList[mod].module.misc) {
                 try {
-                    if (moduleList[mod].misc(msg, perms, l) === true) {
+                    if (moduleList[mod].module.misc(msg, perms, l) === true) {
                         break;
                     }
                 } catch (error) {
@@ -96,14 +96,7 @@ function reload() {
     for (var module in modules) {
         var Modul = require(modules[module]);
         var mod = new Modul(client, config);
-        var item = {"commands": mod.getCommands(), "callback": mod.onCommand};
-        if (mod.checkMisc) {
-            item["misc"] = mod.checkMisc;
-        }
-        if (mod.onDisconnect) {
-            item["onDisconnect"] = mod.onDisconnect;
-        }
-        moduleList.push(item);
+        moduleList.push({"commands": mod.getCommands(), "module": mod});
     }
     console.log(moduleList);
 }
@@ -111,8 +104,8 @@ function reload() {
 client.on('disconnect', ()=>{
     console.log("Disconnect".red);
     for(var i in moduleList) {
-        if(moduleList[i].hasOwnProperty("onDisconnect")) {
-            moduleList[i].onDisconnect();
+        if(moduleList[i].module.onDisconnect) {
+            moduleList[i].module.onDisconnect();
         }
     }
 });
