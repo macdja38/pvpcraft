@@ -13,12 +13,15 @@ class Mod {
         this.client = cl;
         this.logging = {};
         this.config = config;
+
+        //build the map of server id's and logging channels.
         for (var item in config.data) {
             if (config.data[item].hasOwnProperty("msgLog")) {
                 this.logging[item] = this.client.channels.get("id", config.data[item]["msgLog"]);
             }
         }
 
+        //log message deletes to the server's log channel
         this.logDelete = (message, channel) => {
             //check to see if it's a pm
             if (!channel.server) return;
@@ -27,6 +30,7 @@ class Mod {
                     //grab url's to the message's attachments
                     console.log("Message Delete");
                     var string = utils.clean(channel.name) + " | " + utils.fullNameB(message.author) + " deleted:\n";
+                    //if their's content log it.
                     if (message.content) {
                         if (message.content.length > 144 || /[^0-9a-zA-Z\s\.!\?]/.test(message.content)) {
                             string += utils.bubble(message.content);
@@ -34,6 +38,7 @@ class Mod {
                             string += "\n```diff\n-" + utils.clean(message.content) + "\n```";
                         }
                     }
+                    //if their are attachments log them. maybe it's possible to attach more than one?
                     if (message.attachments) {
                         for (var i in message.attachments) {
                             string += message.attachments[i].proxy_url;
@@ -41,6 +46,7 @@ class Mod {
                             console.log("proxy url: " + message.attachments[i].proxy_url);
                         }
                     }
+                    //send everything off.
                     this.client.sendMessage(this.logging[channel.server.id], string, (error)=> {
                         console.error(error)
                     });

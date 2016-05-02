@@ -44,7 +44,7 @@ client.on('message', (msg)=> {
     } else {
         l = defaults.prefix;
     }
-    var command = Parse.command(l, msg, {"allowMention": mention, "botName": name});
+    var command = Parse.command(l, msg, {"allowMention": id, "botName": name});
     if (command) {
         console.log("value is".blue);
         for (var mod in moduleList) {

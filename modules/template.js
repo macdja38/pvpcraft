@@ -19,7 +19,7 @@ var Perms = class Perms {
         return false;
     }
 
-    onCommand(msg, perms, l) {
+    onCommand(msg, command, perms, l) {
         console.log("Perms initiated");
         console.log(msg);
         msg.reply("ahh");

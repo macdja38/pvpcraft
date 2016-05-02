@@ -5,7 +5,8 @@
   "modules": {
     "warframe": "./modules/warframe.js",
     "permissionControls": "./modules/permissionControls.js",
-    "moderation": "./modules/moderation.js"
+    "moderation": "./modules/moderation.js",
+    "utilities": "./modules/utilities.js"
   },
   "default": {
     "prefix": [
