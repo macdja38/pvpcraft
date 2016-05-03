@@ -16,11 +16,12 @@ var request = require('request');
 
 var _ = require('underscore');
 
-var Warframe = function (cl) {
+var Warframe = function (cl, config) {
     Warframe.client = cl;
+    Warframe.config = config;
 };
 
-var commands = ["alert", "deal", "darvo", "trader", "voidtrader", "baro", "trial", "raid", "trialstat", "wiki", "sortie", "farm", "damage", "primeacces", "acces", "update", "update", "armorstat", "armourstat", "armor", "armour"];
+var commands = ["setupalerts", "tracking", "alert", "deal", "darvo", "trader", "voidtrader", "baro", "trial", "raid", "trialstat", "wiki", "sortie", "farm", "damage", "primeacces", "acces", "update", "update", "armorstat", "armourstat", "armor", "armour"];
 
 Warframe.prototype.getCommands = function () {
     return commands
@@ -51,7 +52,52 @@ Warframe.prototype.onCommand = function (msg, command, perms, l) {
         return true;
     }
 
-    else if ((command.commandnos === 'trader' || command.commandnos === 'voidtrader' || command.commandnos === 'baro') && perms.check(msg, "warframe.trader")) {
+    if ((command.commandnos === 'setupalerts') && perms.check(msg, "admin.warframe.setupalerts")) {
+
+        return true;
+    }
+
+    if ((command.commandnos === 'tracking') && perms.check(msg, "admin.warframe.setupalerts")) {
+        console.log(command);
+        if (command.options.add) {
+            var config = Warframe.config.get(msg.channel.server.id,
+                {
+                    "warframeAlerts": {
+                        "tracking": false,
+                        "items": {
+                        }
+                    }
+                }
+            );
+            if(!config.warframeAlerts) {
+                config.warframeAlerts = {"tracking": false, "items": {}};
+            }
+            if(typeof(config.warframeAlerts.tracking) !== "boolean") {
+                config.warframeAlerts.tracking = false;
+            }
+            if(!config.warframeAlerts.items) {
+                config.warframeAlerts.items = {};
+            }
+            msg.channel.server.createRole({name: command.options.add, permissions:[], position:10}, (error, role) => {
+                if(error) {
+                    msg.reply("error creating role, check to see if I have enough permissions.");
+                    console.log(error);
+                    console.log(error.stack);
+                    return;
+                }
+                config.warframeAlerts.items[role.name] = role.id;
+                Warframe.config.set(msg.channel.server.id, config);
+                console.log(config);
+                msg.reply("Created role " + role.name + " with id " + role.id);
+            });
+            return true;
+        }
+
+        msg.reply("invalid option's please specify --add <thing to track> or --remove <thing to remove> to change tracking options");
+        return true;
+    }
+
+    if ((command.commandnos === 'trader' || command.commandnos === 'voidtrader' || command.commandnos === 'baro') && perms.check(msg, "warframe.trader")) {
         worldState.get(function (state) {
             if (state.VoidTraders[0].Manifest) {
                 var rep = "```xl\nBaro leaving " + state.VoidTraders[0].Node + " in " +
@@ -78,24 +124,24 @@ Warframe.prototype.onCommand = function (msg, command, perms, l) {
 
     else if (command.commandnos === 'alert' && perms.check(msg, "warframe.trial")) {
         worldState.get(function (state) {
-            if(state.Alerts) {
-                for(var alert of state.Alerts) {
+            if (state.Alerts) {
+                for (var alert of state.Alerts) {
                     var rewards = "";
-                    if(alert.MissionInfo.missionReward) {
-                        if(alert.MissionInfo.missionReward.items) {
+                    if (alert.MissionInfo.missionReward) {
+                        if (alert.MissionInfo.missionReward.items) {
                             for (var reward of alert.MissionInfo.missionReward.items) {
                                 if (rewards != "") rewards += " + ";
                                 rewards += parseState.getName(reward);
                             }
                         }
-                        if(alert.MissionInfo.missionReward.countedItems) {
+                        if (alert.MissionInfo.missionReward.countedItems) {
                             for (var reward of alert.MissionInfo.missionReward.countedItems) {
                                 if (rewards != "") rewards += " + ";
                                 rewards += reward.itemCount + " " + parseState.getName(reward.itemType);
                             }
                         }
-                        if(rewards != "") rewards += " + ";
-                        if(alert.MissionInfo.missionReward.credits) rewards += alert.MissionInfo.missionReward.credits + " credits";
+                        if (rewards != "") rewards += " + ";
+                        if (alert.MissionInfo.missionReward.credits) rewards += alert.MissionInfo.missionReward.credits + " credits";
                     }
                     Warframe.client.sendMessage(msg.channel,
                         "```xl\n" +
@@ -103,7 +149,7 @@ Warframe.prototype.onCommand = function (msg, command, perms, l) {
                         parseState.getLevel(alert.MissionInfo.descText) + "\n" +
                         parseState.getFaction(alert.MissionInfo.faction) + " " + parseState.getMissionType(alert.MissionInfo.missionType) + "\n" +
                         rewards +
-                        "\nExpires in " + utils.secondsToTime(alert.Expiry.sec-state.Time) +
+                        "\nExpires in " + utils.secondsToTime(alert.Expiry.sec - state.Time) +
                         "\n```"
                     );
                 }
@@ -112,11 +158,12 @@ Warframe.prototype.onCommand = function (msg, command, perms, l) {
         });
         return true;
     }
-        
+
     else if (command.command === 'wiki' && perms.check(msg, "warframe.wiki")) {
         //use wikia's api to search for the item.
-        if(command.arguments.length > 0) {
+        if (command.arguments.length === 0) {
             Warframe.client.sendMessage(msg.channel, "Please provide something to search for!");
+            return true;
         }
         request.post("http://warframe.wikia.com/api/v1/Search/List", {
             form: {
@@ -135,7 +182,6 @@ Warframe.prototype.onCommand = function (msg, command, perms, l) {
                     console.error('Invalid JSON from http://warframe.wikia.com/api/v1/Search/List while searching the wiki');
                 }
             }
-            return true;
         });
         return true;
 
