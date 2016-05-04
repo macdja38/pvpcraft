@@ -21,6 +21,22 @@ class Mod {
             }
         }
 
+        /**
+         * log's a string to the server's log
+         * @param server server to log string to
+         * @param string string to send in server log
+         */
+        this.log = (server, string) => {
+            if (this.logging.hasOwnProperty(server.id)) {
+                console.log("server name " + server.name);
+                this.client.sendMessage(this.logging[server.id], string, (error)=> {
+                    console.error(error);
+                    console.error(error.stack);
+                });
+            }
+        };
+
+
         //log message deletes to the server's log channel
         this.logDelete = (message, channel) => {
             //check to see if it's a pm
@@ -97,12 +113,78 @@ class Mod {
             }
         };
 
+        this.logMember = (server, newUser, oldMember) => {
+            console.log("Member Update");
+            var newMember = server.detailsOfUser(newUser);
+            if (oldMember.roles.length != newMember.roles.length /*|| oldMember.mute != newMember.mute || oldMember.deaf != newMember.deaf*/ || oldMember.nick != newMember.nick) {
+                var text = ":exclamation:User change detected in " + utils.fullNameB(newUser) + "\n";
+                if (oldMember.nick != newMember.nick) {
+                    text += "        Nick changed from `" + utils.removeBlocks(oldMember.nick) + "` to `" + utils.removeBlocks(newMember.nick) + "`\n";
+                }
+
+                /* Changes to the following are not properly tracked by the lib and do not trigger member updates.
+                 if (oldMember.mute != newMember.mute) {
+                 text += "        Is-muted changed from `" + oldMember.mute + "` to `" + newMember.mute + "`\n";
+                 }
+                 if (oldMember.deaf != newMember.deaf) {
+                 text += "        Is-deaf changed from `" + oldMember.deaf + "` to `" + newMember.deaf + "`\n";
+                 }
+                 */
+
+                if (oldMember.roles.length < newMember.roles.length) {
+                    var newRole = findNewRoles(newMember.roles, oldMember.roles);
+                    if(newRole) {
+                        text += "        Role added `" + newRole.name + "`\n";
+                    } else {
+                        console.error("Error adding new Role");
+                        console.error(newMember.roles);
+                        console.error(oldMember.roles);
+                    }
+                }
+                else if (oldMember.roles.length > newMember.roles.length) {
+                    var oldRole = findNewRoles(oldMember.roles, newMember.roles);
+                    if(oldRole) {
+                        text += "        Role removed `" + oldRole.name + "`\n";
+                    } else {
+                        console.error("Error finding removed Role");
+                        console.error(newMember.roles);
+                        console.error(oldMember.roles);
+                    }
+                }
+                console.log("Member Update on " + server.name + " : " + text);
+                if (this.logging.hasOwnProperty(server.id)) {
+                    console.log("server name " + server.name);
+                    this.client.sendMessage(this.logging[server.id], text, (error)=> {
+                        console.error(error)
+                    });
+                }
+            }
+        };
+
+        this.logMemberAdded = (server, user) => {
+            this.log(server, ":inbox_tray: " + utils.fullName(user) + " Joined, id: `" + user.id + "`");
+        };
+
+        this.logMemberRemoved = (server, user) => {
+            this.log(server, ":outbox_tray: " + utils.fullName(user) + " Left or was kicked, id: `" + user.id + "`");
+        };
+
+        this.logMemberBanned = (user, server) => {
+            console.log("User " + user.username + " banned from " + server.name);
+            this.log(server, ":exclamation::outbox_tray: " + utils.fullName(user) + " was Banned, id: `" + user.id + "`");
+        };
+
+        this.logMemberUnbanned = (user, server) => {
+            console.log("User " + user.username + " unbanned from " + server.name);
+            this.log(server, ":exclamation::inbox_tray: " + utils.fullName(user) + " was unbanned, id: `" + user.id + "`");
+        };
+
         this.logRole = (oldRole, newRole) => {
             if (this.logging[newRole.server.id]) {
                 console.log("Role change");
                 var text = ":exclamation:Role change detected in " + utils.clean(oldRole.name) + "#" + oldRole.id + "\n";
                 if (oldRole.permissions != newRole.permissions) {
-                    text += "Permissions changed from " + oldRole.permissions + " to " + newRole.permissions + "\n";
+                    text += "Permissions changed from " + (oldRole.permissions >>> 0).toString(2) + " to " + (newRole.permissions >>> 0).toString(2) + "\n";
                 }
                 if (oldRole.name != newRole.name) {
                     text += "Name changed from " + utils.clean(oldRole.name) + " to " + utils.clean(newRole.name) + "\n";
@@ -123,7 +205,7 @@ class Mod {
         };
 
         this.logPresence = (oldUser, newUser) => {
-            if (oldUser.username != newUser.username || oldUser.discriminator != newUser.discriminator || oldUser.avatar != newUser.avatar) {
+            if (oldUser.username != newUser.username || oldUser.discriminator != newUser.discriminator || (oldUser.avatar != newUser.avatar && !newUser.bot)) {
                 var text = ":exclamation:User change detected in " + utils.fullNameB(oldUser) + "\n";
                 if (oldUser.username != newUser.username) {
                     text += "    Username changed from " + utils.removeBlocks(oldUser.username) + " to " + utils.removeBlocks(newUser.username) + "\n";
@@ -145,18 +227,78 @@ class Mod {
                 }
             }
         };
+        this.logChannelCreated = (channel) => {
+            console.log("Channel " + channel.name + " created in " + channel.server.name);
+            this.log(channel.server, ":exclamation:Channel " + utils.clean(channel.name) + " was created, id: `" + channel.id + "`");
+        };
+        this.logChannelUpdated = (oldChannel, newChannel) => {
+            var text = ":exclamation:Channel change detected in " + utils.clean(oldChannel.name) + "\n";
+            if (oldChannel.name != newChannel.name) {
+                text += "        Name changed from `" + utils.removeBlocks(oldChannel.name) + "` to `" + utils.removeBlocks(newChannel.name) + "`\n";
+            }
+            if (oldChannel.topic != newChannel.topic) {
+                text += "        Topic changed from `" + utils.removeBlocks(oldChannel.topic || null) + "` to `" + utils.removeBlocks(newChannel.topic) + "`\n";
+            }
+            //TODO: parse numbers into legible permissions.
+            var changes = findOverrideChanges(oldChannel.permissionOverwrites, newChannel.permissionOverwrites);
 
-        this.client.on("presence", this.logPresence);
-        this.client.on("serverRoleUpdated", this.logRole);
-        this.client.on("messageDeleted", this.logDelete);
-        this.client.on("messageUpdated", this.logUpdate);
+            for(var change of changes) {
+                var newTargetName;
+                if(change.override.type === "member") {
+                    newTargetName = utils.fullName(newChannel.server.members.get("id", change.override.id));
+                }
+                if(change.override.type === "role") {
+                    newTargetName = utils.clean(newChannel.server.roles.get("id", change.override.id).name);
+                }
+                if(change.change == "remove" || change.change == "add") {
+                    text += "        Channel override " + change.change + " from " + change.override.type + " " + newTargetName + "\n";
+                }
+                else{
+                    text += "        Channel override on " + change.override.type + " " + newTargetName + " " +
+                        change.change + " changed `" + (change.from >>> 0).toString(2) + "` to `" +
+                        (change.to >>> 0).toString(2) + "`\n";
+                }
+            }
+            if(text !== ":exclamation:Channel change detected in " + utils.clean(oldChannel.name) + "\n") {
+                this.log(newChannel.server, text);
+            }
+
+        };
+        this.logChannelDeleted = (channel) => {
+            console.log("Channel " + channel.name + " deleted from " + channel.server.name);
+            this.log(channel.server, ":exclamation:Channel " + utils.clean(channel.name) + " was deleted, id: `" + channel.id + "`");
+        };
     }
 
     onDisconnect() {
         this.client.removeListener("presence", this.logPresence);
         this.client.removeListener("serverRoleUpdated", this.logRole);
+        this.client.removeListener("serverMemberUpdated", this.logMember);
+        this.client.removeListener("serverMemberAdded", this.logMemberAdded);
+        this.client.removeListener("serverMemberRemoved", this.logMemberRemoved);
+        this.client.removeListener("userBanned", this.logMemberBanned);
+        this.client.removeListener("userUnbanned", this.logMemberUnbanned);
         this.client.removeListener("messageDeleted", this.logDelete);
         this.client.removeListener("messageUpdated", this.logUpdate);
+        this.client.removeListener("channelCreated", this.logChannelCreated);
+        this.client.removeListener("channelUpdated", this.logChannelUpdated);
+        this.client.removeListener("channelDeleted", this.logChannelDeleted);
+    }
+
+    onReady() {
+        this.client.on("presence", this.logPresence);
+        this.client.on("serverRoleUpdated", this.logRole);
+        this.client.on("serverMemberUpdated", this.logMember);
+        this.client.on("serverNewMember", this.logMemberAdded);
+        this.client.on("serverMemberRemoved", this.logMemberRemoved);
+        this.client.on("userBanned", this.logMemberBanned);
+        this.client.on("userUnbanned", this.logMemberUnbanned);
+        this.client.on("messageDeleted", this.logDelete);
+        this.client.on("messageUpdated", this.logUpdate);
+        this.client.on("channelCreated", this.logChannelCreated);
+        this.client.on("channelUpdated", this.logChannelUpdated);
+        this.client.on("channelDeleted", this.logChannelDeleted);
+        //TODO: log serverUpdated, serverRoleCreated, serverRoleDeleted
     }
 
     getCommands() {
@@ -188,6 +330,68 @@ class Mod {
         }
         return false;
     }
+}
+
+function findOverrideChanges(thing1, thing2) {
+    var changes = [];
+    if(thing1.length >= thing2.length) {
+        console.log("removed");
+        thing1.forEach(
+            (i)=>{
+                console.log(i);
+                var j = thing2.get("id", i.id)
+                if(j) {
+                    for(var k in i) {
+                        if(i[k] !== j[k]) {
+                            changes.push({"change": k, "override": i, "from":i[k], "to":j[k]});
+                        }
+                    }
+                }
+                else {changes.push({"change": "remove", "override":i})}
+            }
+        );
+    } else {
+        thing2.forEach(
+            (i)=>{
+                console.log(i);
+                if(!thing1.get("id", i.id)) {
+                    changes.push({"change": "add", "override":i})}
+            }
+        );
+    }
+    return changes;
+}
+
+function findNewOverrides(more, less) {
+    for (var i of more) {
+        if (!less.get("id", i.id)) {
+            return i;
+        }
+    }
+    return false;
+}
+
+/**
+ * return roles present in oldR that are not in newR
+ * @param oldR
+ * @param newR
+ */
+function findNewRoles(more, less) {
+    for (var i of more) {
+        if (!roleIn(i, less)) {
+            return i;
+        }
+    }
+    return false;
+}
+
+function roleIn(role, newRoles) {
+    for (var j of newRoles) {
+        if (role.id == j.id) {
+            return true;
+        }
+    }
+    return false;
 }
 
 module.exports = Mod;
