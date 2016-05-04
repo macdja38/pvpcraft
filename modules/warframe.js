@@ -138,7 +138,7 @@ Warframe.prototype.onCommand = function (msg, command, perms, l) {
                         if (alert.MissionInfo.missionReward.countedItems) {
                             for (var reward of alert.MissionInfo.missionReward.countedItems) {
                                 if (rewards != "") rewards += " + ";
-                                rewards += reward.itemCount + " " + parseState.getName(reward.itemType);
+                                rewards += reward.ItemCount + " " + parseState.getName(reward.ItemType);
                             }
                         }
                         if (rewards != "") rewards += " + ";
