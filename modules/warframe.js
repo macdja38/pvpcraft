@@ -56,7 +56,8 @@ Warframe.prototype.onCommand = function (msg, command, perms, l) {
 
         return true;
     }
-
+    //TODO: track alerts, add command to set broadcast channel, regex alerts for role names and mention those roles in broadcast channels.
+    //TODO: make roles created by bot mentionable
     if ((command.commandnos === 'tracking') && perms.check(msg, "admin.warframe.setupalerts")) {
         console.log(command);
         if (command.options.add) {

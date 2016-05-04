@@ -90,16 +90,31 @@ function reload() {
     console.log("defaults");
     console.log(defaults);
     name = client.user.name;
+    for (var module in moduleList) {
+        console.log(module);
+        if(module.module) {
+            if (module.module.onDisconnect) {
+                Console.log("Trying to Remove Listeners!".green);
+                module.module.onDisconnect();
+            }
+        }
+    }
     moduleList = [];
     var modules = config.get("modules");
     console.log(modules);
     for (var module in modules) {
         var Modul = require(modules[module]);
         var mod = new Modul(client, config);
+        if(mod.onReady) mod.onReady();
         moduleList.push({"commands": mod.getCommands(), "module": mod});
     }
     console.log(moduleList);
 }
+
+client.on('error', (error)=>{
+    console.error(error);
+    console.error(error.stack);
+});
 
 client.on('disconnect', ()=>{
     console.log("Disconnect".red);
