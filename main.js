@@ -134,7 +134,10 @@ client.on('ready', ()=> {
     setTimeout(updateCarbon(), 3600000)
 });
 
-client.loginWithToken(require('../auth.json').token);
+client.loginWithToken(require('../auth.json').token, (error)=>{
+	console.error("Error logging in.");
+	console.error(error);
+});
 
 process.on('SIGINT', ()=> {
     setTimeout(() => {

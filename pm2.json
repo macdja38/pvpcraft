@@ -1,0 +1,9 @@
+{
+  "apps": [
+    {
+      "name": "pvpcraft",
+      "script": "main.js",
+      "args": "--color"
+    }
+  ]
+}
