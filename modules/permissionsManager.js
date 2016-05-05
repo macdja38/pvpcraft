@@ -15,6 +15,8 @@ module.exports = class permissionsManager {
     constructor(cl, config) {
         this.client = cl;
         this.config = config;
+
+        //url where permissions are exposed at.
         this.url = config.get("permissions", {url:defaultURL}).url
     }
 
@@ -25,13 +27,23 @@ module.exports = class permissionsManager {
     onCommand(msg, command, perms, l) {
         console.log("Perms initiated");
         console.log(command);
+
+        //commands that deal with permissions
         if(command.command === "pex") {
+
+            //if no command is supplied supply help url
             if (command.arguments.length === 0) {
                 msg.reply("You need help! visit \<https://pvpcraft.ca/pvpbot\> for more info");
                 return true;
             }
+
+            //command to set permissions.
             if(command.arguments[0] === "set") {
+
+                //remove command from arguemnts
                 command.arguments.splice(0,1);
+
+                //check if they gave us enough arguments, if not tell them what to give us.
                 if(command.arguments.length < 2) {
                     msg.reply("pex set <allow|deny|remove> <node>");
                     return true;
