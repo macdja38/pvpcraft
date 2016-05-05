@@ -21,7 +21,7 @@ module.exports = class permissionsManager {
     }
 
     getCommands() {
-        return ["pex"];
+        return ["pex", "perm"];
     }
 
     onCommand(msg, command, perms, l) {
@@ -29,7 +29,7 @@ module.exports = class permissionsManager {
         console.log(command);
 
         //commands that deal with permissions
-        if(command.command === "pex") {
+        if(command.command === "pex" || command.commandnos === "perm") {
 
             //if no command is supplied supply help url
             if (command.arguments.length === 0) {
@@ -45,7 +45,7 @@ module.exports = class permissionsManager {
 
                 //check if they gave us enough arguments, if not tell them what to give us.
                 if(command.arguments.length < 2) {
-                    msg.reply("pex set <allow|deny|remove> <node>");
+                    msg.reply("perms set <allow|deny|remove> <node>");
                     return true;
                 }
                 var channel;
