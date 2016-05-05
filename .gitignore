@@ -27,9 +27,7 @@ build/Release
 node_modules
 
 # Config files
-config/config.json
-config/permissions.json
-config/auth.json
+config/*.json
 
 # Optional npm cache directory
 .npm

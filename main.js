@@ -8,6 +8,7 @@ var client = new Discord.Client({forceFetchUsers: true, autoReconnect: true});
 var Configs = require("./lib/config.js");
 console.log(Configs);
 var config = new Configs("config");
+var auth = new Configs("auth");
 
 var now = require("performance-now");
 var Parse = require("./lib/newParser.js");
@@ -19,8 +20,6 @@ console.log(Permissions);
 var perms = new Permissions(config);
 
 var request = require('request');
-
-var key = require('../auth.json').key;
 
 var defaults = {
     "prefix": []
@@ -134,7 +133,7 @@ client.on('ready', ()=> {
     setTimeout(updateCarbon(), 3600000)
 });
 
-client.loginWithToken(require('../auth.json').token, (error)=>{
+client.loginWithToken(auth.get("token", {}), (error)=>{
 	console.error("Error logging in.");
 	console.error(error);
 });
@@ -153,10 +152,13 @@ process.on('SIGINT', ()=> {
 function updateCarbon() {
     request.post(
         'https://www.carbonitex.net/discord/data/botdata.php',
-        {form: {key: key, servercount: client.servers.length}},
+        {form: {key: config.get("key", {}), servercount: client.servers.length}},
         function (error, response, body) {
             if (!error && response.statusCode == 200) {
                 console.log(body)
+            }
+            else if(error) {
+                console.error(error);
             }
         }
     );
