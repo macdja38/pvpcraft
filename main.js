@@ -25,7 +25,7 @@ var defaults = {
     "prefix": []
 };
 
-var moduleList;
+var moduleList = [];
 
 var mention;
 var name;
@@ -89,7 +89,7 @@ function reload() {
     console.log("defaults");
     console.log(defaults);
     name = client.user.name;
-    for (var module in moduleList) {
+    for (var module of moduleList) {
         console.log(module);
         if(module.module) {
             if (module.module.onDisconnect) {
