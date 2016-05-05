@@ -134,8 +134,11 @@ client.on('ready', ()=> {
 });
 
 client.loginWithToken(auth.get("token", {}), (error)=>{
-	console.error("Error logging in.");
-	console.error(error);
+    if(error) {
+        console.error("Error logging in.");
+        console.error(error);
+        console.error(error.stack);
+    }
 });
 
 process.on('SIGINT', ()=> {
