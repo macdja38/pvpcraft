@@ -9,7 +9,7 @@
     "http": "*",
     "crypto": "*",
     "colors": "^1.1.2",
-    "canvas": "^1.2.12",
-    "nudity": "^0.0.2"
+    "mc-ping-updated": "^0.1.0",
+    "stream-buffers": "^3.0.0"
   }
 }
