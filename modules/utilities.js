@@ -23,7 +23,7 @@ var utilities = class Perms {
     onCommand(msg, command, perms, l) {
         console.log("Perms initiated");
         console.log(command);
-        if (command.command === "serverinfo" || command.command === "server" ) {
+        if ((command.command === "serverinfo" || command.command === "server") && perms.check(msg, "utils.serverinfo")) {
             var botCount = 0;
             for (var i in msg.channel.server.members) {
                 if (msg.channel.server.members[i]) {
@@ -45,7 +45,7 @@ var utilities = class Perms {
             );
             return true;
         }
-        if (command.command === 'userinfo' || command.command === 'user') {
+        if ((command.command === 'userinfo' || command.command === 'user') && perms.check(msg, "utils.userinfo")) {
             var string = "";
             var mentInfo;
             var comaUserNameCodes;
