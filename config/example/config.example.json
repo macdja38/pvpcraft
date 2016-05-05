@@ -1,6 +1,7 @@
 {
   "permissions": {
-    "filename": "permissions"
+    "filename": "permissions",
+    "url": "https://pvpcraft.ca/pvpbotperms/?server="
   },
   "modules": {
     "warframe": "./modules/warframe.js",
