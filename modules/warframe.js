@@ -216,7 +216,7 @@ Warframe.prototype.onCommand = function (msg, command, perms, l) {
         return true;
     }
 
-    else if ((command.commandnos === 'damage' || command.command === 'element') && perms.check(msg, "warframe.trader")) {
+    else if ((command.commandnos === 'damage' || command.command === 'element') && perms.check(msg, "warframe.damage")) {
         Warframe.client.sendMessage(msg.channel, "```xl\nDamage 2.0: https://pvpcraft.ca/wfd2.png Thanks for image Telkhines\n```");
         return true;
     }
