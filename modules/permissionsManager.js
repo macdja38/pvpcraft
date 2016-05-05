@@ -22,10 +22,6 @@ module.exports = class permissionsManager {
         return ["pex"];
     }
 
-    checkMisc() {
-        return false;
-    }
-
     onCommand(msg, command, perms, l) {
         console.log("Perms initiated");
         console.log(command);
