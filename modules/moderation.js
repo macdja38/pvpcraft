@@ -311,8 +311,6 @@ class Mod {
 
     onCommand(msg, command, perms, l) {
         console.log("Moderation initiated");
-        msg.reply("ahh");
-        console.log("ahh".red);
         if (command.command == "setlog") {
             if (/<#\d+>/.test(command.options.channel) && perms.check(msg, "moderation.tools.setlog")) {
                 console.log(this.config);
