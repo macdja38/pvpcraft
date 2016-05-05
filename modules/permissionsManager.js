@@ -9,11 +9,13 @@
 var Utils = require('../lib/utils');
 var utils = new Utils();
 
-var permsURL = "https://pvpcraft.ca/pvpbot/perms/?server=";
+var defaultURL = "https://pvpcraft.ca/pvpbot/perms/?server=";
 
 module.exports = class permissionsManager {
-    constructor(cl) {
+    constructor(cl, config) {
         this.client = cl;
+        this.config = config;
+        this.url = config.get("permissions", {url:defaultURL}).url
     }
 
     getCommands() {
@@ -126,7 +128,7 @@ module.exports = class permissionsManager {
                 perms.set(node, action);
             }
             if(command.arguments[0] === "list") {
-                msg.reply(permsURL + msg.channel.server.id);
+                msg.reply(this.url + msg.channel.server.id);
             }
             return true;
         }
