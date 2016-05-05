@@ -28,8 +28,8 @@ Warframe.prototype.getCommands = function () {
 };
 
 Warframe.prototype.checkMisc = function (msg, perms, l) {
-    if (msg.content.toLowerCase().indexOf("soon") == 0 && msg.content.indexOf(":tm:") < 0 && perms.check(msg, "warframe.misc")) {
-        msg.reply("Soon:tm:");
+    if (msg.content.toLowerCase().indexOf("soon") == 0 && msg.content.indexOf(":tm:") < 0 && perms.check(msg, "warframe.misc.soon")) {
+        Warframe.client.sendMessage(msg.channel, "Soon:tm:");
         return true;
     }
     return false;
