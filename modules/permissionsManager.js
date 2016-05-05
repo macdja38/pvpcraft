@@ -60,7 +60,7 @@ module.exports = class permissionsManager {
                     }
                     if(channel) {
                         //if we found the channel check their permissions then define the channel.
-                        if (!perms.checkManageRolesChannel(msg.author, channel)) {
+                        if (!perms.checkManageRolesChannel(msg.author, channel) && this.config.get("permissions", {admins:[]}).admins.indexOf(msg.author.id)<0) {
                             msg.reply("You don't have perms to edit perms in this channel, you need manage Roles!");
                             return true;
                         }
@@ -74,7 +74,7 @@ module.exports = class permissionsManager {
                 }
                 else{
                     //user has not specified channel, assume server wide
-                    if(!perms.checkManageRolesServer(msg.author, msg.channel.server)) {
+                    if(!perms.checkManageRolesServer(msg.author, msg.channel.server) && this.config.get("permissions", {admins:[]}).admins.indexOf(msg.author.id)<0) {
                         msg.reply("You don't have perms to edit perms in this server, you need manage Roles!");
                         return true;
                     }
