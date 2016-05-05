@@ -123,7 +123,7 @@ Warframe.prototype.onCommand = function (msg, command, perms, l) {
         return true;
     }
 
-    else if (command.commandnos === 'alert' && perms.check(msg, "warframe.trial")) {
+    else if (command.commandnos === 'alert' && perms.check(msg, "warframe.alert")) {
         worldState.get(function (state) {
             if (state.Alerts) {
                 for (var alert of state.Alerts) {
