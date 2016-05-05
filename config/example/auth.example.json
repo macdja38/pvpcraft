@@ -1,4 +1,5 @@
 {
   "token": "Token",
-  "key": "key"
+  "key": "key",
+  "youtube-api-key": "key"
 }
