@@ -27,34 +27,43 @@ module.exports = class music {
     onCommand(msg, command, perms, l) {
         console.log("Music initiated");
         var id = msg.channel.server.id;
-        if(command.command === "init" && perms.check(msg, "music.init")) {
-            if(this.boundChannels.indexOf(msg.channel.server.id)<0) {
-                if(msg.author.voiceChannel) {
-                    if(msg.author.voiceChannel.server.id === msg.channel.server.id) {
-                        this.boundChannels[id] = new Player(this.client, msg.author.voiceChannel, msg.channel, key);
-                        msg.reply("Binding to **" + this.boundChannels[id].voice.name + "** and **" + this.boundChannels[id].text.name + "**");
-                        this.boundChannels[id].init(msg);
-                    }
-                    else {
-                        msg.reply("You must be in a voice channel in this server to use this command here.")
-                    }
+        if (command.command === "init" && perms.check(msg, "music.init")) {
+            if (this.boundChannels.hasOwnProperty(msg.channel.server.id)) {
+                msg.reply("Sorry already in use in this server")
+                return true;
+            }
+            if (msg.author.voiceChannel) {
+                if (msg.author.voiceChannel.server.id === msg.channel.server.id) {
+                    this.boundChannels[id] = new Player(this.client, msg.author.voiceChannel, msg.channel, key);
+                    msg.reply("Binding to **" + this.boundChannels[id].voice.name + "** and **" + this.boundChannels[id].text.name + "**");
+                    this.boundChannels[id].init(msg);
                 }
                 else {
-                    msg.reply("You must be in a voice channel this command.")
+                    msg.reply("You must be in a voice channel in this server to use this command here.")
                 }
             }
             else {
-                msg.reply("Sorry already in use in this server")
+                msg.reply("You must be in a voice channel this command.")
             }
             return true;
         }
 
-        if(command.command === "play" && perms.check(msg, "music.play")) {
-            if(this.boundChannels.hasOwnProperty(id)) {
+        if (command.command === "play" && perms.check(msg, "music.play")) {
+            if (this.boundChannels.hasOwnProperty(id)) {
                 this.boundChannels[id].enqueue(msg, command.arguments[0])
             } else {
                 msg.reply("Please bind a channel first using " + command.prefix + "init")
             }
+            return true;
+        }
+
+        if (command.command === "pause" && perms.check(msg, "music.pause")) {
+            this.boundChannels[id].pause(msg);
+            return true;
+        }
+        if (command.command === "resume" && perms.check(msg, "music.resume")) {
+            this.boundChannels[id].resume(msg);
+            return true;
         }
         return false;
     }

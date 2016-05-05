@@ -208,13 +208,13 @@ class Mod {
             if (oldUser.username != newUser.username || oldUser.discriminator != newUser.discriminator || (oldUser.avatar != newUser.avatar && !newUser.bot)) {
                 var text = ":exclamation:User change detected in " + utils.fullNameB(oldUser) + "\n";
                 if (oldUser.username != newUser.username) {
-                    text += "    Username changed from " + utils.removeBlocks(oldUser.username) + " to " + utils.removeBlocks(newUser.username) + "\n";
+                    text += "        Username changed from " + utils.removeBlocks(oldUser.username) + " to " + utils.removeBlocks(newUser.username) + "\n";
                 }
                 if (oldUser.discriminator != newUser.discriminator) {
-                    text += "    Discriminator changed from " + oldUser.discriminator + " to " + newUser.discriminator + "\n";
+                    text += "        Discriminator changed from " + oldUser.discriminator + " to " + newUser.discriminator + "\n";
                 }
                 if (oldUser.avatar != newUser.avatar && !newUser.bot) {
-                    text += "    Avatar changed from " + oldUser.avatarURL + " to " + newUser.avatarURL + "\n";
+                    text += "        Avatar changed from " + oldUser.avatarURL + " to " + newUser.avatarURL + "\n";
                 }
                 console.log("User Change");
                 for (var serverid in this.logging) {

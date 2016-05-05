@@ -130,7 +130,7 @@ client.on('ready', ()=> {
     name = client.user.name;
     console.log(mention);
     reload();
-    setTimeout(updateCarbon(), 3600000)
+    setTimeout(updateCarbon, 3600000)
 });
 
 client.loginWithToken(auth.get("token", {}), (error)=>{
