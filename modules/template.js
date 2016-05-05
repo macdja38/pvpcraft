@@ -6,7 +6,7 @@
 var Utils = require('../lib/utils');
 var utils = new Utils();
 
-var Perms = class Perms {
+module.exports = class template {
     constructor(cl) {
         this.client = cl;
     }
@@ -22,8 +22,10 @@ var Perms = class Perms {
     onCommand(msg, command, perms, l) {
         console.log("Perms initiated");
         console.log(msg);
-        msg.reply("ahh");
+        if(command.command === "ahh") {
+            msg.reply("ahh");
+            return true;
+        }
+        return false;
     }
 };
-
-module.exports = Perms;
