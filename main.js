@@ -93,7 +93,7 @@ function reload() {
         console.log(module);
         if(module.module) {
             if (module.module.onDisconnect) {
-                Console.log("Trying to Remove Listeners!".green);
+                console.log("Trying to Remove Listeners!".green);
                 module.module.onDisconnect();
             }
         }

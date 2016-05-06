@@ -248,7 +248,7 @@ class Mod {
                     newTargetName = utils.fullName(newChannel.server.members.get("id", change.override.id));
                 }
                 if(change.override.type === "role") {
-                    newTargetName = utils.clean(newChannel.server.roles.get("id", change.override.id).name);
+                    newTargetName = utils.clean((newChannel.server.roles.get("id", change.override.id) || {name: "unknown"}).name);
                 }
                 if(change.change == "remove" || change.change == "add") {
                     text += "        Channel override " + change.change + " from " + change.override.type + " " + newTargetName + "\n";
