@@ -21,7 +21,14 @@ module.exports = class music {
     }
 
     getCommands() {
-        return ["init", "play", "pause", "skip"];
+        return ["init", "play", "pause", "skip", "next", "destroy"];
+    }
+
+    onDisconnect() {
+        for(var i in this.boundChannels) {
+            if(this.boundChannels.hasOwnProperty(i))
+            this.boundChannels[i].destroy();
+        }
     }
 
     onCommand(msg, command, perms, l) {
@@ -51,7 +58,7 @@ module.exports = class music {
         if (command.command === "destroy" && perms.check(msg, "music.destroy")) {
             if(this.boundChannels.hasOwnProperty(id)) {
                 this.boundChannels[id].destroy();
-                this.boundChannels.slice(this.boundChannels.indexOf(id));
+                delete this.boundChannels[id];
             }
             return true;
         }
@@ -66,7 +73,7 @@ module.exports = class music {
         }
 
         if ((command.command === "next" || command.command === "skip") && perms.check(msg, "music.skip")) {
-            this.boundChannels[id].playNext();
+            this.boundChannels[id].skipSong();
             return true;
         }
 
