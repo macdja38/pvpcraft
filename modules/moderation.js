@@ -78,7 +78,7 @@ class Mod {
         };
 
         this.logUpdate = (message, newMessage) => {
-            if (!newMessage.channel.server) return;
+            if (!newMessage.channel.server) return; //it's a pm so we don't log it.
             var changeThresh = this.config.data[newMessage.channel.server.id];
             if (changeThresh) {
                 if (changeThresh.changeThresh) {
@@ -228,8 +228,10 @@ class Mod {
             }
         };
         this.logChannelCreated = (channel) => {
-            console.log("Channel " + channel.name + " created in " + channel.server.name);
-            this.log(channel.server, ":exclamation:Channel " + utils.clean(channel.name) + " was created, id: `" + channel.id + "`");
+            if(channel.server) { //if che channel does not have a server it's a private message and we don't need to log it.
+                console.log("Channel " + channel.name + " created in " + channel.server.name);
+                this.log(channel.server, ":exclamation:Channel " + utils.clean(channel.name) + " was created, id: `" + channel.id + "`");
+            }
         };
         this.logChannelUpdated = (oldChannel, newChannel) => {
             var text = ":exclamation:Channel change detected in " + utils.clean(oldChannel.name) + "\n";
