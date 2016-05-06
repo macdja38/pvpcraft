@@ -10,6 +10,11 @@ console.log(Configs);
 var config = new Configs("config");
 var auth = new Configs("auth");
 
+var key = auth.get("key", null);
+if(key == "key") {
+    key = null;
+}
+
 var now = require("performance-now");
 var Parse = require("./lib/newParser.js");
 
@@ -24,6 +29,8 @@ var request = require('request');
 var defaults = {
     "prefix": []
 };
+
+var hasBeenReady = false;
 
 var moduleList = [];
 
@@ -128,9 +135,15 @@ client.on('ready', ()=> {
     id = client.user.id;
     mention = "<@" + id + ">";
     name = client.user.name;
-    console.log(mention);
     reload();
-    setTimeout(updateCarbon, 3600000)
+    console.log("-------------------");
+    console.log("Ready as " + client.user.username);
+    console.log("Mention  " + mention);
+    console.log("-------------------");
+    if(!hasBeenReady) {
+        hasBeenReady = true;
+        setTimeout(updateCarbon, 3600000)
+    }
 });
 
 client.loginWithToken(auth.get("token", {}), (error)=>{
@@ -139,6 +152,10 @@ client.loginWithToken(auth.get("token", {}), (error)=>{
         console.error(error);
         console.error(error.stack);
     }
+});
+
+client.on('serverCreated', ()=>{
+    updateCarbon();
 });
 
 process.on('SIGINT', ()=> {
@@ -153,18 +170,28 @@ process.on('SIGINT', ()=> {
 });
 
 function updateCarbon() {
-    request.post(
-        'https://www.carbonitex.net/discord/data/botdata.php',
-        {form: {key: config.get("key", {}), servercount: client.servers.length}},
-        function (error, response, body) {
-            if (!error && response.statusCode == 200) {
-                console.log(body)
+    console.log("Attempting to update Carbon".green);
+    if(key) {
+        request(
+            {
+                url: 'https://www.carbonitex.net/discord/data/botdata.php',
+                body: {key: key, servercount: client.servers.length},
+                json: true
+            },
+            function (error, response, body) {
+                if (!error && response.statusCode == 200) {
+                    console.log(body)
+                }
+                else if (error) {
+                    console.error(error);
+                }
+                else {
+                    console.error("Bad request or other");
+                    console.error(response.body);
+                }
             }
-            else if(error) {
-                console.error(error);
-            }
-        }
-    );
+        );
+    }
 }
 
 function processM() {
