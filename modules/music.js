@@ -28,8 +28,8 @@ module.exports = class music {
         console.log("Music initiated");
         var id = msg.channel.server.id;
         if (command.command === "init" && perms.check(msg, "music.init")) {
-            if (this.boundChannels.hasOwnProperty(msg.channel.server.id)) {
-                msg.reply("Sorry already in use in this server")
+            if (this.boundChannels.hasOwnProperty(id)) {
+                msg.reply("Sorry already in use in this server");
                 return true;
             }
             if (msg.author.voiceChannel) {
@@ -48,12 +48,25 @@ module.exports = class music {
             return true;
         }
 
+        if (command.command === "destroy" && perms.check(msg, "music.destroy")) {
+            if(this.boundChannels.hasOwnProperty(id)) {
+                this.boundChannels[id].destroy();
+                this.boundChannels.slice(this.boundChannels.indexOf(id));
+            }
+            return true;
+        }
+
         if (command.command === "play" && perms.check(msg, "music.play")) {
             if (this.boundChannels.hasOwnProperty(id)) {
                 this.boundChannels[id].enqueue(msg, command.arguments[0])
             } else {
                 msg.reply("Please bind a channel first using " + command.prefix + "init")
             }
+            return true;
+        }
+
+        if ((command.command === "next" || command.command === "skip") && perms.check(msg, "music.skip")) {
+            this.boundChannels[id].playNext();
             return true;
         }
 
