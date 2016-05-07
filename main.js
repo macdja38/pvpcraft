@@ -52,7 +52,8 @@ client.on('message', (msg)=> {
     }
     var command = Parse.command(l, msg, {"allowMention": id, "botName": name});
     if (command) {
-        console.log("value is".blue);
+        console.log("Command Used".blue);
+        console.log(command);
         for (var mod in moduleList) {
             //console.log(command.command);
             //console.log(moduleList[mod].commands);
