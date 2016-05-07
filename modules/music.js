@@ -8,7 +8,10 @@ var utils = new Utils();
 
 var Player = require('../lib/player.js');
 
-var key = require('../config/auth.json').key || null;
+var key = require('../config/auth.json').youtubeApiKey || null;
+if(key == "key") {
+    key = null;
+}
 
 module.exports = class music {
     constructor(cl) {
@@ -65,7 +68,12 @@ module.exports = class music {
 
         if (command.command === "play" && perms.check(msg, "music.play")) {
             if (this.boundChannels.hasOwnProperty(id)) {
-                this.boundChannels[id].enqueue(msg, command.arguments[0])
+                if(command.arguments.length>0) {
+                    this.boundChannels[id].enqueue(msg, command.arguments[0])
+                }
+                else{
+                    msg.reply("Please specify a youtube video!")
+                }
             } else {
                 msg.reply("Please bind a channel first using " + command.prefix + "init")
             }
