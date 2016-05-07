@@ -97,8 +97,10 @@ module.exports = class music {
 
         if (command.commandnos === "logchannel" && perms.check(msg, "music.logchannels")) {
             var text = "Playing Music in:\n";
-            for (var server of this.boundChannels) {
-                text += `Server: ${server.server.name} in voice channel ${server.text.name}\n`
+            for (var i in this.boundChannels) {
+                if (this.boundChannels.hasOwnProperty(i)) {
+                    text += `Server: ${this.boundChannels[i].server.name} in voice channel ${this.boundChannels[i].text.name}\n`
+                }
             }
             if (text != "Playing Music in:\n") {
                 msg.channel.sendMessage(text);
