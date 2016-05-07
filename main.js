@@ -195,10 +195,6 @@ function updateCarbon() {
     }
 }
 
-function processM() {
-
-}
-
 //meew0's solution to the ECONNRESET crash error
 process.on('uncaughtException', function(err) {
     // Handle ECONNRESETs caused by `next` or `destroy`
