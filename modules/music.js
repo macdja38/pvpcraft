@@ -9,7 +9,7 @@ var utils = new Utils();
 var Player = require('../lib/player.js');
 
 var key = require('../config/auth.json').youtubeApiKey || null;
-if(key == "key") {
+if (key == "key") {
     key = null;
 }
 
@@ -24,18 +24,19 @@ module.exports = class music {
     }
 
     getCommands() {
-        return ["init", "play", "pause", "skip", "next", "destroy"];
+        return ["init", "play", "pause", "skip", "next", "destroy", "logchannel"];
     }
 
     onDisconnect() {
-        for(var i in this.boundChannels) {
-            if(this.boundChannels.hasOwnProperty(i))
-            this.boundChannels[i].destroy();
+        for (var i in this.boundChannels) {
+            if (this.boundChannels.hasOwnProperty(i))
+                this.boundChannels[i].destroy();
         }
     }
 
     onCommand(msg, command, perms, l) {
         console.log("Music initiated");
+        if (!msg.channel.server) return; //this is a pm... we can't do music stuff here.
         var id = msg.channel.server.id;
         if (command.command === "init" && perms.check(msg, "music.init")) {
             if (this.boundChannels.hasOwnProperty(id)) {
@@ -59,7 +60,7 @@ module.exports = class music {
         }
 
         if (command.command === "destroy" && perms.check(msg, "music.destroy")) {
-            if(this.boundChannels.hasOwnProperty(id)) {
+            if (this.boundChannels.hasOwnProperty(id)) {
                 this.boundChannels[id].destroy();
                 delete this.boundChannels[id];
             }
@@ -68,10 +69,10 @@ module.exports = class music {
 
         if (command.command === "play" && perms.check(msg, "music.play")) {
             if (this.boundChannels.hasOwnProperty(id)) {
-                if(command.arguments.length>0) {
+                if (command.arguments.length > 0) {
                     this.boundChannels[id].enqueue(msg, command.arguments[0])
                 }
-                else{
+                else {
                     msg.reply("Please specify a youtube video!")
                 }
             } else {
@@ -93,6 +94,20 @@ module.exports = class music {
             this.boundChannels[id].resume(msg);
             return true;
         }
+
+        if (command.commandnos === "logchannel" && perms.check(msg, "music.logchannels")) {
+            var text = "Playing Music in:\n";
+            for (var server of this.boundChannels) {
+                text += `Server: ${server.server.name} in voice channel ${server.text.name}\n`
+            }
+            if (text != "Playing Music in:\n") {
+                msg.channel.sendMessage(text);
+            }
+            else {
+                msg.channel.sendMessage("Bot is currently not in use");
+            }
+        }
+
         return false;
     }
 };
