@@ -89,7 +89,13 @@ client.on('message', (msg)=> {
         }
     }
     var t2 = now();
-    console.log(t2 - t1);
+    if(msg.channel.server) {
+        console.log("s: ".magenta + msg.channel.server.name + " c: ".blue + msg.channel.name + " u: ".cyan +
+            msg.author.username +  " m: ".green + msg.content.replace(/\n/g, "\n    ") + " in ".yellow + (t2 - t1) + "ms".red);
+    } else {
+        console.log("u: ".cyan + msg.author.username +  " m: ".green + msg.content.replace(/\n/g, "\n    ").rainbow +
+            " in ".yellow + (t2 - t1) + "ms".red);
+    }
 });
 
 function reload() {

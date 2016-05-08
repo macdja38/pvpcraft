@@ -149,7 +149,7 @@ class Mod {
                         if (newRole) {
                             text += "        Role added `" + newRole.name + "`\n";
                         } else {
-                            console.error("Error adding new Role");
+                            console.error("Error finding adding new Role");
                             console.error(newMember.roles);
                             console.error(oldMember.roles);
                         }
