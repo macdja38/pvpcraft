@@ -130,7 +130,7 @@ module.exports = class permissionsManager {
                 console.log(command);
                 var action = command.arguments.splice(0,1)[0];
                 console.log(command);
-                var node = server + "." + channel + "." + target + "." + command.arguments.join(".");
+                var node = server + "." + channel + "." + target + "." + command.arguments[0];
                 msg.reply("Trying to " + action + " node ```" + node + "```");
                 console.log(node);
                 perms.set(node, action);
