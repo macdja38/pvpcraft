@@ -13,6 +13,8 @@ if (key == "key") {
     key = null;
 }
 
+var text;
+
 module.exports = class music {
     constructor(cl) {
         this.client = cl;
@@ -24,7 +26,7 @@ module.exports = class music {
     }
 
     getCommands() {
-        return ["init", "play", "pause", "skip", "next", "destroy", "logchannel"];
+        return ["init", "play", "skip", "list", "next", "destroy", "logchannel"];
     }
 
     onDisconnect() {
@@ -50,11 +52,11 @@ module.exports = class music {
                     this.boundChannels[id].init(msg);
                 }
                 else {
-                    msg.reply("You must be in a voice channel in this server to use this command here.")
+                    msg.reply("You must be in a voice channel in this server to use this command here. If you are currently in a voice channel please rejoin it.")
                 }
             }
             else {
-                msg.reply("You must be in a voice channel this command.")
+                msg.reply("You must be in a voice channel this command. If you are currently in a voice channel please rejoin it.")
             }
             return true;
         }
@@ -82,10 +84,15 @@ module.exports = class music {
         }
 
         if ((command.command === "next" || command.command === "skip") && perms.check(msg, "music.skip")) {
-            this.boundChannels[id].skipSong();
+            if (this.boundChannels.hasOwnProperty(id)) {
+                this.boundChannels[id].skipSong();
+            } else {
+                msg.reply("Please bind a channel first using " + command.prefix + "init")
+            }
             return true;
         }
 
+        /*
         if (command.command === "pause" && perms.check(msg, "music.pause")) {
             this.boundChannels[id].pause(msg);
             return true;
@@ -94,9 +101,23 @@ module.exports = class music {
             this.boundChannels[id].resume(msg);
             return true;
         }
+        */
+
+        if (command.commandnos === "list" && perms.check(msg, "music.list")) {
+            if (this.boundChannels.hasOwnProperty(id)) {
+                if(this.boundChannels[id].currentVideo) {
+                    msg.channel.sendMessage(this.boundChannels[id].getPrettyList());
+                } else {
+                    msg.channel.sendMessage("Sorry, no song's found in playlist. use " + command.prefix + "play <youtube vid or playlist> to add one.")
+                }
+            } else {
+                msg.channel.sendMessage("Sorry, Bot is not currently in a voice channel use " + command.prefix + "init while in a voice channel to bind it.")
+            }
+            return true;
+        }
 
         if (command.commandnos === "logchannel" && perms.check(msg, "music.logchannels")) {
-            var text = "Playing Music in:\n";
+            text = "Playing Music in:\n";
             for (var i in this.boundChannels) {
                 if (this.boundChannels.hasOwnProperty(i)) {
                     text += `Server: ${this.boundChannels[i].server.name} in voice channel ${this.boundChannels[i].text.name}\n`
@@ -108,6 +129,7 @@ module.exports = class music {
             else {
                 msg.channel.sendMessage("Bot is currently not in use");
             }
+            return true;
         }
 
         return false;
