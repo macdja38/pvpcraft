@@ -6,6 +6,8 @@
 var Utils = require('../lib/utils');
 var utils = new Utils();
 
+var now = require('performance-now');
+
 var utilities = class Perms {
     constructor(cl, config) {
         this.client = cl;
@@ -13,7 +15,7 @@ var utilities = class Perms {
     }
 
     getCommands() {
-        return ["serverinfo", "server", "userinfo", "user"];
+        return ["serverinfo", "server", "userinfo", "user", "ping"];
     }
 
     checkMisc() {
@@ -86,7 +88,18 @@ var utilities = class Perms {
             msg.reply(string);
             return true;
         }
-        msg.reply("ahh");
+        if ((command.command === 'ping') && perms.check(msg, 'utils.ping')) {
+            var t1 = now();
+            msg.channel.sendMessage("Testing Ping", (error, message)=>{
+                var t2 = now();
+                if(!error) {
+                    this.client.updateMessage(message, "Ping is `" + (t2-t1) + "`ms");
+                }
+
+            })
+            return true;
+        }
+        return false;
     }
 };
 
