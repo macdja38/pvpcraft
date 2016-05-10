@@ -1,6 +1,7 @@
 /**
  * Created by macdja38 on 2016-04-17.
  */
+"use strict";
 
 var Discord = require("discord.js");
 var client = new Discord.Client({forceFetchUsers: true, autoReconnect: true});
@@ -29,6 +30,9 @@ var request = require('request');
 var defaults = {
     "prefix": []
 };
+
+var Website = require("./webserver/webServer");
+var website = new Website;
 
 var hasBeenReady = false;
 
