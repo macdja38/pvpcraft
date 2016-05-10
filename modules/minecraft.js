@@ -23,14 +23,13 @@ module.exports = class template {
     }
 
     getCommands() {
-        return ["ping"];
+        return ["mcping", "mcavatar"];
     }
 
     onCommand(msg, command, perms, l) {
         console.log("Minecraft initiated");
-        console.log(msg);
         var t1 = now();
-        if (command.command === "ping" && perms.check(msg, "minecraft.ping")) {
+        if (command.command === "mcping" && perms.check(msg, "minecraft.mcping")) {
             mcping(command.arguments.join("."), "25565", (err, res)=> {
                 if (err) {
                     console.error(err);
@@ -50,6 +49,15 @@ module.exports = class template {
 
                 }
             }, 3000);
+            return true;
+        }
+
+        if (command.command === "mcavatar" && perms.check(msg, "minecraft.mcavatar")) {
+            if(command.arguments.length < 1) {
+                msg.reply("usage " + command.prefix + "mcavatar <minecraft username>")
+                return true;
+            }
+            msg.channel.sendMessage({file:{file:"https://mcapi.ca/avatar/2d/" + command.arguments[0] + "/100/true", name: command.arguments[0] + ".png"}})
             return true;
         }
         return false;
