@@ -26,7 +26,7 @@ module.exports = class music {
     }
 
     getCommands() {
-        return ["init", "play", "skip", "list", "next", "destroy", "logchannel"];
+        return ["init", "play", "skip", "list", "time", "shuffle", "next", "destroy", "logchannel"];
     }
 
     onDisconnect() {
@@ -75,7 +75,7 @@ module.exports = class music {
             }
             return true;
         }
-
+        
         if (command.command === "play" && perms.check(msg, "music.play")) {
             if (this.boundChannels.hasOwnProperty(id)) {
                 if (command.arguments.length > 0) {
@@ -113,9 +113,22 @@ module.exports = class music {
         if (command.commandnos === "list" && perms.check(msg, "music.list")) {
             if (this.boundChannels.hasOwnProperty(id)) {
                 if(this.boundChannels[id].currentVideo) {
-                    msg.channel.sendMessage(this.boundChannels[id].getPrettyList());
+                    msg.channel.sendMessage(this.boundChannels[id].getPrettyList(2000));
                 } else {
                     msg.channel.sendMessage("Sorry, no song's found in playlist. use " + command.prefix + "play <youtube vid or playlist> to add one.")
+                }
+            } else {
+                msg.channel.sendMessage("Sorry, Bot is not currently in a voice channel use " + command.prefix + "init while in a voice channel to bind it.")
+            }
+            return true;
+        }
+
+        if (command.command === "shuffle" && perms.check(msg, "music.shuffle")) {
+            if (this.boundChannels.hasOwnProperty(id)) {
+                if(this.boundChannels[id].queue.length > 1) {
+                    msg.channel.sendMessage(this.boundChannels[id].shuffle());
+                } else {
+                    msg.channel.sendMessage("Sorry, not enough song's in playlist.")
                 }
             } else {
                 msg.channel.sendMessage("Sorry, Bot is not currently in a voice channel use " + command.prefix + "init while in a voice channel to bind it.")
@@ -142,3 +155,4 @@ module.exports = class music {
         return false;
     }
 };
+
