@@ -113,7 +113,20 @@ module.exports = class music {
         if (command.commandnos === "list" && perms.check(msg, "music.list")) {
             if (this.boundChannels.hasOwnProperty(id)) {
                 if(this.boundChannels[id].currentVideo) {
-                    msg.channel.sendMessage(this.boundChannels[id].getPrettyList(2000));
+                    msg.channel.sendMessage(this.boundChannels[id].prettyList(2000));
+                } else {
+                    msg.channel.sendMessage("Sorry, no song's found in playlist. use " + command.prefix + "play <youtube vid or playlist> to add one.")
+                }
+            } else {
+                msg.channel.sendMessage("Sorry, Bot is not currently in a voice channel use " + command.prefix + "init while in a voice channel to bind it.")
+            }
+            return true;
+        }
+
+        if (command.commandnos === "time" && perms.check(msg, "music.time")) {
+            if (this.boundChannels.hasOwnProperty(id)) {
+                if(this.boundChannels[id].currentVideo) {
+                    msg.channel.sendMessage("Currently " + this.boundChannels[id].prettyTime() + " into " + this.boundChannels[id].currentVideo.prettyPrint());
                 } else {
                     msg.channel.sendMessage("Sorry, no song's found in playlist. use " + command.prefix + "play <youtube vid or playlist> to add one.")
                 }
