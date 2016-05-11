@@ -90,11 +90,51 @@ module.exports = class music {
             return true;
         }
 
-        if ((command.command === "next" || command.command === "skip") && perms.check(msg, "music.skip")) {
+        if ((command.command === "next" || command.command === "skip") && perms.check(msg, "music.voteskip")) {
             if (this.boundChannels.hasOwnProperty(id)) {
-                this.boundChannels[id].skipSong();
+                if(this.boundChannels[id].currentVideo) {
+                    var index = command.arguments[0] ? parseInt(command.arguments[0]) - 1 : -1;
+                    console.log(index);
+                    var isForced = !!(perms.check(msg, "music.forceskip") && command.flags.indexOf('f')>-1);
+                    var video;
+                    if(index === -1) {
+                        video = this.boundChannels[id].currentVideo;
+                    }
+                    else if(this.boundChannels[id].queue.hasOwnProperty(index)) {
+                        video = this.boundChannels[id].queue[index];
+                    }
+                    else {
+                        msg.reply("Could not find find the song");
+                        return true;
+                    }
+                    if(video.votes.indexOf(msg.author.id) < 0 || isForced) {
+                        video.votes.push(msg.author.id);
+                        if (video.votes.length > (this.boundChannels[id].voice.members.length / 3) || isForced) {
+                            msg.reply("Removing " + video.prettyPrint() + " From the queue");
+                            if(index === -1) {
+                                this.boundChannels[id].skipSong();
+                            }
+                            else {
+                                this.boundChannels[id].queue.splice(index, 1);
+                            }
+                        }
+                        else {
+                            msg.reply(video.votes.length + " / " + (this.boundChannels[id].voice.members.length / 3 + 1) + " votes needed to skip " +
+                                video.prettyPrint());
+                        }
+                    }
+                    else {
+                        msg.reply("Sorry, you may only vote to skip once per song.");
+                        return true;
+                    }
+                }
+                else {
+                    msg.reply("No song's to skip, queue a song using //play <youtube url of video or playlist>");
+                    return true;
+                }
             } else {
-                msg.reply("Please bind a channel first using " + command.prefix + "init")
+                msg.reply("Please bind a channel first using " + command.prefix + "init");
+                return true;
             }
             return true;
         }
