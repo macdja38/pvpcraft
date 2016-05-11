@@ -49,7 +49,14 @@ module.exports = class music {
                 if (msg.author.voiceChannel.server.id === msg.channel.server.id) {
                     this.boundChannels[id] = new Player(this.client, msg.author.voiceChannel, msg.channel, key);
                     msg.reply("Binding to **" + this.boundChannels[id].voice.name + "** and **" + this.boundChannels[id].text.name + "**");
-                    this.boundChannels[id].init(msg);
+                    this.boundChannels[id].init(msg, (error)=>{
+                        console.log("Bound thing finished maybe");
+                        if(error) {
+                            console.log(error);
+                            msg.reply(error);
+                            delete this.boundChannels[id];
+                        }
+                    });
                 }
                 else {
                     msg.reply("You must be in a voice channel in this server to use this command here. If you are currently in a voice channel please rejoin it.")
