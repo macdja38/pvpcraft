@@ -31,6 +31,9 @@ var defaults = {
     "prefix": []
 };
 
+var Website = require("./www");
+var website = new Website(8000);
+
 var hasBeenReady = false;
 
 var moduleList = [];
