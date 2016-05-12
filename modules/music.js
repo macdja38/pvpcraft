@@ -119,7 +119,7 @@ module.exports = class music {
                             }
                         }
                         else {
-                            msg.reply(video.votes.length + " / " + (this.boundChannels[id].voice.members.length / 3 + 1) + " votes needed to skip " +
+                            msg.reply(video.votes.length + " / " + (Math.floor(this.boundChannels[id].voice.members.length / 3) + 1) + " votes needed to skip " +
                                 video.prettyPrint());
                         }
                     }
