@@ -26,7 +26,7 @@ module.exports = class music {
     }
 
     getCommands() {
-        return ["init", "play", "skip", "list", "next", "destroy", "logchannel"];
+        return ["init", "play", "skip", "list", "time", "shuffle", "next", "destroy", "logchannel"];
     }
 
     onDisconnect() {
@@ -75,7 +75,7 @@ module.exports = class music {
             }
             return true;
         }
-
+        
         if (command.command === "play" && perms.check(msg, "music.play")) {
             if (this.boundChannels.hasOwnProperty(id)) {
                 if (command.arguments.length > 0) {
@@ -90,11 +90,51 @@ module.exports = class music {
             return true;
         }
 
-        if ((command.command === "next" || command.command === "skip") && perms.check(msg, "music.skip")) {
+        if ((command.command === "next" || command.command === "skip") && perms.check(msg, "music.voteskip")) {
             if (this.boundChannels.hasOwnProperty(id)) {
-                this.boundChannels[id].skipSong();
+                if(this.boundChannels[id].currentVideo) {
+                    var index = command.arguments[0] ? parseInt(command.arguments[0]) - 1 : -1;
+                    console.log(index);
+                    var isForced = !!(perms.check(msg, "music.forceskip") && command.flags.indexOf('f')>-1);
+                    var video;
+                    if(index === -1) {
+                        video = this.boundChannels[id].currentVideo;
+                    }
+                    else if(this.boundChannels[id].queue.hasOwnProperty(index)) {
+                        video = this.boundChannels[id].queue[index];
+                    }
+                    else {
+                        msg.reply("Could not find find the song");
+                        return true;
+                    }
+                    if(video.votes.indexOf(msg.author.id) < 0 || isForced) {
+                        video.votes.push(msg.author.id);
+                        if (video.votes.length > (this.boundChannels[id].voice.members.length / 3) || isForced) {
+                            msg.reply("Removing " + video.prettyPrint() + " From the queue");
+                            if(index === -1) {
+                                this.boundChannels[id].skipSong();
+                            }
+                            else {
+                                this.boundChannels[id].queue.splice(index, 1);
+                            }
+                        }
+                        else {
+                            msg.reply(video.votes.length + " / " + (Math.floor(this.boundChannels[id].voice.members.length / 3) + 1) + " votes needed to skip " +
+                                video.prettyPrint());
+                        }
+                    }
+                    else {
+                        msg.reply("Sorry, you may only vote to skip once per song.");
+                        return true;
+                    }
+                }
+                else {
+                    msg.reply("No song's to skip, queue a song using //play <youtube url of video or playlist>");
+                    return true;
+                }
             } else {
-                msg.reply("Please bind a channel first using " + command.prefix + "init")
+                msg.reply("Please bind a channel first using " + command.prefix + "init");
+                return true;
             }
             return true;
         }
@@ -113,9 +153,35 @@ module.exports = class music {
         if (command.commandnos === "list" && perms.check(msg, "music.list")) {
             if (this.boundChannels.hasOwnProperty(id)) {
                 if(this.boundChannels[id].currentVideo) {
-                    msg.channel.sendMessage(this.boundChannels[id].getPrettyList());
+                    msg.channel.sendMessage(this.boundChannels[id].prettyList(2000));
                 } else {
                     msg.channel.sendMessage("Sorry, no song's found in playlist. use " + command.prefix + "play <youtube vid or playlist> to add one.")
+                }
+            } else {
+                msg.channel.sendMessage("Sorry, Bot is not currently in a voice channel use " + command.prefix + "init while in a voice channel to bind it.")
+            }
+            return true;
+        }
+
+        if (command.commandnos === "time" && perms.check(msg, "music.time")) {
+            if (this.boundChannels.hasOwnProperty(id)) {
+                if(this.boundChannels[id].currentVideo) {
+                    msg.channel.sendMessage("Currently " + this.boundChannels[id].prettyTime() + " into " + this.boundChannels[id].currentVideo.prettyPrint());
+                } else {
+                    msg.channel.sendMessage("Sorry, no song's found in playlist. use " + command.prefix + "play <youtube vid or playlist> to add one.")
+                }
+            } else {
+                msg.channel.sendMessage("Sorry, Bot is not currently in a voice channel use " + command.prefix + "init while in a voice channel to bind it.")
+            }
+            return true;
+        }
+
+        if (command.command === "shuffle" && perms.check(msg, "music.shuffle")) {
+            if (this.boundChannels.hasOwnProperty(id)) {
+                if(this.boundChannels[id].queue.length > 1) {
+                    msg.channel.sendMessage(this.boundChannels[id].shuffle());
+                } else {
+                    msg.channel.sendMessage("Sorry, not enough song's in playlist.")
                 }
             } else {
                 msg.channel.sendMessage("Sorry, Bot is not currently in a voice channel use " + command.prefix + "init while in a voice channel to bind it.")
@@ -142,3 +208,4 @@ module.exports = class music {
         return false;
     }
 };
+
