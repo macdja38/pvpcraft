@@ -1,5 +1,9 @@
 {
   "token": "Token",
   "key": "key",
-  "youtubeApiKey": "key"
+  "youtubeApiKey": "key",
+  "reThinkDB": {
+    "host": "localhost",
+    "port": "28015"
+  }
 }

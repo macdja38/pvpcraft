@@ -4,6 +4,9 @@
     "url": "https://pvpcraft.ca/pvpbotperms/?server=",
     "admins": ["85257659694993408"]
   },
+  "middleware": {
+    "logging": "./middleware/logging.js"
+  },
   "modules": {
     "warframe": "./modules/warframe.js",
     "permissionsManager": "./modules/permissionsManager.js",

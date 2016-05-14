@@ -7,7 +7,6 @@ var Discord = require("discord.js");
 var client = new Discord.Client({forceFetchUsers: true, autoReconnect: true});
 
 var Configs = require("./lib/config.js");
-console.log(Configs);
 var config = new Configs("config");
 var auth = new Configs("auth");
 
@@ -22,7 +21,6 @@ var Parse = require("./lib/newParser.js");
 var colors = require('colors');
 
 var Permissions = require("./lib/permissions.js");
-console.log(Permissions);
 var perms = new Permissions(config);
 
 var request = require('request');
@@ -34,6 +32,7 @@ var defaults = {
 var hasBeenReady = false;
 
 var moduleList = [];
+var middlewareList = [];
 
 var mention;
 var name;
@@ -43,6 +42,10 @@ client.on('message', (msg)=> {
     if (msg.author.id === id) return;
     var t1 = now();
     var l;
+    var mod;
+    var ware;
+
+    // handle per server prefixes.
     if (msg.channel.server) {
         l = config.get(msg.channel.server.id, defaults).prefix;
         if (l == null) {
@@ -51,7 +54,33 @@ client.on('message', (msg)=> {
     } else {
         l = defaults.prefix;
     }
+    //Message middleware starts here.
+    for (var ware in middlewareList) {
+        if(middlewareList[ware].ware.onMessage) {
+            middlewareList[ware].ware.onMessage(msg, perms)
+        }
+    }
+    
     var command = Parse.command(l, msg, {"allowMention": id, "botName": name});
+    if(command) {
+        for (var ware in middlewareList) {
+            if (middlewareList[ware].ware.onCommand) {
+                middlewareList[ware].ware.onCommand(msg, command, perms, l)
+            }
+        }
+    }
+    for (var ware in middlewareList) {
+        if(middlewareList[ware].ware.changeMessage) {
+            msg = middlewareList[ware].ware.changeMessage(msg, perms)
+        }
+    }
+    if(command) {
+        for (var ware in middlewareList) {
+            if (middlewareList[ware].ware.changeCommand) {
+                command = middlewareList[ware].ware.changeCommand(msg, command, perms, l)
+            }
+        }
+    }
     if (command) {
         console.log("Command Used".blue);
         console.log(command);
@@ -104,8 +133,17 @@ function reload() {
     console.log("defaults");
     console.log(defaults);
     name = client.user.name;
-    for (var module of moduleList) {
-        console.log(module);
+    var middleware;
+    var module;
+    for (middleware of middlewareList) {
+        if(middleware.module) {
+            if (middleware.module.onDisconnect) {
+                console.log("Trying to Remove Listeners!".green);
+                middleware.module.onDisconnect();
+            }
+        }
+    }
+    for (module of moduleList) {
         if(module.module) {
             if (module.module.onDisconnect) {
                 console.log("Trying to Remove Listeners!".green);
@@ -113,15 +151,22 @@ function reload() {
             }
         }
     }
+    middlewareList = [];
     moduleList = [];
+    var middlewares = config.get("middleware");
     var modules = config.get("modules");
-    console.log(modules);
-    for (var module in modules) {
+    for (module in modules) {
         var Modul = require(modules[module]);
         var mod = new Modul(client, config);
         if(mod.onReady) mod.onReady();
         moduleList.push({"commands": mod.getCommands(), "module": mod});
     }
+    for (middleware in middlewares) {
+        var ware = new (require(middlewares[middleware]))(client, config);
+        if(ware.onReady) ware.onReady();
+        middlewareList.push({"ware": ware});
+    }
+    console.log(middlewareList);
     console.log(moduleList);
 }
 
@@ -139,6 +184,7 @@ client.on('disconnect', ()=>{
     }
 });
 
+//When a connection is made initialise stuff.
 client.on('ready', ()=> {
     id = client.user.id;
     mention = "<@" + id + ">";
@@ -154,6 +200,7 @@ client.on('ready', ()=> {
     }
 });
 
+//Initiate a connection To Discord.
 client.loginWithToken(auth.get("token", {}), (error)=>{
     if(error) {
         console.error("Error logging in.");
@@ -162,10 +209,16 @@ client.loginWithToken(auth.get("token", {}), (error)=>{
     }
 });
 
+//When bot is added to a new server tell carbon about it.
 client.on('serverCreated', ()=>{
     updateCarbon();
 });
 
+
+/**
+ * logout on SIGINT
+ * if logging out does not happen within 5s exit with an error.
+ */
 process.on('SIGINT', ()=> {
     setTimeout(() => {
         process.exit(1)
@@ -177,6 +230,10 @@ process.on('SIGINT', ()=> {
     });
 });
 
+
+/**
+ * Updates Carbonitrix's website telling it the bot's new server count.
+ */
 function updateCarbon() {
     console.log("Attempting to update Carbon".green);
     if(key) {
@@ -201,6 +258,17 @@ function updateCarbon() {
         );
     }
 }
+
+
+
+
+
+
+
+
+
+
+
 
 //meew0's solution to the ECONNRESET crash error
 process.on('uncaughtException', function(err) {
