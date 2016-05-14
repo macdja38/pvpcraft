@@ -8,7 +8,11 @@
     "warframe": "./modules/warframe.js",
     "permissionsManager": "./modules/permissionsManager.js",
     "moderation": "./modules/moderation.js",
-    "utilities": "./modules/utilities.js"
+    "utilities": "./modules/utilities.js",
+    "minecraft": "./modules/minecraft.js",
+    "music": "./modules/music.js",
+    "help": "./modules/help.js",
+    "evaluate": "./modules/evaluate.js"
   },
   "default": {
     "prefix": [
