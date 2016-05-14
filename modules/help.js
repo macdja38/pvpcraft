@@ -12,7 +12,7 @@ module.exports = class help {
     }
 
     getCommands() {
-        return ["help, command"];
+        return ["help", "command"];
     }
 
     onCommand(msg, command, perms, l) {
