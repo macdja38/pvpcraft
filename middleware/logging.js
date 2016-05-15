@@ -9,7 +9,7 @@ var utils = new Utils();
 var DB = require('../lib/database.js');
 var db = new DB();
 
-module.exports = class template {
+module.exports = class logging {
     constructor(cl) {
         this.client = cl;
     }
