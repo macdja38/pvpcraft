@@ -240,7 +240,7 @@ process.on('SIGINT', ()=> {
  */
 function updateCarbon() {
     console.log("Attempting to update Carbon".green);
-    if (process.uptime() < 15000) {
+    if (process.uptime() < 60) {
         console.log("Not updating carbon to ensure all servers are loaded".green)
         return;
     }
