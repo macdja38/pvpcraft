@@ -17,7 +17,7 @@ var myReadableStreamBuffer = new streamBuffers.ReadableStreamBuffer({
     chunkSize: 2048     // in bytes.
 });
 
-module.exports = class template {
+module.exports = class minecraft {
     constructor(cl) {
         this.client = cl;
     }

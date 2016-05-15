@@ -8,7 +8,7 @@ var utils = new Utils();
 
 var colors = require('colors');
 
-class Mod {
+module.exports = class moderation {
     constructor(cl, config) {
         this.client = cl;
         this.logging = {};
@@ -474,5 +474,3 @@ function roleIn(role, newRoles) {
     }
     return false;
 }
-
-module.exports = Mod;

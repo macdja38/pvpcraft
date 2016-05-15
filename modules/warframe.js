@@ -16,31 +16,31 @@ var request = require('request');
 
 var _ = require('underscore');
 
-var Warframe = function (cl, config) {
-    Warframe.client = cl;
-    Warframe.config = config;
+var warframe = function (cl, config) {
+    warframe.client = cl;
+    warframe.config = config;
 };
 
 var commands = ["setupalerts", "tracking", "alert", "deal", "darvo", "trader", "voidtrader", "baro", "trial", "raid", "trialstat", "wiki", "sortie", "farm", "damage", "primeacces", "acces", "update", "update", "armorstat", "armourstat", "armor", "armour"];
 
-Warframe.prototype.getCommands = function () {
+warframe.prototype.getCommands = function () {
     return commands
 };
 
-Warframe.prototype.checkMisc = function (msg, perms, l) {
+warframe.prototype.checkMisc = function (msg, perms, l) {
     if (msg.content.toLowerCase().indexOf("soon") == 0 && msg.content.indexOf(":tm:") < 0 && perms.check(msg, "warframe.misc.soon")) {
-        Warframe.client.sendMessage(msg.channel, "Soon:tm:");
+        warframe.client.sendMessage(msg.channel, "Soon:tm:");
         return true;
     }
     return false;
 };
 
-Warframe.prototype.onCommand = function (msg, command, perms, l) {
+warframe.prototype.onCommand = function (msg, command, perms, l) {
     console.log("WARFRAME initiated");
     //console.log(command);
     if ((command.commandnos === 'deal' || command.command === 'darvo') && perms.check(msg, "warframe.deal")) {
         worldState.get(function (state) {
-            Warframe.client.sendMessage(msg.channel, "```xl\n" + "Darvo is selling " +
+            warframe.client.sendMessage(msg.channel, "```xl\n" + "Darvo is selling " +
                 parseState.getName(state.DailyDeals[0].StoreItem) +
                 " for " + state.DailyDeals[0].SalePrice +
                 "p (" +
@@ -61,7 +61,7 @@ Warframe.prototype.onCommand = function (msg, command, perms, l) {
     if ((command.commandnos === 'tracking') && perms.check(msg, "admin.warframe.setupalerts")) {
         console.log(command);
         if (command.options.add) {
-            var config = Warframe.config.get(msg.channel.server.id,
+            var config = warframe.config.get(msg.channel.server.id,
                 {
                     "warframeAlerts": {
                         "tracking": false,
@@ -87,7 +87,7 @@ Warframe.prototype.onCommand = function (msg, command, perms, l) {
                     return;
                 }
                 config.warframeAlerts.items[role.name] = role.id;
-                Warframe.config.set(msg.channel.server.id, config);
+                warframe.config.set(msg.channel.server.id, config);
                 console.log(config);
                 msg.reply("Created role " + role.name + " with id " + role.id);
             });
@@ -107,10 +107,10 @@ Warframe.prototype.onCommand = function (msg, command, perms, l) {
                     rep += "item: " + parseState.getName(item.ItemType) + " - price:" + item.PrimePrice + " ducats " + item.RegularPrice + "cr\n";
                 }
                 rep += "```"
-                Warframe.client.sendMessage(msg.channel, rep);
+                warframe.client.sendMessage(msg.channel, rep);
             }
             else {
-                Warframe.client.sendMessage(msg.channel, "```xl\nBaro appearing at " + state.VoidTraders[0].Node + " in " +
+                warframe.client.sendMessage(msg.channel, "```xl\nBaro appearing at " + state.VoidTraders[0].Node + " in " +
                     utils.secondsToTime(state.VoidTraders[0].Activation.sec - state.Time) + "\n```");
             }
         });
@@ -118,7 +118,7 @@ Warframe.prototype.onCommand = function (msg, command, perms, l) {
     }
 
     else if ((command.commandnos === 'trial' || command.commandnos === 'raid' || command.commandnos === 'trialstat') && perms.check(msg, "warframe.trial")) {
-        Warframe.client.sendMessage(msg.channel,
+        warframe.client.sendMessage(msg.channel,
             "Hek: \<http://tinyurl.com/qb752oj\> Nightmare: \<http://tinyurl.com/p8og6xf\> Jordas: \<http://tinyurl.com/prpebzh\>");
         return true;
     }
@@ -144,7 +144,7 @@ Warframe.prototype.onCommand = function (msg, command, perms, l) {
                         if (rewards != "") rewards += " + ";
                         if (alert.MissionInfo.missionReward.credits) rewards += alert.MissionInfo.missionReward.credits + " credits";
                     }
-                    Warframe.client.sendMessage(msg.channel,
+                    warframe.client.sendMessage(msg.channel,
                         "```xl\n" +
                         alert.MissionInfo.location + " levels " + alert.MissionInfo.minEnemyLevel + "-" + alert.MissionInfo.maxEnemyLevel + "\n" +
                         parseState.getLevel(alert.MissionInfo.descText) + "\n" +
@@ -163,7 +163,7 @@ Warframe.prototype.onCommand = function (msg, command, perms, l) {
     else if (command.command === 'wiki' && perms.check(msg, "warframe.wiki")) {
         //use wikia's api to search for the item.
         if (command.arguments.length === 0) {
-            Warframe.client.sendMessage(msg.channel, "Please provide something to search for!");
+            warframe.client.sendMessage(msg.channel, "Please provide something to search for!");
             return true;
         }
         request.post("http://warframe.wikia.com/api/v1/Search/List", {
@@ -173,12 +173,12 @@ Warframe.prototype.onCommand = function (msg, command, perms, l) {
             }
         }, function (err, response, body) {
             if (err || response.statusCode === 404) {
-                Warframe.client.sendMessage(msg.channel, "Could not find **" + utils.clean(command.arguments.join(' ')) + "**");
+                warframe.client.sendMessage(msg.channel, "Could not find **" + utils.clean(command.arguments.join(' ')) + "**");
             } else if (response.statusCode !== 200) {
                 console.error(' returned HTTP status ' + response.statusCode);
             } else {
                 try {
-                    Warframe.client.sendMessage(msg.channel, JSON.parse(body).items[0].url);
+                    warframe.client.sendMessage(msg.channel, JSON.parse(body).items[0].url);
                 } catch (e) {
                     console.error('Invalid JSON from http://warframe.wikia.com/api/v1/Search/List while searching the wiki');
                 }
@@ -205,19 +205,19 @@ Warframe.prototype.onCommand = function (msg, command, perms, l) {
                 }
             }
             text += "```";
-            Warframe.client.sendMessage(msg.channel, text);
+            warframe.client.sendMessage(msg.channel, text);
             return true;
         });
         return true;
     }
 
     else if (command.command === 'farm' && perms.check(msg, "warframe.farm")) {
-        Warframe.client.sendMessage(msg.channel, "You can probably find that resource here: \<https://steamcommunity.com/sharedfiles/filedetails/?id=181630751\>");
+        warframe.client.sendMessage(msg.channel, "You can probably find that resource here: \<https://steamcommunity.com/sharedfiles/filedetails/?id=181630751\>");
         return true;
     }
 
     else if ((command.commandnos === 'damage' || command.command === 'element') && perms.check(msg, "warframe.damage")) {
-        Warframe.client.sendMessage(msg.channel, "```xl\nDamage 2.0: https://pvpcraft.ca/wfd2.png Thanks for image Telkhines\n```");
+        warframe.client.sendMessage(msg.channel, "```xl\nDamage 2.0: https://pvpcraft.ca/wfd2.png Thanks for image Telkhines\n```");
         return true;
     }
 
@@ -231,7 +231,7 @@ Warframe.prototype.onCommand = function (msg, command, perms, l) {
                 }
             }
             if (text != "```xl\n") {
-                Warframe.client.sendMessage(msg.channel, text + "```")
+                warframe.client.sendMessage(msg.channel, text + "```")
             }
         });
         return true;
@@ -252,7 +252,7 @@ Warframe.prototype.onCommand = function (msg, command, perms, l) {
                 }
             }
             if (String !== "```xl\n") {
-                Warframe.client.sendMessage(msg.channel, String + "```");
+                warframe.client.sendMessage(msg.channel, String + "```");
             }
         });
         return true;
@@ -262,7 +262,7 @@ Warframe.prototype.onCommand = function (msg, command, perms, l) {
         command.commandnos === 'armourstat' || command.commandnos === 'armour') && perms.check(msg, "warframe.armor")) {
         (function () {
             if (command.arguments.length < 1 || command.arguments.length == 2 || command.arguments.length > 3) {
-                Warframe.client.sendMessage(msg.channel, "```xl\npossible uses include:\n" +
+                warframe.client.sendMessage(msg.channel, "```xl\npossible uses include:\n" +
                     command.prefix + "armor (Base Armor) (Base Level) (Current Level) calculate armor and stats.\n" +
                     command.prefix + "armor (Current Armor)\n```");
                 return true;
@@ -270,7 +270,7 @@ Warframe.prototype.onCommand = function (msg, command, perms, l) {
             var text = "```xl\n";
             if (command.arguments.length == 3) {
                 if ((parseInt(command.arguments[2]) - parseInt(command.arguments[1])) < 0) {
-                    Warframe.client.sendMessage(msg.channel, "```xl\nPlease check your input values\n```");
+                    warframe.client.sendMessage(msg.channel, "```xl\nPlease check your input values\n```");
                     return true;
                 }
                 var armor = parseInt(command.arguments[0]) * (1 + (Math.pow((parseInt(command.arguments[2]) - parseInt(command.arguments[1])), 1.75) / 200));
@@ -280,11 +280,11 @@ Warframe.prototype.onCommand = function (msg, command, perms, l) {
                 var armor = parseInt(command.arguments[0]);
             }
             text += armor / (armor + 300) * 100 + "% damage reduction\n";
-            Warframe.client.sendMessage(msg.channel, text + "```");
+            warframe.client.sendMessage(msg.channel, text + "```");
         })();
         return true;
     }
     return false;
 };
 
-module.exports = Warframe;
+module.exports = warframe;
