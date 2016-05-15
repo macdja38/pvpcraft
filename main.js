@@ -11,7 +11,7 @@ var config = new Configs("config");
 var auth = new Configs("auth");
 
 var key = auth.get("key", null);
-if(key == "key") {
+if (key == "key") {
     key = null;
 }
 
@@ -54,28 +54,35 @@ client.on('message', (msg)=> {
     } else {
         l = defaults.prefix;
     }
+
     //Message middleware starts here.
-    for (var ware in middlewareList) {
-        if(middlewareList[ware].ware.onMessage) {
+    for (ware in middlewareList) {
+        if (middlewareList[ware].ware.onMessage) {
             middlewareList[ware].ware.onMessage(msg, perms)
         }
     }
-    
+
     var command = Parse.command(l, msg, {"allowMention": id, "botName": name});
-    if(command) {
-        for (var ware in middlewareList) {
+    //Reload command starts here.
+    if (command.command === "reload" && msg.author.id === "85257659694993408") {
+        reloadTarget(msg, command, perms, l, moduleList, middlewareList)
+    }
+
+    //Command middleware starts here.
+    if (command) {
+        for (ware in middlewareList) {
             if (middlewareList[ware].ware.onCommand) {
                 middlewareList[ware].ware.onCommand(msg, command, perms, l)
             }
         }
     }
-    for (var ware in middlewareList) {
-        if(middlewareList[ware].ware.changeMessage) {
+    for (ware in middlewareList) {
+        if (middlewareList[ware].ware.changeMessage) {
             msg = middlewareList[ware].ware.changeMessage(msg, perms)
         }
     }
-    if(command) {
-        for (var ware in middlewareList) {
+    if (command) {
+        for (ware in middlewareList) {
             if (middlewareList[ware].ware.changeCommand) {
                 command = middlewareList[ware].ware.changeCommand(msg, command, perms, l)
             }
@@ -83,10 +90,7 @@ client.on('message', (msg)=> {
     }
     if (command) {
         console.log("Command Used".blue);
-        console.log(command);
-        for (var mod in moduleList) {
-            //console.log(command.command);
-            //console.log(moduleList[mod].commands);
+        for (mod in moduleList) {
             //console.log(moduleList[mod].commands.indexOf(command.command));
             if (moduleList[mod].commands.indexOf(command.commandnos) > -1) {
                 try {
@@ -102,7 +106,7 @@ client.on('message', (msg)=> {
     }
     else {
         //apply misc responses.
-        for (var mod in moduleList) {
+        for (mod in moduleList) {
             //console.log(command.command);
             //console.log(moduleList[mod].commands);
             //console.log(moduleList[mod].commands.indexOf(command.command));
@@ -119,11 +123,11 @@ client.on('message', (msg)=> {
         }
     }
     var t2 = now();
-    if(msg.channel.server) {
+    if (msg.channel.server) {
         console.log("s: ".magenta + msg.channel.server.name + " c: ".blue + msg.channel.name + " u: ".cyan +
-            msg.author.username +  " m: ".green + msg.content.replace(/\n/g, "\n    ") + " in ".yellow + (t2 - t1) + "ms".red);
+            msg.author.username + " m: ".green + msg.content.replace(/\n/g, "\n    ") + " in ".yellow + (t2 - t1) + "ms".red);
     } else {
-        console.log("u: ".cyan + msg.author.username +  " m: ".green + msg.content.replace(/\n/g, "\n    ").rainbow +
+        console.log("u: ".cyan + msg.author.username + " m: ".green + msg.content.replace(/\n/g, "\n    ").rainbow +
             " in ".yellow + (t2 - t1) + "ms".red);
     }
 });
@@ -136,7 +140,7 @@ function reload() {
     var middleware;
     var module;
     for (middleware of middlewareList) {
-        if(middleware.module) {
+        if (middleware.module) {
             if (middleware.module.onDisconnect) {
                 console.log("Trying to Remove Listeners!".green);
                 middleware.module.onDisconnect();
@@ -144,7 +148,7 @@ function reload() {
         }
     }
     for (module of moduleList) {
-        if(module.module) {
+        if (module.module) {
             if (module.module.onDisconnect) {
                 console.log("Trying to Remove Listeners!".green);
                 module.module.onDisconnect();
@@ -158,27 +162,27 @@ function reload() {
     for (module in modules) {
         var Modul = require(modules[module]);
         var mod = new Modul(client, config);
-        if(mod.onReady) mod.onReady();
+        if (mod.onReady) mod.onReady();
         moduleList.push({"commands": mod.getCommands(), "module": mod});
     }
     for (middleware in middlewares) {
         var ware = new (require(middlewares[middleware]))(client, config);
-        if(ware.onReady) ware.onReady();
+        if (ware.onReady) ware.onReady();
         middlewareList.push({"ware": ware});
     }
     console.log(middlewareList);
     console.log(moduleList);
 }
 
-client.on('error', (error)=>{
+client.on('error', (error)=> {
     console.error(error);
     console.error(error.stack);
 });
 
-client.on('disconnect', ()=>{
+client.on('disconnect', ()=> {
     console.log("Disconnect".red);
-    for(var i in moduleList) {
-        if(moduleList[i].module.onDisconnect) {
+    for (var i in moduleList) {
+        if (moduleList[i].module.onDisconnect) {
             moduleList[i].module.onDisconnect();
         }
     }
@@ -194,15 +198,15 @@ client.on('ready', ()=> {
     console.log("Ready as " + client.user.username);
     console.log("Mention  " + mention);
     console.log("-------------------");
-    if(!hasBeenReady) {
+    if (!hasBeenReady) {
         hasBeenReady = true;
         setTimeout(updateCarbon, 3600000)
     }
 });
 
 //Initiate a connection To Discord.
-client.loginWithToken(auth.get("token", {}), (error)=>{
-    if(error) {
+client.loginWithToken(auth.get("token", {}), (error)=> {
+    if (error) {
         console.error("Error logging in.");
         console.error(error);
         console.error(error.stack);
@@ -210,7 +214,7 @@ client.loginWithToken(auth.get("token", {}), (error)=>{
 });
 
 //When bot is added to a new server tell carbon about it.
-client.on('serverCreated', ()=>{
+client.on('serverCreated', ()=> {
     updateCarbon();
 });
 
@@ -236,7 +240,11 @@ process.on('SIGINT', ()=> {
  */
 function updateCarbon() {
     console.log("Attempting to update Carbon".green);
-    if(key) {
+    if (process.uptime() < 15000) {
+        console.log("Not updating carbon to ensure all servers are loaded".green)
+        return;
+    }
+    if (key) {
         request(
             {
                 url: 'https://www.carbonitex.net/discord/data/botdata.php',
@@ -259,19 +267,26 @@ function updateCarbon() {
     }
 }
 
-
-
-
-
-
-
-
-
-
-
+function reloadTarget(msg, command, perms, l, moduleList, middlewareList) {
+    for (var module in moduleList) {
+        console.log('moduleList module module'.yellow);
+        if (moduleList[module].module.constructor.name === command.arguments[0]) {
+            console.log(moduleList[module].module);
+            if (moduleList[module].module.onDisconnect) {
+                moduleList[module].module.onDisconnect();
+            }
+            var modules = config.get("modules");
+            msg.reply("Reloading " + command.arguments[0]);
+            var mod = new (require(modules[command.arguments[0]]))(client, config);
+            if (mod.onReady) mod.onReady();
+            moduleList[module] = {"commands": mod.getCommands(), "module": mod};
+            msg.reply("Reloded " + command.arguments[0])
+        }
+    }
+}
 
 //meew0's solution to the ECONNRESET crash error
-process.on('uncaughtException', function(err) {
+process.on('uncaughtException', function (err) {
     // Handle ECONNRESETs caused by `next` or `destroy`
     if (err.code == 'ECONNRESET') {
         // Yes, I'm aware this is really bad node code. However, the uncaught exception
