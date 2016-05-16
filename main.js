@@ -21,17 +21,6 @@ if(auth.get("sentryURL", "") != "") {
             raven = new (require('raven')).Client(auth.data.sentryURL, {release: commit + "-" + branch});
             raven.patchGlobal(function(result) {
                 console.error("Error, reference code " + result);
-                if (err.code == 'ECONNRESET') {
-                } else {
-                    setTimeout(() => {
-                        process.exit(1)
-                    }, 5000);
-                    console.log("Logging out.");
-                    client.logout(()=> {
-                        console.log("Bye");
-                        process.exit(0);
-                    });
-                }
             });
             raven.on('logged', function(e){
                 console.log("Error reported to sentry!: ".green + e.id);
