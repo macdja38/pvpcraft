@@ -318,21 +318,20 @@ function updateCarbon() {
 
 function reloadTarget(msg, command, perms, l, moduleList, middlewareList) {
     for (var module in moduleList) {
-        console.log('moduleList module module'.yellow);
         if (moduleList[module].module.constructor.name === command.arguments[0]) {
-            console.log(moduleList[module].module);
             if (moduleList[module].module.onDisconnect) {
                 moduleList[module].module.onDisconnect();
             }
             var modules = config.get("modules");
+            delete require.cache[require.resolve(modules[command.arguments[0]])];
             msg.reply("Reloading " + command.arguments[0]);
+            console.log("Reloading ".yellow + command.arguments[0].yellow);
             var mod = new (require(modules[command.arguments[0]]))(client, config, raven);
             if (mod.onReady) mod.onReady();
-            console.log("New Module is");
-            console.log(mod);
-            delete moduleList[module];
-            moduleList[module] = {"commands": mod.getCommands(), "module": mod};
-            msg.reply("Reloded " + command.arguments[0])
+            moduleList[module].module = mod;
+            moduleList[module].commands = mod.getCommands();
+            console.log("Reloded ".yellow + command.arguments[0].yellow);
+            msg.reply("Reloded " + command.arguments[0]);
         }
     }
 }
