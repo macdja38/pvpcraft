@@ -2,6 +2,7 @@
  * Created by macdja38 on 2016-04-17.
  */
 "use strict";
+var git = require('git-rev');
 
 var Discord = require("discord.js");
 var client = new Discord.Client({forceFetchUsers: true, autoReconnect: true});
@@ -9,6 +10,44 @@ var client = new Discord.Client({forceFetchUsers: true, autoReconnect: true});
 var Configs = require("./lib/config.js");
 var config = new Configs("config");
 var auth = new Configs("auth");
+
+var raven;
+
+//error reporting, comment out if you don't want the bot calling home.
+if(auth.get("sentryURL", "") != "") {
+    console.log("Sentry Started".yellow);
+    git.long((commit)=>{
+        git.branch((branch)=>{
+            raven = new (require('raven')).Client(auth.data.sentryURL, {release: commit + "-" + branch});
+            raven.patchGlobal(function(result) {
+                console.error("Error, reference code " + result);
+                setTimeout(() => {
+                    process.exit(1)
+                }, 5000);
+                console.log("Logging out.");
+                client.logout(()=> {
+                    console.log("Bye");
+                    process.exit(0);
+                });
+            });
+            raven.on('logged', function(e){
+                console.log("Error reported to sentry!: ".green + e.id);
+            });
+
+            raven.on('error', function(e){
+                // The event contains information about the failure:
+                //   e.reason -- raw response body
+                //   e.statusCode -- response status code
+                //   e.response -- raw http response object
+
+                console.error('Could not report event to sentry');
+                console.error(e.reason);
+                console.error(e.statusCode);
+                console.error(e.response);
+            })
+        })
+    });
+}
 
 var key = auth.get("key", null);
 if (key == "key") {
@@ -98,6 +137,16 @@ client.on('message', (msg)=> {
                         break;
                     }
                 } catch (error) {
+                    raven.captureError(error, {
+                        user: msg.author,
+                        extra: {
+                            mod: mod,
+                            server: msg.channel.server,
+                            channel: msg.channel,
+                            command: command,
+                            msg: msg
+                        }
+                    });
                     console.error(error);
                     console.error(error.stack);
                 }
@@ -161,12 +210,12 @@ function reload() {
     var modules = config.get("modules");
     for (module in modules) {
         var Modul = require(modules[module]);
-        var mod = new Modul(client, config);
+        var mod = new Modul(client, config, raven);
         if (mod.onReady) mod.onReady();
         moduleList.push({"commands": mod.getCommands(), "module": mod});
     }
     for (middleware in middlewares) {
-        var ware = new (require(middlewares[middleware]))(client, config);
+        var ware = new (require(middlewares[middleware]))(client, config, raven);
         if (ware.onReady) ware.onReady();
         middlewareList.push({"ware": ware});
     }
@@ -241,7 +290,7 @@ process.on('SIGINT', ()=> {
 function updateCarbon() {
     console.log("Attempting to update Carbon".green);
     if (process.uptime() < 60) {
-        console.log("Not updating carbon to ensure all servers are loaded".green)
+        console.log("Not updating carbon to ensure all servers are loaded".green);
         return;
     }
     if (key) {
@@ -277,8 +326,11 @@ function reloadTarget(msg, command, perms, l, moduleList, middlewareList) {
             }
             var modules = config.get("modules");
             msg.reply("Reloading " + command.arguments[0]);
-            var mod = new (require(modules[command.arguments[0]]))(client, config);
+            var mod = new (require(modules[command.arguments[0]]))(client, config, raven);
             if (mod.onReady) mod.onReady();
+            console.log("New Module is");
+            console.log(mod);
+            delete moduleList[module];
             moduleList[module] = {"commands": mod.getCommands(), "module": mod};
             msg.reply("Reloded " + command.arguments[0])
         }
@@ -301,8 +353,10 @@ process.on('uncaughtException', function (err) {
         console.log(err.stack);
     } else {
         // Normal error handling
-        console.log(err);
-        console.log(err.stack);
-        process.exit(0);
+        if(raven) {
+            raven.captureException(err);
+        }
+        console.error(err);
+        process.exit(1);
     }
 });

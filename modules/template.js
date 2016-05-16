@@ -7,8 +7,9 @@ var Utils = require('../lib/utils');
 var utils = new Utils();
 
 module.exports = class template {
-    constructor(cl) {
+    constructor(cl, config, raven) {
         this.client = cl;
+        this.raven = raven;
     }
 
     getCommands() {

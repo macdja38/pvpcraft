@@ -9,10 +9,11 @@ var utils = new Utils();
 var colors = require('colors');
 
 module.exports = class moderation {
-    constructor(cl, config) {
+    constructor(cl, config, raven) {
         this.client = cl;
         this.logging = {};
         this.config = config;
+        this.raven = raven;
 
         //build the map of server id's and logging channels.
         for (var item in config.data) {
@@ -80,6 +81,14 @@ module.exports = class moderation {
             catch (err) {
                 console.error(err);
                 console.error(err.stack);
+                if(this.raven) {
+                    this.raven.captureException(err, {
+                        extra: {
+                            message: message,
+                            channel: channel
+                        }
+                    });
+                }
             }
         };
 
@@ -122,6 +131,14 @@ module.exports = class moderation {
             catch (err) {
                 console.error(err);
                 console.error(err.stack);
+                if(this.raven) {
+                    this.raven.captureException(err, {
+                        extra: {
+                            message: message,
+                            newMessage: newMessage
+                        }
+                    });
+                }
             }
         };
 
@@ -149,6 +166,13 @@ module.exports = class moderation {
                         if (newRole) {
                             text += "        Role added `" + newRole.name + "`\n";
                         } else {
+                            this.raven.captureError(new Error("Error finding role difference", {
+                                user: newUser,
+                                extra: {
+                                    oldMemberRoles: oldMember.roles,
+                                    newMemberRoles: newMember.roles
+                                }
+                            }));
                             console.error("Error finding adding new Role");
                             console.error(newMember.roles);
                             console.error(oldMember.roles);
@@ -159,7 +183,14 @@ module.exports = class moderation {
                         if (oldRole) {
                             text += "        Role removed `" + oldRole.name + "`\n";
                         } else {
-                            console.error("Error finding removed Role");
+                            this.raven.captureError(new Error("Error finding role difference", {
+                                user: newUser,
+                                extra: {
+                                    oldMemberRoles: oldMember.roles,
+                                    newMemberRoles: newMember.roles
+                                }
+                            }));
+                            console.error("Error removed Role");
                             console.error(newMember.roles);
                             console.error(oldMember.roles);
                         }
@@ -176,6 +207,15 @@ module.exports = class moderation {
             catch (err) {
                 console.error(err);
                 console.error(err.stack);
+                if(this.raven) {
+                    this.raven.captureException(err, {
+                        extra: {
+                            server: server,
+                            newUser: newUser,
+                            oldMember: oldMember
+                        }
+                    });
+                }
             }
         };
 
@@ -186,6 +226,14 @@ module.exports = class moderation {
             catch (err) {
                 console.error(err);
                 console.error(err.stack);
+                if(this.raven) {
+                    this.raven.captureException(err, {
+                        extra: {
+                            server: server,
+                            user: user
+                        }
+                    });
+                }
             }
         };
 
@@ -196,6 +244,14 @@ module.exports = class moderation {
             catch (err) {
                 console.error(err);
                 console.error(err.stack);
+                if(this.raven) {
+                    this.raven.captureException(err, {
+                        extra: {
+                            server: server,
+                            user: user
+                        }
+                    });
+                }
             }
         };
 
@@ -207,6 +263,14 @@ module.exports = class moderation {
             catch (err) {
                 console.error(err);
                 console.error(err.stack);
+                if(this.raven) {
+                    this.raven.captureException(err, {
+                        extra: {
+                            server: server,
+                            user: user
+                        }
+                    });
+                }
             }
         };
 
@@ -218,6 +282,14 @@ module.exports = class moderation {
             catch (err) {
                 console.error(err);
                 console.error(err.stack);
+                if(this.raven) {
+                    this.raven.captureException(err, {
+                        extra: {
+                            server: server,
+                            user: user
+                        }
+                    });
+                }
             }
         };
 
@@ -249,6 +321,14 @@ module.exports = class moderation {
             catch (err) {
                 console.error(err);
                 console.error(err.stack);
+                if(this.raven) {
+                    this.raven.captureException(err, {
+                        extra: {
+                            oldRole: oldRole,
+                            newRole: newRole
+                        }
+                    });
+                }
             }
         };
 
@@ -279,6 +359,14 @@ module.exports = class moderation {
             catch (err) {
                 console.error(err);
                 console.error(err.stack);
+                if(this.raven) {
+                    this.raven.captureException(err, {
+                        extra: {
+                            oldUser: oldUser,
+                            newUser: newUser
+                        }
+                    });
+                }
             }
         };
         this.logChannelCreated = (channel) => {
@@ -291,6 +379,13 @@ module.exports = class moderation {
             catch (err) {
                 console.error(err);
                 console.error(err.stack);
+                if(this.raven) {
+                    this.raven.captureException(err, {
+                        extra: {
+                            channel: channel
+                        }
+                    });
+                }
             }
         };
         this.logChannelUpdated = (oldChannel, newChannel) => {
@@ -329,6 +424,14 @@ module.exports = class moderation {
             catch (err) {
                 console.error(err);
                 console.error(err.stack);
+                if(this.raven) {
+                    this.raven.captureException(err, {
+                        extra: {
+                            oldChannel: oldChannel,
+                            newChannel: newChannel
+                        }
+                    });
+                }
             }
         };
         this.logChannelDeleted = (channel) => {
@@ -339,6 +442,13 @@ module.exports = class moderation {
             catch (err) {
                 console.error(err);
                 console.error(err.stack);
+                if(this.raven) {
+                    this.raven.captureException(err, {
+                        extra: {
+                            channel: channel
+                        }
+                    });
+                }
             }
         };
 
@@ -406,7 +516,7 @@ module.exports = class moderation {
         }
         return false;
     }
-}
+};
 
 function findOverrideChanges(thing1, thing2) {
     var changes = [];
@@ -457,7 +567,7 @@ function findNewOverrides(more, less) {
  */
 function findNewRoles(more, less) {
     for (var i of more) {
-        if (!i) console.error("Found a null role?");
+        if (!i) console.error(new Error("Found a null role 1?"));
         else if (!roleIn(i, less)) {
             return i;
         }
@@ -467,7 +577,7 @@ function findNewRoles(more, less) {
 
 function roleIn(role, newRoles) {
     for (var j of newRoles) {
-        if (!j) console.error("Found a null role?");
+        if (!j) console.error(new Error("Found a null role"));
         else if (role.id == j.id) {
             return true;
         }
