@@ -36,7 +36,6 @@ module.exports = class logging {
     onMessage(msg, perms) {
         //do something with the message like log it.
         db.logMessage(msg);
-        console.log("Got message")
     }
 
     /**
@@ -48,8 +47,6 @@ module.exports = class logging {
      */
     onCommand(msg, command, perms, l) {
         //do something with the command like logging it to a mod log
-        console.log("Got Command");
-
         //maybe you want to do something here? idk. one possible use for middleware would be a rate limiting module
     }
 
@@ -61,7 +58,6 @@ module.exports = class logging {
      */
     changeMessage(msg, perms) {
         //return a modified version of the message.
-        console.log("Changed Message");
         return msg;
     }
 
@@ -74,7 +70,6 @@ module.exports = class logging {
      * @returns command object (may be modified.)
      */
     changeCommand(msg, command, perms, l) {
-        console.log("Changed Command");
         //modify the command like rate limiting it.
         if(command.command === "ahh") {
             msg.reply("ahh");
