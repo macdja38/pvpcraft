@@ -36,7 +36,10 @@ module.exports = class permissionsManager {
                 msg.reply("You need help! visit \<https://pvpcraft.ca/pvpbot\> for more info");
                 return true;
             }
-
+            if(!msg.channel.server) {
+                msg.reply("Must be used from within a server");
+                return true;
+            }
             //command to set permissions.
             if(command.arguments[0] === "set") {
 
