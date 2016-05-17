@@ -2,7 +2,7 @@
   "private": true,
   "dependencies": {
     "discord.js": "hydrabolt/discord.js#indev",
-    "ytdl-core": "^0.7.14",
+    "ytdl-core": "^0.7.15",
     "superagent": "^1.6.1",
     "performance-now": "^0.2.0",
     "request": "^2.7.0",
