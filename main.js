@@ -126,43 +126,59 @@ client.on('message', (msg)=> {
             if (moduleList[mod].commands.indexOf(command.commandnos) > -1) {
                 try {
                     if (moduleList[mod].module.onCommand(msg, command, perms, l) === true) {
-                        break;
+                        return;
                     }
                 } catch (error) {
-                    raven.captureError(error, {
-                        user: msg.author,
-                        extra: {
-                            mod: mod,
-                            server: msg.channel.server,
-                            channel: msg.channel,
-                            command: command,
-                            msg: msg
-                        }
-                    });
+                    if(raven) {
+                        raven.captureError(error, {
+                            user: msg.author,
+                            extra: {
+                                mod: mod,
+                                server: msg.channel.server.id,
+                                server_name: msg.channel.server.name,
+                                channel: msg.channel.id,
+                                channel_name: msg.channel.name,
+                                command: command,
+                                msg: msg.content
+                            }
+                        });
+                    }
                     console.error(error);
                     console.error(error.stack);
                 }
             }
         }
     }
-    else {
         //apply misc responses.
         for (mod in moduleList) {
             //console.log(command.command);
             //console.log(moduleList[mod].commands);
             //console.log(moduleList[mod].commands.indexOf(command.command));
-            if (moduleList[mod].module.misc) {
+            if (moduleList[mod].module.checkMisc) {
                 try {
-                    if (moduleList[mod].module.misc(msg, perms, l) === true) {
+                    if (moduleList[mod].module.checkMisc(msg, perms, l) === true) {
                         break;
                     }
                 } catch (error) {
+                    if(raven) {
+                        raven.captureError(error, {
+                            user: msg.author,
+                            extra: {
+                                mod: mod,
+                                server: msg.channel.server.id,
+                                server_name: msg.channel.server.name,
+                                channel: msg.channel.id,
+                                channel_name: msg.channel.name,
+                                command: command,
+                                msg: msg.content
+                            }
+                        });
+                    }
                     console.error(error);
                     console.error(error.stack);
                 }
             }
         }
-    }
     var t2 = now();
     if (msg.channel.server) {
         console.log("s: ".magenta + msg.channel.server.name + " c: ".blue + msg.channel.name + " u: ".cyan +
