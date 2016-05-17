@@ -20,7 +20,6 @@ if(auth.get("sentryURL", "") != "") {
         git.branch((branch)=>{
             raven = new (require('raven')).Client(auth.data.sentryURL, {release: commit + "-" + branch});
             raven.patchGlobal(function(result) {
-                console.error("Error, reference code " + result);
             });
             raven.on('logged', function(e){
                 console.log("Error reported to sentry!: ".green + e.id);
