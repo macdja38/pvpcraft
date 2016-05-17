@@ -24,7 +24,7 @@ module.exports = class cleverBot {
     }
 
     checkMisc(msg, perms, l) {
-        if (msg.isMentioned(this.client.user) && perms.check(msg, "pvpcraft.cleverbot")) {
+        if (msg.isMentioned(this.client.user) && perms.check(msg, "cleverbot")) {
             this.client.startTyping(msg.channel);
             var quarry;
             if (msg.content.startsWith("<@" + this.client.user.id + ">")) {
@@ -34,7 +34,7 @@ module.exports = class cleverBot {
                 quarry = msg.content.substr(this.client.user.id.length + 4).replace("<@!" + this.client.user.id + ">", "CleverBot");
             }
             else {
-                quarry = msg.content.replace("<@" + bot.user.id + ">", "CleverBot")
+                quarry = msg.content.replace("<@" + this.client.user.id + ">", "CleverBot")
             }
             var self = this;
             console.log('Sent to Clever:' + quarry);
