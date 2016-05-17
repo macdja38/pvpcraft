@@ -24,7 +24,6 @@ module.exports = class cleverBot {
     }
 
     checkMisc(msg, perms, l) {
-        console.log("Clever got asked to check misc!");
         if (msg.isMentioned(this.client.user) && perms.check(msg, "pvpcraft.cleverbot")) {
             this.client.startTyping(msg.channel);
             var quarry;
