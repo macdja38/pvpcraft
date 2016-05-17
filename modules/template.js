@@ -16,15 +16,15 @@ module.exports = class template {
         return ["ao"];
     }
 
-    checkMisc() {
+    checkMisc(msg, perms) {
         return false;
     }
 
     onCommand(msg, command, perms, l) {
         console.log("Perms initiated");
         console.log(msg);
-        if(command.command === "ahh") {
-            msg.reply("ahh");
+        if(command.command === "ao") {
+            msg.reply("eo");
             return true;
         }
         return false;
