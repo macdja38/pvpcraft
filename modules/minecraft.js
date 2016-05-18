@@ -53,20 +53,30 @@ module.exports = class minecraft {
         }
 
         if (command.command === "mcavatar" && perms.check(msg, "minecraft.mcavatar")) {
-            if(command.arguments.length < 1) {
+            if (command.arguments.length < 1) {
                 msg.reply("usage " + command.prefix + "mcavatar <minecraft username>");
                 return true;
             }
-            msg.channel.sendMessage({file:{file:"https://mcapi.ca/avatar/2d/" + command.arguments[0] + "/100/" + ((command.flags.includes("b")) ? "false":"true"), name: command.arguments[0] + ".png"}})
+            msg.channel.sendMessage({
+                file: {
+                    file: "https://mcapi.ca/avatar/2d/" + command.arguments[0] + "/100/" + ((command.flags.includes("b")) ? "false" : "true"),
+                    name: command.arguments[0] + ".png"
+                }
+            });
             return true;
         }
 
         if (command.command === "mcskin" && perms.check(msg, "minecraft.mcskin")) {
-            if(command.arguments.length < 1) {
+            if (command.arguments.length < 1) {
                 msg.reply("usage " + command.prefix + "mcskin <minecraft username>");
                 return true;
             }
-            msg.channel.sendMessage({file:{file:"https://visage.surgeplay.com/full/404/" + command.arguments[0] + ".png", name: command.arguments[0] + ".png"}})
+            msg.channel.sendMessage({
+                file: {
+                    file: "https://visage.surgeplay.com/full/404/" + command.arguments[0] + ".png",
+                    name: command.arguments[0] + ".png"
+                }
+            });
             return true;
         }
         return false;
