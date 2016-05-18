@@ -31,8 +31,9 @@ module.exports = class moderation {
             if (this.logging.hasOwnProperty(server.id)) {
                 console.log("server name " + server.name);
                 this.client.sendMessage(this.logging[server.id], string, (error)=> {
-                    console.error(error);
-                    console.error(error.stack);
+                    if(error) {
+                        console.error(error);
+                    }
                 });
             }
         };
@@ -73,7 +74,9 @@ module.exports = class moderation {
                         this.client.sendMessage(this.logging[channel.server.id], "An un-cached message in " +
                             utils.clean(channel.name) + " was deleted, this probably means the bot was either recently restarted on the message was old.",
                             (error)=> {
-                                console.error(error)
+                                if(error) {
+                                    console.error(error)
+                                }
                             });
                     }
                 }
@@ -115,14 +118,18 @@ module.exports = class moderation {
                             this.client.sendMessage(this.logging[message.channel.server.id], utils.clean(newMessage.channel.name) +
                                 " | " + utils.fullNameB(message.author) + " changed: " + utils.bubble(message.content) +
                                 " to " + utils.bubble(newMessage.content), (error)=> {
-                                console.error(error)
+                                if(error) {
+                                    console.error(error)
+                                }
                             });
                         }
                         else {
                             this.client.sendMessage(this.logging[message.channel.server.id], utils.clean(newMessage.channel.name) +
                                 " | " + utils.fullNameB(message.author) + "\n```diff\n-" + utils.clean(message.content) +
                                 "\n+" + utils.clean(newMessage.content) + "\n```", (error)=> {
-                                console.error(error)
+                                if(error) {
+                                    console.error(error)
+                                }
                             });
                         }
                     }
@@ -146,20 +153,19 @@ module.exports = class moderation {
             try {
                 console.log("Member Update");
                 var newMember = server.detailsOfUser(newUser);
-                if (oldMember.roles.length != newMember.roles.length /*|| oldMember.mute != newMember.mute || oldMember.deaf != newMember.deaf*/ || oldMember.nick != newMember.nick) {
+                if (oldMember && newMember && (oldMember.roles.length != newMember.roles.length || oldMember.mute != newMember.mute || oldMember.deaf != newMember.deaf || oldMember.nick != newMember.nick)) {
                     var text = ":exclamation:User change detected in " + utils.fullNameB(newUser) + "\n";
                     if (oldMember.nick != newMember.nick) {
                         text += "        Nick changed from `" + utils.removeBlocks(oldMember.nick) + "` to `" + utils.removeBlocks(newMember.nick) + "`\n";
                     }
 
-                    /* Changes to the following are not properly tracked by the lib and do not trigger member updates.
                      if (oldMember.mute != newMember.mute) {
                      text += "        Is-muted changed from `" + oldMember.mute + "` to `" + newMember.mute + "`\n";
                      }
                      if (oldMember.deaf != newMember.deaf) {
                      text += "        Is-deaf changed from `" + oldMember.deaf + "` to `" + newMember.deaf + "`\n";
                      }
-                     */
+
 
                     if (oldMember.roles.length < newMember.roles.length) {
                         var newRole = findNewRoles(newMember.roles, oldMember.roles);
@@ -199,7 +205,9 @@ module.exports = class moderation {
                     if (this.logging.hasOwnProperty(server.id)) {
                         console.log("server name " + server.name);
                         this.client.sendMessage(this.logging[server.id], text, (error)=> {
-                            console.error(error)
+                            if(error) {
+                                console.error(error)
+                            }
                         });
                     }
                 }
