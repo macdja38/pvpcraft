@@ -231,6 +231,9 @@ function reload() {
 }
 
 client.on('error', (error)=> {
+    if(raven) {
+        raven.captureException(error);
+    }
     console.error(error);
     console.error(error.stack);
 });
