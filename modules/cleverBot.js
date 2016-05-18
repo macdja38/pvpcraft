@@ -24,7 +24,7 @@ module.exports = class cleverBot {
     }
 
     checkMisc(msg, perms, l) {
-        if (msg.isMentioned(this.client.user) && perms.check(msg, "cleverbot")) {
+        if (msg.isMentioned(this.client.user) && perms.check(msg, "cleverbot.misc")) {
             this.client.startTyping(msg.channel);
             var quarry;
             if (msg.content.startsWith("<@" + this.client.user.id + ">")) {
