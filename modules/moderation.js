@@ -517,9 +517,11 @@ module.exports = class moderation {
                     this.config.data[msg.channel.server.id] = {msgLog: this.logging[msg.channel.server.id].id};
                 }
                 this.config.save();
+                msg.reply(":thumbsup::skin-tone-2:");
                 return true;
             } else {
                 msg.reply("please properly define a channel to log using --channel #channelmention")
+                return true;
             }
         }
         return false;
