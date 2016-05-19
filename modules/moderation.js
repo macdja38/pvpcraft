@@ -507,8 +507,8 @@ module.exports = class moderation {
 
     onCommand(msg, command, perms, l) {
         console.log("Moderation initiated");
-        if (command.command == "setlog") {
-            if (/<#\d+>/.test(command.options.channel) && perms.check(msg, "moderation.tools.setlog")) {
+        if (command.command == "setlog" && perms.check(msg, "moderation.tools.setlog")) {
+            if (/<#\d+>/.test(command.options.channel)) {
                 console.log(this.config);
                 this.logging[msg.channel.server.id] = this.client.channels.get("id", command.options.channel.match(/<#(\d+)>/)[1]);
                 if (this.config.data[msg.channel.server.id]) {
