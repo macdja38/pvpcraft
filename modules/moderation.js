@@ -355,7 +355,8 @@ module.exports = class moderation {
                     }
                     console.log("User Change");
                     for (var serverid in this.logging) {
-                        if (this.client.servers.get("id", serverid).members.get("id", newUser.id)) {
+                        var server = this.client.servers.get("id", serverid);
+                        if (server && server.members.get("id", newUser.id)) {
                             console.log("server name " + this.client.servers.get("id", serverid).name);
                             this.client.sendMessage(this.logging[serverid], text, (error)=> {
                                 console.error(error)
@@ -520,7 +521,7 @@ module.exports = class moderation {
                 msg.reply(":thumbsup::skin-tone-2:");
                 return true;
             } else {
-                msg.reply("please properly define a channel to log using --channel #channelmention")
+                msg.reply("please properly define a channel to log using --channel #channelmention");
                 return true;
             }
         }
