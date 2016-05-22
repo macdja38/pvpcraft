@@ -15,7 +15,8 @@
     "minecraft": "./modules/minecraft.js",
     "music": "./modules/music.js",
     "help": "./modules/help.js",
-    "evaluate": "./modules/evaluate.js"
+    "evaluate": "./modules/evaluate.js",
+    "pokemon": "./modules/pokemon.js"
   },
   "default": {
     "prefix": [
