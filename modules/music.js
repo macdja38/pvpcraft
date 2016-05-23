@@ -80,7 +80,7 @@ module.exports = class music {
         if (command.command === "play" && perms.check(msg, "music.play")) {
             if (this.boundChannels.hasOwnProperty(id)) {
                 if (command.arguments.length > 0) {
-                    this.boundChannels[id].enqueue(msg, command.arguments[0])
+                    this.boundChannels[id].enqueue(msg, command.arguments)
                 }
                 else {
                     msg.reply("Please specify a youtube video!")
