@@ -48,7 +48,7 @@ module.exports = class moderation {
                     if (message) {
                         //grab url's to the message's attachments
                         console.log("Message Delete");
-                        var string = utils.clean(channel.name) + " | " + utils.fullNameB(message.author) + " deleted:\n";
+                        var string = utils.clean(channel.name) + " | " + utils.fullNameB(message.author) + "'s message was deleted:\n";
                         //if their's content log it.
                         if (message.content) {
                             if (message.content.length > 144 || /[^0-9a-zA-Z\s\.!\?]/.test(message.content)) {
