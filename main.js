@@ -217,12 +217,12 @@ function reload() {
     var modules = config.get("modules");
     for (module in modules) {
         var Modul = require(modules[module]);
-        var mod = new Modul(client, config, raven);
+        var mod = new Modul(client, config, raven, auth);
         if (mod.onReady) mod.onReady();
         moduleList.push({"commands": mod.getCommands(), "module": mod});
     }
     for (middleware in middlewares) {
-        var ware = new (require(middlewares[middleware]))(client, config, raven);
+        var ware = new (require(middlewares[middleware]))(client, config, raven, auth);
         if (ware.onReady) ware.onReady();
         middlewareList.push({"ware": ware});
     }
