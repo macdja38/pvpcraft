@@ -13,7 +13,6 @@ var auth = new Configs("auth");
 
 var raven;
 
-//error reporting, comment out if you don't want the bot calling home.
 if(auth.get("sentryURL", "") != "") {
     console.log("Sentry Started".yellow);
     git.long((commit)=>{
@@ -120,6 +119,7 @@ client.on('message', (msg)=> {
     }
     if (command) {
         console.log("Command Used".blue);
+        console.log(command);
         for (mod in moduleList) {
             //console.log(moduleList[mod].commands.indexOf(command.command));
             if (moduleList[mod].commands.indexOf(command.commandnos) > -1) {
@@ -128,6 +128,7 @@ client.on('message', (msg)=> {
                         return;
                     }
                 } catch (error) {
+                    msg.reply("Sorry their was an error processing your command. the error is " + error);
                     if(raven) {
                         raven.captureError(error, {
                             user: msg.author,
@@ -140,10 +141,11 @@ client.on('message', (msg)=> {
                                 command: command,
                                 msg: msg.content
                             }
+                        }, (something)=>{
+                            console.log(something);
                         });
                     }
                     console.error(error);
-                    console.error(error.stack);
                 }
             }
         }
