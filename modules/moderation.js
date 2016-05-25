@@ -467,7 +467,7 @@ module.exports = class moderation {
         this.client.removeListener("presence", this.logPresence);
         this.client.removeListener("serverRoleUpdated", this.logRole);
         this.client.removeListener("serverMemberUpdated", this.logMember);
-        this.client.removeListener("serverMemberAdded", this.logMemberAdded);
+        this.client.removeListener("serverNewMember", this.logMemberAdded);
         this.client.removeListener("serverMemberRemoved", this.logMemberRemoved);
         this.client.removeListener("userBanned", this.logMemberBanned);
         this.client.removeListener("userUnbanned", this.logMemberUnbanned);
