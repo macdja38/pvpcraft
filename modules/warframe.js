@@ -12,13 +12,41 @@ var parseState = new ParseState();
 var Utils = require('../lib/utils');
 var utils = new Utils();
 
+var Twitter = require('twitter');
+
+var twitter;
+
 var request = require('request');
 
 var _ = require('underscore');
 
-var warframe = function (cl, config) {
+var warframe = function (cl, config, raven, auth) {
     warframe.client = cl;
     warframe.config = config;
+    warframe.raven = raven;
+    var twitter_auth = auth.get("twitter", false);
+    console.log(twitter_auth);
+    warframe.twitter = new Twitter(twitter_auth);
+    warframe.twitter.stream('statuses/filter', {follow: "1344755923"}, (stream)=>{
+        warframe.stream = stream;
+
+        stream.on('data', (tweet)=>{
+            if(tweet.user.id_str === '1344755923' && !tweet.retweeted_status) {
+                //TODO: Fix this absolute garbage.
+                warframe.client.sendMessage(warframe.client.servers.get("id", "77176186148499456").channels.get("id", "137095541195669504"), tweet.text, (error)=> {
+                    if (error) {
+                        console.log(error);
+                    }
+                });
+                console.log(tweet);
+                console.log(tweet.text);
+            }
+        });
+
+        stream.on('error', (error)=> {
+            console.log(error)
+        });
+    });
 };
 
 var commands = ["setupalerts", "tracking", "alert", "deal", "darvo", "trader", "voidtrader", "baro", "trial", "raid", "trialstat", "wiki", "sortie", "farm", "damage", "primeacces", "acces", "update", "update", "armorstat", "armourstat", "armor", "armour"];
@@ -57,7 +85,6 @@ warframe.prototype.onCommand = function (msg, command, perms, l) {
         return true;
     }
     //TODO: track alerts, add command to set broadcast channel, regex alerts for role names and mention those roles in broadcast channels.
-    //TODO: make roles created by bot mentionable
     if ((command.commandnos === 'tracking') && perms.check(msg, "admin.warframe.setupalerts")) {
         console.log(command);
         if (command.options.add) {
@@ -65,31 +92,35 @@ warframe.prototype.onCommand = function (msg, command, perms, l) {
                 {
                     "warframeAlerts": {
                         "tracking": false,
-                        "items": {
-                        }
+                        "items": {}
                     }
                 }
             );
-            if(!config.warframeAlerts) {
+            if (!config.warframeAlerts) {
                 config.warframeAlerts = {"tracking": false, "items": {}};
             }
-            if(typeof(config.warframeAlerts.tracking) !== "boolean") {
+            if (typeof(config.warframeAlerts.tracking) !== "boolean") {
                 config.warframeAlerts.tracking = false;
             }
-            if(!config.warframeAlerts.items) {
+            if (!config.warframeAlerts.items) {
                 config.warframeAlerts.items = {};
             }
-            msg.channel.server.createRole({name: command.options.add, permissions:[], position:10}, (error, role) => {
-                if(error) {
-                    msg.reply("error creating role, check to see if I have enough permissions.");
-                    console.log(error);
-                    console.log(error.stack);
+            msg.channel.server.createRole({name: command.options.add, permissions: [], mentionable: true}, (error, role) => {
+                if (error) {
+                    if(error.status == 403) {
+                        msg.reply("Error, insufficient permissions, please give me manage roles.");
+                    }
+                    else {
+                        msg.reply("Unexpected error please report the issue https://pvpcraft.ca/pvpbot");
+                        console.log(error);
+                        console.log(error.stack);
+                    }
                     return;
                 }
                 config.warframeAlerts.items[role.name] = role.id;
                 warframe.config.set(msg.channel.server.id, config);
                 console.log(config);
-                msg.reply("Created role " + role.name + " with id " + role.id);
+                msg.reply("Created role " + utils.clean(role.name) + " with id `" + role.id + "`");
             });
             return true;
         }
