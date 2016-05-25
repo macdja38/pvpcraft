@@ -26,7 +26,6 @@ module.exports = class permissionsManager {
 
     onCommand(msg, command, perms, l) {
         console.log("Perms initiated");
-        console.log(command);
 
         //commands that deal with permissions
         if(command.command === "pex" || command.commandnos === "perm") {
