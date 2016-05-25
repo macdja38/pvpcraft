@@ -20,11 +20,14 @@ module.exports = class welcome {
                 );
             }
         };
-        this.client.on("serverNewMember", this.onJoin);
     }
 
     onDisconnect() {
         this.client.removeListener("serverNewMember", this.onJoin);
+    }
+
+    onReady() {
+        this.client.on("serverNewMember", this.onJoin);
     }
 
     getCommands() {
