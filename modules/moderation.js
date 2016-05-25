@@ -67,7 +67,9 @@ module.exports = class moderation {
                         }
                         //send everything off.
                         this.client.sendMessage(this.logging[channel.server.id], string, (error)=> {
-                            console.error(error)
+                            if(error) {
+                                console.error(error)
+                            }
                         });
                     }
                     else {
