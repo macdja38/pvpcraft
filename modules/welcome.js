@@ -13,6 +13,7 @@ module.exports = class welcome {
         //save the bug reporting thing raven for later use.
         this.raven = raven;
         this.onJoin = (server, user) => {
+            //TODO: once config loader v2 is done make this configurable.
             if (server.id == "77176186148499456") {
                 this.client.sendMessage(server.channels.get("id", "171382498020950016"),
                     "Hop to it @here, " + utils.clean(user.username) + " Just joined " + utils.clean(server.name) +
