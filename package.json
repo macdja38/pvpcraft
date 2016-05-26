@@ -17,6 +17,7 @@
     "raven": "^0.11.0",
     "git-rev": "^0.2.1",
     "cleverbot-node": "^0.2.2",
-    "pokedex-promise-v2": "^2.0.0"
+    "pokedex-promise-v2": "^2.0.0",
+    "cli-table2": "^0.2.0"
   }
 }
