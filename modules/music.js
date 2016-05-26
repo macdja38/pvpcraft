@@ -27,7 +27,7 @@ module.exports = class music {
     }
 
     getCommands() {
-        return ["init", "play", "skip", "list", "time", "shuffle", "next", "destroy", "logchannel"];
+        return ["init", "play", "skip", "list", "time", "volume", "shuffle", "next", "destroy", "logchannel"];
     }
 
     onDisconnect() {
@@ -41,6 +41,7 @@ module.exports = class music {
         console.log("Music initiated");
         if (!msg.channel.server) return; //this is a pm... we can't do music stuff here.
         var id = msg.channel.server.id;
+
         if (command.command === "init" && perms.check(msg, "music.init")) {
             if (this.boundChannels.hasOwnProperty(id)) {
                 msg.reply("Sorry already in use in this server");
@@ -154,7 +155,11 @@ module.exports = class music {
         if (command.commandnos === "list" && perms.check(msg, "music.list")) {
             if (this.boundChannels.hasOwnProperty(id)) {
                 if(this.boundChannels[id].currentVideo) {
-                    msg.channel.sendMessage(this.boundChannels[id].prettyList(2000));
+                    msg.channel.sendMessage(this.boundChannels[id].prettyList(), (error)=>{
+                        if(error) {
+                            console.log(error)
+                        }
+                    });
                 } else {
                     msg.channel.sendMessage("Sorry, no song's found in playlist. use " + command.prefix + "play <youtube vid or playlist> to add one.")
                 }
@@ -175,6 +180,31 @@ module.exports = class music {
                 msg.channel.sendMessage("Sorry, Bot is not currently in a voice channel use " + command.prefix + "init while in a voice channel to bind it.")
             }
             return true;
+        }
+
+        if (command.commandnos === "volume" && perms.check(msg, "music.volume")) {
+            if (this.boundChannels.hasOwnProperty(id)) {
+                if(command.arguments[0] && perms.check(msg, "music.volume.set")) {
+                    var volume = parseInt(command.arguments[0]);
+                    if (101 > volume && volume > 0) {
+                        this.boundChannels[id].setVolume(volume);
+                        msg.reply("Volume set to **" + volume + "**")
+
+                    } else {
+                        msg.reply("Sorry, invalid volume, please enter a number between 0 and 101")
+                    }
+                    return true;
+                } else {
+                    if(perms.check(msg, "music.volume.list")) {
+                        msg.reply("Current volume is **" + this.boundChannels[id].getVolume() + "**");
+                        return true;
+                    }
+                    return false;
+                }
+            } else {
+                msg.channel.sendMessage("Sorry, Bot is not currently in a voice channel use " + command.prefix + "init while in a voice channel to bind it.")
+                return true;
+            }
         }
 
         if (command.command === "shuffle" && perms.check(msg, "music.shuffle")) {
