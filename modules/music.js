@@ -18,6 +18,7 @@ var text;
 module.exports = class music {
     constructor(cl, config, raven) {
         this.client = cl;
+        this.config = config;
         this.raven = raven;
         /**
          * holds array of servers channels and their bound instances.
@@ -155,7 +156,8 @@ module.exports = class music {
         if (command.commandnos === "list" && perms.check(msg, "music.list")) {
             if (this.boundChannels.hasOwnProperty(id)) {
                 if(this.boundChannels[id].currentVideo) {
-                    msg.channel.sendMessage(this.boundChannels[id].prettyList(), (error)=>{
+                    msg.channel.sendMessage("```xl\n" + this.boundChannels[id].prettyList()
+                        + "```\n" + this.config.get("website", {musicUrl: "https://pvpcraft.ca/pvpbotmusic/?server="}).musicUrl + msg.server.id, (error)=>{
                         if(error) {
                             console.log(error)
                         }

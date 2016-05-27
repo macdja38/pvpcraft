@@ -58,9 +58,6 @@ var defaults = {
     "prefix": []
 };
 
-var Website = require("./www");
-var website = new Website(8000);
-
 var hasBeenReady = false;
 
 var moduleList = [];
@@ -69,6 +66,9 @@ var middlewareList = [];
 var mention;
 var name;
 var id;
+
+var Website = require("./www");
+var website = new Website(config.get("website", {port: 8000}).port);
 
 client.on('message', (msg)=> {
     if (msg.author.id === id) return;
@@ -233,6 +233,7 @@ function reload() {
     }
     console.log(middlewareList);
     console.log(moduleList);
+    website.setModuleList(moduleList);
 }
 
 client.on('error', (error)=> {

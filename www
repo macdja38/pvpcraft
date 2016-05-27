@@ -23,6 +23,7 @@ module.exports = class {
 
         port = normalizePort(chosenPort || '3000');
         app.set('port', this.port);
+        
 
         /**
          * Create HTTP server.
@@ -44,7 +45,9 @@ module.exports = class {
 
     }
 
-
+    setModuleList(moduleList) {
+        app.setModuleList(moduleList);
+    }
 };
 /**
  * Normalize a port into a number, string, or false.

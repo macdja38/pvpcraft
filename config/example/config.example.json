@@ -7,6 +7,10 @@
   "middleware": {
     "logging": "./middleware/logging.js"
   },
+  "website": {
+    "port": 8000,
+    "musicUrl": "https://pvpcraft.ca/pvpbotmusic/?server="
+  },
   "modules": {
     "warframe": "./modules/warframe.js",
     "permissionsManager": "./modules/permissionsManager.js",
