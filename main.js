@@ -67,6 +67,9 @@ var mention;
 var name;
 var id;
 
+var Website = require("./www");
+var website = new Website(config.get("website", {port: 8000}).port);
+
 client.on('message', (msg)=> {
     if (msg.author.id === id) return;
     var t1 = now();
@@ -230,6 +233,7 @@ function reload() {
     }
     console.log(middlewareList);
     console.log(moduleList);
+    website.setModuleList(moduleList);
 }
 
 client.on('error', (error)=> {
