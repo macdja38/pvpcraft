@@ -5,7 +5,7 @@
     "admins": ["85257659694993408"]
   },
   "middleware": {
-    "logging": "./middleware/logging.js"
+    "cleverBot": "./modules/cleverBot.js"
   },
   "website": {
     "port": 8000,
