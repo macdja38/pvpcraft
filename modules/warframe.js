@@ -227,23 +227,25 @@ warframe.prototype.onCommand = function (msg, command, perms, l) {
 
     else if (command.commandnos === 'sortie' && perms.check(msg, "warframe.sortie")) {
         worldState.get(function (state) {
-            var boss = parseState.getBoss(state.Sorties[0].Variants[0].bossIndex);
-            var text = "```xl\n" + utils.secondsToTime(state.Sorties[0].Expiry.sec - state.Time) + " left to defeat " +
-                boss.name + " of the " + boss.faction + "\n";
-            for (var Variant of state.Sorties[0].Variants) {
-                var Region = parseState.getRegion(Variant.regionIndex);
-                if (Region.missions[Variant.missionIndex] != "Assassination") {
-                    text += Region.missions[Variant.missionIndex] + " on " + Region.name + " with " +
-                        parseState.getModifiers(Variant.modifierIndex) + "\n";
+            if(state.Sorties[0]) {
+                var boss = parseState.getBoss(state.Sorties[0].Variants[0].bossIndex);
+                var text = "```xl\n" + utils.secondsToTime(state.Sorties[0].Expiry.sec - state.Time) + " left to defeat " +
+                    boss.name + " of the " + boss.faction + "\n";
+                for (var Variant of state.Sorties[0].Variants) {
+                    var Region = parseState.getRegion(Variant.regionIndex);
+                    if (Region.missions[Variant.missionIndex] != "Assassination") {
+                        text += Region.missions[Variant.missionIndex] + " on " + Region.name + " with " +
+                            parseState.getModifiers(Variant.modifierIndex) + "\n";
+                    }
+                    else {
+                        text += "Assassinate " + boss.name + " on " + Region.name + " with " +
+                            parseState.getModifiers(Variant.modifierIndex) + "\n";
+                    }
                 }
-                else {
-                    text += "Assassinate " + boss.name + " on " + Region.name + " with " +
-                        parseState.getModifiers(Variant.modifierIndex) + "\n";
-                }
+                text += "```";
+                warframe.client.sendMessage(msg.channel, text);
+                return true;
             }
-            text += "```";
-            warframe.client.sendMessage(msg.channel, text);
-            return true;
         });
         return true;
     }
