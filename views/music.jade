@@ -16,9 +16,9 @@ block content
         th Duration
         th votes
         th added by
-      - for (var song=1; song < queue.length; song++)
+      - for (var song=0; song < queue.length; song++)
         tr
-          td= song
+          td= song+1
           td= queue[song].prettyTitle()
           td= queue[song].prettyAuthor()
           td= queue[song].prettyViews()
