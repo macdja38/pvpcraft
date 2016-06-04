@@ -112,7 +112,7 @@ module.exports = class music {
                     }
                     if(video.votes.indexOf(msg.author.id) < 0 || isForced) {
                         video.votes.push(msg.author.id);
-                        if (video.votes.length > (this.boundChannels[id].voice.members.length / 3) || isForced) {
+                        if (video.votes.length > (this.boundChannels[id].connection.voiceChannel.members.length / 3) || isForced) {
                             msg.reply("Removing " + video.prettyPrint() + " From the queue");
                             if(index === -1) {
                                 this.boundChannels[id].skipSong();
@@ -122,7 +122,7 @@ module.exports = class music {
                             }
                         }
                         else {
-                            msg.reply(video.votes.length + " / " + (Math.floor(this.boundChannels[id].voice.members.length / 3) + 1) + " votes needed to skip " +
+                            msg.reply(video.votes.length + " / " + (Math.floor(this.boundChannels[id].connection.voiceChannel.members.length / 3) + 1) + " votes needed to skip " +
                                 video.prettyPrint());
                         }
                     }
