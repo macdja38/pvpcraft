@@ -29,12 +29,14 @@ module.exports = class evaluate {
             var code = command.arguments.join(" ");
 
             //these are so that others code will run in the eval if they depend on things.
-            var client = this.client;
-            var bot = this.client;
-            var message = msg;
-            
-            var t0;
-            var t1;
+            let client = this.client;
+            let bot = this.client;
+            let message = msg;
+
+            let server = message.channel.server;
+            let channel = msg.channel;
+            let t0;
+            let t1;
             t0 = now();
             try {
                 var evaluated = eval(code);

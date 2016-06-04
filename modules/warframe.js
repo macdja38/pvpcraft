@@ -26,33 +26,39 @@ var warframe = function (cl, config, raven, auth) {
     warframe.raven = raven;
     var twitter_auth = auth.get("twitter", false);
     console.log(twitter_auth);
-    warframe.twitter = new Twitter(twitter_auth);
-    warframe.twitter.stream('statuses/filter', {follow: "1344755923"}, (stream)=>{
-        warframe.stream = stream;
-        warframe.stream.on('error', (error)=> {
-            console.log(error)
-        });
-    });
-    warframe.onAlert = function (tweet) {
-        if (tweet.user.id_str === '1344755923' && !tweet.retweeted_status) {
-            //TODO: Fix this absolute garbage.
-            warframe.client.sendMessage(warframe.client.servers.get("id", "77176186148499456").channels.get("id", "137095541195669504"), tweet.text, (error)=> {
-                if (error) {
-                    console.log(error);
-                }
+    if(twitter_auth) {
+        warframe.twitter = new Twitter(twitter_auth);
+        warframe.twitter.stream('statuses/filter', {follow: "1344755923"}, (stream)=> {
+            warframe.stream = stream;
+            warframe.stream.on('error', (error)=> {
+                console.log(error)
             });
-            console.log(tweet);
-            console.log(tweet.text);
+        });
+        warframe.onAlert = function (tweet) {
+            if (tweet.user.id_str === '1344755923' && !tweet.retweeted_status) {
+                //TODO: Fix this absolute garbage.
+                warframe.client.sendMessage(warframe.client.servers.get("id", "77176186148499456").channels.get("id", "137095541195669504"), tweet.text, (error)=> {
+                    if (error) {
+                        console.log(error);
+                    }
+                });
+                console.log(tweet);
+                console.log(tweet.text);
+            }
         }
     }
 };
 
 warframe.prototype.onReady = function() {
-    warframe.stream.on('data', warframe.onAlert);
+    if(warframe.twitter) {
+        warframe.stream.on('data', warframe.onAlert);
+    }
 };
 
 warframe.prototype.onDisconnect = function() {
-    warframe.stream.removeListener('data', warframe.onAlert)
+    if(warframe.twitter) {
+        warframe.stream.removeListener('data', warframe.onAlert)
+    }
 };
 
 var commands = ["setupalerts", "tracking", "alert", "deal", "darvo", "trader", "voidtrader", "baro", "trial", "raid", "trialstat", "wiki", "sortie", "farm", "damage", "primeacces", "acces", "update", "update", "armorstat", "armourstat", "armor", "armour"];
@@ -227,23 +233,25 @@ warframe.prototype.onCommand = function (msg, command, perms, l) {
 
     else if (command.commandnos === 'sortie' && perms.check(msg, "warframe.sortie")) {
         worldState.get(function (state) {
-            var boss = parseState.getBoss(state.Sorties[0].Variants[0].bossIndex);
-            var text = "```xl\n" + utils.secondsToTime(state.Sorties[0].Expiry.sec - state.Time) + " left to defeat " +
-                boss.name + " of the " + boss.faction + "\n";
-            for (var Variant of state.Sorties[0].Variants) {
-                var Region = parseState.getRegion(Variant.regionIndex);
-                if (Region.missions[Variant.missionIndex] != "Assassination") {
-                    text += Region.missions[Variant.missionIndex] + " on " + Region.name + " with " +
-                        parseState.getModifiers(Variant.modifierIndex) + "\n";
+            if(state.Sorties[0]) {
+                var boss = parseState.getBoss(state.Sorties[0].Variants[0].bossIndex);
+                var text = "```xl\n" + utils.secondsToTime(state.Sorties[0].Expiry.sec - state.Time) + " left to defeat " +
+                    boss.name + " of the " + boss.faction + "\n";
+                for (var Variant of state.Sorties[0].Variants) {
+                    var Region = parseState.getRegion(Variant.regionIndex);
+                    if (Region.missions[Variant.missionIndex] != "Assassination") {
+                        text += Region.missions[Variant.missionIndex] + " on " + Region.name + " with " +
+                            parseState.getModifiers(Variant.modifierIndex) + "\n";
+                    }
+                    else {
+                        text += "Assassinate " + boss.name + " on " + Region.name + " with " +
+                            parseState.getModifiers(Variant.modifierIndex) + "\n";
+                    }
                 }
-                else {
-                    text += "Assassinate " + boss.name + " on " + Region.name + " with " +
-                        parseState.getModifiers(Variant.modifierIndex) + "\n";
-                }
+                text += "```";
+                warframe.client.sendMessage(msg.channel, text);
+                return true;
             }
-            text += "```";
-            warframe.client.sendMessage(msg.channel, text);
-            return true;
         });
         return true;
     }

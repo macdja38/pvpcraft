@@ -324,7 +324,9 @@ module.exports = class moderation {
                         text += "Colour changed from " + oldRole.color + " to " + newRole.color + "\n";
                     }
                     this.client.sendMessage(this.logging[newRole.server.id], text, (error)=> {
-                        console.error(error)
+                        if(error) {
+                            console.error(error)
+                        }
                     });
                 }
             }
