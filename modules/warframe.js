@@ -26,33 +26,39 @@ var warframe = function (cl, config, raven, auth) {
     warframe.raven = raven;
     var twitter_auth = auth.get("twitter", false);
     console.log(twitter_auth);
-    warframe.twitter = new Twitter(twitter_auth);
-    warframe.twitter.stream('statuses/filter', {follow: "1344755923"}, (stream)=>{
-        warframe.stream = stream;
-        warframe.stream.on('error', (error)=> {
-            console.log(error)
-        });
-    });
-    warframe.onAlert = function (tweet) {
-        if (tweet.user.id_str === '1344755923' && !tweet.retweeted_status) {
-            //TODO: Fix this absolute garbage.
-            warframe.client.sendMessage(warframe.client.servers.get("id", "77176186148499456").channels.get("id", "137095541195669504"), tweet.text, (error)=> {
-                if (error) {
-                    console.log(error);
-                }
+    if(twitter_auth) {
+        warframe.twitter = new Twitter(twitter_auth);
+        warframe.twitter.stream('statuses/filter', {follow: "1344755923"}, (stream)=> {
+            warframe.stream = stream;
+            warframe.stream.on('error', (error)=> {
+                console.log(error)
             });
-            console.log(tweet);
-            console.log(tweet.text);
+        });
+        warframe.onAlert = function (tweet) {
+            if (tweet.user.id_str === '1344755923' && !tweet.retweeted_status) {
+                //TODO: Fix this absolute garbage.
+                warframe.client.sendMessage(warframe.client.servers.get("id", "77176186148499456").channels.get("id", "137095541195669504"), tweet.text, (error)=> {
+                    if (error) {
+                        console.log(error);
+                    }
+                });
+                console.log(tweet);
+                console.log(tweet.text);
+            }
         }
     }
 };
 
 warframe.prototype.onReady = function() {
-    warframe.stream.on('data', warframe.onAlert);
+    if(warframe.twitter) {
+        warframe.stream.on('data', warframe.onAlert);
+    }
 };
 
 warframe.prototype.onDisconnect = function() {
-    warframe.stream.removeListener('data', warframe.onAlert)
+    if(warframe.twitter) {
+        warframe.stream.removeListener('data', warframe.onAlert)
+    }
 };
 
 var commands = ["setupalerts", "tracking", "alert", "deal", "darvo", "trader", "voidtrader", "baro", "trial", "raid", "trialstat", "wiki", "sortie", "farm", "damage", "primeacces", "acces", "update", "update", "armorstat", "armourstat", "armor", "armour"];
