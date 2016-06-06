@@ -40,8 +40,9 @@ module.exports = class cleverBot {
             console.log('Sent to Clever:' + quarry);
             CleverBot.prepare(function () {
                 clever.write(quarry, function (response) {
-                    msg.reply(response.message);
-                    self.client.stopTyping(msg.channel)
+                    msg.reply(response.message, ()=>{
+                        self.client.stopTyping(msg.channel);
+                    });
                 });
             });
             return true;
