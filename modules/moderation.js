@@ -43,7 +43,6 @@ module.exports = class moderation {
         //log message deletes to the server's log channel
         this.logDelete = (message, channel) => {
             try {
-                console.log(this.purgedMessages['97069403178278912']);
                 //check to see if it's a pm
                 if (!channel.server) return;
                 if (this.logging[channel.server.id]) {
