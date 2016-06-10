@@ -15,7 +15,7 @@ var utilities = class utilities {
     }
 
     getCommands() {
-        return ["serverinfo", "server", "userinfo", "user", "ping"];
+        return ["serverinfo", "server", "userinfo", "user", "ping", "lmgtfy"];
     }
 
     checkMisc() {
@@ -97,6 +97,11 @@ var utilities = class utilities {
                 }
 
             })
+            return true;
+        }
+        //http://lmgtfy.com/?q=How+to+hug
+        if ((command.command === 'lmgtfy') && perms.check(msg, 'utils.lmgtfy')) {
+            msg.channel.sendMessage(`http://lmgtfy.com/?q=${command.arguments.join("+")}`)
             return true;
         }
         return false;
