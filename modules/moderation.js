@@ -14,6 +14,7 @@ module.exports = class moderation {
         this.logging = {};
         this.config = config;
         this.raven = raven;
+        this.purgedMessages = {};
 
         //build the map of server id's and logging channels.
         for (var item in config.data) {
@@ -30,8 +31,8 @@ module.exports = class moderation {
         this.log = (server, string) => {
             if (this.logging.hasOwnProperty(server.id)) {
                 console.log("server name " + server.name);
-                this.client.sendMessage(this.logging[server.id], string, (error)=> {
-                    if(error) {
+                this.client.sendMessage(this.logging[server.id], utils.clean(string), (error)=> {
+                    if (error) {
                         console.error(error);
                     }
                 });
@@ -42,10 +43,20 @@ module.exports = class moderation {
         //log message deletes to the server's log channel
         this.logDelete = (message, channel) => {
             try {
+                console.log(this.purgedMessages['97069403178278912']);
                 //check to see if it's a pm
                 if (!channel.server) return;
                 if (this.logging[channel.server.id]) {
                     if (message) {
+                        let ignoreMessage = false;
+                        if (this.purgedMessages.hasOwnProperty(channel.id)) {
+                            this.purgedMessages[channel.id].messages.forEach((messages)=> {
+                                if (messages.contains(message)) {
+                                    ignoreMessage = true;
+                                }
+                            })
+                        }
+                        if (ignoreMessage) return;
                         //grab url's to the message's attachments
                         console.log("Message Delete");
                         var string = utils.clean(channel.name) + " | " + utils.fullNameB(message.author) + "'s message was deleted:\n";
@@ -67,26 +78,28 @@ module.exports = class moderation {
                         }
                         //send everything off.
                         this.client.sendMessage(this.logging[channel.server.id], string, (error)=> {
-                            if(error) {
+                            if (error) {
                                 console.error(error)
                             }
                         });
                     }
                     else {
-                        this.client.sendMessage(this.logging[channel.server.id], "An un-cached message in " +
-                            utils.clean(channel.name) + " was deleted, this probably means the bot was either recently restarted on the message was old.",
-                            (error)=> {
-                                if(error) {
-                                    console.error(error)
-                                }
-                            });
+                        if ((!this.purgedMessages[channel.server.id]) && (!this.purgedMessages[channel.server.id].messages.length > 0)) {
+                            this.client.sendMessage(this.logging[channel.server.id], "An un-cached message in " +
+                                utils.clean(channel.name) + " was deleted, this probably means the bot was either recently restarted on the message was old.",
+                                (error)=> {
+                                    if (error) {
+                                        console.error(error)
+                                    }
+                                });
+                        }
                     }
                 }
             }
             catch (err) {
                 console.error(err);
                 console.error(err.stack);
-                if(this.raven) {
+                if (this.raven) {
                     this.raven.captureException(err, {
                         extra: {
                             message: message,
@@ -120,7 +133,7 @@ module.exports = class moderation {
                             this.client.sendMessage(this.logging[message.channel.server.id], utils.clean(newMessage.channel.name) +
                                 " | " + utils.fullNameB(message.author) + " changed: " + utils.bubble(message.content) +
                                 " to " + utils.bubble(newMessage.content), (error)=> {
-                                if(error) {
+                                if (error) {
                                     console.error(error)
                                 }
                             });
@@ -129,7 +142,7 @@ module.exports = class moderation {
                             this.client.sendMessage(this.logging[message.channel.server.id], utils.clean(newMessage.channel.name) +
                                 " | " + utils.fullNameB(message.author) + "\n```diff\n-" + utils.clean(message.content) +
                                 "\n+" + utils.clean(newMessage.content) + "\n```", (error)=> {
-                                if(error) {
+                                if (error) {
                                     console.error(error)
                                 }
                             });
@@ -140,7 +153,7 @@ module.exports = class moderation {
             catch (err) {
                 console.error(err);
                 console.error(err.stack);
-                if(this.raven) {
+                if (this.raven) {
                     this.raven.captureException(err, {
                         extra: {
                             message: message,
@@ -161,12 +174,12 @@ module.exports = class moderation {
                         text += "        Nick changed from `" + utils.removeBlocks(oldMember.nick) + "` to `" + utils.removeBlocks(newMember.nick) + "`\n";
                     }
 
-                     if (oldMember.mute != newMember.mute) {
-                     text += "        Is-muted changed from `" + oldMember.mute + "` to `" + newMember.mute + "`\n";
-                     }
-                     if (oldMember.deaf != newMember.deaf) {
-                     text += "        Is-deaf changed from `" + oldMember.deaf + "` to `" + newMember.deaf + "`\n";
-                     }
+                    if (oldMember.mute != newMember.mute) {
+                        text += "        Is-muted changed from `" + oldMember.mute + "` to `" + newMember.mute + "`\n";
+                    }
+                    if (oldMember.deaf != newMember.deaf) {
+                        text += "        Is-deaf changed from `" + oldMember.deaf + "` to `" + newMember.deaf + "`\n";
+                    }
 
 
                     if (oldMember.roles.length < newMember.roles.length) {
@@ -207,7 +220,7 @@ module.exports = class moderation {
                     if (this.logging.hasOwnProperty(server.id)) {
                         console.log("server name " + server.name);
                         this.client.sendMessage(this.logging[server.id], text, (error)=> {
-                            if(error) {
+                            if (error) {
                                 console.error(error)
                             }
                         });
@@ -217,7 +230,7 @@ module.exports = class moderation {
             catch (err) {
                 console.error(err);
                 console.error(err.stack);
-                if(this.raven) {
+                if (this.raven) {
                     this.raven.captureException(err, {
                         extra: {
                             server: server,
@@ -236,7 +249,7 @@ module.exports = class moderation {
             catch (err) {
                 console.error(err);
                 console.error(err.stack);
-                if(this.raven) {
+                if (this.raven) {
                     this.raven.captureException(err, {
                         extra: {
                             server: server,
@@ -254,7 +267,7 @@ module.exports = class moderation {
             catch (err) {
                 console.error(err);
                 console.error(err.stack);
-                if(this.raven) {
+                if (this.raven) {
                     this.raven.captureException(err, {
                         extra: {
                             server: server,
@@ -273,7 +286,7 @@ module.exports = class moderation {
             catch (err) {
                 console.error(err);
                 console.error(err.stack);
-                if(this.raven) {
+                if (this.raven) {
                     this.raven.captureException(err, {
                         extra: {
                             server: server,
@@ -292,7 +305,7 @@ module.exports = class moderation {
             catch (err) {
                 console.error(err);
                 console.error(err.stack);
-                if(this.raven) {
+                if (this.raven) {
                     this.raven.captureException(err, {
                         extra: {
                             server: server,
@@ -333,7 +346,7 @@ module.exports = class moderation {
             catch (err) {
                 console.error(err);
                 console.error(err.stack);
-                if(this.raven) {
+                if (this.raven) {
                     this.raven.captureException(err, {
                         extra: {
                             oldRole: oldRole,
@@ -372,7 +385,7 @@ module.exports = class moderation {
             catch (err) {
                 console.error(err);
                 console.error(err.stack);
-                if(this.raven) {
+                if (this.raven) {
                     this.raven.captureException(err, {
                         extra: {
                             oldUser: oldUser,
@@ -392,7 +405,7 @@ module.exports = class moderation {
             catch (err) {
                 console.error(err);
                 console.error(err.stack);
-                if(this.raven) {
+                if (this.raven) {
                     this.raven.captureException(err, {
                         extra: {
                             channel: channel
@@ -437,7 +450,7 @@ module.exports = class moderation {
             catch (err) {
                 console.error(err);
                 console.error(err.stack);
-                if(this.raven) {
+                if (this.raven) {
                     this.raven.captureException(err, {
                         extra: {
                             oldChannel: oldChannel,
@@ -455,7 +468,7 @@ module.exports = class moderation {
             catch (err) {
                 console.error(err);
                 console.error(err.stack);
-                if(this.raven) {
+                if (this.raven) {
                     this.raven.captureException(err, {
                         extra: {
                             channel: channel
@@ -484,8 +497,8 @@ module.exports = class moderation {
 
     onReady() {
         /*
-        These all contain try catches because discord.js sometimes forget's to supply random members. I'm actively monitoring
-        the error log's and fixing thing's as they crop up, but in order to prevent crashes I've decided to just log the errors.
+         These all contain try catches because discord.js sometimes forget's to supply random members. I'm actively monitoring
+         the error log's and fixing thing's as they crop up, but in order to prevent crashes I've decided to just log the errors.
          */
         this.client.on("presence", this.logPresence);
         this.client.on("serverRoleUpdated", this.logRole);
@@ -503,7 +516,7 @@ module.exports = class moderation {
     }
 
     getCommands() {
-        return ["setlog"];
+        return ["setlog", "purge"];
     }
 
     checkMisc() {
@@ -514,7 +527,6 @@ module.exports = class moderation {
         console.log("Moderation initiated");
         if (command.command == "setlog" && perms.check(msg, "moderation.tools.setlog")) {
             if (/<#\d+>/.test(command.options.channel)) {
-                console.log(this.config);
                 this.logging[msg.channel.server.id] = this.client.channels.get("id", command.options.channel.match(/<#(\d+)>/)[1]);
                 if (this.config.data[msg.channel.server.id]) {
                     this.config.data[msg.channel.server.id].msgLog = this.logging[msg.channel.server.id].id;
@@ -529,8 +541,67 @@ module.exports = class moderation {
                 return true;
             }
         }
+
+        if (command.command == "purge" && perms.check(msg, "moderation.tools.purge")) {
+            //decide what is going to be purged in terms of the channel, user and length.
+            let channel;
+            if (/<#\d+>/.test(command.options.channel)) {
+                channel = msg.channel.server.channels.get("id", command.options.channel.match(/<#(\d+)>/)[1]);
+                if (!channel) {
+                    msg.reply("Cannot find that channel.")
+                }
+                return true;
+            } else {
+                channel = msg.channel;
+            }
+            let user;
+            if (/<#\d+>/.test(command.options.user)) {
+                user = msg.channel.server.users.get("id", command.options.user.match(/<#(\d+)>/)[1]);
+                if (!user) {
+                    msg.reply("Cannot find that user.")
+                }
+            }
+            let length;
+            if (command.arguments[0]) {
+                length = Math.min(command.arguments[0].valueOf() || this.config.get("purgeLength", 100), this.config.get("maxPurgeLength", 100));
+            }
+            //get the log's delete the messages that pass the filter defined above.
+            this.client.getChannelLogs(channel, length).then((messages)=> {
+                if (user) {
+                    messages = messages.filter((message)=> {
+                        return message.author.id === user.id
+                    })
+                }
+
+                //add the purged messages to a list of purged messages so they won't break the log.
+                if (!this.purgedMessages[msg.channel.server.id]) {
+                    this.purgedMessages[msg.channel.server.id] = {messages: {}};
+                }
+                let index = Object.keys(this.purgedMessages[msg.channel.server.id].messages).length;
+                this.purgedMessages[msg.channel.server.id].messages[index] = messages;
+                this.client.deleteMessages(messages).then(()=> {
+                    this.log(msg.channel.server, `${messages.length} messages deleted from ${channel.name} by ${msg.author.username} id:\`${msg.author.id}\``);
+                    msg.reply("Messages deleted").then((message)=> {
+                        setTimeout(()=> {
+                            this.client.deleteMessage(message);
+                            delete this.purgedMessages[msg.channel.server.id].messages[index];
+                        }, 5000);
+                    })
+                }).catch((error)=> {
+                    msg.reply("Cannot delete messages.");
+                    this.purgedMessages[msg.channel.server.id].messages.splice(index, 1);
+                    console.error(error);
+                });
+            }).catch((error)=> {
+                msg.reply("Cannot get channel history.");
+                console.error(error);
+            });
+
+            return true;
+
+        }
         return false;
-    }
+    };
 };
 
 function findOverrideChanges(thing1, thing2) {
@@ -540,7 +611,7 @@ function findOverrideChanges(thing1, thing2) {
         thing1.forEach(
             (i)=> {
                 console.log(i);
-                var j = thing2.get("id", i.id)
+                var j = thing2.get("id", i.id);
                 if (j) {
                     for (var k in i) {
                         if (i[k] !== j[k]) {
