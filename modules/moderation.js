@@ -336,7 +336,7 @@ module.exports = class moderation {
                         text += "Colour changed from " + oldRole.color + " to " + newRole.color + "\n";
                     }
                     this.client.sendMessage(this.logging[newRole.server.id], text, (error)=> {
-                        if(error) {
+                        if (error) {
                             console.error(error)
                         }
                     });
@@ -525,18 +525,44 @@ module.exports = class moderation {
     onCommand(msg, command, perms, l) {
         console.log("Moderation initiated");
         if (command.command == "setlog" && perms.check(msg, "moderation.tools.setlog")) {
-            if (/<#\d+>/.test(command.options.channel)) {
-                this.logging[msg.channel.server.id] = this.client.channels.get("id", command.options.channel.match(/<#(\d+)>/)[1]);
-                if (this.config.data[msg.channel.server.id]) {
-                    this.config.data[msg.channel.server.id].msgLog = this.logging[msg.channel.server.id].id;
+            if (command.arguments[0] == 'false' || /<#\d+>/.test(command.options.channel)) {
+                if (this.logging.hasOwnProperty(msg.channel.server.id)) {
+                    var oldLog = this.logging[msg.channel.server.id];
+                }
+                if (command.arguments[0] === "false") {
+                    delete this.logging[msg.channel.server.id];
+                    if (this.config.data[msg.channel.server.id]) {
+                        delete this.config.data[msg.channel.server.id].msgLog
+                    }
                 } else {
-                    this.config.data[msg.channel.server.id] = {msgLog: this.logging[msg.channel.server.id].id};
+                    this.logging[msg.channel.server.id] = this.client.channels.get("id", command.options.channel.match(/<#(\d+)>/)[1]);
+                    if (this.config.data[msg.channel.server.id]) {
+                        this.config.data[msg.channel.server.id].msgLog = this.logging[msg.channel.server.id].id;
+                    } else {
+                        this.config.data[msg.channel.server.id] = {msgLog: this.logging[msg.channel.server.id].id};
+                    }
                 }
                 this.config.save();
+                if (oldLog) {
+                    if (this.logging.hasOwnProperty(msg.channel.server.id)) {
+                        this.client.sendMessage(oldLog, utils.clean(`Moderation log changed to channel ${this.logging[msg.channel.server.id].name}`), (error)=> {
+                            if (error) {
+                                console.error(error);
+                            }
+                        });
+                    } else {
+                        this.client.sendMessage(oldLog, utils.clean(`Moderation log **Disabled**`), (error)=> {
+                            if (error) {
+                                console.error(error);
+                            }
+                        });
+                    }
+                }
                 msg.reply(":thumbsup::skin-tone-2:");
                 return true;
             } else {
-                msg.reply("please properly define a channel to log using --channel #channelmention");
+                msg.reply("please properly define a channel to log using --channel #channelmention," +
+                    "or disable logging using `" + command.prefix + "setlog false`");
                 return true;
             }
         }
@@ -579,7 +605,7 @@ module.exports = class moderation {
                 let index = Object.keys(this.purgedMessages[msg.channel.server.id].messages).length;
                 this.purgedMessages[msg.channel.server.id].messages[index] = messages;
                 this.client.deleteMessages(messages).then(()=> {
-                    this.log(msg.channel.server, `${messages.length} messages deleted from ${channel.name} by ${msg.author.username} id:\`${msg.author.id}\``);
+                    this.log(msg.channel.server, `${messages.length} messages deleted from ${channel.name} by ${utils.removeBlocks(msg.author.username)} id:\`${msg.author.id}\``);
                     msg.reply("Messages deleted").then((message)=> {
                         setTimeout(()=> {
                             this.client.deleteMessage(message);
