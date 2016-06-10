@@ -13,18 +13,18 @@ var auth = new Configs("auth");
 
 var raven;
 
-if(auth.get("sentryURL", "") != "") {
+if (auth.get("sentryURL", "") != "") {
     console.log("Sentry Started".yellow);
-    git.long((commit)=>{
-        git.branch((branch)=>{
+    git.long((commit)=> {
+        git.branch((branch)=> {
             raven = new (require('raven')).Client(auth.data.sentryURL, {release: commit + "-" + branch});
-            raven.patchGlobal(function(result) {
+            raven.patchGlobal(function (result) {
             });
-            raven.on('logged', function(e){
+            raven.on('logged', function (e) {
                 console.log("Error reported to sentry!: ".green + e.id);
             });
 
-            raven.on('error', function(e){
+            raven.on('error', function (e) {
                 // The event contains information about the failure:
                 //   e.reason -- raw response body
                 //   e.statusCode -- response status code
@@ -131,8 +131,8 @@ client.on('message', (msg)=> {
                         return;
                     }
                 } catch (error) {
-                    msg.reply("Sorry their was an error processing your command. the error is " + error);
-                    if(raven) {
+                    msg.reply("Sorry their was an error processing your command. The error is ```" + error + "```");
+                    if (raven) {
                         raven.captureError(error, {
                             user: msg.author,
                             extra: {
@@ -144,7 +144,7 @@ client.on('message', (msg)=> {
                                 command: command,
                                 msg: msg.content
                             }
-                        }, (something)=>{
+                        }, (something)=> {
                             console.log(something);
                         });
                     }
@@ -153,36 +153,36 @@ client.on('message', (msg)=> {
             }
         }
     }
-        //apply misc responses.
-        for (mod in moduleList) {
-            //console.log(command.command);
-            //console.log(moduleList[mod].commands);
-            //console.log(moduleList[mod].commands.indexOf(command.command));
-            if (moduleList[mod].module.checkMisc) {
-                try {
-                    if (moduleList[mod].module.checkMisc(msg, perms, l) === true) {
-                        break;
-                    }
-                } catch (error) {
-                    if(raven) {
-                        raven.captureError(error, {
-                            user: msg.author,
-                            extra: {
-                                mod: mod,
-                                server: msg.channel.server.id,
-                                server_name: msg.channel.server.name,
-                                channel: msg.channel.id,
-                                channel_name: msg.channel.name,
-                                command: command,
-                                msg: msg.content
-                            }
-                        });
-                    }
-                    console.error(error);
-                    console.error(error.stack);
+    //apply misc responses.
+    for (mod in moduleList) {
+        //console.log(command.command);
+        //console.log(moduleList[mod].commands);
+        //console.log(moduleList[mod].commands.indexOf(command.command));
+        if (moduleList[mod].module.checkMisc) {
+            try {
+                if (moduleList[mod].module.checkMisc(msg, perms, l) === true) {
+                    break;
                 }
+            } catch (error) {
+                if (raven) {
+                    raven.captureError(error, {
+                        user: msg.author,
+                        extra: {
+                            mod: mod,
+                            server: msg.channel.server.id,
+                            server_name: msg.channel.server.name,
+                            channel: msg.channel.id,
+                            channel_name: msg.channel.name,
+                            command: command,
+                            msg: msg.content
+                        }
+                    });
+                }
+                console.error(error);
+                console.error(error.stack);
             }
         }
+    }
     var t2 = now();
     if (msg.channel.server) {
         console.log("s: ".magenta + msg.channel.server.name + " c: ".blue + msg.channel.name + " u: ".cyan +
@@ -237,7 +237,7 @@ function reload() {
 }
 
 client.on('error', (error)=> {
-    if(raven) {
+    if (raven) {
         raven.captureException(error);
     }
     console.error(error);
@@ -368,7 +368,7 @@ process.on('uncaughtException', function (err) {
         console.log(err.stack);
     } else {
         // Normal error handling
-        if(raven) {
+        if (raven) {
             raven.captureException(err);
         }
         console.error(err);
