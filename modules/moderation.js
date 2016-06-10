@@ -579,6 +579,10 @@ module.exports = class moderation {
             } else {
                 channel = msg.channel;
             }
+            if(this.logging.hasOwnProperty(msg.channel.server.id) && this.logging[msg.channel.server.id].id == channel.id) {
+                msg.reply("For transparency purposes at the moment you cannot purge the moderation log.");
+                return true;
+            }
             let user;
             if (/<#\d+>/.test(command.options.user)) {
                 user = msg.channel.server.users.get("id", command.options.user.match(/<#(\d+)>/)[1]);
@@ -589,6 +593,8 @@ module.exports = class moderation {
             let length;
             if (command.arguments[0]) {
                 length = Math.min(command.arguments[0].valueOf() || this.config.get("purgeLength", 100), this.config.get("maxPurgeLength", 100));
+            } else {
+                length = this.config.get("purgeLength", 100)
             }
             //get the log's delete the messages that pass the filter defined above.
             this.client.getChannelLogs(channel, length).then((messages)=> {

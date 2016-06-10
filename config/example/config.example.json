@@ -28,6 +28,8 @@
     ],
     "changeThresh": 1
   },
+  "purgeLength": 25,
+  "maxPurgeLength": 100,
   "97069403178278912": {
     "msgLog": "174015839895420930",
     "warframeAlerts": {
