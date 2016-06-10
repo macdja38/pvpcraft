@@ -13,18 +13,21 @@ var Utils = require('../lib/utils');
 var utils = new Utils();
 
 module.exports = class evaluate {
-    constructor(cl) {
+    constructor(cl, config) {
         this.client = cl;
+        this.config = config;
     }
 
     getCommands() {
-        return ["eval"];
+        return ["eval", "setavatar"];
     }
 
     onCommand(msg, command, perms, l) {
         console.log("Perms initiated");
         //id is hardcoded to prevent problems stemming from the misuse of eval.
         //no perms check because this extends paste the bounds of a server.
+        //if you know what you are doing and would like to use the id in the config file you may replace msg.author.id == id, with
+        //this.config.get("permissions", {"permissions": {admins: []}}).admins.includes(msg.author.id)
         if (command.command === "eval" && msg.author.id === "85257659694993408") {
             var code = command.arguments.join(" ");
 
@@ -59,6 +62,27 @@ module.exports = class evaluate {
                     "In " + (t1 - t0) + " milliseconds!\n```");
                 console.error(error);
             }
+            return true;
+        }
+
+        if (command.command === "setavatar" && this.config.get("permissions", {"permissions": {admins: []}}).admins.includes(msg.author.id)) {
+            request({
+                method: 'GET',
+                url: command.arguments[0],
+                encoding: null
+            }, (err, res, image) => {
+                if (err) {
+                    this.client.sendMessage(msg.channel, "Failed to get a valid image.");
+                    return true;
+                }
+                this.client.setAvatar(image, (err) => {
+                    if (err) {
+                        this.client.sendMessage(msg.channel, "Failed setting avatar.");
+                        return true;
+                    }
+                    this.client.sendMessage(msg.channel, "Changed avatar.");
+                });
+            });
             return true;
         }
         return false;
