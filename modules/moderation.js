@@ -48,7 +48,7 @@ module.exports = class moderation {
                 if (this.logging[channel.server.id]) {
                     if (message) {
                         let ignoreMessage = false;
-                        if (this.purgedMessages.hasOwnProperty(channel.id)) {
+                        if (this.purgedMessages.hasOwnProperty(channel.id) && this.purgedMessages[channel.id].hasOwnProperty("messages")) {
                             this.purgedMessages[channel.id].messages.forEach((messages)=> {
                                 if (messages.contains(message)) {
                                     ignoreMessage = true;
