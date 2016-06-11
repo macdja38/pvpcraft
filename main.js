@@ -18,8 +18,9 @@ if (auth.get("sentryURL", "") != "") {
     git.long((commit)=> {
         git.branch((branch)=> {
             raven = new (require('raven')).Client(auth.data.sentryURL, {release: commit + "-" + branch});
-            raven.patchGlobal(function (result) {
-            });
+            //raven's patch global seems to have been running synchronously and delaying the execution of other code.
+            /*raven.patchGlobal(function (result) {
+            });*/
             raven.on('logged', function (e) {
                 console.log("Error reported to sentry!: ".green + e.id);
             });
