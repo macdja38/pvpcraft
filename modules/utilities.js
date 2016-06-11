@@ -101,7 +101,7 @@ var utilities = class utilities {
         }
         //http://lmgtfy.com/?q=How+to+hug
         if ((command.command === 'lmgtfy') && perms.check(msg, 'utils.lmgtfy')) {
-            msg.channel.sendMessage(`http://lmgtfy.com/?q=${command.arguments.join("+")}`)
+            msg.channel.sendMessage(`http://lmgtfy.com/?q=${command.arguments.join("+")}`);
             return true;
         }
         return false;
