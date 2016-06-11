@@ -83,15 +83,15 @@ module.exports = class moderation {
                         });
                     }
                     else {
-                        if ((!this.purgedMessages[channel.server.id]) && (!this.purgedMessages[channel.server.id].messages.length > 0)) {
-                            this.client.sendMessage(this.logging[channel.server.id], "An un-cached message in " +
-                                utils.clean(channel.name) + " was deleted, this probably means the bot was either recently restarted on the message was old.",
-                                (error)=> {
-                                    if (error) {
-                                        console.error(error)
-                                    }
-                                });
-                        }
+                        if (this.purgedMessages[channel.server.id] && this.purgedMessages[channel.server.id].messages.length > 0) return;
+                        this.client.sendMessage(this.logging[channel.server.id], "An un-cached message in " +
+                            utils.clean(channel.name) + " was deleted, this probably means the bot was either recently restarted on the message was old.",
+                            (error)=> {
+                                if (error) {
+                                    console.error(error)
+                                }
+                            });
+
                     }
                 }
             }
@@ -579,7 +579,7 @@ module.exports = class moderation {
             } else {
                 channel = msg.channel;
             }
-            if(this.logging.hasOwnProperty(msg.channel.server.id) && this.logging[msg.channel.server.id].id == channel.id) {
+            if (this.logging.hasOwnProperty(msg.channel.server.id) && this.logging[msg.channel.server.id].id == channel.id) {
                 msg.reply("For transparency purposes at the moment you cannot purge the moderation log.");
                 return true;
             }
@@ -597,7 +597,7 @@ module.exports = class moderation {
                 length = this.config.get("purgeLength", 100)
             }
             //get the log's delete the messages that pass the filter defined above.
-            this.client.getChannelLogs(channel, length).then((messages)=> {
+            getLogs(this.client, channel, length).then((messages)=> {
                 if (user) {
                     messages = messages.filter((message)=> {
                         return message.author.id === user.id
@@ -700,4 +700,21 @@ function roleIn(role, newRoles) {
         }
     }
     return false;
+}
+
+function getLogs(client, channel, count, before) {
+    return new Promise((resolve)=> {
+        client.getChannelLogs(channel, count, before ? {before: before} : {}).then((messages)=> {
+            count -= 100;
+            console.log(count);
+            if (count > 0) {
+                getLogs(client, channel, count, messages[99]).then(
+                    (newMessages) => {
+                        resolve(messages + newMessages);
+                    }
+                )
+            }
+            resolve(messages);
+        })
+    })
 }
