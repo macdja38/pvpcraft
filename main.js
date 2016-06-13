@@ -12,12 +12,14 @@ var config = new Configs("config");
 var auth = new Configs("auth");
 
 var raven;
+var ravenClient;
 
 if (auth.get("sentryURL", "") != "") {
     console.log("Sentry Started".yellow);
     git.long((commit)=> {
         git.branch((branch)=> {
-            raven = new (require('raven')).Client(auth.data.sentryURL, {release: commit + "-" + branch});
+            ravenClient = new require('raven');
+            raven = ravenClient.Client(auth.data.sentryURL, {release: commit + "-" + branch});
             //raven's patch global seems to have been running synchronously and delaying the execution of other code.
             /*raven.patchGlobal(function (result) {
             });*/
@@ -128,11 +130,10 @@ client.on('message', (msg)=> {
             //console.log(moduleList[mod].commands.indexOf(command.command));
             if (moduleList[mod].commands.indexOf(command.commandnos) > -1) {
                 try {
-                    if (moduleList[mod].module.onCommand(msg, command, perms, l) === true) {
+                    if (moduleList[mod].module.onCommand(msg, command, perms, moduleList, mod) === true) {
                         return;
                     }
                 } catch (error) {
-                    msg.reply("Sorry their was an error processing your command. The error is ```" + error + "```");
                     if (raven) {
                         raven.captureError(error, {
                             user: msg.author,
@@ -145,11 +146,14 @@ client.on('message', (msg)=> {
                                 command: command,
                                 msg: msg.content
                             }
-                        }, (something)=> {
-                            console.log(something);
+                        }, (result)=> {
+                            msg.reply("Sorry their was an error processing your command. The error is ```" + error +
+                                "``` reference code `" + ravenClient.getIdent(result) + "`");
+                            console.error(error, ravenClient.getIdent(result));
                         });
+                    } else {
+                        console.error(error);
                     }
-                    console.error(error);
                 }
             }
         }

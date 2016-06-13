@@ -20,7 +20,8 @@
     "music": "./modules/music.js",
     "help": "./modules/help.js",
     "evaluate": "./modules/evaluate.js",
-    "pokemon": "./modules/pokemon.js"
+    "pokemon": "./modules/pokemon.js",
+    "rank": "./modules/rank.js"
   },
   "default": {
     "prefix": [
