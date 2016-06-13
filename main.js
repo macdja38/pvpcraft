@@ -148,8 +148,8 @@ client.on('message', (msg)=> {
                             }
                         }, (result)=> {
                             msg.reply("Sorry their was an error processing your command. The error is ```" + error +
-                                "``` reference code `" + ravenClient.getIdent(result) + "`");
-                            console.error(error, ravenClient.getIdent(result));
+                                "``` reference code "/*`" + ravenClient.getIdent(result) + "`"*/);
+                            //console.error(error, ravenClient.getIdent(result));
                         });
                     } else {
                         console.error(error);
