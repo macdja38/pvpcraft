@@ -18,7 +18,7 @@ module.exports = class help {
         return ["help", "command"];
     }
 
-    onCommand(msg, command, perms, l) {
+    onCommand(msg, command, perms) {
         console.log("Help initiated");
         //permissions have not yet been added, this is a preliminary version of the help command. Final version will be dynamic.        
         if (command.command === "help" || command.commandnos === "command") {

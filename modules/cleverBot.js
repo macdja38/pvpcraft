@@ -23,7 +23,7 @@ module.exports = class cleverBot {
         return [];
     }
 
-    checkMisc(msg, perms, l) {
+    checkMisc(msg, perms) {
         if (msg.isMentioned(this.client.user) && perms.check(msg, "cleverbot.misc")) {
             this.client.startTyping(msg.channel);
             var quarry;
@@ -40,7 +40,7 @@ module.exports = class cleverBot {
             console.log('Sent to Clever:' + quarry);
             CleverBot.prepare(function () {
                 clever.write(quarry, function (response) {
-                    msg.reply(response.message, ()=>{
+                    msg.reply(response.message, ()=> {
                         self.client.stopTyping(msg.channel);
                     });
                 });

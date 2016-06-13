@@ -72,7 +72,7 @@ module.exports = class template {
     changeCommand(msg, command, perms, l) {
         console.log("Changed Command");
         //modify the command like rate limiting it.
-        if(command.command === "ahh") {
+        if (command.command === "ahh") {
             msg.reply("ahh");
             return false;
         }

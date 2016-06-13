@@ -48,7 +48,7 @@ module.exports = class moderation {
                 if (this.logging[channel.server.id]) {
                     if (message) {
                         let ignoreMessage = false;
-                        if (this.purgedMessages.hasOwnProperty(channel.id) && this.purgedMessages[channel.id].hasOwnProperty("messages")) {
+                        if (this.purgedMessages.hasOwnProperty(channel.id) && this.purgedMessages[channel.id].hasOwnProperty("messages") && typeof(this.purgedMessages[channel.id].messages) === "object") {
                             this.purgedMessages[channel.id].messages.forEach((messages)=> {
                                 if (messages.contains(message)) {
                                     ignoreMessage = true;
@@ -83,7 +83,7 @@ module.exports = class moderation {
                         });
                     }
                     else {
-                        if (this.purgedMessages[channel.server.id] && this.purgedMessages[channel.server.id].messages.length > 0) return;
+                        if (this.purgedMessages[channel.server.id] && Object.keys(this.purgedMessages[channel.server.id].messages).length > 0) return;
                         this.client.sendMessage(this.logging[channel.server.id], "An un-cached message in " +
                             utils.clean(channel.name) + " was deleted, this probably means the bot was either recently restarted on the message was old.",
                             (error)=> {
@@ -522,7 +522,7 @@ module.exports = class moderation {
         return false;
     }
 
-    onCommand(msg, command, perms, l) {
+    onCommand(msg, command, perms) {
         console.log("Moderation initiated");
         if (command.command == "setlog" && perms.check(msg, "moderation.tools.setlog")) {
             if (command.arguments[0] == 'false' || /<#\d+>/.test(command.options.channel)) {
@@ -597,6 +597,7 @@ module.exports = class moderation {
                 length = this.config.get("purgeLength", 100)
             }
             //get the log's delete the messages that pass the filter defined above.
+            this.log(msg.channel.server, `Attempting to delete ${length} messages from ${channel.name} on orders from ${utils.removeBlocks(msg.author.username)} id:\`${msg.author.id}\``);
             getLogs(this.client, channel, length).then((messages)=> {
                 if (user) {
                     messages = messages.filter((message)=> {
@@ -610,8 +611,14 @@ module.exports = class moderation {
                 }
                 let index = Object.keys(this.purgedMessages[msg.channel.server.id].messages).length;
                 this.purgedMessages[msg.channel.server.id].messages[index] = messages;
-                this.client.deleteMessages(messages).then(()=> {
-                    this.log(msg.channel.server, `${messages.length} messages deleted from ${channel.name} by ${utils.removeBlocks(msg.author.username)} id:\`${msg.author.id}\``);
+                //split the arrays into chucks of 100 messages.
+                var messagesChunks = messages.slice(0, Math.ceil(messages.length / 100)).map((x, i) => messages.slice(i * 100, i * 100 + 100));
+                let deleteMessageArray = [];
+                messagesChunks.forEach((messageChunk, i)=> {
+                    deleteMessageArray[i] = this.client.deleteMessages(messageChunk)
+                });
+                Promise.all(deleteMessageArray).then(()=> {
+                    this.log(msg.channel.server, `${messages.length} messages deleted from ${channel.name} by order of ${utils.removeBlocks(msg.author.username)} id:\`${msg.author.id}\``);
                     msg.reply("Messages deleted").then((message)=> {
                         setTimeout(()=> {
                             this.client.deleteMessage(message);
@@ -620,7 +627,9 @@ module.exports = class moderation {
                     })
                 }).catch((error)=> {
                     msg.reply("Cannot delete messages.");
-                    this.purgedMessages[msg.channel.server.id].messages.splice(index, 1);
+                    setTimeout(()=> {
+                        delete this.purgedMessages[msg.channel.server.id].messages[index];
+                    }, 60000);
                     console.error(error);
                 });
             }).catch((error)=> {
@@ -704,17 +713,26 @@ function roleIn(role, newRoles) {
 
 function getLogs(client, channel, count, before) {
     return new Promise((resolve)=> {
-        client.getChannelLogs(channel, count, before ? {before: before} : {}).then((messages)=> {
+        client.getChannelLogs(channel, count, before ? {before: before} : {}).then((newMessages)=> {
             count -= 100;
             console.log(count);
-            if (count > 0) {
-                getLogs(client, channel, count, messages[99]).then(
-                    (newMessages) => {
-                        resolve(messages + newMessages);
+            if (count > 0 && newMessages.length == 100) {
+                getLogs(client, channel, count, newMessages[99]).then(
+                    (messages) => {
+                        if (messages) {
+                            resolve(messages.concat(newMessages));
+                        } else {
+                            resolve(messages);
+                        }
+                    }
+                ).catch(
+                    ()=> {
+                        resolve(newMessages);
                     }
                 )
+            } else {
+                resolve(newMessages);
             }
-            resolve(messages);
         })
     })
 }

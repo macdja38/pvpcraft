@@ -19,7 +19,7 @@ module.exports = class pokemon {
         return ["pokemon", "shiny", "stat", "hiddenability"];
     }
 
-    onCommand(msg, command, perms, l) {
+    onCommand(msg, command, perms) {
         console.log("Pokemon initiated");
         if (command.command === "pokemon" && perms.check(msg, "pokemon.pokemon")) {
             var pokemon_name = command.arguments[0];
@@ -47,14 +47,14 @@ module.exports = class pokemon {
                             })
                     })
                     .catch(function (error) {
-                        if (error.statusCode == "404") {
-                            msg.reply("Could not find **" + utils.clean(command.arguments[0]) + "**");
-                        } else {
-                            console.log('There was an ERROR with getting the data: ', error);
-                            msg.reply("Error getting data " + error);
+                            if (error.statusCode == "404") {
+                                msg.reply("Could not find **" + utils.clean(command.arguments[0]) + "**");
+                            } else {
+                                console.log('There was an ERROR with getting the data: ', error);
+                                msg.reply("Error getting data " + error);
+                            }
                         }
-                    }
-                );
+                    );
             }
             else {
                 msg.reply("Sorry invalid input");
@@ -63,50 +63,50 @@ module.exports = class pokemon {
         if (command.command === "shiny" && perms.check(msg, "pokemon.shiny")) {
             var pokemon_name = command.arguments[0];
             if (/^[^<@#\\\/>]*$/g.test(pokemon_name)) {
-            P.getPokemonByName(pokemon_name)
-                .then((response)=> {
-                    this.client.sendMessage(msg.channel,
-                        {
-                            file: {
-                                file: response.sprites.front_shiny,
-                                name: command.arguments[0] + ".png"
-                            }
-                        })
-                })
-                .catch(function (error) {
-                    if (error.statusCode == "404") {
-                        msg.reply("Could not find " + command.arguments[0]);
-                    } else {
-                        console.log('There was an ERROR with getting the data: ', error);
-                        msg.reply("Error getting data " + error);
-                    }
-                })
+                P.getPokemonByName(pokemon_name)
+                    .then((response)=> {
+                        this.client.sendMessage(msg.channel,
+                            {
+                                file: {
+                                    file: response.sprites.front_shiny,
+                                    name: command.arguments[0] + ".png"
+                                }
+                            })
+                    })
+                    .catch(function (error) {
+                        if (error.statusCode == "404") {
+                            msg.reply("Could not find " + command.arguments[0]);
+                        } else {
+                            console.log('There was an ERROR with getting the data: ', error);
+                            msg.reply("Error getting data " + error);
+                        }
+                    })
             }
             else {
-                    msg.reply("Sorry invalid input");
-                }
+                msg.reply("Sorry invalid input");
+            }
             return true;
         }
         if (command.commandnos === "pokestat" && perms.check(msg, "pokemon.pokestat")) {
             var pokemon_name = command.arguments[0];
             if (/^[^<@#\\\/>]*$/g.test(pokemon_name)) {
-            P.getPokemonByName(pokemon_name)
-                .then((response)=> {
-                    this.client.sendMessage(msg.channel, cap(response.stats[5].stat.name) + ": " + response.stats[5].base_stat
-                        + "\n" + cap(response.stats[4].stat.name) + ": " + response.stats[4].base_stat
-                        + "\n" + cap(response.stats[3].stat.name) + ": " + response.stats[3].base_stat
-                        + "\n" + cap(response.stats[2].stat.name) + ": " + response.stats[2].base_stat
-                        + "\n" + cap(response.stats[1].stat.name) + ": " + response.stats[1].base_stat
-                        + "\n" + cap(response.stats[0].stat.name) + ": " + response.stats[0].base_stat)
-                })
-                .catch(function (error) {
-                    if (error.statusCode == "404") {
-                        msg.reply("Could not find " + command.arguments[0]);
-                    } else {
-                        console.log('There was an ERROR with getting the data: ', error);
-                        msg.reply("Error getting data " + error);
-                    }
-                });
+                P.getPokemonByName(pokemon_name)
+                    .then((response)=> {
+                        this.client.sendMessage(msg.channel, cap(response.stats[5].stat.name) + ": " + response.stats[5].base_stat
+                            + "\n" + cap(response.stats[4].stat.name) + ": " + response.stats[4].base_stat
+                            + "\n" + cap(response.stats[3].stat.name) + ": " + response.stats[3].base_stat
+                            + "\n" + cap(response.stats[2].stat.name) + ": " + response.stats[2].base_stat
+                            + "\n" + cap(response.stats[1].stat.name) + ": " + response.stats[1].base_stat
+                            + "\n" + cap(response.stats[0].stat.name) + ": " + response.stats[0].base_stat)
+                    })
+                    .catch(function (error) {
+                        if (error.statusCode == "404") {
+                            msg.reply("Could not find " + command.arguments[0]);
+                        } else {
+                            console.log('There was an ERROR with getting the data: ', error);
+                            msg.reply("Error getting data " + error);
+                        }
+                    });
             }
             else {
                 msg.reply("Sorry invalid input");
@@ -117,22 +117,22 @@ module.exports = class pokemon {
         if (command.command === "hiddenability" && perms.check(msg, "pokemon.hiddenability")) {
             var pokemon_name = command.arguments[0];
             if (/^[^<@#\\\/>]*$/g.test(pokemon_name)) {
-            P.getPokemonByName(pokemon_name)
-                .then((response)=> {
-                    for (var i = 0; i < response.abilities.length; i++) {
-                        if (response.abilities[i].is_hidden === true) {
-                            this.client.sendMessage(msg.channel, "Hidden ability: " + cap(response.abilities[i].ability.name))
+                P.getPokemonByName(pokemon_name)
+                    .then((response)=> {
+                        for (var i = 0; i < response.abilities.length; i++) {
+                            if (response.abilities[i].is_hidden === true) {
+                                this.client.sendMessage(msg.channel, "Hidden ability: " + cap(response.abilities[i].ability.name))
+                            }
                         }
-                    }
-                })
-                .catch(function (error) {
-                    if (error.statusCode == "404") {
-                        msg.reply("Could not find " + command.arguments[0]);
-                    } else {
-                        console.log('There was an ERROR with getting the data: ', error);
-                        msg.reply("Error getting data " + error);
-                    }
-                });
+                    })
+                    .catch(function (error) {
+                        if (error.statusCode == "404") {
+                            msg.reply("Could not find " + command.arguments[0]);
+                        } else {
+                            console.log('There was an ERROR with getting the data: ', error);
+                            msg.reply("Error getting data " + error);
+                        }
+                    });
             }
             else {
                 msg.reply("Sorry invalid input");

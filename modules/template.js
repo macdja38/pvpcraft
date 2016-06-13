@@ -26,12 +26,12 @@ module.exports = class template {
         return false;
     }
 
-    onCommand(msg, command, perms, l) {
+    onCommand(msg, command, perms) {
         //log that the module was called.
         console.log("Template initiated");
 
         //check if this is a command we should handle and if the user has permissions to execute it.
-        if(command.command === "ao" && perms.check(msg, "template.ao")) {
+        if (command.command === "ao" && perms.check(msg, "template.ao")) {
             //provide user feedback.
             msg.reply("eo");
             //return true, which tells the command dispatcher that we processed the command.

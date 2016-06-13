@@ -26,7 +26,7 @@ module.exports = class minecraft {
         return ["mcping", "mcskin", "mcavatar"];
     }
 
-    onCommand(msg, command, perms, l) {
+    onCommand(msg, command, perms) {
         console.log("Minecraft initiated");
         var t1 = now();
         if (command.command === "mcping" && perms.check(msg, "minecraft.mcping")) {

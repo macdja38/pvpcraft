@@ -26,7 +26,7 @@ var warframe = function (cl, config, raven, auth) {
     warframe.raven = raven;
     var twitter_auth = auth.get("twitter", false);
     console.log(twitter_auth);
-    if(twitter_auth) {
+    if (twitter_auth) {
         warframe.twitter = new Twitter(twitter_auth);
         warframe.twitter.stream('statuses/filter', {follow: "1344755923"}, (stream)=> {
             warframe.stream = stream;
@@ -49,14 +49,14 @@ var warframe = function (cl, config, raven, auth) {
     }
 };
 
-warframe.prototype.onReady = function() {
-    if(warframe.twitter) {
+warframe.prototype.onReady = function () {
+    if (warframe.twitter) {
         warframe.stream.on('data', warframe.onAlert);
     }
 };
 
-warframe.prototype.onDisconnect = function() {
-    if(warframe.twitter) {
+warframe.prototype.onDisconnect = function () {
+    if (warframe.twitter) {
         warframe.stream.removeListener('data', warframe.onAlert)
     }
 };
@@ -67,7 +67,7 @@ warframe.prototype.getCommands = function () {
     return commands
 };
 
-warframe.prototype.checkMisc = function (msg, perms, l) {
+warframe.prototype.checkMisc = function (msg, perms) {
     if (msg.content.toLowerCase().indexOf("soon") == 0 && msg.content.indexOf(":tm:") < 0 && perms.check(msg, "warframe.misc.soon")) {
         warframe.client.sendMessage(msg.channel, "Soon:tm:");
         return true;
@@ -75,7 +75,7 @@ warframe.prototype.checkMisc = function (msg, perms, l) {
     return false;
 };
 
-warframe.prototype.onCommand = function (msg, command, perms, l) {
+warframe.prototype.onCommand = function (msg, command, perms) {
     console.log("WARFRAME initiated");
     //console.log(command);
     if ((command.commandnos === 'deal' || command.command === 'darvo') && perms.check(msg, "warframe.deal")) {
@@ -117,9 +117,13 @@ warframe.prototype.onCommand = function (msg, command, perms, l) {
             if (!config.warframeAlerts.items) {
                 config.warframeAlerts.items = {};
             }
-            msg.channel.server.createRole({name: command.options.add, permissions: [], mentionable: true}, (error, role) => {
+            msg.channel.server.createRole({
+                name: command.options.add,
+                permissions: [],
+                mentionable: true
+            }, (error, role) => {
                 if (error) {
-                    if(error.status == 403) {
+                    if (error.status == 403) {
                         msg.reply("Error, insufficient permissions, please give me manage roles.");
                     }
                     else {
@@ -233,7 +237,7 @@ warframe.prototype.onCommand = function (msg, command, perms, l) {
 
     else if (command.commandnos === 'sortie' && perms.check(msg, "warframe.sortie")) {
         worldState.get(function (state) {
-            if(state.Sorties[0]) {
+            if (state.Sorties[0]) {
                 var boss = parseState.getBoss(state.Sorties[0].Variants[0].bossIndex);
                 var text = "```xl\n" + utils.secondsToTime(state.Sorties[0].Expiry.sec - state.Time) + " left to defeat " +
                     boss.name + " of the " + boss.faction + "\n";

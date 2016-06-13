@@ -38,7 +38,7 @@ module.exports = class music {
         }
     }
 
-    onCommand(msg, command, perms, l) {
+    onCommand(msg, command, perms) {
         console.log("Music initiated");
         if (!msg.channel.server) return; //this is a pm... we can't do music stuff here.
         var id = msg.channel.server.id;
@@ -52,9 +52,9 @@ module.exports = class music {
                 if (msg.author.voiceChannel.server.id === msg.channel.server.id) {
                     this.boundChannels[id] = new Player(this.client, msg.author.voiceChannel, msg.channel, key, this.raven);
                     msg.reply("Binding to **" + this.boundChannels[id].voice.name + "** and **" + this.boundChannels[id].text.name + "**");
-                    this.boundChannels[id].init(msg, (error)=>{
+                    this.boundChannels[id].init(msg, (error)=> {
                         console.log("Bound thing finished maybe");
-                        if(error) {
+                        if (error) {
                             console.log(error);
                             msg.reply(error);
                             delete this.boundChannels[id];
@@ -78,7 +78,7 @@ module.exports = class music {
             }
             return true;
         }
-        
+
         if (command.command === "play" && perms.check(msg, "music.play")) {
             if (this.boundChannels.hasOwnProperty(id)) {
                 if (command.arguments.length > 0) {
@@ -95,26 +95,26 @@ module.exports = class music {
 
         if ((command.command === "next" || command.command === "skip") && perms.check(msg, "music.voteskip")) {
             if (this.boundChannels.hasOwnProperty(id)) {
-                if(this.boundChannels[id].currentVideo) {
+                if (this.boundChannels[id].currentVideo) {
                     var index = command.arguments[0] ? parseInt(command.arguments[0]) - 1 : -1;
                     console.log(index);
-                    var isForced = !!(perms.check(msg, "music.forceskip") && command.flags.indexOf('f')>-1);
+                    var isForced = !!(perms.check(msg, "music.forceskip") && command.flags.indexOf('f') > -1);
                     var video;
-                    if(index === -1) {
+                    if (index === -1) {
                         video = this.boundChannels[id].currentVideo;
                     }
-                    else if(this.boundChannels[id].queue.hasOwnProperty(index)) {
+                    else if (this.boundChannels[id].queue.hasOwnProperty(index)) {
                         video = this.boundChannels[id].queue[index];
                     }
                     else {
                         msg.reply("Could not find find the song");
                         return true;
                     }
-                    if(video.votes.indexOf(msg.author.id) < 0 || isForced) {
+                    if (video.votes.indexOf(msg.author.id) < 0 || isForced) {
                         video.votes.push(msg.author.id);
                         if (video.votes.length > (this.boundChannels[id].connection.voiceChannel.members.length / 3) || isForced) {
                             msg.reply("Removing " + video.prettyPrint() + " From the queue");
-                            if(index === -1) {
+                            if (index === -1) {
                                 this.boundChannels[id].skipSong();
                             }
                             else {
@@ -143,22 +143,22 @@ module.exports = class music {
         }
 
         /*
-        if (command.command === "pause" && perms.check(msg, "music.pause")) {
-            this.boundChannels[id].pause(msg);
-            return true;
-        }
-        if (command.command === "resume" && perms.check(msg, "music.resume")) {
-            this.boundChannels[id].resume(msg);
-            return true;
-        }
-        */
+         if (command.command === "pause" && perms.check(msg, "music.pause")) {
+         this.boundChannels[id].pause(msg);
+         return true;
+         }
+         if (command.command === "resume" && perms.check(msg, "music.resume")) {
+         this.boundChannels[id].resume(msg);
+         return true;
+         }
+         */
 
         if (command.commandnos === "list" && perms.check(msg, "music.list")) {
             if (this.boundChannels.hasOwnProperty(id)) {
-                if(this.boundChannels[id].currentVideo) {
+                if (this.boundChannels[id].currentVideo) {
                     msg.channel.sendMessage("```xl\n" + this.boundChannels[id].prettyList()
-                        + "```\n" + this.config.get("website", {musicUrl: "https://pvpcraft.ca/pvpbotmusic/?server="}).musicUrl + msg.server.id, (error)=>{
-                        if(error) {
+                        + "```\n" + this.config.get("website", {musicUrl: "https://pvpcraft.ca/pvpbotmusic/?server="}).musicUrl + msg.server.id, (error)=> {
+                        if (error) {
                             console.log(error)
                         }
                     });
@@ -173,7 +173,7 @@ module.exports = class music {
 
         if (command.commandnos === "time" && perms.check(msg, "music.time")) {
             if (this.boundChannels.hasOwnProperty(id)) {
-                if(this.boundChannels[id].currentVideo) {
+                if (this.boundChannels[id].currentVideo) {
                     msg.channel.sendMessage("Currently " + this.boundChannels[id].prettyTime() + " into " + this.boundChannels[id].currentVideo.prettyPrint());
                 } else {
                     msg.channel.sendMessage("Sorry, no song's found in playlist. use " + command.prefix + "play <youtube vid or playlist> to add one.")
@@ -186,7 +186,7 @@ module.exports = class music {
 
         if (command.commandnos === "volume") {
             if (this.boundChannels.hasOwnProperty(id)) {
-                if(command.arguments[0] && perms.check(msg, "music.volume.set")) {
+                if (command.arguments[0] && perms.check(msg, "music.volume.set")) {
                     var volume = parseInt(command.arguments[0]);
                     if (101 > volume && volume > 0) {
                         this.boundChannels[id].setVolume(volume);
@@ -197,14 +197,14 @@ module.exports = class music {
                     }
                     return true;
                 } else {
-                    if(perms.check(msg, "music.volume.list")) {
+                    if (perms.check(msg, "music.volume.list")) {
                         msg.reply("Current volume is **" + this.boundChannels[id].getVolume() + "**");
                         return true;
                     }
                     return false;
                 }
             } else {
-                if(perms.check(msg, "music.volume.list") || perms.check(msg, "music.volume.set")) {
+                if (perms.check(msg, "music.volume.list") || perms.check(msg, "music.volume.set")) {
                     msg.channel.sendMessage("Sorry, Bot is not currently in a voice channel use " + command.prefix + "init while in a voice channel to bind it.");
                     return true;
                 }
@@ -216,7 +216,7 @@ module.exports = class music {
 
         if (command.command === "shuffle" && perms.check(msg, "music.shuffle")) {
             if (this.boundChannels.hasOwnProperty(id)) {
-                if(this.boundChannels[id].queue.length > 1) {
+                if (this.boundChannels[id].queue.length > 1) {
                     msg.channel.sendMessage(this.boundChannels[id].shuffle());
                 } else {
                     msg.channel.sendMessage("Sorry, not enough song's in playlist.")

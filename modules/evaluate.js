@@ -22,7 +22,7 @@ module.exports = class evaluate {
         return ["eval", "setavatar"];
     }
 
-    onCommand(msg, command, perms, l) {
+    onCommand(msg, command, perms) {
         console.log("Perms initiated");
         //id is hardcoded to prevent problems stemming from the misuse of eval.
         //no perms check because this extends paste the bounds of a server.

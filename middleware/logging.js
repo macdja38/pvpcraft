@@ -71,7 +71,7 @@ module.exports = class logging {
      */
     changeCommand(msg, command, perms, l) {
         //modify the command like rate limiting it.
-        if(command.command === "ahh") {
+        if (command.command === "ahh") {
             msg.reply("ahh");
             return false;
         }

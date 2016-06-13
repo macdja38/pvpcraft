@@ -22,7 +22,7 @@ var utilities = class utilities {
         return false;
     }
 
-    onCommand(msg, command, perms, l) {
+    onCommand(msg, command, perms) {
         console.log("Perms initiated");
         console.log(command);
         if ((command.command === "serverinfo" || command.command === "server") && perms.check(msg, "utils.serverinfo")) {
@@ -53,16 +53,16 @@ var utilities = class utilities {
             var comaUserNameCodes;
             var ment;
             var targets = command.arguments;
-            if(command.arguments.length === 0) {
+            if (command.arguments.length === 0) {
                 targets.push("<@" + msg.author.id + ">");
             }
             for (var arg of targets) {
-                if(/(?:<@|<@!)\d+>/.test(arg)) {
+                if (/(?:<@|<@!)\d+>/.test(arg)) {
                     ment = msg.channel.server.members.get("id", arg.match(/(?:<@|<@!)(\d+)>/)[1]);
                 } else {
                     ment = msg.channel.server.members.get("name", arg)
                 }
-                if(ment) {
+                if (ment) {
                     mentInfo = msg.channel.server.detailsOf(ment);
                     comaUserNameCodes = '';
                     for (var i = 0; i < ment.username.length - 1; i++) {
@@ -90,10 +90,10 @@ var utilities = class utilities {
         }
         if ((command.command === 'ping') && perms.check(msg, 'utils.ping')) {
             var t1 = now();
-            msg.channel.sendMessage("Testing Ping", (error, message)=>{
+            msg.channel.sendMessage("Testing Ping", (error, message)=> {
                 var t2 = now();
-                if(!error) {
-                    this.client.updateMessage(message, "Ping is `" + (t2-t1) + "`ms");
+                if (!error) {
+                    this.client.updateMessage(message, "Ping is `" + (t2 - t1) + "`ms");
                 }
 
             })
