@@ -13,8 +13,9 @@ var Utils = require('../lib/utils');
 var utils = new Utils();
 
 module.exports = class evaluate {
-    constructor(cl, config) {
+    constructor(cl, config, raven, modules) {
         this.client = cl;
+        this.modules = modules;
         this.config = config;
     }
 
@@ -36,6 +37,8 @@ module.exports = class evaluate {
             let bot = this.client;
             let message = msg;
 
+            let raven = this.raven;
+            let modules = this.modules;
             let server = message.channel.server;
             let channel = msg.channel;
             let t0;
