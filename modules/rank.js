@@ -12,7 +12,7 @@ module.exports = class rank {
         this.raven = raven;
 
         this.onJoin = (server, user) => {
-            var rank = config.get("joinRole", false, {server: server.id});
+            var rank = config.get("joinrole", false, {server: server.id});
             if (rank) {
                 rank = server.roles.get("id", rank);
                 if (rank) {
@@ -102,7 +102,7 @@ module.exports = class rank {
                 var roles = this.config.get("roles", {}, {server: msg.server.id});
                 let coloredRolesList = "";
                 for (var role in roles) {
-                    if (roles.hasOwnProperty(role) && role != "joinRole") {
+                    if (roles.hasOwnProperty(role) && role != "joinrole") {
                         if (perms.check(msg, `rank.join.${role}`)) {
                             coloredRolesList += `+${role}\n`;
                         } else {
