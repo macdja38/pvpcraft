@@ -18,8 +18,8 @@ if (auth.get("sentryURL", "") != "") {
     console.log("Sentry Started".yellow);
     git.long((commit)=> {
         git.branch((branch)=> {
-            ravenClient = new require('raven');
-            raven = ravenClient.Client(auth.data.sentryURL, {release: commit + "-" + branch});
+            ravenClient = require('raven');
+            raven = new ravenClient.Client(auth.data.sentryURL, {release: commit + "-" + branch});
             //raven's patch global seems to have been running synchronously and delaying the execution of other code.
             /*raven.patchGlobal(function (result) {
             });*/
