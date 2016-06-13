@@ -12,9 +12,9 @@ module.exports = class rank {
         this.raven = raven;
 
         this.onJoin = (server, user) => {
-            var rank = config.get("joinrole", false, {server: server.id});
-            if (rank) {
-                rank = server.roles.get("id", rank);
+            var rank = config.get("ranks", false, {server: server.id});
+            if (rank && rank.joinrole) {
+                rank = server.roles.get("id", rank.joinrole);
                 if (rank) {
                     this.client.addMemberToRole(user, rank, (error)=> {
                         if (error) {
