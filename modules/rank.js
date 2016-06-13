@@ -89,7 +89,7 @@ module.exports = class rank {
                     msg.reply(`Please supply a rank to remove using \`${command.prefix}rank join \<rank\>\`, for a list of ranks use \`${command.prefix}rank list\``);
                     return true;
                 }
-                let rankToJoin = arguments[1].toLowerCase();
+                let rankToJoin = command.arguments[1].toLowerCase();
                 let oldRoles = this.config.get("roles", {}, {server: msg.server.id});
                 if (oldRoles.hasOwnProperty(rankToJoin)) {
                     delete oldRoles[rankToJoin];
@@ -122,7 +122,7 @@ module.exports = class rank {
                     msg.reply(`Please supply a rank to join using \`${command.prefix}rank join \<rank\>\`, for a list of ranks use \`${command.prefix}rank list\``);
                     return true;
                 }
-                let rankToJoin = arguments[1].toLowerCase();
+                let rankToJoin = command.arguments[1].toLowerCase();
                 if (!perms.check(msg, `rank.join.${rankToJoin}`)) {
                     msg.reply(`You do not have perms to join this rank for a list of ranks use \`${command.prefix}rank list\``);
                     return true;
