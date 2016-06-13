@@ -76,7 +76,7 @@ module.exports = class rank {
                         msg.reply("Could not find role with that name, please try a mention or name, names are case sensitive");
                         return true;
                     }
-                    let roleName = command.arguments[1];
+                    let roleName = command.arguments[1].toLowerCase();
                     let oldRoles = this.config.get("roles", {}, {server: msg.server.id});
                     oldRoles[roleName] = roleId;
                     this.config.set("roles", oldRoles, {server: msg.server.id});
@@ -89,9 +89,10 @@ module.exports = class rank {
                     msg.reply(`Please supply a rank to remove using \`${command.prefix}rank join \<rank\>\`, for a list of ranks use \`${command.prefix}rank list\``);
                     return true;
                 }
+                let rankToJoin = arguments[1].toLowerCase();
                 let oldRoles = this.config.get("roles", {}, {server: msg.server.id});
-                if (oldRoles.hasOwnProperty(command.argument[0])) {
-                    delete oldRoles[command.arguments[0]];
+                if (oldRoles.hasOwnProperty(rankToJoin)) {
+                    delete oldRoles[rankToJoin];
                     this.config.set("roles", oldRoles, {server: msg.server.id});
                 } else {
                     msg.reply(`Role could not be found, use \`${command.prefix}rank list\` to see the current ranks.`);
@@ -121,11 +122,12 @@ module.exports = class rank {
                     msg.reply(`Please supply a rank to join using \`${command.prefix}rank join \<rank\>\`, for a list of ranks use \`${command.prefix}rank list\``);
                     return true;
                 }
-                if (!perms.check(msg, `rank.join.${command.arguments[1]}`)) {
+                let rankToJoin = arguments[1].toLowerCase();
+                if (!perms.check(msg, `rank.join.${rankToJoin}`)) {
                     msg.reply(`You do not have perms to join this rank for a list of ranks use \`${command.prefix}rank list\``);
                     return true;
                 }
-                role = msg.server.roles.get("id", roles[command.arguments[1]]);
+                role = msg.server.roles.get("id", roles[rankToJoin]);
                 if (role) {
                     this.client.addMemberToRole(msg.author, role, (error)=> {
                         if (error) {
@@ -153,11 +155,11 @@ module.exports = class rank {
                 }
             }
             if (command.arguments[0] === "leave" && perms.check(msg, "rank.leave.use")) {
-                roles = this.config.get("roles", command.arguments[1], {server: msg.server.id});
                 if (!command.arguments[1] && !roles[command.arguments[1]]) {
                     msg.reply(`Please supply a rank to leave using \`${command.prefix}rank leave \<rank\>\`, for a list of ranks use \`${command.prefix}rank list\``);
                     return true;
                 }
+                roles = this.config.get("roles", arguments[1].toLowerCase(), {server: msg.server.id});
                 if (!perms.check(msg, `rank.leave.${command.arguments[1]}`)) {
                     msg.reply(`You do not have perms to join this rank for a list of ranks use \`${command.prefix}rank list\``);
                     return true;
