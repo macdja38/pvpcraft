@@ -18,8 +18,13 @@ module.exports = class moderation {
 
         //build the map of server id's and logging channels.
         for (var item in config.data) {
-            if (config.data[item].hasOwnProperty("msgLog")) {
-                this.logging[item] = this.client.channels.get("id", config.data[item]["msgLog"]);
+            if (config.data.hasOwnProperty(item) && config.data[item].hasOwnProperty("msgLog")) {
+                let channel = this.client.channels.get("id", config.data[item]["msgLog"]);
+                if(channel != null) {
+                    this.logging[item] = channel;
+                } else {
+                    //TODO: notify the server owner their mod log has been removed and that //setlog false will make that permanent.
+                }
             }
         }
 
