@@ -20,7 +20,7 @@ module.exports = class moderation {
         for (var item in config.data) {
             if (config.data.hasOwnProperty(item) && config.data[item].hasOwnProperty("msgLog")) {
                 let channel = this.client.channels.get("id", config.data[item]["msgLog"]);
-                if(channel != null) {
+                if (channel != null) {
                     this.logging[item] = channel;
                 } else {
                     //TODO: notify the server owner their mod log has been removed and that //setlog false will make that permanent.
@@ -75,9 +75,11 @@ module.exports = class moderation {
                         //if their are attachments log them. maybe it's possible to attach more than one?
                         if (message.attachments) {
                             for (var i in message.attachments) {
-                                string += message.attachments[i].proxy_url;
-                                console.log("url: " + message.attachments[i].url);
-                                console.log("proxy url: " + message.attachments[i].proxy_url);
+                                if (message.attachments.hasOwnProperty(i)) {
+                                    string += message.attachments[i].proxy_url;
+                                    console.log("url: " + message.attachments[i].url);
+                                    console.log("proxy url: " + message.attachments[i].proxy_url);
+                                }
                             }
                         }
                         //send everything off.
@@ -129,28 +131,31 @@ module.exports = class moderation {
                 else {
                     changeThresh = this.config.get("default", {changeThresh: "1"}).changeThresh
                 }
-                if (this.logging[newMessage.channel.server.id] && message.content !== newMessage.content) {
-                    console.log("Message Change");
-                    console.log(changeThresh);
-                    if (utils.compare(message.content, newMessage.content) > changeThresh) {
-                        if (message.content.length > 144 || /[^0-9a-zA-Z\s\.!\?]/.test(message.content) || /[^0-9a-zA-Z\s\.!\?]/.test(newMessage.content)) {
-                            this.client.sendMessage(this.logging[message.channel.server.id], utils.clean(newMessage.channel.name) +
-                                " | " + utils.fullNameB(message.author) + " changed: " + utils.bubble(message.content) +
-                                " to " + utils.bubble(newMessage.content), (error)=> {
-                                if (error) {
-                                    console.error(error)
-                                }
-                            });
+                if (this.logging[newMessage.channel.server.id] && (!message || message.content !== newMessage.content)) {
+                    if (message) {
+                        if (utils.compare(message.content, newMessage.content) > changeThresh) {
+                            if (message.content.length > 144 || /[^0-9a-zA-Z\s\.!\?]/.test(message.content) || /[^0-9a-zA-Z\s\.!\?]/.test(newMessage.content)) {
+                                this.client.sendMessage(this.logging[newMessage.channel.server.id], utils.clean(newMessage.channel.name) +
+                                    " | " + utils.fullNameB(newMessage.author) + " changed: " + utils.bubble(message.content) +
+                                    " to " + utils.bubble(newMessage.content), (error)=> {
+                                    if (error) {
+                                        console.error(error)
+                                    }
+                                });
+                            }
+                            else {
+                                this.client.sendMessage(this.logging[message.channel.server.id], utils.clean(newMessage.channel.name) +
+                                    " | " + utils.fullNameB(newMessage.author) + "\n```diff\n-" + utils.clean(message.content) +
+                                    "\n+" + utils.clean(newMessage.content) + "\n```", (error)=> {
+                                    if (error) {
+                                        console.error(error)
+                                    }
+                                });
+                            }
                         }
-                        else {
-                            this.client.sendMessage(this.logging[message.channel.server.id], utils.clean(newMessage.channel.name) +
-                                " | " + utils.fullNameB(message.author) + "\n```diff\n-" + utils.clean(message.content) +
-                                "\n+" + utils.clean(newMessage.content) + "\n```", (error)=> {
-                                if (error) {
-                                    console.error(error)
-                                }
-                            });
-                        }
+                    } else {
+                        this.log(newMessage.server, `${utils.clean(newMessage.channel.name)}` +
+                            ` | ${utils.fullNameB(newMessage.author)} changed: **An un-cached message** to ${utils.bubble(newMessage.content)}`)
                     }
                 }
             }
@@ -376,12 +381,14 @@ module.exports = class moderation {
                     }
                     console.log("User Change");
                     for (var serverid in this.logging) {
-                        var server = this.client.servers.get("id", serverid);
-                        if (server && server.members.get("id", newUser.id)) {
-                            console.log("server name " + this.client.servers.get("id", serverid).name);
-                            this.client.sendMessage(this.logging[serverid], text, (error)=> {
-                                console.error(error)
-                            });
+                        if (this.logging.hasOwnProperty(serverid)) {
+                            var server = this.client.servers.get("id", serverid);
+                            if (server && server.members.get("id", newUser.id)) {
+                                console.log("server name " + this.client.servers.get("id", serverid).name);
+                                this.client.sendMessage(this.logging[serverid], text, (error)=> {
+                                    console.error(error)
+                                });
+                            }
                         }
                     }
                 }
@@ -619,24 +626,46 @@ module.exports = class moderation {
                 //split the arrays into chucks of 100 messages.
                 var messagesChunks = messages.slice(0, Math.ceil(messages.length / 100)).map((x, i) => messages.slice(i * 100, i * 100 + 100));
                 let deleteMessageArray = [];
-                messagesChunks.forEach((messageChunk, i)=> {
-                    deleteMessageArray[i] = this.client.deleteMessages(messageChunk)
-                });
-                Promise.all(deleteMessageArray).then(()=> {
-                    this.log(msg.channel.server, `${messages.length} messages deleted from ${channel.name} by order of ${utils.removeBlocks(msg.author.username)} id:\`${msg.author.id}\``);
-                    msg.reply("Messages deleted").then((message)=> {
-                        setTimeout(()=> {
-                            this.client.deleteMessage(message);
-                            delete this.purgedMessages[msg.channel.server.id].messages[index];
-                        }, 5000);
+
+                var logDelete = ()=> {
+                    Promise.all(deleteMessageArray).then(()=> {
+                        this.log(msg.channel.server, `${messages.length} messages deleted from ${channel.name} by order of ${utils.removeBlocks(msg.author.username)} id:\`${msg.author.id}\``);
+                        msg.reply("Messages deleted").then((message)=> {
+                            setTimeout(()=> {
+                                this.client.deleteMessage(message);
+                                delete this.purgedMessages[msg.channel.server.id].messages[index];
+                            }, 5000);
+                        })
                     })
-                }).catch((error)=> {
+                };
+
+                var logError = () => {
                     msg.reply("Cannot delete messages.");
                     setTimeout(()=> {
                         delete this.purgedMessages[msg.channel.server.id].messages[index];
                     }, 60000);
+                    console.error("ERROR that's probably a problem");
                     console.error(error);
-                });
+                };
+
+                console.log("Loop should run " + messagesChunks.length);
+
+                let i = 0;
+                var deleteTask = setInterval(()=> {
+                    console.log("Place first " + i);
+                    deleteMessageArray[i] = this.client.deleteMessages(messagesChunks[i]);
+                    deleteMessageArray[i].catch(()=> {
+                        clearInterval(deleteTask);
+                        logError();
+                    });
+                    i++;
+                    if (i >= messagesChunks.length) {
+                        clearInterval(deleteTask);
+                        logDelete();
+                    }
+                }, 1100);
+
+
             }).catch((error)=> {
                 msg.reply("Cannot get channel history.");
                 console.error(error);
@@ -659,7 +688,7 @@ function findOverrideChanges(thing1, thing2) {
                 var j = thing2.get("id", i.id);
                 if (j) {
                     for (var k in i) {
-                        if (i[k] !== j[k]) {
+                        if (i.hasOwnProperty(k) && i[k] !== j[k]) {
                             changes.push({"change": k, "override": i, "from": i[k], "to": j[k]});
                         }
                     }
@@ -692,9 +721,9 @@ function findNewOverrides(more, less) {
 }
 
 /**
- * return roles present in oldR that are not in newR
- * @param oldR
- * @param newR
+ * return {Object} roles present in oldR that are not in newR
+ * @param more {Object} group of role's that has more roles
+ * @param less {Object} group of role's that has less role's than more.
  */
 function findNewRoles(more, less) {
     for (var i of more) {
