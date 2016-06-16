@@ -137,6 +137,8 @@ module.exports = class rank {
                                 logChannel = msg.server.channels.get("id", logChannel);
                                 if (logChannel) {
                                     this.client.sendMessage(logChannel, `Error ${error} promoting ${utils.removeBlocks(msg.author.username)} try redefining your rank and making sure the bot has enough permissions.`).catch(console.error)
+                                } else {
+                                    msg.reply(`Error ${error} promoting ${utils.removeBlocks(msg.author.username)} try redefining your rank and making sure the bot has enough permissions.`)
                                 }
                             }
                         } else {
@@ -152,8 +154,8 @@ module.exports = class rank {
                     })
                 } else {
                     msg.reply(`Role could not be found, have an administrator use \`${command.prefix}rank add\` to update it.`);
-                    return true;
                 }
+                return true;
             }
             if (command.arguments[0] === "leave" && perms.check(msg, "rank.leave.use")) {
                 if (!command.arguments[1] && !roles[command.arguments[1]]) {
