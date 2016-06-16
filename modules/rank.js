@@ -86,7 +86,7 @@ module.exports = class rank {
             }
             if (command.arguments[0] === "remove" && perms.check(msg, "admin.rank.remove")) {
                 if (command.arguments[1]) {
-                    msg.reply(`Please supply a rank to remove using \`${command.prefix}rank join \<rank\>\`, for a list of ranks use \`${command.prefix}rank list\``);
+                    msg.reply(`Please supply a rank to remove using \`${command.prefix}rank remove \<rank\>\`, for a list of ranks use \`${command.prefix}rank list\``);
                     return true;
                 }
                 let rankToJoin = command.arguments[1].toLowerCase();
