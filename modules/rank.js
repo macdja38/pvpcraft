@@ -100,7 +100,7 @@ module.exports = class rank {
                 }
             }
             if (command.arguments[0] === "list" && perms.check(msg, "rank.list")) {
-                var roles = this.config.get("roles", {}, {server: msg.server.id});
+                let roles = this.config.get("roles", {}, {server: msg.server.id});
                 let coloredRolesList = "";
                 for (var role in roles) {
                     if (roles.hasOwnProperty(role) && role != "joinrole") {
@@ -118,8 +118,8 @@ module.exports = class rank {
                 }
             }
             if (command.arguments[0] === "join" && perms.check(msg, "rank.join.use")) {
-                roles = this.config.get("roles", command.arguments[1], {server: msg.server.id});
-                if (!command.arguments[1] && !roles[command.arguments[1]]) {
+                let roles = this.config.get("roles", command.arguments[1], {server: msg.server.id});
+                if (!command.arguments[1] || !roles[command.arguments[1]]) {
                     msg.reply(`Please supply a rank to join using \`${command.prefix}rank join \<rank\>\`, for a list of ranks use \`${command.prefix}rank list\``);
                     return true;
                 }
@@ -158,11 +158,12 @@ module.exports = class rank {
                 return true;
             }
             if (command.arguments[0] === "leave" && perms.check(msg, "rank.leave.use")) {
-                if (!command.arguments[1] && !roles[command.arguments[1]]) {
+                let roles = this.config.get("roles", command.arguments[1], {server: msg.server.id});
+                if (!command.arguments[1] || !roles[command.arguments[1]]) {
                     msg.reply(`Please supply a rank to leave using \`${command.prefix}rank leave \<rank\>\`, for a list of ranks use \`${command.prefix}rank list\``);
                     return true;
                 }
-                roles = this.config.get("roles", arguments[1].toLowerCase(), {server: msg.server.id});
+                roles = this.config.get("roles", command.arguments[1].toLowerCase(), {server: msg.server.id});
                 if (!perms.check(msg, `rank.leave.${command.arguments[1]}`)) {
                     msg.reply(`You do not have perms to join this rank for a list of ranks use \`${command.prefix}rank list\``);
                     return true;
