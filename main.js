@@ -19,10 +19,13 @@ if (auth.get("sentryURL", "") != "") {
     git.long((commit)=> {
         git.branch((branch)=> {
             ravenClient = require('raven');
-            raven = new ravenClient.Client(auth.data.sentryURL, {release: commit + "-" + branch});
+            raven = new ravenClient.Client(auth.data.sentryURL, {
+                release: commit + "-" + branch,
+                transport: new ravenClient.transports.HTTPSTransport({rejectUnauthorized: false})
+            });
             //raven's patch global seems to have been running synchronously and delaying the execution of other code.
             /*raven.patchGlobal(function (result) {
-            });*/
+             });*/
             raven.on('logged', function (e) {
                 console.log("Error reported to sentry!: ".green + e.id);
             });
@@ -92,7 +95,7 @@ client.on('message', (msg)=> {
 
     //Message middleware starts here.
     for (ware in middlewareList) {
-        if (middlewareList[ware].ware.onMessage) {
+        if (middlewareList.hasOwnProperty(ware) && middlewareList[ware].ware.onMessage) {
             middlewareList[ware].ware.onMessage(msg, perms)
         }
     }
@@ -106,19 +109,19 @@ client.on('message', (msg)=> {
     //Command middleware starts here.
     if (command) {
         for (ware in middlewareList) {
-            if (middlewareList[ware].ware.onCommand) {
+            if (middlewareList.hasOwnProperty(ware) && middlewareList[ware].ware.onCommand) {
                 middlewareList[ware].ware.onCommand(msg, command, perms, l)
             }
         }
     }
     for (ware in middlewareList) {
-        if (middlewareList[ware].ware.changeMessage) {
+        if (middlewareList.hasOwnProperty(ware) && middlewareList[ware].ware.changeMessage) {
             msg = middlewareList[ware].ware.changeMessage(msg, perms)
         }
     }
     if (command) {
         for (ware in middlewareList) {
-            if (middlewareList[ware].ware.changeCommand) {
+            if (middlewareList.hasOwnProperty(ware) && middlewareList[ware].ware.changeCommand) {
                 command = middlewareList[ware].ware.changeCommand(msg, command, perms, l)
             }
         }
@@ -128,7 +131,7 @@ client.on('message', (msg)=> {
         console.log(command);
         for (mod in moduleList) {
             //console.log(moduleList[mod].commands.indexOf(command.command));
-            if (moduleList[mod].commands.indexOf(command.commandnos) > -1) {
+            if (moduleList.hasOwnProperty(mod) && moduleList[mod].commands.indexOf(command.commandnos) > -1) {
                 try {
                     if (moduleList[mod].module.onCommand(msg, command, perms, moduleList, mod) === true) {
                         return;
@@ -148,8 +151,8 @@ client.on('message', (msg)=> {
                             }
                         }, (result)=> {
                             msg.reply("Sorry their was an error processing your command. The error is ```" + error +
-                                "``` reference code "/*`" + ravenClient.getIdent(result) + "`"*/);
-                            //console.error(error, ravenClient.getIdent(result));
+                                "``` reference code `" + raven.getIdent(result) + "`");
+                            console.error(error, raven.getIdent(result));
                         });
                     } else {
                         console.error(error);
@@ -163,7 +166,7 @@ client.on('message', (msg)=> {
         //console.log(command.command);
         //console.log(moduleList[mod].commands);
         //console.log(moduleList[mod].commands.indexOf(command.command));
-        if (moduleList[mod].module.checkMisc) {
+        if (moduleList.hasOwnProperty(mod) && moduleList[mod].module.checkMisc) {
             try {
                 if (moduleList[mod].module.checkMisc(msg, perms, l) === true) {
                     break;
@@ -203,9 +206,7 @@ function reload() {
     console.log("defaults");
     console.log(defaults);
     name = client.user.name;
-    var middleware;
-    var module;
-    for (middleware of middlewareList) {
+    for (let middleware of middlewareList) {
         if (middleware.module) {
             if (middleware.module.onDisconnect) {
                 console.log("Trying to Remove Listeners!".green);
@@ -213,7 +214,7 @@ function reload() {
             }
         }
     }
-    for (module of moduleList) {
+    for (let module of moduleList) {
         if (module.module) {
             if (module.module.onDisconnect) {
                 console.log("Trying to Remove Listeners!".green);
@@ -225,16 +226,20 @@ function reload() {
     moduleList = [];
     var middlewares = config.get("middleware");
     var modules = config.get("modules");
-    for (module in modules) {
-        var Modul = require(modules[module]);
-        var mod = new Modul(client, config, raven, auth);
-        if (mod.onReady) mod.onReady();
-        moduleList.push({"commands": mod.getCommands(), "module": mod});
+    for (let module in modules) {
+        if (modules.hasOwnProperty(module)) {
+            let Modul = require(modules[module]);
+            let mod = new Modul(client, config, raven, auth);
+            if (mod.onReady) mod.onReady();
+            moduleList.push({"commands": mod.getCommands(), "module": mod});
+        }
     }
-    for (middleware in middlewares) {
-        var ware = new (require(middlewares[middleware]))(client, config, raven, auth);
-        if (ware.onReady) ware.onReady();
-        middlewareList.push({"ware": ware});
+    for (let middleware in middlewares) {
+        if (middlewares.hasOwnProperty(middleware)) {
+            let ware = new (require(middlewares[middleware]))(client, config, raven, auth);
+            if (ware.onReady) ware.onReady();
+            middlewareList.push({"ware": ware});
+        }
     }
     console.log(middlewareList);
     console.log(moduleList);
@@ -251,9 +256,11 @@ client.on('error', (error)=> {
 
 client.on('disconnect', ()=> {
     console.log("Disconnect".red);
-    for (var i in moduleList) {
-        if (moduleList[i].module.onDisconnect) {
-            moduleList[i].module.onDisconnect();
+    for (let i in moduleList) {
+        if (moduleList.hasOwnProperty(i)) {
+            if (moduleList[i].module.onDisconnect) {
+                moduleList[i].module.onDisconnect();
+            }
         }
     }
 });
@@ -339,7 +346,7 @@ function updateCarbon() {
 
 function reloadTarget(msg, command, perms, l, moduleList, middlewareList) {
     for (var module in moduleList) {
-        if (moduleList[module].module.constructor.name === command.arguments[0]) {
+        if (moduleList.hasOwnProperty(module) && moduleList[module].module.constructor.name === command.arguments[0]) {
             if (moduleList[module].module.onDisconnect) {
                 moduleList[module].module.onDisconnect();
             }
@@ -360,6 +367,9 @@ function reloadTarget(msg, command, perms, l, moduleList, middlewareList) {
 //meew0's solution to the ECONNRESET crash error
 process.on('uncaughtException', function (err) {
     // Handle ECONNRESETs caused by `next` or `destroy`
+    if (raven) {
+        raven.captureException(err);
+    }
     if (err.code == 'ECONNRESET') {
         // Yes, I'm aware this is really bad node code. However, the uncaught exception
         // that causes this error is buried deep inside either discord.js, ytdl or node
@@ -373,9 +383,6 @@ process.on('uncaughtException', function (err) {
         console.log(err.stack);
     } else {
         // Normal error handling
-        if (raven) {
-            raven.captureException(err);
-        }
         console.error(err);
         process.exit(1);
     }
