@@ -52,8 +52,8 @@ var utilities = class utilities {
             var mentInfo;
             var comaUserNameCodes;
             var ment;
-            var targets = command.arguments;
-            if (command.arguments.length === 0) {
+            var targets = command.args;
+            if (command.args.length === 0) {
                 targets.push("<@" + msg.author.id + ">");
             }
             for (var arg of targets) {
@@ -101,7 +101,7 @@ var utilities = class utilities {
         }
         //http://lmgtfy.com/?q=How+to+hug
         if ((command.command === 'lmgtfy') && perms.check(msg, 'utils.lmgtfy')) {
-            msg.channel.sendMessage(`http://lmgtfy.com/?q=${command.arguments.join("+")}`);
+            msg.channel.sendMessage(`http://lmgtfy.com/?q=${command.args.join("+")}`);
             return true;
         }
         return false;

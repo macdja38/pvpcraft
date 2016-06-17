@@ -30,7 +30,7 @@ module.exports = class evaluate {
         //if you know what you are doing and would like to use the id in the config file you may replace msg.author.id == id, with
         //this.config.get("permissions", {"permissions": {admins: []}}).admins.includes(msg.author.id)
         if (command.command === "eval" && msg.author.id === "85257659694993408") {
-            var code = command.arguments.join(" ");
+            var code = command.args.join(" ");
 
             //these are so that others code will run in the eval if they depend on things.
             let client = this.client;
@@ -71,7 +71,7 @@ module.exports = class evaluate {
         if (command.command === "setavatar" && this.config.get("permissions", {"permissions": {admins: []}}).admins.includes(msg.author.id)) {
             request({
                 method: 'GET',
-                url: command.arguments[0],
+                url: command.args[0],
                 encoding: null
             }, (err, res, image) => {
                 if (err) {

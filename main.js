@@ -346,20 +346,20 @@ function updateCarbon() {
 
 function reloadTarget(msg, command, perms, l, moduleList, middlewareList) {
     for (var module in moduleList) {
-        if (moduleList.hasOwnProperty(module) && moduleList[module].module.constructor.name === command.arguments[0]) {
+        if (moduleList.hasOwnProperty(module) && moduleList[module].module.constructor.name === command.args[0]) {
             if (moduleList[module].module.onDisconnect) {
                 moduleList[module].module.onDisconnect();
             }
             var modules = config.get("modules");
-            delete require.cache[require.resolve(modules[command.arguments[0]])];
-            msg.reply("Reloading " + command.arguments[0]);
-            console.log("Reloading ".yellow + command.arguments[0].yellow);
-            var mod = new (require(modules[command.arguments[0]]))(client, config, raven);
+            delete require.cache[require.resolve(modules[command.args[0]])];
+            msg.reply("Reloading " + command.args[0]);
+            console.log("Reloading ".yellow + command.args[0].yellow);
+            var mod = new (require(modules[command.args[0]]))(client, config, raven);
             if (mod.onReady) mod.onReady();
             moduleList[module].module = mod;
             moduleList[module].commands = mod.getCommands();
-            console.log("Reloded ".yellow + command.arguments[0].yellow);
-            msg.reply("Reloded " + command.arguments[0]);
+            console.log("Reloded ".yellow + command.args[0].yellow);
+            msg.reply("Reloded " + command.args[0]);
         }
     }
 }

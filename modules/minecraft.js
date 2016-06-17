@@ -30,7 +30,7 @@ module.exports = class minecraft {
         console.log("Minecraft initiated");
         var t1 = now();
         if (command.command === "mcping" && perms.check(msg, "minecraft.mcping")) {
-            mcping(command.arguments.join("."), "25565", (err, res)=> {
+            mcping(command.args.join("."), "25565", (err, res)=> {
                 if (err) {
                     console.error(err);
                     this.client.sendMessage(msg.channel, "```xl\n" + err + "```")
@@ -42,7 +42,7 @@ module.exports = class minecraft {
                     myReadableStreamBuffer.stop();
                     console.log(myReadableStreamBuffer);
                     this.client.sendMessage(msg.channel, "```xl\n" +
-                        "Pinged " + command.arguments.join(".") + " in " + (now() - t1) + "ms\n" +
+                        "Pinged " + command.args.join(".") + " in " + (now() - t1) + "ms\n" +
                         "Version " + res.version.name + " protocol " + res.version.protocol + "\n" +
                         "Players " + res.players.online + "/" + res.players.max + "```"
                     )
@@ -53,28 +53,28 @@ module.exports = class minecraft {
         }
 
         if (command.command === "mcavatar" && perms.check(msg, "minecraft.mcavatar")) {
-            if (command.arguments.length < 1) {
+            if (command.args.length < 1) {
                 msg.reply("usage " + command.prefix + "mcavatar <minecraft username>");
                 return true;
             }
             msg.channel.sendMessage({
                 file: {
-                    file: "https://mcapi.ca/avatar/2d/" + command.arguments[0] + "/100/" + ((command.flags.includes("b")) ? "false" : "true"),
-                    name: command.arguments[0] + ".png"
+                    file: "https://mcapi.ca/avatar/2d/" + command.args[0] + "/100/" + ((command.flags.includes("b")) ? "false" : "true"),
+                    name: command.args[0] + ".png"
                 }
             });
             return true;
         }
 
         if (command.command === "mcskin" && perms.check(msg, "minecraft.mcskin")) {
-            if (command.arguments.length < 1) {
+            if (command.args.length < 1) {
                 msg.reply("usage " + command.prefix + "mcskin <minecraft username>");
                 return true;
             }
             msg.channel.sendMessage({
                 file: {
-                    file: "https://visage.surgeplay.com/full/404/" + command.arguments[0] + ".png",
-                    name: command.arguments[0] + ".png"
+                    file: "https://visage.surgeplay.com/full/404/" + command.args[0] + ".png",
+                    name: command.args[0] + ".png"
                 }
             });
             return true;

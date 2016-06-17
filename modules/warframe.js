@@ -209,18 +209,18 @@ warframe.prototype.onCommand = function (msg, command, perms) {
 
     else if (command.command === 'wiki' && perms.check(msg, "warframe.wiki")) {
         //use wikia's api to search for the item.
-        if (command.arguments.length === 0) {
+        if (command.args.length === 0) {
             warframe.client.sendMessage(msg.channel, "Please provide something to search for!");
             return true;
         }
         request.post("http://warframe.wikia.com/api/v1/Search/List", {
             form: {
-                query: command.arguments.join(' '),
+                query: command.args.join(' '),
                 limit: 1
             }
         }, function (err, response, body) {
             if (err || response.statusCode === 404) {
-                warframe.client.sendMessage(msg.channel, "Could not find **" + utils.clean(command.arguments.join(' ')) + "**");
+                warframe.client.sendMessage(msg.channel, "Could not find **" + utils.clean(command.args.join(' ')) + "**");
             } else if (response.statusCode !== 200) {
                 console.error(' returned HTTP status ' + response.statusCode);
             } else {
@@ -310,23 +310,23 @@ warframe.prototype.onCommand = function (msg, command, perms) {
     else if ((command.commandnos === 'armorstat' || command.commandnos === 'armor' ||
         command.commandnos === 'armourstat' || command.commandnos === 'armour') && perms.check(msg, "warframe.armor")) {
         (function () {
-            if (command.arguments.length < 1 || command.arguments.length == 2 || command.arguments.length > 3) {
+            if (command.args.length < 1 || command.args.length == 2 || command.args.length > 3) {
                 warframe.client.sendMessage(msg.channel, "```xl\npossible uses include:\n" +
                     command.prefix + "armor (Base Armor) (Base Level) (Current Level) calculate armor and stats.\n" +
                     command.prefix + "armor (Current Armor)\n```");
                 return true;
             }
             var text = "```xl\n";
-            if (command.arguments.length == 3) {
-                if ((parseInt(command.arguments[2]) - parseInt(command.arguments[1])) < 0) {
+            if (command.args.length == 3) {
+                if ((parseInt(command.args[2]) - parseInt(command.args[1])) < 0) {
                     warframe.client.sendMessage(msg.channel, "```xl\nPlease check your input values\n```");
                     return true;
                 }
-                var armor = parseInt(command.arguments[0]) * (1 + (Math.pow((parseInt(command.arguments[2]) - parseInt(command.arguments[1])), 1.75) / 200));
-                text += "at level " + command.arguments[2] + " your enemy would have " + armor + " Armor\n";
+                var armor = parseInt(command.args[0]) * (1 + (Math.pow((parseInt(command.args[2]) - parseInt(command.args[1])), 1.75) / 200));
+                text += "at level " + command.args[2] + " your enemy would have " + armor + " Armor\n";
             }
             else {
-                var armor = parseInt(command.arguments[0]);
+                var armor = parseInt(command.args[0]);
             }
             text += armor / (armor + 300) * 100 + "% damage reduction\n";
             warframe.client.sendMessage(msg.channel, text + "```");

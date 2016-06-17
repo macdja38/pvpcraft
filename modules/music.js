@@ -81,8 +81,8 @@ module.exports = class music {
 
         if (command.command === "play" && perms.check(msg, "music.play")) {
             if (this.boundChannels.hasOwnProperty(id)) {
-                if (command.arguments.length > 0) {
-                    this.boundChannels[id].enqueue(msg, command.arguments)
+                if (command.args.length > 0) {
+                    this.boundChannels[id].enqueue(msg, command.args)
                 }
                 else {
                     msg.reply("Please specify a youtube video!")
@@ -96,7 +96,7 @@ module.exports = class music {
         if ((command.command === "next" || command.command === "skip") && perms.check(msg, "music.voteskip")) {
             if (this.boundChannels.hasOwnProperty(id)) {
                 if (this.boundChannels[id].currentVideo) {
-                    var index = command.arguments[0] ? parseInt(command.arguments[0]) - 1 : -1;
+                    var index = command.args[0] ? parseInt(command.args[0]) - 1 : -1;
                     console.log(index);
                     var isForced = !!(perms.check(msg, "music.forceskip") && command.flags.indexOf('f') > -1);
                     var video;
@@ -186,8 +186,8 @@ module.exports = class music {
 
         if (command.commandnos === "volume") {
             if (this.boundChannels.hasOwnProperty(id)) {
-                if (command.arguments[0] && perms.check(msg, "music.volume.set")) {
-                    var volume = parseInt(command.arguments[0]);
+                if (command.args[0] && perms.check(msg, "music.volume.set")) {
+                    var volume = parseInt(command.args[0]);
                     if (101 > volume && volume > 0) {
                         this.boundChannels[id].setVolume(volume);
                         msg.reply("Volume set to **" + volume + "**")

@@ -22,7 +22,7 @@ module.exports = class pokemon {
     onCommand(msg, command, perms) {
         console.log("Pokemon initiated");
         if (command.command === "pokemon" && perms.check(msg, "pokemon.pokemon")) {
-            var pokemon_name = command.arguments[0];
+            var pokemon_name = command.args[0];
             if (/^[^<@#\\\/>]*$/g.test(pokemon_name)) {
                 P.getPokemonByName(pokemon_name)
                     .then((response)=> {
@@ -42,13 +42,13 @@ module.exports = class pokemon {
                             {
                                 file: {
                                     file: response.sprites.front_default,
-                                    name: command.arguments[0] + ".png"
+                                    name: command.args[0] + ".png"
                                 }
                             })
                     })
                     .catch(function (error) {
                             if (error.statusCode == "404") {
-                                msg.reply("Could not find **" + utils.clean(command.arguments[0]) + "**");
+                                msg.reply("Could not find **" + utils.clean(command.args[0]) + "**");
                             } else {
                                 console.log('There was an ERROR with getting the data: ', error);
                                 msg.reply("Error getting data " + error);
@@ -61,7 +61,7 @@ module.exports = class pokemon {
             }
         }
         if (command.command === "shiny" && perms.check(msg, "pokemon.shiny")) {
-            var pokemon_name = command.arguments[0];
+            var pokemon_name = command.args[0];
             if (/^[^<@#\\\/>]*$/g.test(pokemon_name)) {
                 P.getPokemonByName(pokemon_name)
                     .then((response)=> {
@@ -69,13 +69,13 @@ module.exports = class pokemon {
                             {
                                 file: {
                                     file: response.sprites.front_shiny,
-                                    name: command.arguments[0] + ".png"
+                                    name: command.args[0] + ".png"
                                 }
                             })
                     })
                     .catch(function (error) {
                         if (error.statusCode == "404") {
-                            msg.reply("Could not find " + command.arguments[0]);
+                            msg.reply("Could not find " + command.args[0]);
                         } else {
                             console.log('There was an ERROR with getting the data: ', error);
                             msg.reply("Error getting data " + error);
@@ -88,7 +88,7 @@ module.exports = class pokemon {
             return true;
         }
         if (command.commandnos === "pokestat" && perms.check(msg, "pokemon.pokestat")) {
-            var pokemon_name = command.arguments[0];
+            var pokemon_name = command.args[0];
             if (/^[^<@#\\\/>]*$/g.test(pokemon_name)) {
                 P.getPokemonByName(pokemon_name)
                     .then((response)=> {
@@ -101,7 +101,7 @@ module.exports = class pokemon {
                     })
                     .catch(function (error) {
                         if (error.statusCode == "404") {
-                            msg.reply("Could not find " + command.arguments[0]);
+                            msg.reply("Could not find " + command.args[0]);
                         } else {
                             console.log('There was an ERROR with getting the data: ', error);
                             msg.reply("Error getting data " + error);
@@ -115,7 +115,7 @@ module.exports = class pokemon {
 
         }
         if (command.command === "hiddenability" && perms.check(msg, "pokemon.hiddenability")) {
-            var pokemon_name = command.arguments[0];
+            var pokemon_name = command.args[0];
             if (/^[^<@#\\\/>]*$/g.test(pokemon_name)) {
                 P.getPokemonByName(pokemon_name)
                     .then((response)=> {
@@ -127,7 +127,7 @@ module.exports = class pokemon {
                     })
                     .catch(function (error) {
                         if (error.statusCode == "404") {
-                            msg.reply("Could not find " + command.arguments[0]);
+                            msg.reply("Could not find " + command.args[0]);
                         } else {
                             console.log('There was an ERROR with getting the data: ', error);
                             msg.reply("Error getting data " + error);

@@ -537,11 +537,11 @@ module.exports = class moderation {
     onCommand(msg, command, perms) {
         console.log("Moderation initiated");
         if (command.command == "setlog" && perms.check(msg, "moderation.tools.setlog")) {
-            if (command.arguments[0] == 'false' || /<#\d+>/.test(command.options.channel)) {
+            if (command.args[0] == 'false' || /<#\d+>/.test(command.options.channel)) {
                 if (this.logging.hasOwnProperty(msg.channel.server.id)) {
                     var oldLog = this.logging[msg.channel.server.id];
                 }
-                if (command.arguments[0] === "false") {
+                if (command.args[0] === "false") {
                     delete this.logging[msg.channel.server.id];
                     if (this.config.data[msg.channel.server.id]) {
                         delete this.config.data[msg.channel.server.id].msgLog
@@ -603,8 +603,8 @@ module.exports = class moderation {
                 }
             }
             let length;
-            if (command.arguments[0]) {
-                length = Math.min(command.arguments[0].valueOf() || this.config.get("purgeLength", 100), this.config.get("maxPurgeLength", 100));
+            if (command.args[0]) {
+                length = Math.min(command.args[0].valueOf() || this.config.get("purgeLength", 100), this.config.get("maxPurgeLength", 100));
             } else {
                 length = this.config.get("purgeLength", 100)
             }

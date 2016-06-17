@@ -31,7 +31,7 @@ module.exports = class permissionsManager {
         if (command.command === "pex" || command.commandnos === "perm") {
 
             //if no command is supplied supply help url
-            if (command.arguments.length === 0) {
+            if (command.args.length === 0) {
                 msg.reply("You need help! visit \<https://pvpcraft.ca/pvpbot\> for more info");
                 return true;
             }
@@ -40,13 +40,13 @@ module.exports = class permissionsManager {
                 return true;
             }
             //command to set permissions.
-            if (command.arguments[0] === "set") {
+            if (command.args[0] === "set") {
 
                 //remove command from arguemnts
-                command.arguments.splice(0, 1);
+                command.args.splice(0, 1);
 
-                //check if they gave us enough arguments, if not tell them what to give us.
-                if (command.arguments.length < 2) {
+                //check if they gave us enough args, if not tell them what to give us.
+                if (command.args.length < 2) {
                     msg.reply("perms set <allow|deny|remove> <node>");
                     return true;
                 }
@@ -70,7 +70,7 @@ module.exports = class permissionsManager {
                         channel = channel.id;
                     }
                     else {
-                        msg.reply("Could not find channel specified please either mention the channel or use it's full name")
+                        msg.reply("Could not find channel specified please either mention the channel or use it's full name");
                         return true;
                     }
                 }
@@ -130,14 +130,14 @@ module.exports = class permissionsManager {
                 console.log("server:" + server);
                 console.log("target:" + target);
                 console.log(command);
-                var action = command.arguments.splice(0, 1)[0];
+                var action = command.args.splice(0, 1)[0];
                 console.log(command);
-                var node = server + "." + channel + "." + target + "." + command.arguments[0];
+                var node = server + "." + channel + "." + target + "." + command.args[0];
                 msg.reply(action + "ing node ```xl\n" + node + "\n```");
                 console.log(node);
                 perms.set(node, action);
             }
-            if (command.arguments[0] === "list") {
+            if (command.args[0] === "list") {
                 msg.reply(this.url + msg.channel.server.id);
             }
             return true;

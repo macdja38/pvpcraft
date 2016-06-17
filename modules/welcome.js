@@ -8,10 +8,10 @@ var utils = new Utils();
 
 module.exports = class welcome {
     constructor(cl, config, raven) {
-        //save the client as this.client for later use.
         this.client = cl;
-        //save the bug reporting thing raven for later use.
+        this.config = config;
         this.raven = raven;
+
         this.onJoin = (server, user) => {
             //TODO: once config loader v2 is done make this configurable.
             if (server.id == "77176186148499456") {
@@ -20,6 +20,25 @@ module.exports = class welcome {
                     " announce it in <#77176186148499456>\n```Welcome **" + utils.clean(user.username) + "**!```"
                 );
             }
+            var welcomeInfo = config.get("welcome", {}, {server: server.id});
+            if (welcomeInfo.message) {
+                let welcomeChannel;
+                if (welcomeInfo.channel) {
+                    welcomeChannel = server.channels.get("id", welcomeInfo.channel);
+                }
+                if (!welcomeChannel) {
+                    welcomeChannel = server.defaultChannel;
+                }
+                let message = welcomeInfo.message.replace(/\$user/gi, utils.clean(user.username));
+                if (welcomeInfo.delay && welcomeInfo.delay > 1000) {
+                    setTimeout(()=> {
+                        this.client.sendMessage(welcomeChannel, message);
+                    }, welcomeInfo.delay);
+                } else {
+                    this.client.sendMessage(welcomeChannel, message)
+                }
+            }
+
         };
     }
 
@@ -32,11 +51,34 @@ module.exports = class welcome {
     }
 
     getCommands() {
-        return [""];
+        return ["setwelcome"];
     }
 
     onCommand(msg, command, perms, l) {
         console.log("welcomeBot initiated");
+        if (command.command === "setwelcome" && perms.check(msg, "admin.welcome.set")) {
+            if (!command.args && !command.channel) {
+                return true;
+            }
+            var settings = this.config.get("welcome", {}, {server: msg.server.id});
+            if (command.args.length > 0 && command.args[0].toLowerCase() === "false") {
+                this.config.set("welcome", {}, {server: msg.server.id});
+                msg.reply(":thumbsup::skin-tone-2:");
+                return true;
+            }
+            if (command.args.length > 0) {
+                settings.message = command.args.join(" ");
+            }
+            if (command.channel) {
+                settings.channel = command.channel.id;
+            }
+            if (command.options.delay) {
+                settings.delay = Math.max(Math.min(command.options.delay.valueOf() || 0, 20), 0)*1000;
+            }
+            this.config.set("welcome", settings, {server: msg.server.id});
+            msg.reply(":thumbsup::skin-tone-2:");
+            return true;
+        }
         return false;
     }
 };
