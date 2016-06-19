@@ -12,11 +12,6 @@ var mcping = require('mc-ping-updated');
 
 var streamBuffers = require('stream-buffers');
 
-var myReadableStreamBuffer = new streamBuffers.ReadableStreamBuffer({
-    frequency: 10,       // in milliseconds.
-    chunkSize: 2048     // in bytes.
-});
-
 module.exports = class minecraft {
     constructor(cl) {
         this.client = cl;
@@ -30,7 +25,17 @@ module.exports = class minecraft {
         console.log("Minecraft initiated");
         var t1 = now();
         if (command.command === "mcping" && perms.check(msg, "minecraft.mcping")) {
-            mcping(command.args.join("."), "25565", (err, res)=> {
+            let combined = command.args.join(".").match(/(.*?):(.*)/);
+            let address;
+            let port;
+            if(combined) {
+                address = combined[1];
+                port = combined[2];
+            } else {
+                address = command.args.join(".") || "pvpcraft.ca";
+                port = "25565";
+            }
+            mcping(address, port, (err, res)=> {
                 if (err) {
                     console.error(err);
                     this.client.sendMessage(msg.channel, "```xl\n" + err + "```")
@@ -38,6 +43,10 @@ module.exports = class minecraft {
                 else {
                     console.log(res);
                     console.log(res.favicon.split(",")[1]);
+                    let myReadableStreamBuffer = new streamBuffers.ReadableStreamBuffer({
+                        frequency: 10,       // in milliseconds.
+                        chunkSize: 2048     // in bytes.
+                    });
                     myReadableStreamBuffer.put(res.favicon.split(",")[1]);
                     myReadableStreamBuffer.stop();
                     console.log(myReadableStreamBuffer);
