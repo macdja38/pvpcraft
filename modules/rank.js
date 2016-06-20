@@ -83,6 +83,7 @@ module.exports = class rank {
                     msg.reply(":thumbsup::skin-tone-2:");
                     return true;
                 }
+                return true;
             }
             if (command.args[0] === "remove" && perms.check(msg, "admin.rank.remove")) {
                 if (!command.args[1]) {
@@ -98,6 +99,7 @@ module.exports = class rank {
                 } else {
                     msg.reply(`Role could not be found, use \`${command.prefix}rank list\` to see the current ranks.`);
                 }
+                return true;
             }
             if (command.args[0] === "list" && perms.check(msg, "rank.list")) {
                 let roles = this.config.get("roles", {}, {server: msg.server.id});
@@ -116,6 +118,7 @@ module.exports = class rank {
                 } else {
                     msg.reply(`No ranks are setup to be join-able.`)
                 }
+                return true;
             }
             if (command.args[0] === "join" && perms.check(msg, "rank.join.use")) {
                 let roles = this.config.get("roles", command.args[1], {server: msg.server.id});
@@ -194,6 +197,7 @@ module.exports = class rank {
                     msg.reply(`Role could not be found, have an administrator use \`${command.prefix}rank add\` to update it.`);
                     return true;
                 }
+                return true;
             }
         }
         return false;
