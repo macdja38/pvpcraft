@@ -305,6 +305,24 @@ process.on('SIGINT', ()=> {
         process.exit(1)
     }, 5000);
     console.log("Logging out.");
+    for (let middleware of middlewareList) {
+        if (middleware.module) {
+            if (middleware.module.onDisconnect) {
+                console.log("Trying to Remove Listeners!".green);
+                middleware.module.onDisconnect();
+            }
+        }
+    }
+    for (let module of moduleList) {
+        if (module.module) {
+            if (module.module.onDisconnect) {
+                console.log("Trying to Remove Listeners!".green);
+                module.module.onDisconnect();
+            }
+        }
+    }
+    middlewareList = [];
+    moduleList = [];
     client.logout(()=> {
         console.log("Bye");
         process.exit(0);
