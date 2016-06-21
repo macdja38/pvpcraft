@@ -24,6 +24,7 @@ var warframe = function (cl, config, raven, auth) {
     warframe.client = cl;
     warframe.config = config;
     warframe.raven = raven;
+    warframe.alerts = [];
     var twitter_auth = auth.get("twitter", false);
     console.log(twitter_auth);
     if (twitter_auth) {
@@ -34,15 +35,53 @@ var warframe = function (cl, config, raven, auth) {
                 console.log(error)
             });
         });
+        //build the map of server id's and logging channels.
+        for (var item in config.data) {
+            if (config.data.hasOwnProperty(item) && config.data[item].hasOwnProperty("warframeAlerts")) {
+                if (warframe.client.channels.get("id", config.data[item]["warframeAlerts"].channel) != null) {
+                    warframe.alerts.push(config.data[item].warframeAlerts);
+                } else {
+                    //TODO: notify the server owner their mod alerts channel has been removed and that //setalerts false will make that permanent.
+                }
+            }
+        }
+        console.log(warframe.alerts);
         warframe.onAlert = function (tweet) {
             if (tweet.user.id_str === '1344755923' && !tweet.retweeted_status) {
                 //TODO: Fix this absolute garbage.
-                warframe.client.sendMessage(warframe.client.servers.get("id", "77176186148499456").channels.get("id", "137095541195669504"), tweet.text, (error)=> {
+                let alert = tweet.text.match(/(.*?): (.*?) - (.*?) - (.*)/);
+                console.log(alert);
+                if (alert) {
+                    console.dir(warframe.alerts, {depth: 2});
+                    warframe.alerts.forEach((server)=> {
+                        console.log("Server");
+                        console.log(server);
+                        let channel = warframe.client.channels.get("id", server.channel);
+                        if (channel && server.tracking === true) {
+                            console.log(channel.name);
+                            let things = [];
+                            for (let thing in server.items) {
+                                if (server.items.hasOwnProperty(thing)) {
+                                    if (alert[4].toLowerCase().indexOf(thing) > -1) {
+                                        things.push(server.items[thing])
+                                    }
+                                }
+                            }
+                            console.log("Searched alert");
+                            console.log(`\`\`\`xl\n${alert.slice(1, 5).join("\n")}\`\`\`${things.map((thing)=> {
+                                return `<@&${thing}>`
+                            })}`);
+                            warframe.client.sendMessage(channel, `\`\`\`xl\n${alert.slice(1, 5).join("\n")}\`\`\`${things.map((thing)=> {
+                                return `<@&${thing}>`
+                            })}`);
+                        }
+                    });
+                }
+                warframe.client.sendMessage(warframe.client.channels.get("id", "137095541195669504"), tweet.text, (error)=> {
                     if (error) {
                         console.log(error);
                     }
                 });
-                console.log(tweet);
                 console.log(tweet.text);
             }
         }
@@ -61,7 +100,7 @@ warframe.prototype.onDisconnect = function () {
     }
 };
 
-var commands = ["setupalerts", "tracking", "alert", "deal", "darvo", "trader", "voidtrader", "baro", "trial", "raid", "trialstat", "wiki", "sortie", "farm", "damage", "primeacces", "acces", "update", "update", "armorstat", "armourstat", "armor", "armour"];
+var commands = ["setupalerts", "alert", "deal", "darvo", "trader", "voidtrader", "baro", "trial", "raid", "trialstat", "wiki", "sortie", "farm", "damage", "primeacces", "acces", "update", "update", "armorstat", "armourstat", "armor", "armour"];
 
 warframe.prototype.getCommands = function () {
     return commands
@@ -92,57 +131,216 @@ warframe.prototype.onCommand = function (msg, command, perms) {
         return true;
     }
 
-    if ((command.commandnos === 'setupalerts') && perms.check(msg, "admin.warframe.setupalerts")) {
-
-        return true;
-    }
-    //TODO: track alerts, add command to set broadcast channel, regex alerts for role names and mention those roles in broadcast channels.
-    if ((command.commandnos === 'tracking') && perms.check(msg, "admin.warframe.setupalerts")) {
-        console.log(command);
-        if (command.options.add) {
-            var config = warframe.config.get(msg.channel.server.id,
-                {
-                    "warframeAlerts": {
-                        "tracking": false,
-                        "items": {}
-                    }
+    if (command.commandnos === "alert") {
+        if (command.args[0] === "list" && perms.check(msg, "rank.list")) {
+            let roles = warframe.config.get("warframeAlerts", {items: {}}, {server: msg.server.id}).items;
+            let coloredRolesList = "";
+            for (var role in roles) {
+                if (roles.hasOwnProperty(role) && role != "joinrole") {
+                    coloredRolesList += `+${role}\n`;
                 }
-            );
-            if (!config.warframeAlerts) {
-                config.warframeAlerts = {"tracking": false, "items": {}};
             }
-            if (typeof(config.warframeAlerts.tracking) !== "boolean") {
-                config.warframeAlerts.tracking = false;
+            if (coloredRolesList != "") {
+                msg.channel.sendMessage(`Available alerts include \`\`\`xl\n${coloredRolesList}\`\`\``)
+            } else {
+                msg.reply(`No alerts are being tracked.`)
             }
-            if (!config.warframeAlerts.items) {
-                config.warframeAlerts.items = {};
+            return true;
+        }
+        if (command.args[0] === "join" && perms.check(msg, "warframe.alerts.join")) {
+            let roles = warframe.config.get("warframeAlerts", {items: {}}, {server: msg.server.id}).items;
+            if (!command.args[1] || !roles[command.args[1]]) {
+                msg.reply(`Please supply an item to join using \`${command.prefix}rank join \<rank\>\`, for a list of items use \`${command.prefix}rank list\``);
+                return true;
             }
-            msg.channel.server.createRole({
-                name: command.options.add,
-                permissions: [],
-                mentionable: true
-            }, (error, role) => {
-                if (error) {
-                    if (error.status == 403) {
-                        msg.reply("Error, insufficient permissions, please give me manage roles.");
+            let rankToJoin = command.args[1].toLowerCase();
+            role = msg.server.roles.get("id", roles[rankToJoin]);
+            if (role) {
+                warframe.client.addMemberToRole(msg.author, role, (error)=> {
+                    let logChannel = warframe.config.get("msgLog", false, {server: msg.server.id});
+                    if (error) {
+                        if (logChannel) {
+                            logChannel = msg.server.channels.get("id", logChannel);
+                            if (logChannel) {
+                                warframe.client.sendMessage(logChannel, `Error ${error} promoting ${utils.removeBlocks(msg.author.username)} try redefining your rank and making sure the bot has enough permissions.`).catch(console.error)
+                            } else {
+                                msg.reply(`Error ${error} promoting ${utils.removeBlocks(msg.author.username)} try redefining your rank and making sure the bot has enough permissions.`)
+                            }
+                        }
+                    } else {
+                        if (logChannel) {
+                            logChannel = msg.server.channels.get("id", logChannel);
+                            if (logChannel) {
+                                warframe.client.sendMessage(logChannel, `${utils.removeBlocks(msg.author.username)} added themselves to ${utils.removeBlocks(role.name)}!`)
+                            }
+                        }
+                        msg.reply(":thumbsup::skin-tone-2:");
                     }
-                    else {
-                        msg.reply("Unexpected error please report the issue https://pvpcraft.ca/pvpbot");
-                        console.log(error);
-                        console.log(error.stack);
+                })
+            } else {
+                msg.reply(`Role could not be found, have an administrator use \`${command.prefix}tracking --add <item>\` to add it.`);
+            }
+            return true;
+        }
+        if (command.args[0] === "leave" && perms.check(msg, "warframe.alerts.leave")) {
+            let roles = warframe.config.get("warframeAlerts", {items: {}}, {server: msg.server.id}).items;
+            if (!command.args[1] || !roles[command.args[1]]) {
+                msg.reply(`Please supply a rank to leave using \`${command.prefix}alerts leave \<rank\>\`, for a list of ranks use \`${command.prefix}alerts list\``);
+                return true;
+            }
+            if (!perms.check(msg, `rank.leave.${command.args[1]}`)) {
+                msg.reply(`You do not have perms to join this rank for a list of ranks use \`${command.prefix}rank list\``);
+                return true;
+            }
+            role = msg.server.roles.get("id", roles[command.args[1]]);
+            if (role) {
+                warframe.client.removeMemberFromRole(msg.author, role, (error)=> {
+                    let logChannel = warframe.config.get("msgLog", false, {server: msg.server.id});
+                    if (error) {
+                        if (logChannel) {
+                            logChannel = msg.server.channels.get("id", logChannel);
+                            if (logChannel) {
+                                warframe.client.sendMessage(logChannel, `Error ${error} demoting ${utils.removeBlocks(msg.author.username)} try redefining your rank and making sure the bot has enough permissions.`).catch(console.error)
+                            }
+                        }
+                    } else {
+                        if (logChannel) {
+                            logChannel = msg.server.channels.get("id", logChannel);
+                            if (logChannel) {
+                                warframe.client.sendMessage(logChannel, `${utils.removeBlocks(msg.author.username)} removed themselves from ${utils.removeBlocks(role.name)}!`)
+                            }
+                        }
+                        msg.reply(":thumbsup::skin-tone-2:");
                     }
-                    return;
-                }
-                config.warframeAlerts.items[role.name] = role.id;
-                warframe.config.set(msg.channel.server.id, config);
-                console.log(config);
-                msg.reply("Created role " + utils.clean(role.name) + " with id `" + role.id + "`");
-            });
+                })
+            } else {
+                msg.reply(`Role could not be found, have an administrator use \`${command.prefix}alerts add <item>\` to add it.`);
+                return true;
+            }
             return true;
         }
 
-        msg.reply("invalid option's please specify --add <thing to track> or --remove <thing to remove> to change tracking options");
-        return true;
+        if(command.args[0] === "enable" && perms.check(msg, "admin.warframe.alerts")) {
+            let config = warframe.config.get("warframeAlerts",
+                {
+                    "tracking": true,
+                    "channel": "",
+                    "items": {}
+                }, {
+                    server: msg.server.id
+                }
+            );
+            if (command.args[0] && command.args[0] == "false") {
+                config.tracking = false;
+            } else if (config.tracking == false) {
+                config.tracking = true;
+            }
+            if (command.channel) {
+                config.channel = command.channel.id;
+            }
+            if (!config.items) {
+                config.items = {};
+            }
+            warframe.config.set("warframeAlerts", config, {server: msg.channel.server.id});
+            msg.reply(":thumbsup::skin-tone-2:");
+            return true;
+        }
+
+        if (command.args[0] === "add" && perms.check(msg, "admin.warframe.alerts")) {
+            if(command.args[1]) {
+                let config = warframe.config.get("warframeAlerts",
+                    {
+                        "tracking": false,
+                        "channel": "",
+                        "items": {}
+                    }
+
+                    , {server: msg.server.id});
+                if (typeof(config.tracking) !== "boolean") {
+                    config.tracking = false;
+                }
+                if (!config.items) {
+                    config.items = {};
+                }
+                if (config.items.indexOf(command.args[1].toLowerCase()) > 0) {
+                    msg.reply(`Resource is already being tracked, use \`${command.prefix}alert join ${utils.clean(command.args[1])}\` to join it.`);
+                    return;
+                }
+                msg.channel.server.createRole({
+                    name: command.args[1].toLowerCase(),
+                    permissions: [],
+                    mentionable: true
+                }, (error, role) => {
+                    if (error) {
+                        if (error.status == 403) {
+                            msg.reply("Error, insufficient permissions, please give me manage roles.");
+                        }
+                        else {
+                            msg.reply("Unexpected error please report the issue https://pvpcraft.ca/pvpbot");
+                            console.log(error);
+                            console.log(error.stack);
+                        }
+                        return;
+                    }
+                    config.items[role.name] = role.id;
+                    warframe.config.set("warframeAlerts", config, {server: msg.channel.server.id});
+                    console.log(config);
+                    msg.reply("Created role " + utils.clean(role.name) + " with id `" + role.id + "`");
+                });
+                return true;
+            }
+            msg.reply("invalid option's please specify the name of a resource to track to change tracking options");
+            return true;
+        }
+
+        if (command.args[0] === "remove" && perms.check(msg, "admin.warframe.alerts")) {
+            if(command.args[1]) {
+                let config = warframe.config.get("warframeAlerts",
+                    {
+                        "tracking": false,
+                        "channel": "",
+                        "items": {}
+                    }
+
+                    , {server: msg.server.id});
+                if (typeof(config.tracking) !== "boolean") {
+                    config.tracking = false;
+                }
+                if (!config.items) {
+                    config.items = {};
+                }
+                if (!config.items.hasOwnProperty(command.args[1])) {
+                    msg.reply(`Resource is not being tracked, use \`${command.prefix}alert add ${utils.clean(command.args[1])}\` to add it.`);
+                    return;
+                }
+                let role = msg.server.roles.get("name", command.args[1]);
+                if(role) {
+                    warframe.client.deleteRole(role, (error) => {
+                        if (error) {
+                            if (error.status == 403) {
+                                msg.reply("Error, insufficient permissions, please give me manage roles.");
+                            }
+                            else {
+                                msg.reply("Unexpected error please report the issue https://pvpcraft.ca/pvpbot");
+                                console.log(error);
+                                console.log(error.stack);
+                            }
+                            return;
+                        }
+                        delete config.items[command.args[1]];
+                        warframe.config.set("warframeAlerts", config, {server: msg.channel.server.id});
+                        msg.reply("Deleted role " + utils.clean(command.args[1]) + " with id `" + role.id + "`");
+                    });
+                    return true;
+                } else {
+                    delete config.items[command.args[1]];
+                    warframe.config.set("warframeAlerts", config, {server: msg.channel.server.id});
+                    return true;
+                }
+            }
+            msg.reply("Invalid option's please specify the name of a resource to track to change tracking options");
+            return true;
+        }
     }
 
     if ((command.commandnos === 'trader' || command.commandnos === 'voidtrader' || command.commandnos === 'baro') && perms.check(msg, "warframe.trader")) {
