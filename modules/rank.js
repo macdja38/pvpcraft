@@ -121,12 +121,19 @@ module.exports = class rank {
                 return true;
             }
             if (command.args[0] === "join" && perms.check(msg, "rank.join.use")) {
-                let roles = this.config.get("roles", command.args[1], {server: msg.server.id});
-                if (!command.args[1] || !roles[command.args[1]]) {
+                if (!command.args[1]) {
                     msg.reply(`Please supply a rank to join using \`${command.prefix}rank join \<rank\>\`, for a list of ranks use \`${command.prefix}rank list\``);
                     return true;
                 }
                 let rankToJoin = command.args[1].toLowerCase();
+                if (rankToJoin[0] == "+" || rankToJoin[0] == "-") {
+                    rankToJoin = rankToJoin.substring(1);
+                }
+                let roles = this.config.get("roles", rankToJoin, {server: msg.server.id});
+                if (!roles[rankToJoin]) {
+                    msg.reply(`Invalid rank, for a list of ranks use \`${command.prefix}rank list\``);
+                    return true;
+                }
                 if (!perms.check(msg, `rank.join.${rankToJoin}`)) {
                     msg.reply(`You do not have perms to join this rank for a list of ranks use \`${command.prefix}rank list\``);
                     return true;
