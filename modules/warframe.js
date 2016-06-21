@@ -237,6 +237,8 @@ warframe.prototype.onCommand = function (msg, command, perms) {
             }
             if (command.channel) {
                 config.channel = command.channel.id;
+            } else {
+                config.channel = msg.channel.id;
             }
             if (!config.items) {
                 config.items = {};
@@ -262,7 +264,7 @@ warframe.prototype.onCommand = function (msg, command, perms) {
                 if (!config.items) {
                     config.items = {};
                 }
-                if (config.items.indexOf(command.args[1].toLowerCase()) > 0) {
+                if (config.items.hasOwnProperty(command.args[1].toLowerCase())) {
                     msg.reply(`Resource is already being tracked, use \`${command.prefix}alert join ${utils.clean(command.args[1])}\` to join it.`);
                     return;
                 }
