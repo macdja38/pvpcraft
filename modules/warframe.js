@@ -50,12 +50,9 @@ var warframe = function (cl, config, raven, auth) {
             if (tweet.user.id_str === '1344755923' && !tweet.retweeted_status) {
                 //TODO: Fix this absolute garbage.
                 let alert = tweet.text.match(/(.*?): (.*?) - (.*?) - (.*)/);
-                console.log(alert);
                 if (alert) {
                     console.dir(warframe.alerts, {depth: 2});
                     warframe.alerts.forEach((server)=> {
-                        console.log("Server");
-                        console.log(server);
                         let channel = warframe.client.channels.get("id", server.channel);
                         if (channel && server.tracking === true) {
                             console.log(channel.name);
@@ -67,21 +64,12 @@ var warframe = function (cl, config, raven, auth) {
                                     }
                                 }
                             }
-                            console.log("Searched alert");
-                            console.log(`\`\`\`xl\n${alert.slice(1, 5).join("\n")}\`\`\`${things.map((thing)=> {
-                                return `<@&${thing}>`
-                            })}`);
                             warframe.client.sendMessage(channel, `\`\`\`xl\n${alert.slice(1, 5).join("\n")}\`\`\`${things.map((thing)=> {
                                 return `<@&${thing}>`
                             })}`);
                         }
                     });
                 }
-                warframe.client.sendMessage(warframe.client.channels.get("id", "137095541195669504"), tweet.text, (error)=> {
-                    if (error) {
-                        console.log(error);
-                    }
-                });
                 console.log(tweet.text);
             }
         }
@@ -137,7 +125,7 @@ warframe.prototype.onCommand = function (msg, command, perms) {
             let coloredRolesList = "";
             for (var role in roles) {
                 if (roles.hasOwnProperty(role) && role != "joinrole") {
-                    coloredRolesList += `+${role}\n`;
+                    coloredRolesList += `${role}\n`;
                 }
             }
             if (coloredRolesList != "") {
@@ -337,6 +325,7 @@ warframe.prototype.onCommand = function (msg, command, perms) {
                 } else {
                     delete config.items[command.args[1]];
                     warframe.config.set("warframeAlerts", config, {server: msg.channel.server.id});
+                    msg.reply("Role not found, removed " + utils.clean(command.args[1]) + " from list.");
                     return true;
                 }
             }
