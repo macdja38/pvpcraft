@@ -22,7 +22,9 @@ function loadConfigs() {
             global.configDB = configDB;
             permsDB = new ConfigsDB("permissions", client, con);
             perms = new Permissions(permsDB);
-            resolve(true);
+            Promise.all([configDB,permsDB]).then(()=>{
+                resolve(true);
+            }).catch(()=>{resolve(true)});
         })
     });
 }
@@ -34,8 +36,8 @@ if (cluster.isMaster) {
         cluster.fork();
     }
 
-     var Website = require("./www");
-     var website = new Website(config.get("website", {port: 8000}).port);
+    var Website = require("./www");
+    var website = new Website(config.get("website", {port: 8000}).port);
 
     cluster.on('exit', (deadWorker, code, signal) => {
         var worker = cluster.fork();
@@ -48,8 +50,13 @@ if (cluster.isMaster) {
     var git = require('git-rev');
 
     var Discord = require("discord.js");
-    console.log(`Worker id ${cluster.worker.id-1} Shard count ${numCPUs}`);
-    var client = new Discord.Client({forceFetchUsers: true, autoReconnect: true, shardId: cluster.worker.id-1, shardCount: numCPUs});
+    console.log(`Worker id ${cluster.worker.id - 1} Shard count ${numCPUs}`);
+    var client = new Discord.Client({
+        forceFetchUsers: true,
+        autoReconnect: true,
+        shardId: cluster.worker.id - 1,
+        shardCount: numCPUs
+    });
 
     global.r = require('rethinkdb');
     var r = global.r;
@@ -135,7 +142,7 @@ if (cluster.isMaster) {
         } else {
             l = defaults.prefix;
         }
-
+        console.log(`Prefix ${l}`);
         //Message middleware starts here.
         for (ware in middlewareList) {
             if (middlewareList.hasOwnProperty(ware) && middlewareList[ware].ware.onMessage) {
@@ -144,6 +151,7 @@ if (cluster.isMaster) {
         }
 
         var command = Parse.command(l, msg, {"allowMention": id, "botName": name});
+        console.log(`Command ${command}`);
         //Reload command starts here.
         if (command.command === "reload" && msg.author.id === "85257659694993408") {
             reloadTarget(msg, command, perms, l, moduleList, middlewareList)
@@ -236,7 +244,7 @@ if (cluster.isMaster) {
         }
         var t2 = now();
         if (msg.channel.server) {
-            console.log("s:".blue + cluster.worker.id + " s: ".magenta + msg.channel.server.name + " c: ".blue + msg.channel.name + " u: ".cyan +
+            console.log("s:".blue + (cluster.worker.id-1) + " s: ".magenta + msg.channel.server.name + " c: ".blue + msg.channel.name + " u: ".cyan +
                 msg.author.username + " m: ".green + msg.content.replace(/\n/g, "\n    ") + " in ".yellow + (t2 - t1) + "ms".red);
         } else {
             console.log("u: ".cyan + msg.author.username + " m: ".green + msg.content.replace(/\n/g, "\n    ").rainbow +
@@ -273,7 +281,7 @@ if (cluster.isMaster) {
             console.log("-------------------");
             console.log("Ready as " + client.user.username);
             console.log("Mention  " + mention);
-            console.log("Shard " + cluster.worker.id + "/" + numCPUs);
+            console.log("Shard " + (cluster.worker.id-1) + "/" + numCPUs);
             console.log("-------------------");
             if (!hasBeenReady) {
                 hasBeenReady = true;
