@@ -7,6 +7,7 @@ var router = express.Router();
 /* GET users listing. */
 router.get('/', function(req, res, next) {
     //res.render('music', { title: 'Express' });
+    /*
     var music = express.moduleList.find((a)=>{return a.module.constructor.name === "music"});
     if(music.module.boundChannels.hasOwnProperty(req.query.server)) {
         res.render('music', {
@@ -21,6 +22,8 @@ router.get('/', function(req, res, next) {
         //console.log(music.module.boundChannels[req.params]);
         res.render('music', {title: "0 Songs queued", servers: Object.keys(music.module.boundChannels).length})
     }
+     */
+    res.render('music-disabled')
 });
 
 module.exports = router;

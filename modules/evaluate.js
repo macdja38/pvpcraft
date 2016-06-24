@@ -13,10 +13,11 @@ var Utils = require('../lib/utils');
 var utils = new Utils();
 
 module.exports = class evaluate {
-    constructor(cl, config, raven, modules) {
-        this.client = cl;
-        this.modules = modules;
-        this.config = config;
+    constructor(e) {
+        this.client = e.client;
+        this.modules = e.modules;
+        this.config = e.configDB;
+        this.fileConfig = e.config;
     }
 
     getCommands() {
@@ -36,6 +37,7 @@ module.exports = class evaluate {
             let client = this.client;
             let bot = this.client;
             let message = msg;
+            let config = this.config;
 
             let raven = this.raven;
             let modules = this.modules;
@@ -68,7 +70,7 @@ module.exports = class evaluate {
             return true;
         }
 
-        if (command.command === "setavatar" && this.config.get("permissions", {"permissions": {admins: []}}).admins.includes(msg.author.id)) {
+        if (command.command === "setavatar" && this.fileConfig.get("permissions", {"permissions": {admins: []}}).admins.includes(msg.author.id)) {
             request({
                 method: 'GET',
                 url: command.args[0],

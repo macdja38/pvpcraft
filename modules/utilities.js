@@ -9,9 +9,9 @@ var utils = new Utils();
 var now = require('performance-now');
 
 var utilities = class utilities {
-    constructor(cl, config) {
-        this.client = cl;
-        this.config = config;
+    constructor(e) {
+        this.client = e.client;
+        this.config = e.config;
     }
 
     getCommands() {

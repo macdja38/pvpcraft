@@ -9,17 +9,17 @@ var utils = new Utils();
 var colors = require('colors');
 
 module.exports = class moderation {
-    constructor(cl, config, raven) {
-        this.client = cl;
+    constructor(e) {
+        this.client = e.client;
         this.logging = {};
-        this.config = config;
-        this.raven = raven;
+        this.config = e.config;
+        this.raven = e.raven;
         this.purgedMessages = {};
 
         //build the map of server id's and logging channels.
-        for (var item in config.data) {
-            if (config.data.hasOwnProperty(item) && config.data[item].hasOwnProperty("msgLog")) {
-                let channel = this.client.channels.get("id", config.data[item]["msgLog"]);
+        for (var item in this.config.data) {
+            if (this.config.data.hasOwnProperty(item) && this.config.data[item].hasOwnProperty("msgLog")) {
+                let channel = this.client.channels.get("id", this.config.data[item]["msgLog"]);
                 if (channel != null) {
                     this.logging[item] = channel;
                 } else {

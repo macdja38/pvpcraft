@@ -7,11 +7,11 @@ var Utils = require('../lib/utils');
 var utils = new Utils();
 
 module.exports = class template {
-    constructor(cl, config, raven) {
+    constructor(e) {
         //save the client as this.client for later use.
-        this.client = cl;
+        this.client = e.client;
         //save the bug reporting thing raven for later use.
-        this.raven = raven;
+        this.raven = e.raven;
     }
 
     getCommands() {

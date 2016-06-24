@@ -16,10 +16,10 @@ if (key == "key") {
 var text;
 
 module.exports = class music {
-    constructor(cl, config, raven) {
-        this.client = cl;
-        this.config = config;
-        this.raven = raven;
+    constructor(e) {
+        this.client = e.client;
+        this.config = e.config;
+        this.raven = e.raven;
         /**
          * holds array of servers channels and their bound instances.
          * @type {Array}

@@ -1,27 +1,27 @@
 extends layout
 
 block content
-  h1 Music Module
-  p Currently playing music in #{servers} servers.
-  if textChannel
-      p Bound to text channel #{textChannel.name} and voice channel #{voiceChannel.name} in #{server.name}
-  if queue
-    p Songs in queue #{queue.length}
-    table
-      tr
-        th #
-        th Song
-        th Uploder
-        th Views
-        th Duration
-        th votes
-        th added by
-      - for (var song=0; song < queue.length; song++)
-        tr
-          td= song+1
-          td= queue[song].prettyTitle()
-          td= queue[song].prettyAuthor()
-          td= queue[song].prettyViews()
-          td= queue[song].prettyTime()
-          td= queue[song].votes.length
-          td= queue[song].user.username
+    h1 Music Module
+    p Currently playing music in #{servers} servers.
+    if textChannel
+        p Bound to text channel #{textChannel.name} and voice channel #{voiceChannel.name} in #{server.name}
+    if queue
+          p Songs in queue #{queue.length}
+          table
+                tr
+                      th #
+                      th Song
+                      th Uploder
+                      th Views
+                      th Duration
+                      th votes
+                      th added by
+                - for (var song=0; song < queue.length; song++)
+                      tr
+                            td= song+1
+                            td= queue[song].prettyTitle()
+                            td= queue[song].prettyAuthor()
+                            td= queue[song].prettyViews()
+                            td= queue[song].prettyTime()
+                            td= queue[song].votes.length
+                            td= queue[song].user.username

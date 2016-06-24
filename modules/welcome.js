@@ -7,10 +7,10 @@ var Utils = require('../lib/utils');
 var utils = new Utils();
 
 module.exports = class welcome {
-    constructor(cl, config, raven) {
-        this.client = cl;
-        this.config = config;
-        this.raven = raven;
+    constructor(e) {
+        this.client = e.client;
+        this.config = e.configDB;
+        this.raven = e.raven;
 
         this.onJoin = (server, user) => {
             //TODO: once config loader v2 is done make this configurable.
@@ -20,7 +20,7 @@ module.exports = class welcome {
                     " announce it in <#77176186148499456>\n```Welcome **" + utils.clean(user.username) + "**!```"
                 );
             }
-            var welcomeInfo = config.get("welcome", {}, {server: server.id});
+            var welcomeInfo = this.config.get("welcome", {}, {server: server.id});
             if (welcomeInfo.message) {
                 let welcomeChannel;
                 if (welcomeInfo.channel) {

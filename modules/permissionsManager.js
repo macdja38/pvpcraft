@@ -12,12 +12,12 @@ var utils = new Utils();
 var defaultURL = "https://pvpcraft.ca/pvpbot/perms/?server=";
 
 module.exports = class permissionsManager {
-    constructor(cl, config) {
-        this.client = cl;
-        this.config = config;
+    constructor(e) {
+        this.client = e.client;
+        this.config = e.config;
 
         //url where permissions are exposed at.
-        this.url = config.get("permissions", {url: defaultURL}).url
+        this.url = this.config.get("permissions", {url: defaultURL}).url
     }
 
     getCommands() {

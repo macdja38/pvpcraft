@@ -7,8 +7,8 @@ var Utils = require('../lib/utils');
 var utils = new Utils();
 
 module.exports = class template {
-    constructor(cl) {
-        this.client = cl;
+    constructor(e) {
+        this.client = e.client;
     }
 
     /**

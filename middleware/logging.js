@@ -10,8 +10,8 @@ var DB = require('../lib/database.js');
 var db = new DB();
 
 module.exports = class logging {
-    constructor(cl) {
-        this.client = cl;
+    constructor(e) {
+        this.client = e.client;
     }
 
     /**

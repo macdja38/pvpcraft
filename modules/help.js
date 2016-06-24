@@ -9,9 +9,9 @@ var utils = new Utils();
 var colors = require('colors');
 
 module.exports = class help {
-    constructor(cl, config, raven) {
-        this.client = cl;
-        this.raven = raven;
+    constructor(e) {
+        this.client = e.client;
+        this.raven = e.raven;
     }
 
     getCommands() {

@@ -14,48 +14,104 @@ var utils = new Utils();
 
 var Twitter = require('twit');
 
+var master;
+if (global.cluster.worker.id == 1) {
+    master = true;
+}
+
 var twitter;
 
 var request = require('request');
 
 var _ = require('underscore');
 
-var warframe = function (cl, config, raven, auth) {
-    warframe.client = cl;
-    warframe.config = config;
-    warframe.raven = raven;
+var warframe = function (e) {
+    warframe.client = e.client;
+    warframe.config = e.configDB;
+    warframe.raven = e.raven;
     warframe.alerts = [];
-    var twitter_auth = auth.get("twitter", false);
-    console.log(twitter_auth);
-    if (twitter_auth) {
+    if (master) {
+        var twitter_auth = e.auth.get("twitter", false);
         warframe.twitter = new Twitter(twitter_auth);
-        warframe.stream = warframe.twitter.stream('statuses/filter', {follow: "1344755923"})
-        //build the map of server id's and logging channels.
-        for (var item in config.data) {
-            if (config.data.hasOwnProperty(item) && config.data[item].hasOwnProperty("warframeAlerts")) {
-                if (warframe.client.channels.get("id", config.data[item]["warframeAlerts"].channel) != null) {
-                    warframe.alerts.push(config.data[item].warframeAlerts);
-                } else {
-                    //TODO: notify the server owner their mod alerts channel has been removed and that //setalerts false will make that permanent.
-                }
+        warframe.stream = warframe.twitter.stream('statuses/filter', {follow: "1344755923"});
+    }
+    warframe.onAlert = new Promise((resolve)=> {
+        global.conn.then((con)=> {
+            let dbReady;
+            if (global.cluster.worker.id == 1) {
+                dbReady = createDBIfNotExists("alerts", con);
+            } else {
+                dbReady = Promise.resolve();
             }
-        }
-        console.log(warframe.alerts);
-        warframe.onAlert = function (tweet) {
-            if (tweet.user.id_str === '1344755923' && !tweet.retweeted_status) {
-                //TODO: Fix this absolute garbage.
-                let alert = tweet.text.match(/(.*?): (.*?) - (.*?) - (.*)/);
-                if (alert) {
-                    console.dir(warframe.alerts, {depth: 2});
-                    warframe.alerts.forEach((server)=> {
-                        let channel = warframe.client.channels.get("id", server.channel);
-                        if (channel && server.tracking === true) {
-                            console.log(channel.name);
+            dbReady.then(()=> {
+                /*global.r.table(this.table).insert([{id: "*", prefix: "//", "changeThresh": 1}]).run(this.con).then((res)=>{
+                 console.log(res);
+                 });*/
+                console.log("Did, DB Thing");
+                for (var item in warframe.config.data) {
+                    if (warframe.config.data.hasOwnProperty(item) && warframe.config.data[item].hasOwnProperty("warframeAlerts")) {
+                        if (warframe.client.channels.get("id", warframe.config.data[item]["warframeAlerts"].channel) != null) {
+                            warframe.alerts.push(warframe.config.data[item].warframeAlerts);
+                        } else {
+                            //TODO: notify the server owner their mod alerts channel has been removed and that //setalerts false will make that permanent.
+                        }
+                    }
+                }
+                if (master) {
+                    console.log(`Shard ${global.cluster.worker.id} is the Master Shard!`);
+                    if (twitter_auth) {
+                        //build the map of server id's and logging channels.
+                        console.log(warframe.alerts);
+                        console.log("twitter auth found, declairing onAlert");
+                        resolve(
+                            function (tweet) {
+                                console.log(tweet);
+                                if (tweet.user.id_str === '1344755923' && !tweet.retweeted_status) {
+                                    console.log("Tweet Found");
+                                    let alert = tweet.text.match(/(.*?): (.*?) - (.*?) - (.*)/);
+                                    if (alert) {
+                                        alert = alert.slice(1, 5);
+                                        alert.invasion = false;
+                                    } else {
+                                        alert = tweet.text.match(/(.*?): (.*?) (VS\.) (.*)/);
+                                        if (alert) {
+                                            alert = alert.slice(1, 5);
+                                            alert.invasion = true;
+                                        }
+                                    }
+                                    if (alert) {
+                                        console.log("Logging tweet");
+                                        global.r.table('alerts').insert(alert.reduce(function (o, v, i) {
+                                            o[i] = v;
+                                            return o;
+                                        }, {})).run(con).then(console.log);
+                                    }
+                                }
+                            })
+                    }
+                }
+                global.r.table('alerts').changes().run(con, (err, cursor)=> {
+                    if (err) {
+                        console.log(err);
+                        return;
+                    }
+                    cursor.each((alert)=> {
+                        console.dir(warframe.alerts, {depth: 2});
+                        warframe.alerts.forEach((server)=> {
+                            let channel = warframe.client.channels.get("id", server.channel);
+                            if (channel && server.tracking === true)
+                                console.log(channel.name);
                             let things = [];
                             let madeMentionable = [];
                             for (let thing in server.items) {
                                 if (server.items.hasOwnProperty(thing)) {
-                                    if (alert[4].toLowerCase().indexOf(thing) > -1) {
+                                    if (alert["3"].toLowerCase().indexOf(thing) > -1) {
+                                        things.push(server.items[thing]);
+                                        madeMentionable.push(warframe.client.updateRole(server.items[thing], {
+                                            mentionable: true
+                                        }));
+                                    }
+                                    if (alert.invasion && alert["2"].toLowerCase().indexOf(thing) > -1) {
                                         things.push(server.items[thing]);
                                         madeMentionable.push(warframe.client.updateRole(server.items[thing], {
                                             mentionable: true
@@ -64,15 +120,15 @@ var warframe = function (cl, config, raven, auth) {
                                 }
                             }
                             let sendAlert = () => {
-                                warframe.client.sendMessage(channel, `\`\`\`xl\n${alert.slice(1, 5).join("\n")}\`\`\`${things.map((thing)=> {
+                                return warframe.client.sendMessage(channel, `\`\`\`xl\n${alert.join("\n")}\`\`\`${things.map((thing)=> {
                                     return `<@&${thing}>`
                                 })}`)
                             };
                             let makeUnmentionable = () => {
-                                for(let thing in things) {
-                                    if(things.hasOwnProperty(thing)) {
+                                for (let thing in things) {
+                                    if (things.hasOwnProperty(thing)) {
                                         let role = server.roles.get("id", things[thing]);
-                                        if(role) {
+                                        if (role) {
                                             warframe.client.updateRole(role, {
                                                 mentionable: false
                                             });
@@ -81,34 +137,49 @@ var warframe = function (cl, config, raven, auth) {
                                 }
                             };
                             Promise.all(madeMentionable).then(()=> {
-                                sendAlert();
-                                makeUnmentionable();
-                            }).catch((error)=>{
+                                sendAlert().then(makeUnmentionable);
+                            }).catch((error)=> {
                                 //console.error(error);
                                 //sendAlert();
                                 //makeUnmentionable();
                                 //warframe.client.sendMessage(channel, "Unable to make role mentionable, please contact @```Macdja38#7770 for help after making sure the bot has sufficient permissions").catch(console.error);
                             });
-                        }
+
+                        });
                     });
-                }
-                console.log(tweet.text);
-            }
-        }
-    }
+                });
+            });
+        });
+    });
 };
 
+function createDBIfNotExists(name, con) {
+    return global.r.tableList().contains(name)
+        .do((databaseExists) => {
+            return global.r.branch(
+                databaseExists,
+                {dbs_created: 0},
+                global.r.tableCreate(name)
+            );
+        }).run(con)
+}
+
 warframe.prototype.onReady = function () {
-    if (warframe.twitter) {
-        warframe.stream.on('tweet', warframe.onAlert);
-        warframe.stream.stop();
+    if (warframe.twitter && master) {
+        warframe.onAlert.then((alerts)=> {
+            console.log("Attaching Listener");
+            warframe.stream.on('tweet', alerts);
+            warframe.stream.start();
+        })
     }
 };
 
 warframe.prototype.onDisconnect = function () {
-    if (warframe.twitter) {
-        warframe.stream.removeListener('tweet', warframe.onAlert);
-        warframe.stream.stop();
+    if (warframe.twitter && master) {
+        warframe.onAlert.then((alerts)=> {
+            warframe.stream.removeListener('tweet', alerts);
+            warframe.stream.stop();
+        });
     }
 };
 
@@ -198,10 +269,6 @@ warframe.prototype.onCommand = function (msg, command, perms) {
             let roles = warframe.config.get("warframeAlerts", {items: {}}, {server: msg.server.id}).items;
             if (!command.args[1] || !roles[command.args[1]]) {
                 msg.reply(`Please supply a rank to leave using \`${command.prefix}alerts leave \<rank\>\`, for a list of ranks use \`${command.prefix}alerts list\``);
-                return true;
-            }
-            if (!perms.check(msg, `rank.leave.${command.args[1]}`)) {
-                msg.reply(`You do not have perms to join this rank for a list of ranks use \`${command.prefix}rank list\``);
                 return true;
             }
             role = msg.server.roles.get("id", roles[command.args[1]]);

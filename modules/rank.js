@@ -6,13 +6,13 @@ var Utils = require('../lib/utils');
 var utils = new Utils();
 
 module.exports = class rank {
-    constructor(cl, config, raven) {
-        this.client = cl;
-        this.config = config;
-        this.raven = raven;
+    constructor(e) {
+        this.client = e.client;
+        this.config = e.config;
+        this.raven = e.raven;
 
         this.onJoin = (server, user) => {
-            var rank = config.get("roles", false, {server: server.id});
+            var rank = this.config.get("roles", false, {server: server.id});
             if (rank && rank.joinrole) {
                 rank = server.roles.get("id", rank.joinrole);
                 if (rank) {

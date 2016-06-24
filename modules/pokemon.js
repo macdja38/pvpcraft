@@ -11,8 +11,8 @@ var utils = new Utils();
 var P = new Pokedex();
 
 module.exports = class pokemon {
-    constructor(cl) {
-        this.client = cl;
+    constructor(e) {
+        this.client = e.client;
     }
 
     getCommands() {

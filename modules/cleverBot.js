@@ -14,9 +14,9 @@ var CleverBot = require('cleverbot-node');
 var clever = new CleverBot();
 
 module.exports = class cleverBot {
-    constructor(cl, config, raven) {
-        this.client = cl;
-        this.raven = raven;
+    constructor(e) {
+        this.client = e.client;
+        this.raven = e.raven;
     }
 
     getCommands() {
