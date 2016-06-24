@@ -8,7 +8,7 @@ var utils = new Utils();
 module.exports = class rank {
     constructor(e) {
         this.client = e.client;
-        this.config = e.config;
+        this.config = e.configDB;
         this.raven = e.raven;
 
         this.onJoin = (server, user) => {

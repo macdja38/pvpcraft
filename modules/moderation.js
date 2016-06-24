@@ -13,13 +13,14 @@ module.exports = class moderation {
         this.client = e.client;
         this.logging = {};
         this.config = e.config;
+        this.configDB = e.configDB;
         this.raven = e.raven;
         this.purgedMessages = {};
 
         //build the map of server id's and logging channels.
-        for (var item in this.config.data) {
-            if (this.config.data.hasOwnProperty(item) && this.config.data[item].hasOwnProperty("msgLog")) {
-                let channel = this.client.channels.get("id", this.config.data[item]["msgLog"]);
+        for (var item in this.configDB.data) {
+            if (this.configDB.data.hasOwnProperty(item) && this.configDB.data[item].hasOwnProperty("msgLog")) {
+                let channel = this.client.channels.get("id", this.configDB.data[item]["msgLog"]);
                 if (channel != null) {
                     this.logging[item] = channel;
                 } else {
@@ -119,17 +120,17 @@ module.exports = class moderation {
         this.logUpdate = (message, newMessage) => {
             try {
                 if (!newMessage.channel.server) return; //it's a pm so we don't log it.
-                var changeThresh = this.config.data[newMessage.channel.server.id];
+                var changeThresh = this.configDB.data[newMessage.channel.server.id];
                 if (changeThresh) {
                     if (changeThresh.changeThresh) {
                         changeThresh = changeThresh.changeThresh;
                     }
                     else {
-                        changeThresh = this.config.get("default", {changeThresh: "1"}).changeThresh
+                        changeThresh = this.configDB.get("*", {changeThresh: "1"}).changeThresh
                     }
                 }
                 else {
-                    changeThresh = this.config.get("default", {changeThresh: "1"}).changeThresh
+                    changeThresh = this.configDB.get("*", {changeThresh: "1"}).changeThresh
                 }
                 if (this.logging[newMessage.channel.server.id] && (!message || message.content !== newMessage.content)) {
                     if (message) {
@@ -543,18 +544,18 @@ module.exports = class moderation {
                 }
                 if (command.args[0] === "false") {
                     delete this.logging[msg.channel.server.id];
-                    if (this.config.data[msg.channel.server.id]) {
-                        delete this.config.data[msg.channel.server.id].msgLog
+                    if (this.configDB.data[msg.channel.server.id]) {
+                        delete this.configDB.data[msg.channel.server.id].msgLog
                     }
                 } else {
                     this.logging[msg.channel.server.id] = this.client.channels.get("id", command.options.channel.match(/<#(\d+)>/)[1]);
-                    if (this.config.data[msg.channel.server.id]) {
-                        this.config.data[msg.channel.server.id].msgLog = this.logging[msg.channel.server.id].id;
+                    if (this.configDB.data[msg.channel.server.id]) {
+                        this.configDB.data[msg.channel.server.id].msgLog = this.logging[msg.channel.server.id].id;
                     } else {
-                        this.config.data[msg.channel.server.id] = {msgLog: this.logging[msg.channel.server.id].id};
+                        this.configDB.data[msg.channel.server.id] = {msgLog: this.logging[msg.channel.server.id].id};
                     }
                 }
-                this.config.save();
+                this.configDB.save(msg.channel.server.id);
                 if (oldLog) {
                     if (this.logging.hasOwnProperty(msg.channel.server.id)) {
                         this.client.sendMessage(oldLog, utils.clean(`Moderation log changed to channel ${this.logging[msg.channel.server.id].name}`), (error)=> {

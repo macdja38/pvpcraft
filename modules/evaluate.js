@@ -16,7 +16,8 @@ module.exports = class evaluate {
     constructor(e) {
         this.client = e.client;
         this.modules = e.modules;
-        this.config = e.configDB;
+        this.config = e.config;
+        this.configDB = e.configDB;
         this.fileConfig = e.config;
     }
 
