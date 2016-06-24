@@ -48,6 +48,7 @@ if (cluster.isMaster) {
     var git = require('git-rev');
 
     var Discord = require("discord.js");
+    console.log(`Worker id ${cluster.worker.id-1} Shard count ${numCPUs}`);
     var client = new Discord.Client({forceFetchUsers: true, autoReconnect: true, shardId: cluster.worker.id-1, shardCount: numCPUs});
 
     global.r = require('rethinkdb');
