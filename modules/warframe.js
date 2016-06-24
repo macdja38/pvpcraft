@@ -14,6 +14,9 @@ var utils = new Utils();
 
 var Twitter = require('twit');
 
+var newStateGrabber = require("../lib/newWorldState");
+var newWorldState = new newStateGrabber("http://content.warframe.com/dynamic/worldState.php", "pc");
+
 var master;
 if (global.cluster.worker.id == 1) {
     master = true;
