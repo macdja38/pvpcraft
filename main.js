@@ -22,7 +22,7 @@ function loadConfigs() {
             global.configDB = configDB;
             permsDB = new ConfigsDB("permissions", client, con);
             perms = new Permissions(permsDB);
-            Promise.all([configDB,permsDB]).then(()=>{
+            Promise.all([configDB.reload(),permsDB.reload()]).then(()=>{
                 resolve(true);
             }).catch(()=>{resolve(true)});
         })
