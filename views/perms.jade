@@ -1,0 +1,18 @@
+//
+   Created by macdja38 on 2016-06-25.
+
+extends layout
+
+block content
+    script(src='https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js')
+    h2 Permissions module
+    if err
+        p error #{err} finding content
+    else if serverPerms
+        h1 Server Permissions
+        pre.prettyprint
+            !{JSON.stringify(serverPerms, null, 4)}
+    if defaultPerms
+        h1 Default Permissions
+        pre.prettyprint
+            !{JSON.stringify(defaultPerms, null, 4)}

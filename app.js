@@ -8,6 +8,11 @@ var bodyParser = require('body-parser');
 var routes = require('./routes/index');
 var users = require('./routes/users');
 var music = require('./routes/music');
+var perms = require('./routes/perms');
+
+var Configs = require("./lib/config.js");
+var auth = new Configs("auth");
+
 express.test = "HI";
 
 var moduleList;
@@ -26,9 +31,17 @@ app.use(bodyParser.urlencoded({extended: false}));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+express.r = require('rethinkdb');
+express.conn = express.r.connect(auth.get("reThinkDB", {}));
+
+express.conn.then(()=> {
+
+}).catch(console.error);
+
 app.use('/', routes);
 app.use('/users', users);
 app.use('/music', music);
+app.use('/perms', perms);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
@@ -37,9 +50,6 @@ app.use(function (req, res, next) {
     next(err);
 });
 
-app.setModuleList = (modules) => {
-    express.moduleList = modules;
-};
 
 // error handlers
 

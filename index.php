@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Permissions</title>
-<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+    <title>Permissions</title>
+    <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
 </head>
 
 <body>
@@ -10,6 +10,7 @@
 <h1>Permissions</h1>
 
 <pre class="prettyprint">
+<code>
 <?php
 $permissions = file_get_contents("permissions.json");
 $permissions_a = json_decode($permissions, true);

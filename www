@@ -44,10 +44,6 @@ module.exports = class {
          */
 
     }
-
-    setModuleList(moduleList) {
-        app.setModuleList(moduleList);
-    }
 };
 /**
  * Normalize a port into a number, string, or false.
