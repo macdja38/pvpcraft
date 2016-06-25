@@ -16,17 +16,13 @@ var permsDB;
 var perms;
 
 function loadConfigs() {
-    return new Promise((resolve)=> {
-        global.conn.then((con)=> {
-            configDB = new ConfigsDB("servers", client, con);
-            global.configDB = configDB;
-            permsDB = new ConfigsDB("permissions", client, con);
-            perms = new Permissions(permsDB);
-            Promise.all([configDB.reload(),permsDB.reload()]).then(()=>{
-                resolve(true);
-            }).catch(()=>{resolve(true)});
-        })
-    });
+    configDB = new ConfigsDB("servers", client, con);
+    global.configDB = configDB;
+    permsDB = new ConfigsDB("permissions", client, con);
+    perms = new Permissions(permsDB);
+    return Promise.all([configDB.reload(), permsDB.reload()]).then(()=> {
+        resolve(true);
+    }).catch(console.error);
 }
 
 if (cluster.isMaster) {
@@ -244,7 +240,7 @@ if (cluster.isMaster) {
         }
         var t2 = now();
         if (msg.channel.server) {
-            console.log("s:".blue + (cluster.worker.id-1) + " s: ".magenta + msg.channel.server.name + " c: ".blue + msg.channel.name + " u: ".cyan +
+            console.log("s:".blue + (cluster.worker.id - 1) + " s: ".magenta + msg.channel.server.name + " c: ".blue + msg.channel.name + " u: ".cyan +
                 msg.author.username + " m: ".green + msg.content.replace(/\n/g, "\n    ") + " in ".yellow + (t2 - t1) + "ms".red);
         } else {
             console.log("u: ".cyan + msg.author.username + " m: ".green + msg.content.replace(/\n/g, "\n    ").rainbow +
@@ -277,11 +273,12 @@ if (cluster.isMaster) {
             id = client.user.id;
             mention = "<@" + id + ">";
             name = client.user.name;
+            console.log(`Loading modules for Shard ${cluster.worker.id - 1} / ${numCPUs}`.cyan);
             reload();
             console.log(`-------------------`.magenta);
             console.log(`Ready as ${client.user.username}`.magenta);
             console.log(`Mention ${mention}`.magenta);
-            console.log(`Shard ${cluster.worker.id-1} / ${numCPUs}`.magenta);
+            console.log(`Shard ${cluster.worker.id - 1} / ${numCPUs}`.magenta);
             console.log(`-------------------`.magenta);
             if (!hasBeenReady) {
                 hasBeenReady = true;
