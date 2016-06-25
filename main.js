@@ -16,13 +16,17 @@ var permsDB;
 var perms;
 
 function loadConfigs() {
-    configDB = new ConfigsDB("servers", client, con);
-    global.configDB = configDB;
-    permsDB = new ConfigsDB("permissions", client, con);
-    perms = new Permissions(permsDB);
-    return Promise.all([configDB.reload(), permsDB.reload()]).then(()=> {
-        resolve(true);
-    }).catch(console.error);
+    return new Promise((resolve)=> {
+        global.conn.then((con)=> {
+            configDB = new ConfigsDB("servers", client, con);
+            global.configDB = configDB;
+            permsDB = new ConfigsDB("permissions", client, con);
+            perms = new Permissions(permsDB);
+            resolve(Promise.all([configDB.reload(), permsDB.reload()]).then(()=> {
+                resolve(true);
+            }).catch(console.error));
+        })
+    })
 }
 
 if (cluster.isMaster) {
