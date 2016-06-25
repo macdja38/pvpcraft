@@ -555,7 +555,7 @@ module.exports = class moderation {
                         this.configDB.data[msg.channel.server.id] = {msgLog: this.logging[msg.channel.server.id].id};
                     }
                 }
-                this.configDB.save(msg.channel.server.id);
+                this.configDB.write(msg.channel.server.id);
                 if (oldLog) {
                     if (this.logging.hasOwnProperty(msg.channel.server.id)) {
                         this.client.sendMessage(oldLog, utils.clean(`Moderation log changed to channel ${this.logging[msg.channel.server.id].name}`), (error)=> {

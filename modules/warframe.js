@@ -18,7 +18,7 @@ var newStateGrabber = require("../lib/newWorldState");
 var newWorldState = new newStateGrabber("http://content.warframe.com/dynamic/worldState.php", "pc");
 
 var master;
-if (global.cluster.worker.id == 1) {
+if (process.env.id == 0) {
     master = true;
 }
 
@@ -61,7 +61,7 @@ var warframe = function (e) {
                     }
                 }
                 if (master) {
-                    console.log(`Shard ${global.cluster.worker.id} is the Master Shard!`);
+                    console.log(`Shard ${process.env.id} is the Master Shard!`);
                     if (twitter_auth) {
                         //build the map of server id's and logging channels.
                         console.log(warframe.alerts);

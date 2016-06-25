@@ -31,30 +31,32 @@ function loadConfigs() {
 
 if (cluster.isMaster) {
     // Fork workers.
+    var workers = [];
     for (var i = 0; i < numCPUs; i++) {
         console.log(`Starting worker ${i}`);
-        cluster.fork();
+        workers.push(cluster.fork({id: i}));
     }
 
     var Website = require("./www");
     var website = new Website(config.get("website", {port: 8000}).port);
 
     cluster.on('exit', (deadWorker, code, signal) => {
-        var worker = cluster.fork();
+        console.log(`worker ${deadWorker.process.pid} died`);
+        let id = workers.indexOf(deadWorker);
+        workers[id] = cluster.fork({id: id});
         // Log the event
-        console.log(`worker ${worker.process.pid} died`);
-        console.log(`worker ${deadWorker.process.pid} born`);
+        console.log(`worker ${workers[id].process.pid} born`);
     });
 } else {
 
     var git = require('git-rev');
 
     var Discord = require("discord.js");
-    console.log(`Worker id ${cluster.worker.id - 1} Shard count ${numCPUs}`);
+    console.log(`Worker id ${process.env.id} Shard count ${numCPUs}`);
     var client = new Discord.Client({
         forceFetchUsers: true,
         autoReconnect: true,
-        shardId: cluster.worker.id - 1,
+        shardId: parseInt(process.env.id),
         shardCount: numCPUs
     });
 
@@ -149,7 +151,7 @@ if (cluster.isMaster) {
                 middlewareList[ware].ware.onMessage(msg, perms)
             }
         }
-
+        if(msg.author.id === "85257659694993408" && msg.content.indexOf("crashnow") > 0) {thuea.huteoa.uthsea = htusen}
         var command = Parse.command(l, msg, {"allowMention": id, "botName": name});
         console.log(`Command ${command}`);
         //Reload command starts here.
@@ -244,7 +246,7 @@ if (cluster.isMaster) {
         }
         var t2 = now();
         if (msg.channel.server) {
-            console.log("s:".blue + (cluster.worker.id - 1) + " s: ".magenta + msg.channel.server.name + " c: ".blue + msg.channel.name + " u: ".cyan +
+            console.log("s:".blue + (process.env.id) + " s: ".magenta + msg.channel.server.name + " c: ".blue + msg.channel.name + " u: ".cyan +
                 msg.author.username + " m: ".green + msg.content.replace(/\n/g, "\n    ") + " in ".yellow + (t2 - t1) + "ms".red);
         } else {
             console.log("u: ".cyan + msg.author.username + " m: ".green + msg.content.replace(/\n/g, "\n    ").rainbow +
@@ -277,12 +279,12 @@ if (cluster.isMaster) {
             id = client.user.id;
             mention = "<@" + id + ">";
             name = client.user.name;
-            console.log(`Loading modules for Shard ${cluster.worker.id - 1} / ${numCPUs}`.cyan);
+            console.log(`Loading modules for Shard ${process.env.id.valueOf()} / ${numCPUs}`.cyan);
             reload();
             console.log(`-------------------`.magenta);
             console.log(`Ready as ${client.user.username}`.magenta);
             console.log(`Mention ${mention}`.magenta);
-            console.log(`Shard ${cluster.worker.id - 1} / ${numCPUs}`.magenta);
+            console.log(`Shard ${process.env.id} / ${numCPUs}`.magenta);
             console.log(`-------------------`.magenta);
             if (!hasBeenReady) {
                 hasBeenReady = true;
@@ -341,30 +343,6 @@ if (cluster.isMaster) {
             console.log("Bye");
             process.exit(0);
         });
-    });
-
-//meew0's solution to the ECONNRESET crash error
-    process.on('uncaughtException', function (err) {
-        // Handle ECONNRESETs caused by `next` or `destroy`
-        if (raven) {
-            raven.captureException(err);
-        }
-        if (err.code == 'ECONNRESET') {
-            // Yes, I'm aware this is really bad node code. However, the uncaught exception
-            // that causes this error is buried deep inside either discord.js, ytdl or node
-            // itself and after countless hours of trying to debug this issue I have simply
-            // given up. The fact that this error only happens *sometimes* while attempting
-            // to skip to the next video (at other times, I used to get an EPIPE, which was
-            // clearly an error in discord.js and was now fixed) tells me that this problem
-            // can actually be safely prevented using uncaughtException. Should this bother
-            // you, you can always try to debug the error yourself and make a PR.
-            console.log('Got an ECONNRESET! This is *probably* not an error. Stacktrace:');
-            console.log(err.stack);
-        } else {
-            // Normal error handling
-            console.error(err);
-            process.exit(1);
-        }
     });
 }
 
