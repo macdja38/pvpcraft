@@ -278,11 +278,11 @@ if (cluster.isMaster) {
             mention = "<@" + id + ">";
             name = client.user.name;
             reload();
-            console.log("-------------------");
-            console.log("Ready as " + client.user.username);
-            console.log("Mention  " + mention);
-            console.log("Shard " + (cluster.worker.id-1) + "/" + numCPUs);
-            console.log("-------------------");
+            console.log(`-------------------`.magenta);
+            console.log(`Ready as ${client.user.username}`.magenta);
+            console.log(`Mention ${mention}`.magenta);
+            console.log(`Shard ${cluster.worker.id-1} / ${numCPUs}`.magenta);
+            console.log(`-------------------`.magenta);
             if (!hasBeenReady) {
                 hasBeenReady = true;
                 /*
