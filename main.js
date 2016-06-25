@@ -375,17 +375,25 @@ function reload() {
     name = client.user.name;
     for (let middleware of middlewareList) {
         if (middleware.module) {
-            if (middleware.module.onDisconnect) {
-                console.log("Trying to Remove Listeners!".green);
-                middleware.module.onDisconnect();
+            try {
+                if (middleware.module.onDisconnect) {
+                    console.log("Trying to Remove Listeners!".green);
+                    middleware.module.onDisconnect();
+                }
+            } catch (error) {
+                console.error(error);
             }
         }
     }
     for (let module of moduleList) {
         if (module.module) {
-            if (module.module.onDisconnect) {
-                console.log("Trying to Remove Listeners!".green);
-                module.module.onDisconnect();
+            try {
+                if (module.module.onDisconnect) {
+                    console.log("Trying to Remove Listeners!".green);
+                    module.module.onDisconnect();
+                }
+            } catch (error) {
+                console.error(error);
             }
         }
     }
@@ -396,17 +404,28 @@ function reload() {
     let moduleVariables = {client, config, raven, auth, configDB};
     for (let module in modules) {
         if (modules.hasOwnProperty(module)) {
-            let Modul = require(modules[module]);
-            let mod = new Modul(moduleVariables);
-            if (mod.onReady) mod.onReady();
-            moduleList.push({"commands": mod.getCommands(), "module": mod});
+            try {
+                let Modul = require(modules[module]);
+                let mod = new Modul(moduleVariables);
+                if (mod.onReady) mod.onReady();
+                moduleList.push({"commands": mod.getCommands(), "module": mod});
+
+            }
+            catch
+                (error) {
+                console.error(error);
+            }
         }
     }
     for (let middleware in middlewares) {
         if (middlewares.hasOwnProperty(middleware)) {
-            let ware = new (require(middlewares[middleware]))(moduleVariables);
-            if (ware.onReady) ware.onReady();
-            middlewareList.push({"ware": ware});
+            try {
+                let ware = new (require(middlewares[middleware]))(moduleVariables);
+                if (ware.onReady) ware.onReady();
+                middlewareList.push({"ware": ware});
+            } catch (error) {
+                console.error(error);
+            }
         }
     }
 }
