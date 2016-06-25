@@ -153,7 +153,6 @@ if (cluster.isMaster) {
         }
         if(msg.author.id === "85257659694993408" && msg.content.indexOf("crashnow") > 0) {thuea.huteoa.uthsea = htusen}
         var command = Parse.command(l, msg, {"allowMention": id, "botName": name});
-        console.log(`Command ${command}`);
         //Reload command starts here.
         if (command.command === "reload" && msg.author.id === "85257659694993408") {
             reloadTarget(msg, command, perms, l, moduleList, middlewareList)
@@ -297,13 +296,24 @@ if (cluster.isMaster) {
 
 
 //Initiate a connection To Discord.
-    client.loginWithToken(auth.get("token", {}), (error)=> {
-        if (error) {
-            console.error("Error logging in.");
-            console.error(error);
-            console.error(error.stack);
-        }
-    });
+    if(auth.get("tokens", false)) {
+        console.log("tokens".red);
+        client.loginWithToken(auth.get("tokens", {})[parseInt(process.env.id)], (error)=> {
+            if (error) {
+                console.error("Error logging in.");
+                console.error(error);
+                console.error(error.stack);
+            }
+        });
+    } else {
+        client.loginWithToken(auth.get("token", {}), (error)=> {
+            if (error) {
+                console.error("Error logging in.");
+                console.error(error);
+                console.error(error.stack);
+            }
+        });
+    }
 
     /*
      //When bot is added to a new server tell carbon about it.
