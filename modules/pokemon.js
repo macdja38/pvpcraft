@@ -22,7 +22,7 @@ module.exports = class pokemon {
     onCommand(msg, command, perms) {
         console.log("Pokemon initiated");
         if (command.command === "pokemon" && perms.check(msg, "pokemon.pokemon")) {
-            var pokemon_name = command.args[0];
+            let pokemon_name = command.args[0];
             if (/^[^<@#\\\/>]*$/g.test(pokemon_name)) {
                 P.getPokemonByName(pokemon_name)
                     .then((response)=> {
@@ -61,7 +61,7 @@ module.exports = class pokemon {
             }
         }
         if (command.command === "shiny" && perms.check(msg, "pokemon.shiny")) {
-            var pokemon_name = command.args[0];
+            let pokemon_name = command.args[0];
             if (/^[^<@#\\\/>]*$/g.test(pokemon_name)) {
                 P.getPokemonByName(pokemon_name)
                     .then((response)=> {
@@ -115,7 +115,7 @@ module.exports = class pokemon {
 
         }
         if (command.command === "hiddenability" && perms.check(msg, "pokemon.hiddenability")) {
-            var pokemon_name = command.args[0];
+            let pokemon_name = command.args[0];
             if (/^[^<@#\\\/>]*$/g.test(pokemon_name)) {
                 P.getPokemonByName(pokemon_name)
                     .then((response)=> {

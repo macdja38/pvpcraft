@@ -37,3 +37,8 @@ config/*.json
 
 # Optional REPL history
 .node_repl_history
+index.d.ts
+index.html
+public/images/
+public/javascripts/
+test.js
