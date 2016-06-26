@@ -35,8 +35,11 @@ var warframe = function (e) {
     warframe.alerts = [];
     if (master) {
         var twitter_auth = e.auth.get("twitter", false);
-        warframe.twitter = new Twitter(twitter_auth);
-        warframe.stream = warframe.twitter.stream('statuses/filter', {follow: "1344755923"});
+        if(twitter_auth) {
+            console.log(`Found twitter auth, starting twitter stream`.blue);
+            warframe.twitter = new Twitter(twitter_auth);
+            warframe.stream = warframe.twitter.stream('statuses/filter', {follow: "1344755923"});
+        }
     }
     warframe.onAlert = new Promise((resolve)=> {
         global.conn.then((con)=> {
@@ -65,7 +68,7 @@ var warframe = function (e) {
                     if (twitter_auth) {
                         //build the map of server id's and logging channels.
                         console.log(warframe.alerts);
-                        console.log("twitter auth found, declairing onAlert");
+                        console.log("twitter auth found, declaring onAlert");
                         resolve(
                             function (tweet) {
                                 console.log(tweet);

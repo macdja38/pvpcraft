@@ -22,6 +22,8 @@ module.exports = class music {
         this.client = e.client;
         this.config = e.config;
         this.raven = e.raven;
+        this.r = e.r;
+        this.conn = e.conn;
         /**
          * holds array of servers channels and their bound instances.
          * @type {Array}
@@ -53,7 +55,15 @@ module.exports = class music {
             }
             if (msg.author.voiceChannel) {
                 if (msg.author.voiceChannel.server.id === msg.channel.server.id) {
-                    this.boundChannels[id] = new Player(this.client, msg.author.voiceChannel, msg.channel, key, this.raven);
+                    this.boundChannels[id] = new Player({
+                        client: this.client,
+                        voiceChannel: msg.author.voiceChannel,
+                        textChannel: msg.channel,
+                        apiKey: key,
+                        raven: this.raven,
+                        r: this.r,
+                        conn: this.conn
+                    });
                     msg.reply("Binding to **" + this.boundChannels[id].voice.name + "** and **" + this.boundChannels[id].text.name + "**");
                     this.boundChannels[id].init(msg, (error)=> {
                         console.log("Bound thing finished maybe");
