@@ -42,14 +42,6 @@ module.exports = class minecraft {
                 }
                 else {
                     console.log(res);
-                    console.log(res.favicon.split(",")[1]);
-                    let myReadableStreamBuffer = new streamBuffers.ReadableStreamBuffer({
-                        frequency: 10,       // in milliseconds.
-                        chunkSize: 2048     // in bytes.
-                    });
-                    myReadableStreamBuffer.put(res.favicon.split(",")[1]);
-                    myReadableStreamBuffer.stop();
-                    console.log(myReadableStreamBuffer);
                     this.client.sendMessage(msg.channel, "```xl\n" +
                         "Pinged " + command.args.join(".") + " in " + (now() - t1) + "ms\n" +
                         "Version " + res.version.name + " protocol " + res.version.protocol + "\n" +
