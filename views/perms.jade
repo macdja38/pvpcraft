@@ -5,14 +5,14 @@ extends layout
 
 block content
     script(src='https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js')
-    h2 Permissions module
+    h1 Permissions module
     if err
         p error #{err} finding content
     else if serverPerms
-        h1 Server Permissions
+        h2 Server Permissions
         pre.prettyprint
             !{JSON.stringify(serverPerms, null, 4)}
     if defaultPerms
-        h1 Default Permissions
+        h2 Default Permissions
         pre.prettyprint
             !{JSON.stringify(defaultPerms, null, 4)}

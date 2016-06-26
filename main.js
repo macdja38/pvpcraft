@@ -10,10 +10,46 @@ var Configs = require("./lib/config.js");
 var config = new Configs("config");
 var auth = new Configs("auth");
 
+var git = require('git-rev');
+
 var ConfigsDB = require("./lib/configDB.js");
 var configDB;
 var permsDB;
 var perms;
+
+var raven;
+var ravenClient;
+
+if (auth.get("sentryURL", "") != "") {
+    console.log("Sentry Started".yellow);
+    git.long((commit)=> {
+        git.branch((branch)=> {
+            ravenClient = require('raven');
+            raven = new ravenClient.Client(auth.data.sentryURL, {
+                release: commit + "-" + branch,
+                transport: new ravenClient.transports.HTTPSTransport({rejectUnauthorized: false})
+            });
+            //raven's patch global seems to have been running synchronously and delaying the execution of other code.
+            /*raven.patchGlobal(function (result) {
+             });*/
+            raven.on('logged', function (e) {
+                console.log("Error reported to sentry!: ".green + e.id);
+            });
+
+            raven.on('error', function (e) {
+                // The event contains information about the failure:
+                //   e.reason -- raw response body
+                //   e.statusCode -- response status code
+                //   e.response -- raw http response object
+
+                console.error('Could not report event to sentry');
+                console.error(e.reason);
+                console.error(e.statusCode);
+                console.error(e.response);
+            })
+        })
+    });
+}
 
 function loadConfigs() {
     return new Promise((resolve)=> {
@@ -44,12 +80,22 @@ if (cluster.isMaster) {
         console.log(`worker ${deadWorker.process.pid} died`);
         let id = workers.indexOf(deadWorker);
         workers[id] = cluster.fork({id: id});
+        if (raven) {
+            raven.captureError(code, {
+                user: id,
+                extra: {
+                    signal: signal
+                }
+            }, (result)=> {
+                console.error(code, raven.getIdent(result));
+            });
+        } else {
+            console.error(code);
+        }
         // Log the event
         console.log(`worker ${workers[id].process.pid} born`);
     });
 } else {
-
-    var git = require('git-rev');
 
     var Discord = require("discord.js");
     console.log(`Worker id ${process.env.id} Shard count ${numCPUs}`);
@@ -64,42 +110,7 @@ if (cluster.isMaster) {
     var r = global.r;
     global.conn = r.connect(auth.get("reThinkDB", {}));
 
-    var raven;
-    var ravenClient;
-
     var Permissions = require("./lib/permissions.js");
-
-    if (auth.get("sentryURL", "") != "") {
-        console.log("Sentry Started".yellow);
-        git.long((commit)=> {
-            git.branch((branch)=> {
-                ravenClient = require('raven');
-                raven = new ravenClient.Client(auth.data.sentryURL, {
-                    release: commit + "-" + branch,
-                    transport: new ravenClient.transports.HTTPSTransport({rejectUnauthorized: false})
-                });
-                //raven's patch global seems to have been running synchronously and delaying the execution of other code.
-                /*raven.patchGlobal(function (result) {
-                 });*/
-                raven.on('logged', function (e) {
-                    console.log("Error reported to sentry!: ".green + e.id);
-                });
-
-                raven.on('error', function (e) {
-                    // The event contains information about the failure:
-                    //   e.reason -- raw response body
-                    //   e.statusCode -- response status code
-                    //   e.response -- raw http response object
-
-                    console.error('Could not report event to sentry');
-                    console.error(e.reason);
-                    console.error(e.statusCode);
-                    console.error(e.response);
-                })
-            })
-        });
-    }
-
 
     var key = auth.get("key", null);
     if (key == "key") {
