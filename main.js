@@ -17,6 +17,9 @@ var configDB;
 var permsDB;
 var perms;
 
+var r;
+var conn;
+
 var raven;
 var ravenClient;
 
@@ -97,9 +100,10 @@ if (cluster.isMaster) {
     });
 
     global.r = require('rethinkdb');
-    var r = global.r;
+    r = global.r;
     global.conn = r.connect(auth.get("reThinkDB", {}));
-
+    conn = global.conn;
+    
     var Permissions = require("./lib/permissions.js");
 
     var key = auth.get("key", null);
@@ -419,7 +423,7 @@ function reload() {
     moduleList = [];
     var middlewares = config.get("middleware");
     var modules = config.get("modules");
-    let moduleVariables = {client, config, raven, auth, configDB};
+    let moduleVariables = {client, config, raven, auth, configDB, r, conn};
     for (let module in modules) {
         if (modules.hasOwnProperty(module)) {
             try {
@@ -492,7 +496,7 @@ function reloadTarget(msg, command, perms, l, moduleList, middlewareList) {
             delete require.cache[require.resolve(modules[command.args[0]])];
             msg.reply("Reloading " + command.args[0]);
             console.log("Reloading ".yellow + command.args[0].yellow);
-            var mod = new (require(modules[command.args[0]]))({client, config, raven, auth, configDB});
+            var mod = new (require(modules[command.args[0]]))({client, config, raven, auth, configDB, r, conn});
             if (mod.onReady) mod.onReady();
             moduleList[module].module = mod;
             moduleList[module].commands = mod.getCommands();
