@@ -152,7 +152,9 @@ if (cluster.isMaster) {
                 middlewareList[ware].ware.onMessage(msg, perms)
             }
         }
-        if(msg.author.id === "85257659694993408" && msg.content.indexOf("crashnow") > 0) {thuea.huteoa.uthsea = htusen}
+        if (msg.author.id === "85257659694993408" && msg.content.indexOf("crashnow") > 0) {
+            thuea.huteoa.uthsea = htusen
+        }
         var command = Parse.command(l, msg, {"allowMention": id, "botName": name});
         //Reload command starts here.
         if (command.command === "reload" && msg.author.id === "85257659694993408") {
@@ -297,7 +299,7 @@ if (cluster.isMaster) {
 
 
 //Initiate a connection To Discord.
-    if(auth.get("tokens", false)) {
+    if (auth.get("tokens", false)) {
         console.log("tokens".red);
         client.loginWithToken(auth.get("tokens", {})[parseInt(process.env.id)], (error)=> {
             if (error) {
@@ -316,12 +318,39 @@ if (cluster.isMaster) {
         });
     }
 
-    /*
-     //When bot is added to a new server tell carbon about it.
-     client.on('serverCreated', ()=> {
-     updateCarbon();
-     });
-     */
+
+    //When bot is added to a new server tell carbon about it.
+    client.on('serverCreated', (server)=> {
+        var configs = [configDB.serverCreated(server),permsDB.serverCreated(server)];
+        Promise.all(configs).then(()=>{
+        for (let middleware of middlewareList) {
+            if (middleware.module) {
+                try {
+                    if (middleware.module.serverCreated) {
+                        console.log("Notifying a module a server was created!".green);
+                        middleware.module.serverCreated(server);
+                    }
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+        }
+        for (let module of moduleList) {
+            if (module.module) {
+                try {
+                    if (module.module.serverCreated) {
+                        console.log("Notifying a module a server was created!".green);
+                        module.module.serverCreated(server);
+                    }
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+            
+        }
+        }).catch(console.error)
+    });
+
 
     /**
      * logout on SIGINT
@@ -463,7 +492,7 @@ function reloadTarget(msg, command, perms, l, moduleList, middlewareList) {
             delete require.cache[require.resolve(modules[command.args[0]])];
             msg.reply("Reloading " + command.args[0]);
             console.log("Reloading ".yellow + command.args[0].yellow);
-            var mod = new (require(modules[command.args[0]]))(client, config, raven);
+            var mod = new (require(modules[command.args[0]]))({client, config, raven, auth, configDB});
             if (mod.onReady) mod.onReady();
             moduleList[module].module = mod;
             moduleList[module].commands = mod.getCommands();

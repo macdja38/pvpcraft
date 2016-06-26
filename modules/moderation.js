@@ -17,17 +17,19 @@ module.exports = class moderation {
         this.raven = e.raven;
         this.purgedMessages = {};
 
-        //build the map of server id's and logging channels.
-        for (var item in this.configDB.data) {
-            if (this.configDB.data.hasOwnProperty(item) && this.configDB.data[item].hasOwnProperty("msgLog")) {
-                let channel = this.client.channels.get("id", this.configDB.data[item]["msgLog"]);
-                if (channel != null) {
-                    this.logging[item] = channel;
-                } else {
-                    //TODO: notify the server owner their mod log has been removed and that //setlog false will make that permanent.
+        this.refreshMap = ()=> {
+            //build the map of server id's and logging channels.
+            for (var item in this.configDB.data) {
+                if (this.configDB.data.hasOwnProperty(item) && this.configDB.data[item].hasOwnProperty("msgLog")) {
+                    let channel = this.client.channels.get("id", this.configDB.data[item]["msgLog"]);
+                    if (channel != null) {
+                        this.logging[item] = channel;
+                    } else {
+                        //TODO: notify the server owner their mod log has been removed and that //setlog false will make that permanent.
+                    }
                 }
             }
-        }
+        };
 
         /**
          * log's a string to the server's log
@@ -45,6 +47,56 @@ module.exports = class moderation {
             }
         };
 
+        this.voiceJoin = (channel, user) => {
+            try{
+                this.log(channel.server, `:notes: ${utils.fullNameB(user)} joined voice channel ${channel.name}`)
+            } catch (err) {
+                console.error(err);
+                console.error(err.stack);
+                if (this.raven) {
+                    this.raven.captureException(err, {
+                        extra: {
+                            message: message,
+                            channel: channel
+                        }
+                    });
+                }
+            }
+        };
+
+        this.voiceSwitch = (oldChannel, newChannel, user) => {
+            try{
+                this.log(oldChannel.server, `:notes: ${utils.fullNameB(user)} moved from ${utils.clean(oldChannel.name)} to ${utils.clean(newChannel.name)}`)
+            } catch (err) {
+                console.error(err);
+                console.error(err.stack);
+                if (this.raven) {
+                    this.raven.captureException(err, {
+                        extra: {
+                            message: message,
+                            channel: channel
+                        }
+                    });
+                }
+            }
+        };
+
+        this.voiceLeave = (channel, user) => {
+            try{
+                this.log(channel.server, `:notes: ${utils.fullNameB(user)} left voice channel ${channel.name}`)
+            } catch (err) {
+                console.error(err);
+                console.error(err.stack);
+                if (this.raven) {
+                    this.raven.captureException(err, {
+                        extra: {
+                            message: message,
+                            channel: channel
+                        }
+                    });
+                }
+            }
+        };
 
         //log message deletes to the server's log channel
         this.logDelete = (message, channel) => {
@@ -505,6 +557,9 @@ module.exports = class moderation {
         this.client.removeListener("channelCreated", this.logChannelCreated);
         this.client.removeListener("channelUpdated", this.logChannelUpdated);
         this.client.removeListener("channelDeleted", this.logChannelDeleted);
+        this.client.removeListener("voiceJoin", this.voiceJoin);
+        //this.client.removeListener("voiceSwitch", this.voiceSwitch);
+        this.client.removeListener("voiceLeave", this.voiceLeave);
     }
 
     onReady() {
@@ -524,7 +579,15 @@ module.exports = class moderation {
         this.client.on("channelCreated", this.logChannelCreated);
         this.client.on("channelUpdated", this.logChannelUpdated);
         this.client.on("channelDeleted", this.logChannelDeleted);
+        this.client.on("voiceJoin", this.voiceJoin);
+        //this.client.on("voiceSwitch", this.voiceSwitch);
+        this.client.on("voiceLeave", this.voiceLeave);
+        this.refreshMap();
         //TODO: log serverUpdated, serverRoleCreated, serverRoleDeleted
+    }
+
+    serverCreated() {
+        this.refreshMap();
     }
 
     getCommands() {
