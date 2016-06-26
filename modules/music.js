@@ -74,13 +74,14 @@ module.exports = class music {
         if (command.command === "destroy" && perms.check(msg, "music.destroy")) {
             if (this.boundChannels.hasOwnProperty(id)) {
                 this.boundChannels[id].destroy();
+                msg.reply("Disconnecting from voice chat and unbinding from text chat.");
                 delete this.boundChannels[id];
             }
             return true;
         }
 
         if (command.command === "play" && perms.check(msg, "music.play")) {
-            if (this.boundChannels.hasOwnProperty(id)) {
+            if (this.boundChannels.hasOwnProperty(id) && this.boundChannels.hasOwnProperty("connection")) {
                 if (command.args.length > 0) {
                     this.boundChannels[id].enqueue(msg, command.args)
                 }
@@ -154,7 +155,7 @@ module.exports = class music {
          */
 
         if (command.commandnos === "list" && perms.check(msg, "music.list")) {
-            if (this.boundChannels.hasOwnProperty(id)) {
+            if (this.boundChannels.hasOwnProperty(id)  && this.boundChannels.hasOwnProperty("connection")) {
                 if (this.boundChannels[id].currentVideo) {
                     msg.channel.sendMessage("```xl\n" + this.boundChannels[id].prettyList()
                         + "```\n" + this.config.get("website", {musicUrl: "https://pvpcraft.ca/pvpbotmusic/?server="}).musicUrl + msg.server.id, (error)=> {
@@ -172,7 +173,7 @@ module.exports = class music {
         }
 
         if (command.commandnos === "time" && perms.check(msg, "music.time")) {
-            if (this.boundChannels.hasOwnProperty(id)) {
+            if (this.boundChannels.hasOwnProperty(id) && this.boundChannels.hasOwnProperty("connection")) {
                 if (this.boundChannels[id].currentVideo) {
                     msg.channel.sendMessage("Currently " + this.boundChannels[id].prettyTime() + " into " + this.boundChannels[id].currentVideo.prettyPrint());
                 } else {
@@ -185,7 +186,7 @@ module.exports = class music {
         }
 
         if (command.commandnos === "volume") {
-            if (this.boundChannels.hasOwnProperty(id)) {
+            if (this.boundChannels.hasOwnProperty(id) && this.boundChannels.hasOwnProperty("connection")) {
                 if (command.args[0] && perms.check(msg, "music.volume.set")) {
                     var volume = parseInt(command.args[0]);
                     if (101 > volume && volume > 0) {
@@ -215,7 +216,7 @@ module.exports = class music {
         }
 
         if (command.command === "shuffle" && perms.check(msg, "music.shuffle")) {
-            if (this.boundChannels.hasOwnProperty(id)) {
+            if (this.boundChannels.hasOwnProperty(id) && this.boundChannels.hasOwnProperty("connection")) {
                 if (this.boundChannels[id].queue.length > 1) {
                     msg.channel.sendMessage(this.boundChannels[id].shuffle());
                 } else {
