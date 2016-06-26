@@ -94,7 +94,7 @@ module.exports = class music {
         }
 
         if ((command.command === "next" || command.command === "skip") && perms.check(msg, "music.voteskip")) {
-            if (this.boundChannels.hasOwnProperty(id)) {
+            if (this.boundChannels.hasOwnProperty(id) && this.boundChannels.hasOwnProperty("connection")) {
                 if (this.boundChannels[id].currentVideo) {
                     var index = command.args[0] ? parseInt(command.args[0]) - 1 : -1;
                     console.log(index);
