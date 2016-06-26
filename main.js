@@ -30,8 +30,10 @@ if (auth.get("sentryURL", "") != "") {
                 transport: new ravenClient.transports.HTTPSTransport({rejectUnauthorized: false})
             });
             //raven's patch global seems to have been running synchronously and delaying the execution of other code.
-            /*raven.patchGlobal(function (result) {
-             });*/
+            raven.patchGlobal(function (result) {
+                process.exit(1);
+            });
+
             raven.on('logged', function (e) {
                 console.log("Error reported to sentry!: ".green + e.id);
             });
@@ -80,18 +82,6 @@ if (cluster.isMaster) {
         console.log(`worker ${deadWorker.process.pid} died`);
         let id = workers.indexOf(deadWorker);
         workers[id] = cluster.fork({id: id});
-        if (raven) {
-            raven.captureError(code, {
-                user: id,
-                extra: {
-                    signal: signal
-                }
-            }, (result)=> {
-                console.error(code, raven.getIdent(result));
-            });
-        } else {
-            console.error(code);
-        }
         // Log the event
         console.log(`worker ${workers[id].process.pid} born`);
     });
