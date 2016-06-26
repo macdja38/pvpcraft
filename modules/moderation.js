@@ -440,7 +440,9 @@ module.exports = class moderation {
                             if (server && server.members.get("id", newUser.id)) {
                                 console.log("server name " + this.client.servers.get("id", serverid).name);
                                 this.client.sendMessage(this.logging[serverid], text, (error)=> {
-                                    console.error(error)
+                                    if (error) {
+                                        console.error(error)
+                                    }
                                 });
                             }
                         }
