@@ -20,6 +20,7 @@ module.exports = class moderation {
         this.refreshMap = ()=> {
             //build the map of server id's and logging channels.
             for (var item in this.configDB.data) {
+                console.log(this.configDB.data);
                 if (this.configDB.data.hasOwnProperty(item) && this.configDB.data[item].hasOwnProperty("msgLog")) {
                     let channel = this.client.channels.get("id", this.configDB.data[item]["msgLog"]);
                     if (channel != null) {
@@ -48,7 +49,7 @@ module.exports = class moderation {
         };
 
         this.voiceJoin = (channel, user) => {
-            try{
+            try {
                 this.log(channel.server, `:notes: ${utils.fullNameB(user)} joined voice channel ${channel.name}`)
             } catch (err) {
                 console.error(err);
@@ -65,7 +66,7 @@ module.exports = class moderation {
         };
 
         this.voiceSwitch = (oldChannel, newChannel, user) => {
-            try{
+            try {
                 this.log(oldChannel.server, `:notes: ${utils.fullNameB(user)} moved from ${utils.clean(oldChannel.name)} to ${utils.clean(newChannel.name)}`)
             } catch (err) {
                 console.error(err);
@@ -82,7 +83,7 @@ module.exports = class moderation {
         };
 
         this.voiceLeave = (channel, user) => {
-            try{
+            try {
                 this.log(channel.server, `:notes: ${utils.fullNameB(user)} left voice channel ${channel.name}`)
             } catch (err) {
                 console.error(err);
