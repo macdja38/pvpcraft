@@ -48,7 +48,7 @@ module.exports = class music {
 
         if (command.command === "init" && perms.check(msg, "music.init")) {
             if (this.boundChannels.hasOwnProperty(id)) {
-                msg.reply("Sorry already in use in this server");
+                msg.reply(`Sorry already in use in this server. Use ${command.prefix}destroy to erase that connection.`);
                 return true;
             }
             if (msg.author.voiceChannel) {
