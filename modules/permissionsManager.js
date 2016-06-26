@@ -140,6 +140,14 @@ module.exports = class permissionsManager {
             if (command.args[0] === "list") {
                 msg.reply(this.url + msg.channel.server.id);
             }
+            if (command.args[0].toLowerCase() === "hardreset") {
+                if(msg.author.id == msg.server.owner.id) {
+                    perms.set(msg.server.id, "remove");
+                    msg.reply(`All permissions have been reset!`)
+                } else {
+                    msg.reply(`Only the server owner can use this command.`);
+                }
+            }
             return true;
         }
         return false;
