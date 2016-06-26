@@ -10,9 +10,7 @@ block content
         p error #{err} finding content
     else if serverPerms
         h2 Server Permissions
-        pre.prettyprint
-            !{JSON.stringify(serverPerms, null, 4)}
+        pre.prettyprint !{JSON.stringify(serverPerms, null, 4)}
     if defaultPerms
         h2 Default Permissions
-        pre.prettyprint
-            !{JSON.stringify(defaultPerms, null, 4)}
+        pre.prettyprint !{JSON.stringify(defaultPerms, null, 4)}

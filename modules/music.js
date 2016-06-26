@@ -43,6 +43,7 @@ module.exports = class music {
         if (!msg.channel.server) return; //this is a pm... we can't do music stuff here.
         var id = msg.channel.server.id;
 
+
         if (command.command === "init" && perms.check(msg, "music.init")) {
             if (this.boundChannels.hasOwnProperty(id)) {
                 msg.reply("Sorry already in use in this server");
@@ -71,6 +72,7 @@ module.exports = class music {
             return true;
         }
 
+
         if (command.command === "destroy" && perms.check(msg, "music.destroy")) {
             if (this.boundChannels.hasOwnProperty(id)) {
                 this.boundChannels[id].destroy();
@@ -80,8 +82,9 @@ module.exports = class music {
             return true;
         }
 
+
         if (command.command === "play" && perms.check(msg, "music.play")) {
-            if (this.boundChannels.hasOwnProperty(id) && this.boundChannels.hasOwnProperty("connection")) {
+            if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
                 if (command.args.length > 0) {
                     this.boundChannels[id].enqueue(msg, command.args)
                 }
@@ -94,8 +97,9 @@ module.exports = class music {
             return true;
         }
 
+
         if ((command.command === "next" || command.command === "skip") && perms.check(msg, "music.voteskip")) {
-            if (this.boundChannels.hasOwnProperty(id) && this.boundChannels.hasOwnProperty("connection")) {
+            if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
                 if (this.boundChannels[id].currentVideo) {
                     var index = command.args[0] ? parseInt(command.args[0]) - 1 : -1;
                     console.log(index);
@@ -143,19 +147,29 @@ module.exports = class music {
             return true;
         }
 
-        /*
-         if (command.command === "pause" && perms.check(msg, "music.pause")) {
-         this.boundChannels[id].pause(msg);
-         return true;
-         }
-         if (command.command === "resume" && perms.check(msg, "music.resume")) {
-         this.boundChannels[id].resume(msg);
-         return true;
-         }
-         */
+
+        if (command.command === "pause" && perms.check(msg, "music.pause")) {
+            if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
+                this.boundChannels[id].pause(msg);
+            } else {
+                msg.channel.sendMessage("Sorry, Bot is not currently in a voice channel use " + command.prefix + "init while in a voice channel to bind it.")
+            }
+            return true;
+        }
+
+
+        if (command.command === "resume" && perms.check(msg, "music.resume")) {
+            if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
+                this.boundChannels[id].resume(msg);
+            } else {
+                msg.channel.sendMessage("Sorry, Bot is not currently in a voice channel use " + command.prefix + "init while in a voice channel to bind it.")
+            }
+            return true;
+        }
+
 
         if (command.commandnos === "list" && perms.check(msg, "music.list")) {
-            if (this.boundChannels.hasOwnProperty(id)  && this.boundChannels.hasOwnProperty("connection")) {
+            if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
                 if (this.boundChannels[id].currentVideo) {
                     msg.channel.sendMessage("```xl\n" + this.boundChannels[id].prettyList()
                         + "```\n" + this.config.get("website", {musicUrl: "https://pvpcraft.ca/pvpbotmusic/?server="}).musicUrl + msg.server.id, (error)=> {
@@ -172,8 +186,9 @@ module.exports = class music {
             return true;
         }
 
+
         if (command.commandnos === "time" && perms.check(msg, "music.time")) {
-            if (this.boundChannels.hasOwnProperty(id) && this.boundChannels.hasOwnProperty("connection")) {
+            if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
                 if (this.boundChannels[id].currentVideo) {
                     msg.channel.sendMessage("Currently " + this.boundChannels[id].prettyTime() + " into " + this.boundChannels[id].currentVideo.prettyPrint());
                 } else {
@@ -185,8 +200,9 @@ module.exports = class music {
             return true;
         }
 
+
         if (command.commandnos === "volume") {
-            if (this.boundChannels.hasOwnProperty(id) && this.boundChannels.hasOwnProperty("connection")) {
+            if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
                 if (command.args[0] && perms.check(msg, "music.volume.set")) {
                     var volume = parseInt(command.args[0]);
                     if (101 > volume && volume > 0) {
@@ -215,8 +231,9 @@ module.exports = class music {
             }
         }
 
+
         if (command.command === "shuffle" && perms.check(msg, "music.shuffle")) {
-            if (this.boundChannels.hasOwnProperty(id) && this.boundChannels.hasOwnProperty("connection")) {
+            if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
                 if (this.boundChannels[id].queue.length > 1) {
                     msg.channel.sendMessage(this.boundChannels[id].shuffle());
                 } else {
@@ -227,6 +244,7 @@ module.exports = class music {
             }
             return true;
         }
+
 
         if (command.commandnos === "logchannel" && perms.check(msg, "music.logchannels")) {
             text = "Playing Music in:\n";
