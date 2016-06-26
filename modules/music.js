@@ -152,8 +152,12 @@ module.exports = class music {
 
         if (command.command === "pause" && perms.check(msg, "music.pause")) {
             if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
-                this.boundChannels[id].pause();
-                msg.reply(`Paused Playback use ${command.prefix}resume to resume it.`)
+                if (this.boundChannels[id].connection.playing) {
+                    this.boundChannels[id].pause();
+                    msg.reply(`Paused Playback use ${command.prefix}resume to resume it.`)
+                } else {
+                    msg.reply(`Cannot pause unless something is being played`)
+                }
             } else {
                 msg.channel.sendMessage("Sorry, Bot is not currently in a voice channel use " + command.prefix + "init while in a voice channel to bind it.")
             }
@@ -163,8 +167,12 @@ module.exports = class music {
 
         if (command.command === "resume" && perms.check(msg, "music.resume")) {
             if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
-                this.boundChannels[id].resume(msg);
-                msg.reply("Playback resumed")
+                if (this.boundChannels[id].connection.paused) {
+                    this.boundChannels[id].resume(msg);
+                    msg.reply("Playback resumed.")
+                } else {
+                    msg.reply(`Cannot resume unless something is paused.`)
+                }
             } else {
                 msg.channel.sendMessage("Sorry, Bot is not currently in a voice channel use " + command.prefix + "init while in a voice channel to bind it.")
             }
