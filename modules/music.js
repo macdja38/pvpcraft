@@ -6,6 +6,8 @@
 var Utils = require('../lib/utils');
 var utils = new Utils();
 
+var color = require('colors');
+
 var Player = require('../lib/player.js');
 
 var key = require('../config/auth.json').youtubeApiKey || null;
@@ -28,7 +30,7 @@ module.exports = class music {
     }
 
     getCommands() {
-        return ["init", "play", "skip", "list", "time", "volume", "shuffle", "next", "destroy", "logchannel"];
+        return ["init", "play", "skip", "list", "time", "pause", "resume", "volume", "shuffle", "next", "destroy", "logchannel"];
     }
 
     onDisconnect() {
@@ -150,7 +152,8 @@ module.exports = class music {
 
         if (command.command === "pause" && perms.check(msg, "music.pause")) {
             if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
-                this.boundChannels[id].pause(msg);
+                this.boundChannels[id].pause();
+                msg.reply(`Paused Playback use ${command.prefix}resume to resume it.`)
             } else {
                 msg.channel.sendMessage("Sorry, Bot is not currently in a voice channel use " + command.prefix + "init while in a voice channel to bind it.")
             }
@@ -161,6 +164,7 @@ module.exports = class music {
         if (command.command === "resume" && perms.check(msg, "music.resume")) {
             if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
                 this.boundChannels[id].resume(msg);
+                msg.reply("Playback resumed")
             } else {
                 msg.channel.sendMessage("Sorry, Bot is not currently in a voice channel use " + command.prefix + "init while in a voice channel to bind it.")
             }
