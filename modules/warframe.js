@@ -35,7 +35,7 @@ var warframe = function (e) {
     warframe.alerts = [];
     if (master) {
         var twitter_auth = e.auth.get("twitter", false);
-        if(twitter_auth) {
+        if (twitter_auth) {
             console.log(`Found twitter auth, starting twitter stream`.blue);
             warframe.twitter = new Twitter(twitter_auth);
             warframe.stream = warframe.twitter.stream('statuses/filter', {follow: "1344755923"});
@@ -101,9 +101,11 @@ var warframe = function (e) {
                         console.log(err);
                         return;
                     }
-                    cursor.each((alert)=> {
+                    cursor.each((err, alert)=> {
+                        alert = alert.new_val;
                         console.log(`Alert`.green);
-                        if(alert) {
+                        console.log(alert);
+                        if (alert) {
                             console.dir(warframe.alerts, {depth: 2});
                             warframe.alerts.forEach((server)=> {
                                 let channel = warframe.client.channels.get("id", server.channel);
@@ -127,30 +129,38 @@ var warframe = function (e) {
                                         }
                                     }
                                 }
+                                console.log(`\`\`\`xl\n${alert["0"]}\n${alert["1"]}\n${alert["2"]}\n${alert["3"]}\n\`\`\`${things.map((thing)=> {
+                                    return `<@&${thing}>`
+                                })}`);
                                 let sendAlert = () => {
-                                    return warframe.client.sendMessage(channel, `\`\`\`xl\n${alert.join("\n")}\`\`\`${things.map((thing)=> {
-                                        return `<@&${thing}>`
-                                    })}`)
+                                    return warframe.client.sendMessage(channel, `\`\`\`xl\n${alert["0"]}\n${alert["1"]}\n${alert["2"]}\n${alert["3"]}\n\`\`\`${things.map((thing)=> {
+                                        return `<@&${thing}>`;
+                                    })}`);
                                 };
                                 let makeUnmentionable = () => {
+                                    console.log(`Was told to make things unmentionable`);
+                                    console.log(things);
                                     for (let thing in things) {
+                                        console.log(thing);
+                                        console.log(things[thing]);
                                         if (things.hasOwnProperty(thing)) {
-                                            let role = server.roles.get("id", things[thing]);
+                                            console.log(`things has property thing`);
+                                            let role = channel.server.roles.get("id", things[thing]);
                                             if (role) {
+                                                console.log(`Making role ${role.name} un-mentionable.`);
                                                 warframe.client.updateRole(role, {
                                                     mentionable: false
-                                                });
+                                                }).catch(console.error);
                                             }
                                         }
                                     }
                                 };
                                 Promise.all(madeMentionable).then(()=> {
-                                    sendAlert().then(makeUnmentionable);
+                                    sendAlert().then(makeUnmentionable).catch(console.error);
                                 }).catch((error)=> {
-                                    //console.error(error);
-                                    //sendAlert();
-                                    //makeUnmentionable();
-                                    //warframe.client.sendMessage(channel, "Unable to make role mentionable, please contact @```Macdja38#7770 for help after making sure the bot has sufficient permissions").catch(console.error);
+                                    console.error(error);
+                                    sendAlert().then(makeUnmentionable);
+                                    warframe.client.sendMessage(channel, "Unable to make role mentionable, please contact @```Macdja38#7770 for help after making sure the bot has sufficient permissions").catch(console.error);
                                 });
 
                             });
