@@ -16,7 +16,7 @@ module.exports = class pokemon {
     }
 
     getCommands() {
-        return ["pokemon", "shiny", "stat", "hiddenability"];
+        return ["pokemon", "shiny", "pokestat", "hiddenability"];
     }
 
     onCommand(msg, command, perms) {
@@ -24,8 +24,7 @@ module.exports = class pokemon {
         if (command.command === "pokemon" && perms.check(msg, "pokemon.pokemon")) {
             let pokemon_name = command.args[0];
             if (/^[^<@#\\\/>]*$/g.test(pokemon_name)) {
-                P.getPokemonByName(pokemon_name)
-                    .then((response)=> {
+                Promise.resolve(P.getPokemonByName(pokemon_name)).then((response)=> {
                         var secondtype;
                         try {
                             secondtype = response.types[1].type.name;
@@ -63,8 +62,8 @@ module.exports = class pokemon {
         if (command.command === "shiny" && perms.check(msg, "pokemon.shiny")) {
             let pokemon_name = command.args[0];
             if (/^[^<@#\\\/>]*$/g.test(pokemon_name)) {
-                P.getPokemonByName(pokemon_name)
-                    .then((response)=> {
+                let P = new Pokedex();
+                Promise.resolve(P.getPokemonByName(pokemon_name)).then((response) => {
                         this.client.sendMessage(msg.channel,
                             {
                                 file: {
@@ -90,8 +89,7 @@ module.exports = class pokemon {
         if (command.commandnos === "pokestat" && perms.check(msg, "pokemon.pokestat")) {
             var pokemon_name = command.args[0];
             if (/^[^<@#\\\/>]*$/g.test(pokemon_name)) {
-                P.getPokemonByName(pokemon_name)
-                    .then((response)=> {
+                Promise.resolve(P.getPokemonByName(pokemon_name)).then((response)=> {
                         this.client.sendMessage(msg.channel, cap(response.stats[5].stat.name) + ": " + response.stats[5].base_stat
                             + "\n" + cap(response.stats[4].stat.name) + ": " + response.stats[4].base_stat
                             + "\n" + cap(response.stats[3].stat.name) + ": " + response.stats[3].base_stat
@@ -117,7 +115,7 @@ module.exports = class pokemon {
         if (command.command === "hiddenability" && perms.check(msg, "pokemon.hiddenability")) {
             let pokemon_name = command.args[0];
             if (/^[^<@#\\\/>]*$/g.test(pokemon_name)) {
-                P.getPokemonByName(pokemon_name)
+                Promise.resolve(P.getPokemonByName(pokemon_name))
                     .then((response)=> {
                         for (var i = 0; i < response.abilities.length; i++) {
                             if (response.abilities[i].is_hidden === true) {
