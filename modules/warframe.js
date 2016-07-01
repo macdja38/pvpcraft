@@ -187,6 +187,7 @@ warframe.prototype.onReady = function () {
     if (warframe.twitter && master) {
         warframe.onAlert.then((alerts)=> {
             console.log("Attaching Listener");
+            warframe.stream.removeListener('tweet', alerts);
             warframe.stream.on('tweet', alerts);
             warframe.stream.start();
         })
