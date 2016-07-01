@@ -73,9 +73,11 @@ function loadConfigs() {
 if (cluster.isMaster) {
     // Fork workers.
     var workers = [];
-    for (var i = 0; i < numCPUs; i++) {
-        console.log(`Starting worker ${i}`);
-        workers.push(cluster.fork({id: i}));
+    for (let i = 0; i < numCPUs; i++) {
+        setTimeout(function () {
+            console.log(`Starting worker ${i}`);
+            workers.push(cluster.fork({id: i}));
+        }, 6000 * i);
     }
 
     var Website = require("./www");
@@ -103,7 +105,7 @@ if (cluster.isMaster) {
     r = global.r;
     global.conn = r.connect(auth.get("reThinkDB", {}));
     conn = global.conn;
-    
+
     var Permissions = require("./lib/permissions.js");
 
     var key = auth.get("key", null);
@@ -157,7 +159,7 @@ if (cluster.isMaster) {
             }
         }
         if (msg.author.id === "85257659694993408" && msg.content.indexOf("crashnow") > 0) {
-            thuea.huteoa.uthsea = htusen
+            process.exit(0);
         }
         var command = Parse.command(l, msg, {"allowMention": id, "botName": name});
         //Reload command starts here.
@@ -325,33 +327,33 @@ if (cluster.isMaster) {
 
     //When bot is added to a new server tell carbon about it.
     client.on('serverCreated', (server)=> {
-        var configs = [configDB.serverCreated(server),permsDB.serverCreated(server)];
-        Promise.all(configs).then(()=>{
-        for (let middleware of middlewareList) {
-            if (middleware.module) {
-                try {
-                    if (middleware.module.serverCreated) {
-                        console.log("Notifying a module a server was created!".green);
-                        middleware.module.serverCreated(server);
+        var configs = [configDB.serverCreated(server), permsDB.serverCreated(server)];
+        Promise.all(configs).then(()=> {
+            for (let middleware of middlewareList) {
+                if (middleware.module) {
+                    try {
+                        if (middleware.module.serverCreated) {
+                            console.log("Notifying a module a server was created!".green);
+                            middleware.module.serverCreated(server);
+                        }
+                    } catch (error) {
+                        console.error(error);
                     }
-                } catch (error) {
-                    console.error(error);
                 }
             }
-        }
-        for (let module of moduleList) {
-            if (module.module) {
-                try {
-                    if (module.module.serverCreated) {
-                        console.log("Notifying a module a server was created!".green);
-                        module.module.serverCreated(server);
+            for (let module of moduleList) {
+                if (module.module) {
+                    try {
+                        if (module.module.serverCreated) {
+                            console.log("Notifying a module a server was created!".green);
+                            module.module.serverCreated(server);
+                        }
+                    } catch (error) {
+                        console.error(error);
                     }
-                } catch (error) {
-                    console.error(error);
                 }
+
             }
-            
-        }
         }).catch(console.error)
     });
 
