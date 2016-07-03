@@ -77,7 +77,7 @@ if (cluster.isMaster) {
         setTimeout(function () {
             console.log(`Starting worker ${i}`);
             workers.push(cluster.fork({id: i}));
-        }, 6000 * i);
+        }, 7500 * i);
     }
 
     var Website = require("./www");
@@ -164,7 +164,12 @@ if (cluster.isMaster) {
         var command = Parse.command(l, msg, {"allowMention": id, "botName": name});
         //Reload command starts here.
         if (command.command === "reload" && msg.author.id === "85257659694993408") {
-            reloadTarget(msg, command, perms, l, moduleList, middlewareList)
+            if(command.flags.indexOf("a")>-1) {
+                reload();
+            } else {
+                reloadTarget(msg, command, perms, l, moduleList, middlewareList)
+            }
+            return;
         }
 
         //Command middleware starts here.
@@ -189,7 +194,7 @@ if (cluster.isMaster) {
         }
         if (command) {
             console.log("Command Used".blue);
-            console.dir(command, {depth: 3});
+            console.dir(command, {depth: 2});
             for (mod in moduleList) {
                 //console.log(moduleList[mod].commands.indexOf(command.command));
                 if (moduleList.hasOwnProperty(mod) && moduleList[mod].commands.indexOf(command.commandnos) > -1) {
@@ -397,25 +402,27 @@ function reload() {
     console.log("defaults");
     console.log(defaults);
     name = client.user.name;
-    for (let middleware of middlewareList) {
-        if (middleware.module) {
+    for (let middleware in middlewareList) {
+        if (middlewareList.hasOwnProperty(middleware)) {
             try {
-                if (middleware.module.onDisconnect) {
-                    console.log("Trying to Remove Listeners!".green);
-                    middleware.module.onDisconnect();
+                if (middlewareList[middleware].module && middlewareList[middleware].module.onDisconnect) {
+                    console.log(`Removing Listeners for middleware ${middleware}`.green);
+                    middlewareList[middleware].module.onDisconnect();
                 }
+                delete middlewareList[middleware];
             } catch (error) {
                 console.error(error);
             }
         }
     }
-    for (let module of moduleList) {
-        if (module.module) {
+    for (let module in moduleList) {
+        if (moduleList.hasOwnProperty(module)) {
             try {
-                if (module.module.onDisconnect) {
-                    console.log("Trying to Remove Listeners!".green);
-                    module.module.onDisconnect();
+                if (moduleList[module].module && moduleList[module].module.onDisconnect) {
+                    console.log(`Removing Listeners for module ${module}`.green);
+                    moduleList[module].module.onDisconnect();
                 }
+                delete moduleList[module];
             } catch (error) {
                 console.error(error);
             }
