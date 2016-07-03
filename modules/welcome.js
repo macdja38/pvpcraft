@@ -21,15 +21,20 @@ module.exports = class welcome {
                 );
             }
             var welcomeInfo = this.config.get("welcome", {}, {server: server.id});
+            var pm = welcomeInfo.private;
             if (welcomeInfo.message) {
                 let welcomeChannel;
-                if (welcomeInfo.channel) {
-                    welcomeChannel = server.channels.get("id", welcomeInfo.channel);
+                if(pm !== true) {
+                    if (welcomeInfo.channel) {
+                        welcomeChannel = server.channels.get("id", welcomeInfo.channel);
+                    }
+                    if (!welcomeChannel) {
+                        welcomeChannel = server.defaultChannel;
+                    }
+                } else {
+                    welcomeChannel = user;
                 }
-                if (!welcomeChannel) {
-                    welcomeChannel = server.defaultChannel;
-                }
-                let message = welcomeInfo.message.replace(/\$user/gi, utils.clean(user.username));
+                let message = welcomeInfo.message.replace(/\$user/gi, utils.clean(user.username)).replace(/\$mention/gi, user);
                 if (welcomeInfo.delay && welcomeInfo.delay > 1000) {
                     setTimeout(()=> {
                         this.client.sendMessage(welcomeChannel, message);
@@ -72,6 +77,7 @@ module.exports = class welcome {
             if (command.channel) {
                 settings.channel = command.channel.id;
             }
+            settings.private = command.flags.indexOf('p') > -1;
             if (command.options.delay) {
                 settings.delay = Math.max(Math.min(command.options.delay.valueOf() || 0, 20), 0)*1000;
             }
