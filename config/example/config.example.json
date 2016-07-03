@@ -22,7 +22,7 @@
     "music": "./modules/music.js",
     "welcome": "./modules/welcome.js",
     "rank": "./modules/rank.js",
-    "cleverBot": "./middleware/cleverBot.js"
+    "cleverBot": "./modules/cleverBot.js"
   },
   "default": {
     "prefix": [
