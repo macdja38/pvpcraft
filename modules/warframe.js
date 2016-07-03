@@ -101,6 +101,7 @@ var warframe = function (e) {
                         console.log(err);
                         return;
                     }
+                    warframe.cursor = cursor;
                     cursor.each((err, alert)=> {
                         alert = alert.new_val;
                         console.log(`Alert`.green);
@@ -138,16 +139,10 @@ var warframe = function (e) {
                                     })}`);
                                 };
                                 let makeUnmentionable = () => {
-                                    console.log(`Was told to make things unmentionable`);
-                                    console.log(things);
                                     for (let thing in things) {
-                                        console.log(thing);
-                                        console.log(things[thing]);
                                         if (things.hasOwnProperty(thing)) {
-                                            console.log(`things has property thing`);
                                             let role = channel.server.roles.get("id", things[thing]);
                                             if (role) {
-                                                console.log(`Making role ${role.name} un-mentionable.`);
                                                 warframe.client.updateRole(role, {
                                                     mentionable: false
                                                 }).catch(console.error);
@@ -159,8 +154,8 @@ var warframe = function (e) {
                                     sendAlert().then(makeUnmentionable).catch(console.error);
                                 }).catch((error)=> {
                                     console.error(error);
-                                    sendAlert().then(makeUnmentionable);
                                     warframe.client.sendMessage(channel, "Unable to make role mentionable, please contact @```Macdja38#7770 for help after making sure the bot has sufficient permissions").catch(console.error);
+                                    sendAlert().then(makeUnmentionable);
                                 });
 
                             });
@@ -200,6 +195,9 @@ warframe.prototype.onDisconnect = function () {
             warframe.stream.removeListener('tweet', alerts);
             warframe.stream.stop();
         });
+    }
+    if (warframe.cursor) {
+        warframe.cursor.close();
     }
 };
 
