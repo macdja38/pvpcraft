@@ -5,7 +5,6 @@
     "admins": ["85257659694993408"]
   },
   "middleware": {
-    "cleverBot": "./modules/cleverBot.js"
   },
   "website": {
     "port": 8000,
@@ -17,11 +16,13 @@
     "moderation": "./modules/moderation.js",
     "utilities": "./modules/utilities.js",
     "minecraft": "./modules/minecraft.js",
-    "music": "./modules/music.js",
     "help": "./modules/help.js",
     "evaluate": "./modules/evaluate.js",
     "pokemon": "./modules/pokemon.js",
-    "rank": "./modules/rank.js"
+    "music": "./modules/music.js",
+    "welcome": "./modules/welcome.js",
+    "rank": "./modules/rank.js",
+    "cleverBot": "./middleware/cleverBot.js"
   },
   "default": {
     "prefix": [
