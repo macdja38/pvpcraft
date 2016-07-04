@@ -1,10 +1,6 @@
 /**
  * Created by macdja38 on 2016-05-16.
  */
-
-/**
- * Created by macdja38 on 2016-04-25.
- */
 "use strict";
 
 var Utils = require('../lib/utils');
