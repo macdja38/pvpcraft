@@ -1,6 +1,7 @@
 /**
  * Created by macdja38 on 2016-06-13.
  */
+"use strict";
 
 var Utils = require('../lib/utils');
 var utils = new Utils();
