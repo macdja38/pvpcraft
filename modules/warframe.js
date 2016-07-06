@@ -233,7 +233,7 @@ warframe.prototype.onCommand = function (msg, command, perms) {
     }
 
     if (command.commandnos === "alert") {
-        if (command.args[0] === "list" && perms.check(msg, "rank.list")) {
+        if (command.args[0] === "list" && perms.check(msg, "warframe.alerts.list")) {
             let roles = warframe.config.get("warframeAlerts", {items: {}}, {server: msg.server.id}).items;
             let coloredRolesList = "";
             for (var role in roles) {
