@@ -529,8 +529,10 @@ module.exports = class moderation {
         };
         this.logChannelDeleted = (channel) => {
             try {
-                console.log("Channel " + channel.name + " deleted from " + channel.server.name);
-                this.log(channel.server, ":exclamation:Channel " + utils.clean(channel.name) + " was deleted, id: `" + channel.id + "`");
+                if(channel.server) {
+                    console.log("Channel " + channel.name + " deleted from " + channel.server.name);
+                    this.log(channel.server, ":exclamation:Channel " + utils.clean(channel.name) + " was deleted, id: `" + channel.id + "`");
+                }
             }
             catch (err) {
                 console.error(err);
