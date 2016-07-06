@@ -16,8 +16,8 @@ module.exports = class welcome {
             //TODO: once config loader v2 is done make this configurable.
             if (server.id == "77176186148499456") {
                 this.client.sendMessage(server.channels.get("id", "171382498020950016"),
-                    "Hop to it @here, " + utils.clean(user.username) + " Just joined " + utils.clean(server.name) +
-                    " announce it in <#77176186148499456>\n```Welcome **" + utils.clean(user.username) + "**!```"
+                    `Hop to it @here, ${utils.clean(user.username)} Just joined ${utils.clean(server.name)} ` +
+                    `announce it in <#77176186148499456>\n\`\`\`\nWelcome **${utils.clean(user.username)}**!\n\`\`\``
                 );
             }
             var welcomeInfo = this.config.get("welcome", {}, {server: server.id});
