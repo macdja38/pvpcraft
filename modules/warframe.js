@@ -33,6 +33,17 @@ var warframe = function (e) {
     warframe.config = e.configDB;
     warframe.raven = e.raven;
     warframe.alerts = [];
+    warframe.rebuildAlerts = () => {
+        for (var item in warframe.config.data) {
+            if (warframe.config.data.hasOwnProperty(item) && warframe.config.data[item].hasOwnProperty("warframeAlerts")) {
+                if (warframe.client.channels.get("id", warframe.config.data[item]["warframeAlerts"].channel) != null) {
+                    warframe.alerts.push(warframe.config.data[item].warframeAlerts);
+                } else {
+                    //TODO: notify the server owner their mod alerts channel has been removed and that //setalerts false will make that permanent.
+                }
+            }
+        }
+    };
     if (master) {
         var twitter_auth = e.auth.get("twitter", false);
         if (twitter_auth) {
@@ -54,15 +65,7 @@ var warframe = function (e) {
                  console.log(res);
                  });*/
                 console.log("Did, DB Thing");
-                for (var item in warframe.config.data) {
-                    if (warframe.config.data.hasOwnProperty(item) && warframe.config.data[item].hasOwnProperty("warframeAlerts")) {
-                        if (warframe.client.channels.get("id", warframe.config.data[item]["warframeAlerts"].channel) != null) {
-                            warframe.alerts.push(warframe.config.data[item].warframeAlerts);
-                        } else {
-                            //TODO: notify the server owner their mod alerts channel has been removed and that //setalerts false will make that permanent.
-                        }
-                    }
-                }
+                warframe.rebuildAlerts();
                 if (master) {
                     console.log(`Shard ${process.env.id} is the Master Shard!`);
                     if (twitter_auth) {
@@ -207,6 +210,10 @@ warframe.prototype.getCommands = function () {
     return commands
 };
 
+warframe.prototype.serverCreated = function() {
+    warframe.rebuildAlerts();
+};
+
 warframe.prototype.checkMisc = function (msg, perms) {
     if (msg.content.toLowerCase().indexOf("soon") == 0 && msg.content.indexOf(":tm:") < 0 && perms.check(msg, "warframe.misc.soon")) {
         warframe.client.sendMessage(msg.channel, "Soon:tm:");
@@ -341,6 +348,7 @@ warframe.prototype.onCommand = function (msg, command, perms) {
                 config.items = {};
             }
             warframe.config.set("warframeAlerts", config, {server: msg.channel.server.id});
+            warframe.rebuildAlerts();
             msg.reply(":thumbsup::skin-tone-2:");
             return true;
         }
