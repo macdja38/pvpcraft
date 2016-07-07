@@ -34,6 +34,7 @@ var warframe = function (e) {
     warframe.raven = e.raven;
     warframe.alerts = [];
     warframe.rebuildAlerts = () => {
+        warframe.alerts = [];
         for (var item in warframe.config.data) {
             if (warframe.config.data.hasOwnProperty(item) && warframe.config.data[item].hasOwnProperty("warframeAlerts")) {
                 if (warframe.client.channels.get("id", warframe.config.data[item]["warframeAlerts"].channel) != null) {
