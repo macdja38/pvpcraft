@@ -20,7 +20,7 @@ var text;
 module.exports = class music {
     constructor(e) {
         this.client = e.client;
-        this.config = e.config;
+        this.config = e.configDB;
         this.raven = e.raven;
         this.r = e.r;
         this.conn = e.conn;
@@ -62,7 +62,8 @@ module.exports = class music {
                         apiKey: key,
                         raven: this.raven,
                         r: this.r,
-                        conn: this.conn
+                        conn: this.conn,
+                        config: this.config
                     });
                     msg.reply("Binding to **" + this.boundChannels[id].voice.name + "** and **" + this.boundChannels[id].text.name + "**");
                     this.boundChannels[id].init(msg, (error)=> {
@@ -227,12 +228,12 @@ module.exports = class music {
             if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
                 if (command.args[0] && perms.check(msg, "music.volume.set")) {
                     var volume = parseInt(command.args[0]);
-                    if (101 > volume && volume > 0) {
+                    if (111 > volume && volume > 9) {
                         this.boundChannels[id].setVolume(volume);
                         msg.reply("Volume set to **" + volume + "**")
 
                     } else {
-                        msg.reply("Sorry, invalid volume, please enter a number between 0 and 101")
+                        msg.reply("Sorry, invalid volume, please enter a number between 10 and 110")
                     }
                     return true;
                 } else {
