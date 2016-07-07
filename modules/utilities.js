@@ -8,6 +8,9 @@ var utils = new Utils();
 
 var now = require('performance-now');
 
+const os = require('os');
+const numCPUs = os.cpus().length;
+
 var utilities = class utilities {
     constructor(e) {
         this.client = e.client;
@@ -15,7 +18,7 @@ var utilities = class utilities {
     }
 
     getCommands() {
-        return ["serverinfo", "server", "userinfo", "user", "ping", "lmgtfy"];
+        return ["serverinfo", "server", "userinfo", "user", "ping", "lmgtfy", "statu"];
     }
 
     checkMisc() {
@@ -47,6 +50,7 @@ var utilities = class utilities {
             );
             return true;
         }
+
         if ((command.command === 'userinfo' || command.command === 'user') && perms.check(msg, "utils.userinfo")) {
             var string = "";
             var mentInfo;
@@ -88,6 +92,7 @@ var utilities = class utilities {
             msg.reply(string);
             return true;
         }
+
         if ((command.command === 'ping') && perms.check(msg, 'utils.ping')) {
             var t1 = now();
             msg.channel.sendMessage("Testing Ping", (error, message)=> {
@@ -99,9 +104,15 @@ var utilities = class utilities {
             })
             return true;
         }
+
         //http://lmgtfy.com/?q=How+to+hug
         if ((command.command === 'lmgtfy') && perms.check(msg, 'utils.lmgtfy')) {
             msg.channel.sendMessage(`http://lmgtfy.com/?q=${command.args.join("+")}`);
+            return true;
+        }
+
+        if ((command.command === 'status') && perms.check(msg, 'utils.status')) {
+            msg.channel.sendMessage(`\`\`\`xl\nShard: ${process.env.id}/${numCPUs}\nCPU: ${"unknown"}\nLoadAverage ${os.loadavg()}\nMemory usage: ${process.memoryUsage().heapTotal/1000000}MB\nRSS: ${process.memoryUsage().rss/1000000}MB\n\`\`\``);
             return true;
         }
         return false;
