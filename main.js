@@ -120,9 +120,7 @@ if (cluster.isMaster) {
 
     var request = require('request');
 
-    var defaults = {
-        "prefix": []
-    };
+    var prefix = [];
 
     var hasBeenReady = false;
 
@@ -144,12 +142,12 @@ if (cluster.isMaster) {
 
         // handle per server prefixes.
         if (msg.channel.server) {
-            l = configDB.get("prefix", defaults.prefix, {server: msg.channel.server.id});
+            l = configDB.get("prefix", prefix, {server: msg.channel.server.id});
             if (l == null) {
-                l = defaults.prefix;
+                l = prefix;
             }
         } else {
-            l = defaults.prefix;
+            l = prefix;
         }
         console.log(`Prefix ${l}`);
         //Message middleware starts here.
@@ -398,9 +396,9 @@ if (cluster.isMaster) {
 }
 
 function reload() {
-    defaults = config.get("*", {"prefix": ["!!", "//"]});
+    prefix = configDB.get("prefix", ["!!", "//"], {server: "*"});
     console.log("defaults");
-    console.log(defaults);
+    console.log(prefix);
     name = client.user.name;
     for (let middleware in middlewareList) {
         if (middlewareList.hasOwnProperty(middleware)) {
