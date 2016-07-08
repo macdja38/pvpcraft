@@ -66,7 +66,6 @@ var warframe = function (e) {
                  console.log(res);
                  });*/
                 console.log("Did, DB Thing");
-                warframe.rebuildAlerts();
                 if (master) {
                     console.log(`Shard ${process.env.id} is the Master Shard!`);
                     if (twitter_auth) {
@@ -183,6 +182,7 @@ function createDBIfNotExists(name, con) {
 }
 
 warframe.prototype.onReady = function () {
+    warframe.rebuildAlerts();
     if (warframe.twitter && master) {
         warframe.onAlert.then((alerts)=> {
             console.log("Attaching Listener");
