@@ -442,7 +442,7 @@ warframe.prototype.onCommand = function (msg, command, perms) {
                     return true;
                 } else {
                     delete config.items[command.args[1]];
-                    warframe.config.set("warframeAlerts", config, {server: msg.channel.server.id});
+                    warframe.config.set("warframeAlerts", config, {server: msg.channel.server.id, conflict: "replace"});
                     msg.reply("Role not found, removed " + utils.clean(command.args[1]) + " from list.");
                     return true;
                 }
