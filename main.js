@@ -149,7 +149,7 @@ if (cluster.isMaster) {
         } else {
             l = prefix;
         }
-        console.log(`Prefix ${l}`);
+        //console.log(`Prefix ${l}`);
         //Message middleware starts here.
         for (ware in middlewareList) {
             if (middlewareList.hasOwnProperty(ware) && middlewareList[ware].ware.onMessage) {
@@ -257,8 +257,8 @@ if (cluster.isMaster) {
         }
         var t2 = now();
         if (msg.channel.server) {
-            console.log("s:".blue + (process.env.id) + " s: ".magenta + msg.channel.server.name + " c: ".blue + msg.channel.name + " u: ".cyan +
-                msg.author.username + " m: ".green + msg.content.replace(/\n/g, "\n    ") + " in ".yellow + (t2 - t1) + "ms".red);
+            /*console.log("s:".blue + (process.env.id) + " s: ".magenta + msg.channel.server.name + " c: ".blue + msg.channel.name + " u: ".cyan +
+                msg.author.username + " m: ".green + msg.content.replace(/\n/g, "\n    ") + " in ".yellow + (t2 - t1) + "ms".red); */
         } else {
             console.log("u: ".cyan + msg.author.username + " m: ".green + msg.content.replace(/\n/g, "\n    ").rainbow +
                 " in ".yellow + (t2 - t1) + "ms".red);
@@ -310,21 +310,17 @@ if (cluster.isMaster) {
 //Initiate a connection To Discord.
     if (auth.get("tokens", false)) {
         console.log("tokens".red);
-        client.loginWithToken(auth.get("tokens", {})[parseInt(process.env.id)], (error)=> {
-            if (error) {
+        client.loginWithToken(auth.get("tokens", {})[parseInt(process.env.id)]).catch((error)=>{
                 console.error("Error logging in.");
                 console.error(error);
                 console.error(error.stack);
-            }
-        });
+        })
     } else {
-        client.loginWithToken(auth.get("token", {}), (error)=> {
-            if (error) {
+        client.loginWithToken(auth.get("token", {})).catch((error)=>{
                 console.error("Error logging in.");
                 console.error(error);
                 console.error(error.stack);
-            }
-        });
+        })
     }
 
 

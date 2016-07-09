@@ -39,7 +39,6 @@ module.exports = class moderation {
          */
         this.log = (server, string) => {
             if (this.logging.hasOwnProperty(server.id)) {
-                console.log("server name " + server.name);
                 this.client.sendMessage(this.logging[server.id], utils.clean(string), (error)=> {
                     if (error) {
                         console.error(error);
@@ -229,7 +228,6 @@ module.exports = class moderation {
 
         this.logMember = (server, newUser, oldMember) => {
             try {
-                console.log("Member Update");
                 var newMember = server.detailsOfUser(newUser);
                 if (oldMember && newMember && (oldMember.roles.length != newMember.roles.length || oldMember.mute != newMember.mute || oldMember.deaf != newMember.deaf || oldMember.nick != newMember.nick)) {
                     var text = ":exclamation:User change detected in " + utils.fullNameB(newUser) + "\n";
@@ -279,9 +277,7 @@ module.exports = class moderation {
                             console.error(oldMember.roles);
                         }
                     }
-                    console.log("Member Update on " + server.name + " : " + text);
                     if (this.logging.hasOwnProperty(server.id)) {
-                        console.log("server name " + server.name);
                         this.client.sendMessage(this.logging[server.id], text, (error)=> {
                             if (error) {
                                 console.error(error)
@@ -382,7 +378,6 @@ module.exports = class moderation {
         this.logRole = (oldRole, newRole) => {
             try {
                 if (this.logging[newRole.server.id]) {
-                    console.log("Role change");
                     var text = ":exclamation:Role change detected in " + utils.clean(oldRole.name) + "#" + oldRole.id + "\n";
                     if (oldRole.permissions != newRole.permissions) {
                         text += "Permissions changed from " + (oldRole.permissions >>> 0).toString(2) + " to " + (newRole.permissions >>> 0).toString(2) + "\n";
@@ -438,7 +433,6 @@ module.exports = class moderation {
                         if (this.logging.hasOwnProperty(serverid)) {
                             var server = this.client.servers.get("id", serverid);
                             if (server && server.members.get("id", newUser.id)) {
-                                console.log("server name " + this.client.servers.get("id", serverid).name);
                                 this.client.sendMessage(this.logging[serverid], text, (error)=> {
                                     if (error) {
                                         console.error(error)
@@ -750,10 +744,8 @@ module.exports = class moderation {
 function findOverrideChanges(thing1, thing2) {
     var changes = [];
     if (thing1.length >= thing2.length) {
-        console.log("removed");
         thing1.forEach(
             (i)=> {
-                console.log(i);
                 var j = thing2.get("id", i.id);
                 if (j) {
                     for (var k in i) {
@@ -770,7 +762,6 @@ function findOverrideChanges(thing1, thing2) {
     } else {
         thing2.forEach(
             (i)=> {
-                console.log(i);
                 if (!thing1.get("id", i.id)) {
                     changes.push({"change": "add", "override": i})
                 }
@@ -818,7 +809,6 @@ function getLogs(client, channel, count, before) {
     return new Promise((resolve)=> {
         client.getChannelLogs(channel, count, before ? {before: before} : {}).then((newMessages)=> {
             count -= 100;
-            console.log(count);
             if (count > 0 && newMessages.length == 100) {
                 getLogs(client, channel, count, newMessages[99]).then(
                     (messages) => {
