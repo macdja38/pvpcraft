@@ -379,6 +379,7 @@ module.exports = class moderation {
             try {
                 if (this.logging[newRole.server.id]) {
                     var text = ":exclamation:Role change detected in " + utils.clean(oldRole.name) + "#" + oldRole.id + "\n";
+                    var oldText = text;
                     if (oldRole.permissions != newRole.permissions) {
                         text += "Permissions changed from " + (oldRole.permissions >>> 0).toString(2) + " to " + (newRole.permissions >>> 0).toString(2) + "\n";
                     }
@@ -394,11 +395,13 @@ module.exports = class moderation {
                     if (oldRole.color != newRole.color) {
                         text += "Colour changed from " + oldRole.color + " to " + newRole.color + "\n";
                     }
-                    this.client.sendMessage(this.logging[newRole.server.id], text, (error)=> {
-                        if (error) {
-                            console.error(error)
-                        }
-                    });
+                    if(text !== oldText) {
+                        this.client.sendMessage(this.logging[newRole.server.id], text, (error)=> {
+                            if (error) {
+                                console.error(error)
+                            }
+                        });
+                    }
                 }
             }
             catch (err) {
