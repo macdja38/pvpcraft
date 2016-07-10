@@ -48,9 +48,9 @@ if (auth.get("sentryURL", "") != "") {
                 //   e.response -- raw http response object
 
                 console.error('Could not report event to sentry');
-                console.error(e.reason);
-                console.error(e.statusCode);
-                console.error(e.response);
+                //console.error(e.reason);
+                //console.error(e.statusCode);
+                //console.error(e.response);
             })
         })
     });
@@ -315,13 +315,14 @@ if (cluster.isMaster) {
 
 //Initiate a connection To Discord.
     if (auth.get("tokens", false)) {
-        console.log("tokens".red);
+        console.log(`token: ${auth.get("tokens", {})[parseInt(process.env.id)]}`.red);
         client.loginWithToken(auth.get("tokens", {})[parseInt(process.env.id)]).catch((error)=>{
                 console.error("Error logging in.");
                 console.error(error);
                 console.error(error.stack);
         })
     } else {
+        console.log(`token: ${auth.get("token", {})}`.blue);
         client.loginWithToken(auth.get("token", {})).catch((error)=>{
                 console.error("Error logging in.");
                 console.error(error);
