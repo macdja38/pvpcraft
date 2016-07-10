@@ -273,6 +273,12 @@ if (cluster.isMaster) {
         console.error(error.stack);
     });
 
+    client.on('warn', (error)=> {
+        console.error(`Warning`);
+        console.error(error);
+        console.error(error.stack);
+    });
+
     client.on('disconnect', ()=> {
         console.log("Disconnect".red);
         for (let i in moduleList) {

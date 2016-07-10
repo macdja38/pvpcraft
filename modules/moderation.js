@@ -430,8 +430,7 @@ module.exports = class moderation {
                     }
                     if (oldUser.avatar != newUser.avatar && !newUser.bot) {
                         text += "        Avatar changed from " + oldUser.avatarURL + " to " + newUser.avatarURL + "\n";
-                    }
-                    console.log("User Change");
+                    } 
                     for (var serverid in this.logging) {
                         if (this.logging.hasOwnProperty(serverid)) {
                             var server = this.client.servers.get("id", serverid);
