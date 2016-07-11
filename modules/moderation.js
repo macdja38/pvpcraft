@@ -20,7 +20,6 @@ module.exports = class moderation {
         this.refreshMap = ()=> {
             //build the map of server id's and logging channels.
             for (var item in this.configDB.data) {
-                console.log(this.configDB.data);
                 if (this.configDB.data.hasOwnProperty(item) && this.configDB.data[item].hasOwnProperty("msgLog")) {
                     let channel = this.client.channels.get("id", this.configDB.data[item]["msgLog"]);
                     if (channel != null) {
@@ -430,7 +429,7 @@ module.exports = class moderation {
                     }
                     if (oldUser.avatar != newUser.avatar && !newUser.bot) {
                         text += "        Avatar changed from " + oldUser.avatarURL + " to " + newUser.avatarURL + "\n";
-                    } 
+                    }
                     for (var serverid in this.logging) {
                         if (this.logging.hasOwnProperty(serverid)) {
                             var server = this.client.servers.get("id", serverid);
