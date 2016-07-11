@@ -193,6 +193,9 @@ if (cluster.isMaster) {
         if (command) {
             console.log("Command Used".blue);
             console.dir(command, {depth: 2});
+            var t2 = now();
+            console.log("s:".blue + (process.env.id) + " s: ".magenta + msg.channel.server.name + " c: ".blue + msg.channel.name + " u: ".cyan +
+                msg.author.username + " m: ".green + msg.content.replace(/\n/g, "\n    ") + " in ".yellow + (t2 - t1) + "ms".red);
             for (mod in moduleList) {
                 //console.log(moduleList[mod].commands.indexOf(command.command));
                 if (moduleList.hasOwnProperty(mod) && moduleList[mod].commands.indexOf(command.commandnos) > -1) {
@@ -255,7 +258,6 @@ if (cluster.isMaster) {
                 }
             }
         }
-        var t2 = now();
         if (msg.channel.server) {
             /*console.log("s:".blue + (process.env.id) + " s: ".magenta + msg.channel.server.name + " c: ".blue + msg.channel.name + " u: ".cyan +
                 msg.author.username + " m: ".green + msg.content.replace(/\n/g, "\n    ") + " in ".yellow + (t2 - t1) + "ms".red); */
@@ -276,7 +278,6 @@ if (cluster.isMaster) {
     client.on('warn', (error)=> {
         console.error(`Warning`);
         console.error(error);
-        console.error(error.stack);
     });
 
     client.on('disconnect', ()=> {
