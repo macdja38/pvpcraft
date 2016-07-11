@@ -504,7 +504,7 @@ warframe.prototype.onCommand = function (msg, command, perms) {
                     }
                     warframe.client.sendMessage(msg.channel,
                         "```xl\n" +
-                        alert.MissionInfo.location + " levels " + alert.MissionInfo.minEnemyLevel + "-" + alert.MissionInfo.maxEnemyLevel + "\n" +
+                        parseState.getNode(alert.MissionInfo.location) + " levels " + alert.MissionInfo.minEnemyLevel + "-" + alert.MissionInfo.maxEnemyLevel + "\n" +
                         parseState.getLevel(alert.MissionInfo.descText) + "\n" +
                         parseState.getFaction(alert.MissionInfo.faction) + " " + parseState.getMissionType(alert.MissionInfo.missionType) + "\n" +
                         rewards +
