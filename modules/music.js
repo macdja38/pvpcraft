@@ -98,7 +98,7 @@ module.exports = class music {
 
         if (command.command === "play" && perms.check(msg, "music.play")) {
             if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
-                if (this.boundChannels[id].connection.voiceChannel.id !== msg.author.voiceChannel.id) {
+                if (msg.author.voiceChannel && this.boundChannels[id].connection.voiceChannel.id !== msg.author.voiceChannel.id) {
                     msg.reply("You must be in the current voice channel to queue a song. If you are already in the voice channel please leave and rejoin or toggle your mute.");
                     return true;
                 }

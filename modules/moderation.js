@@ -361,8 +361,10 @@ module.exports = class moderation {
                 if (this.logging[newRole.server.id]) {
                     var text = ":exclamation:Role change detected in " + utils.clean(oldRole.name) + "#" + oldRole.id + "\n";
                     var oldText = text;
-                    if (oldRole.serialise() != newRole.serialise()) {
-                        text += "Permissions changed from `" + oldRole.serialize() + "` to `" + newRole.serialize() + "`\n";
+                    let oldPerms = arrayOfTrues(oldRole.serialize()).toString();
+                    let newPerms = arrayOfTrues(newRole.serialize()).toString();
+                    if (oldPerms !== newPerms) {
+                        text += "Permissions changed from `" + oldPerms + "` to `" + newPerms + "`\n";
                     }
                     if (oldRole.name != newRole.name) {
                         text += "Name changed from " + utils.clean(oldRole.name) + " to " + utils.clean(newRole.name) + "\n";
@@ -814,4 +816,19 @@ function getLogs(client, channel, count, before) {
             }
         })
     })
+}
+
+/**
+ * Return an array of the objects keys that have the value true
+ * @param object
+ * @returns {Array}
+ */
+function arrayOfTrues(object) {
+    var arr = [];
+    for(let key in object) {
+        if(object.hasOwnProperty(key) && object[key] === true) {
+            arr.push(key)
+        }
+    }
+    return arr;
 }
