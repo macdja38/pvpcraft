@@ -6,6 +6,8 @@
 var Utils = require('../lib/utils');
 var utils = new Utils();
 
+var SlowSender = require('../lib/slowSender');
+
 var colors = require('colors');
 
 module.exports = class moderation {
@@ -16,6 +18,7 @@ module.exports = class moderation {
         this.configDB = e.configDB;
         this.raven = e.raven;
         this.purgedMessages = {};
+        this._slowSender = new SlowSender(e);
 
         this.refreshMap = ()=> {
             //build the map of server id's and logging channels.
@@ -38,7 +41,7 @@ module.exports = class moderation {
          */
         this.log = (server, string) => {
             if (this.logging.hasOwnProperty(server.id)) {
-                this.client.sendMessage(this.logging[server.id], utils.clean(string), (error)=> {
+                this._slowSender.sendMessage(this.logging[server.id], utils.clean(string), (error)=> {
                     if (error) {
                         console.error(error);
                     }
@@ -135,21 +138,12 @@ module.exports = class moderation {
                             }
                         }
                         //send everything off.
-                        this.client.sendMessage(this.logging[channel.server.id], string, (error)=> {
-                            if (error) {
-                                console.error(error)
-                            }
-                        });
+                        this._slowSender.sendMessage(this.logging[channel.server.id], string)
                     }
                     else {
                         if (this.purgedMessages[channel.server.id] && Object.keys(this.purgedMessages[channel.server.id].messages).length > 0) return;
-                        this.client.sendMessage(this.logging[channel.server.id], "An un-cached message in " +
-                            utils.clean(channel.name) + " was deleted, this probably means the bot was either recently restarted on the message was old.",
-                            (error)=> {
-                                if (error) {
-                                    console.error(error)
-                                }
-                            });
+                        this._slowSender.sendMessage(this.logging[channel.server.id], "An un-cached message in " +
+                            utils.clean(channel.name) + " was deleted, this probably means the bot was either recently restarted on the message was old.");
 
                     }
                 }
@@ -187,22 +181,16 @@ module.exports = class moderation {
                     if (message) {
                         if (utils.compare(message.content, newMessage.content) > changeThresh) {
                             if (message.content.length > 144 || /[^0-9a-zA-Z\s\.!\?]/.test(message.content) || /[^0-9a-zA-Z\s\.!\?]/.test(newMessage.content)) {
-                                this.client.sendMessage(this.logging[newMessage.channel.server.id], utils.clean(newMessage.channel.name) +
+                                this._slowSender.sendMessage(this.logging[newMessage.channel.server.id], utils.clean(newMessage.channel.name) +
                                     " | " + utils.fullNameB(newMessage.author) + " changed: " + utils.bubble(message.content) +
-                                    " to " + utils.bubble(newMessage.content), (error)=> {
-                                    if (error) {
-                                        console.error(error)
-                                    }
-                                });
+                                    " to " + utils.bubble(newMessage.content)
+                                );
                             }
                             else {
-                                this.client.sendMessage(this.logging[message.channel.server.id], utils.clean(newMessage.channel.name) +
+                                this._slowSender.sendMessage(this.logging[message.channel.server.id], utils.clean(newMessage.channel.name) +
                                     " | " + utils.fullNameB(newMessage.author) + "\n```diff\n-" + utils.clean(message.content) +
-                                    "\n+" + utils.clean(newMessage.content) + "\n```", (error)=> {
-                                    if (error) {
-                                        console.error(error)
-                                    }
-                                });
+                                    "\n+" + utils.clean(newMessage.content) + "\n```"
+                                );
                             }
                         }
                     } else {
@@ -276,13 +264,7 @@ module.exports = class moderation {
                             console.error(oldMember.roles);
                         }
                     }
-                    if (this.logging.hasOwnProperty(server.id)) {
-                        this.client.sendMessage(this.logging[server.id], text, (error)=> {
-                            if (error) {
-                                console.error(error)
-                            }
-                        });
-                    }
+                    this.log(server, text);
                 }
             }
             catch (err) {
@@ -379,8 +361,8 @@ module.exports = class moderation {
                 if (this.logging[newRole.server.id]) {
                     var text = ":exclamation:Role change detected in " + utils.clean(oldRole.name) + "#" + oldRole.id + "\n";
                     var oldText = text;
-                    if (oldRole.permissions != newRole.permissions) {
-                        text += "Permissions changed from " + (oldRole.permissions >>> 0).toString(2) + " to " + (newRole.permissions >>> 0).toString(2) + "\n";
+                    if (oldRole.serialise() != newRole.serialise()) {
+                        text += "Permissions changed from `" + oldRole.serialize() + "` to `" + newRole.serialize() + "`\n";
                     }
                     if (oldRole.name != newRole.name) {
                         text += "Name changed from " + utils.clean(oldRole.name) + " to " + utils.clean(newRole.name) + "\n";
@@ -394,12 +376,8 @@ module.exports = class moderation {
                     if (oldRole.color != newRole.color) {
                         text += "Colour changed from " + oldRole.color + " to " + newRole.color + "\n";
                     }
-                    if(text !== oldText) {
-                        this.client.sendMessage(this.logging[newRole.server.id], text, (error)=> {
-                            if (error) {
-                                console.error(error)
-                            }
-                        });
+                    if (text !== oldText) {
+                        this.log(newRole.server, text)
                     }
                 }
             }
@@ -434,11 +412,7 @@ module.exports = class moderation {
                         if (this.logging.hasOwnProperty(serverid)) {
                             var server = this.client.servers.get("id", serverid);
                             if (server && server.members.get("id", newUser.id)) {
-                                this.client.sendMessage(this.logging[serverid], text, (error)=> {
-                                    if (error) {
-                                        console.error(error)
-                                    }
-                                });
+                                this.log(server, text)
                             }
                         }
                     }
@@ -500,9 +474,17 @@ module.exports = class moderation {
                         text += "        Channel override " + change.change + " from " + change.override.type + " " + newTargetName + "\n";
                     }
                     else {
-                        text += "        Channel override on " + change.override.type + " " + newTargetName + " " +
-                            change.change + " changed `" + (change.from >>> 0).toString(2) + "` to `" +
-                            (change.to >>> 0).toString(2) + "`\n";
+                        console.log(change);
+                        text += "        Channel override on "
+                            + change.override.type
+                            + " " + newTargetName
+                            + " "
+                            + change.change
+                            + " changed `"
+                            + (change.change === "allow" ? change.from.allowed : change.from.denied )
+                            + "` to `"
+                            + (change.change === "allow" ? change.to.allowed : change.to.denied )
+                            + "`\n";
                     }
                 }
                 if (text !== ":exclamation:Channel change detected in " + utils.clean(oldChannel.name) + "\n") {
@@ -524,7 +506,7 @@ module.exports = class moderation {
         };
         this.logChannelDeleted = (channel) => {
             try {
-                if(channel.server) {
+                if (channel.server) {
                     console.log("Channel " + channel.name + " deleted from " + channel.server.name);
                     this.log(channel.server, ":exclamation:Channel " + utils.clean(channel.name) + " was deleted, id: `" + channel.id + "`");
                 }
@@ -560,6 +542,7 @@ module.exports = class moderation {
         this.client.removeListener("voiceJoin", this.voiceJoin);
         //this.client.removeListener("voiceSwitch", this.voiceSwitch);
         this.client.removeListener("voiceLeave", this.voiceLeave);
+        this._slowSender.onDisconnect();
     }
 
     onReady() {
@@ -583,6 +566,7 @@ module.exports = class moderation {
         //this.client.on("voiceSwitch", this.voiceSwitch);
         this.client.on("voiceLeave", this.voiceLeave);
         this.refreshMap();
+        this._slowSender.onReady();
         //TODO: log serverUpdated, serverRoleCreated, serverRoleDeleted
     }
 
@@ -751,7 +735,8 @@ function findOverrideChanges(thing1, thing2) {
                 if (j) {
                     for (var k in i) {
                         if (i.hasOwnProperty(k) && i[k] !== j[k]) {
-                            changes.push({"change": k, "override": i, "from": i[k], "to": j[k]});
+                            console.log(i);
+                            changes.push({"change": k, "override": i, "from": i, "to": j});
                         }
                     }
                 }
