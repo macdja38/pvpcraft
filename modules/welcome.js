@@ -24,7 +24,7 @@ module.exports = class welcome {
             var pm = welcomeInfo.private;
             if (welcomeInfo.message) {
                 let welcomeChannel;
-                if(pm !== true) {
+                if (pm !== true) {
                     if (welcomeInfo.channel) {
                         welcomeChannel = server.channels.get("id", welcomeInfo.channel);
                     }
@@ -34,7 +34,7 @@ module.exports = class welcome {
                 } else {
                     welcomeChannel = user;
                 }
-                let message = welcomeInfo.message.replace(/\$user/gi, utils.clean(user.username)).replace(/\$mention/gi, user);
+                let message = welcomeInfo.message.replace(/\$user/gi, utils.clean(user.username)).replace(/\$mention/gi, user).replace(/\$server/gi, utils.clean(server.name));
                 if (welcomeInfo.delay && welcomeInfo.delay > 1000) {
                     setTimeout(()=> {
                         this.client.sendMessage(welcomeChannel, message);
@@ -79,7 +79,7 @@ module.exports = class welcome {
             }
             settings.private = command.flags.indexOf('p') > -1;
             if (command.options.delay) {
-                settings.delay = Math.max(Math.min(command.options.delay.valueOf() || 0, 20), 0)*1000;
+                settings.delay = Math.max(Math.min(command.options.delay.valueOf() || 0, 20), 0) * 1000;
             }
             this.config.set("welcome", settings, {server: msg.server.id});
             msg.reply(":thumbsup::skin-tone-2:");
