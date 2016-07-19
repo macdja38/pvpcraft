@@ -12,6 +12,8 @@ module.exports = class rateLimits {
     constructor(e) {
         this.client = e.client;
 
+        this.channelRateLimitWhiteList = e.config.get("channelRateLimitWhiteList", []);
+
         this.userCommandCount = {};
         this.channelCommandCount = {};
         this.serverCommandCount = {};
@@ -104,7 +106,7 @@ module.exports = class rateLimits {
      */
     changeCommand(msg, command, perms, l) {
         if (!this.userCommandCount.hasOwnProperty(msg.author.id)) {
-            this.userCommandCount[msg.author.id] = 1;
+            this.userCommandCount[msg.author.id] = 1; 
         }
         else {
             this.userCommandCount[msg.author.id]++;
@@ -119,6 +121,9 @@ module.exports = class rateLimits {
         }
 
         if (msg.server) {
+            if(this.channelRateLimitWhiteList.includes(command.commandnos)) {
+                return command;
+            }
             if (!this.channelCommandCount.hasOwnProperty(msg.channel.id)) {
                 this.channelCommandCount[msg.channel.id] = 1;
             }

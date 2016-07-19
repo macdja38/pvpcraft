@@ -9,6 +9,8 @@ var request = require('request');
 
 var now = require("performance-now");
 
+var SlowSender = require('../lib/slowSender');
+
 var Utils = require('../lib/utils');
 var utils = new Utils();
 
@@ -19,12 +21,21 @@ module.exports = class evaluate {
         this.config = e.config;
         this.configDB = e.configDB;
         this.fileConfig = e.config;
+        this.slowSender = new SlowSender(e);
     }
 
     getCommands() {
         return ["eval", "setavatar"];
     }
+    
+    onReady() {
+        this.slowSender.onReady();
+    }
 
+    onDisconnect() {
+        this.slowSender.onDisconnect();
+    }
+    
     onCommand(msg, command, perms) {
         console.log("Perms initiated");
         //id is hardcoded to prevent problems stemming from the misuse of eval.
@@ -39,6 +50,7 @@ module.exports = class evaluate {
             let bot = this.client;
             let message = msg;
             let config = this.config;
+            let slowSend = this.slowSender;
 
             let raven = this.raven;
             let modules = this.modules;
