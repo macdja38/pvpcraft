@@ -53,7 +53,7 @@ module.exports = class giveaways {
         console.log("Giveaways initiated");
 
         if (command.commandnos === "giveaway" && perms.check(msg, "giveaway.admin.setup")) {
-            if (command.args.length > 0 && (command.args[0] === "enable" || command.args[0] === "enable")) {
+            if (command.args.length > 0 && (command.args[0] === "enable" || command.args[0] === "disable")) {
                 let data = this.entries.get(null, {}, {server: msg.server.id});
                 data.enable = command.args[0] === "enable";
                 if (command.options.hasOwnProperty("channel")) {
