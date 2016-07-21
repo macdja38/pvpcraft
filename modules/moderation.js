@@ -646,8 +646,8 @@ module.exports = class moderation {
                 return true;
             }
             let user;
-            if (/<#\d+>/.test(command.options.user)) {
-                user = msg.channel.server.users.get("id", command.options.user.match(/<#(\d+)>/)[1]);
+            if (/<@(?:!)?\d+>/.test(command.options.user)) {
+                user = msg.channel.server.members.get("id", command.options.user.match(/<@(?:!)?(\d+)>/)[1]);
                 if (!user) {
                     msg.reply("Cannot find that user.")
                 }
