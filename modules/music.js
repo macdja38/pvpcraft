@@ -232,12 +232,12 @@ module.exports = class music {
             if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
                 if (command.args[0] && perms.check(msg, "music.volume.set")) {
                     var volume = parseInt(command.args[0]);
-                    if (111 > volume && volume > 9) {
+                    if (111 > volume && volume > 4) {
                         this.boundChannels[id].setVolume(volume);
                         msg.reply("Volume set to **" + volume + "**")
 
                     } else {
-                        msg.reply("Sorry, invalid volume, please enter a number between 10 and 110")
+                        msg.reply("Sorry, invalid volume, please enter a number between 5 and 110")
                     }
                     return true;
                 } else {
