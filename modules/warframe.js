@@ -209,7 +209,7 @@ warframe.prototype.onDisconnect = function () {
     }
 };
 
-var commands = ["setupalerts", "alert", "deal", "darvo", "trader", "voidtrader", "baro", "trial", "raid", "trialstat", "wiki", "sortie", "farm", "damage", "primeacces", "acces", "update", "update", "armorstat", "armourstat", "armor", "armour"];
+var commands = ["setupalerts", "alert", "fissure", "rift", "deal", "darvo", "trader", "voidtrader", "baro", "trial", "raid", "trialstat", "wiki", "sortie", "farm", "damage", "primeacces", "acces", "update", "update", "armorstat", "armourstat", "armor", "armour"];
 
 warframe.prototype.getCommands = function () {
     return commands
@@ -504,15 +504,33 @@ warframe.prototype.onCommand = function (msg, command, perms) {
                     }
                     warframe.client.sendMessage(msg.channel,
                         "```xl\n" +
-                        parseState.getNode(alert.MissionInfo.location) + " levels " + alert.MissionInfo.minEnemyLevel + "-" + alert.MissionInfo.maxEnemyLevel + "\n" +
-                        parseState.getLevel(alert.MissionInfo.descText) + "\n" +
+                        parseState.getNodeName(alert.MissionInfo.location) + " levels " + alert.MissionInfo.minEnemyLevel + "-" + alert.MissionInfo.maxEnemyLevel + "\n" +
                         parseState.getFaction(alert.MissionInfo.faction) + " " + parseState.getMissionType(alert.MissionInfo.missionType) + "\n" +
                         rewards +
                         "\nExpires in " + utils.secondsToTime(alert.Expiry.sec - state.Time) +
                         "\n```"
                     );
                 }
+            }
+        });
+        return true;
+    }
 
+    else if (command.commandnos === 'rift' || command.commandnos === 'fissure' && perms.check(msg, "warframe.alert")) {
+        worldState.get(function (state) {
+            if (state.ActiveMissions) {
+                let string = "";
+                for (let mission of state.ActiveMissions) {
+                    let node = parseState.getNode(mission.Node);
+                    if(node) {
+                        let nodeFaction = parseState.getFaction(node.faction);
+                        let nodeMission = parseState.getMissionType(node.missionType);
+                        string += `\`\`\`xl\n${parseState.getTierName(mission.Modifier).name} (${mission.Modifier.slice(4)}) rift active on ${parseState.getNodeName(mission.Node)} (${nodeFaction} ${nodeMission}) for ${utils.secondsToTime(mission.Expiry.sec - state.Time)}\n\`\`\``;
+                    } else {
+                        string += `\`\`\`xl\n${parseState.getTierName(mission.Modifier).name} (${mission.Modifier.slice(4)}) rift active for ${utils.secondsToTime(mission.Expiry.sec - state.Time)}\n\`\`\``;
+                    }
+                }
+                warframe.client.sendMessage(msg.channel, string);
             }
         });
         return true;
