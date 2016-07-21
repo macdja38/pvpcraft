@@ -10,9 +10,7 @@ var google = require('google');
 
 module.exports = class template {
     constructor(e) {
-        //save the client as this.client for later use.
         this.client = e.client;
-        //save the bug reporting thing raven for later use.
         this.raven = e.raven;
     }
 
@@ -38,14 +36,14 @@ module.exports = class template {
                 else if (response.links.length < 1) msg.reply("No results found");
                 else {
                     if (response.links[0].link === null) {
-                        for (i = 1; i < response.links.length; i++) {
+                        for (let i = 1; i < response.links.length; i++) {
                             if (response.links[i].link !== null) {
-                                this.client.sendMessage(msg.channel, `Found ${response.links[i].link}`);
+                                this.client.sendMessage(msg.channel, `Found ${utils.clean(response.links[i].link)})`);
                                 return;
                             }
                         }
                     } else {
-                        this.client.sendMessage(msg.channel, `Found ${response.links[0].link}`);
+                        this.client.sendMessage(msg.channel, `Found ${utils.clean(response.links[0].link)}`);
                     }
                 }
             });
