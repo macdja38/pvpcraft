@@ -263,7 +263,7 @@ warframe.prototype.onCommand = function (msg, command, perms) {
         if (command.args[0] === "join" && perms.check(msg, "warframe.alerts.join")) {
             let roles = warframe.config.get("warframeAlerts", {items: {}}, {server: msg.server.id}).items;
             if (!command.args[1] || !roles[command.args[1]]) {
-                msg.reply(`Please supply an item to join using \`${command.prefix}rank join \<rank\>\`, for a list of items use \`${command.prefix}rank list\``);
+                msg.reply(`Please supply an item to join using \`${command.prefix}alert join \<rank\>\`, for a list of items use \`${command.prefix}alert list\``);
                 return true;
             }
             let rankToJoin = command.args[1].toLowerCase();
@@ -298,7 +298,7 @@ warframe.prototype.onCommand = function (msg, command, perms) {
         if (command.args[0] === "leave" && perms.check(msg, "warframe.alerts.leave")) {
             let roles = warframe.config.get("warframeAlerts", {items: {}}, {server: msg.server.id}).items;
             if (!command.args[1] || !roles[command.args[1]]) {
-                msg.reply(`Please supply a rank to leave using \`${command.prefix}alerts leave \<rank\>\`, for a list of ranks use \`${command.prefix}alerts list\``);
+                msg.reply(`Please supply a rank to leave using \`${command.prefix}alerts leave \<rank\>\`, for a list of items use \`${command.prefix}alerts list\``);
                 return true;
             }
             role = msg.server.roles.get("id", roles[command.args[1]]);
