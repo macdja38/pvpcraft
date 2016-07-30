@@ -112,7 +112,7 @@ var utilities = class utilities {
         }
 
         if ((command.command === 'status') && perms.check(msg, 'utils.status')) {
-            msg.channel.sendMessage(`\`\`\`xl\nShard: ${process.env.id}/${numCPUs}\nCPU: ${"unknown"}\nLoadAverage ${os.loadavg()}\nMemory usage: ${process.memoryUsage().heapTotal/1000000}MB\nRSS: ${process.memoryUsage().rss/1000000}MB\n\`\`\``);
+            msg.channel.sendMessage(`\`\`\`xl\nShard: ${process.env.id}/${process.env.shards}\nCPU: ${"unknown"}\nLoadAverage ${os.loadavg()}\nMemory usage: ${process.memoryUsage().heapTotal/1000000}MB\nRSS: ${process.memoryUsage().rss/1000000}MB\n\`\`\``);
             return true;
         }
         return false;
