@@ -20,9 +20,9 @@ module.exports = class rateLimits {
 
         this.userLimit = e.config.get("userLimit", 2);
         this.userPerTick = e.config.get("userPerTick", 2);
-        this.userTickInterval = e.config.get("userTickInterval", 5000);
+        this.userTickInterval = e.config.get("userTickInterval", 4000);
 
-        this.channelLimit = e.config.get("channelLimit", 8);
+        this.channelLimit = e.config.get("channelLimit", 5);
         this.channelPerTick = e.config.get("channelPerTick", 2);
         this.channelTickInterval = e.config.get("channelTickInterval", 2500);
 
@@ -122,8 +122,10 @@ module.exports = class rateLimits {
 
         if (msg.server) {
             if(this.channelRateLimitWhiteList.includes(command.commandnos)) {
+                console.log("Command Whitelisted.");
                 return command;
             }
+
             if (!this.channelCommandCount.hasOwnProperty(msg.channel.id)) {
                 this.channelCommandCount[msg.channel.id] = 1;
             }
