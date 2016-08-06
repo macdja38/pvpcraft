@@ -56,8 +56,8 @@ module.exports = class giveaways {
             if (command.args.length > 0 && (command.args[0] === "enable" || command.args[0] === "disable")) {
                 let data = this.entries.get(null, {}, {server: msg.server.id});
                 data.enable = command.args[0] === "enable";
-                if (command.options.hasOwnProperty("channel")) {
-                    data.channel = command.options.channel.id;
+                if (command.hasOwnProperty("channel")) {
+                    data.channel = command.channel.id;
                 } else if (!data.hasOwnProperty("channel")) {
                     data.channel = msg.channel.id;
                 }
