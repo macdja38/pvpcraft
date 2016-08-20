@@ -6,6 +6,9 @@
   },
   "middleware": {
   },
+  "shards": 2,
+  "localShards": 2,
+  "shardStart": 0,
   "website": {
     "port": 8000,
     "musicUrl": "https://pvpcraft.ca/pvpbotmusic/?server="

@@ -4,7 +4,6 @@
 "use strict";
 const cluster = require('cluster');
 global.cluster = cluster;
-const numCPUs = require('os').cpus().length;
 
 var Configs = require("./lib/config.js");
 var config = new Configs("config");
@@ -72,12 +71,22 @@ function loadConfigs() {
 
 if (cluster.isMaster) {
     // Fork workers.
+    var shards = config.get("shards", 2);
+    var startShard = config.get("shardStart", 0);
+    var localShards = config.get("localShards", 2);
+    var lastRestart = 0;
+    var restartQueue = 0;
     var workers = [];
-    for (let i = 0; i < numCPUs; i++) {
-        setTimeout(function () {
-            console.log(`Starting worker ${i}`);
-            workers.push(cluster.fork({id: i}));
-        }, 7500 * i);
+    if(!config.get("webOnly", false)) {
+        console.log(`This is the master, starting ${shards} shards`.green);
+        for (let i = startShard; i < (startShard + localShards); i++) {
+            console.log(`Scheduling shard ${i}`);
+            setTimeout(function () {
+                console.log(`Starting worker ${i} ${typeof(i)} ${typeof(shards)}`);
+                workers.push(cluster.fork({id: i, shards: shards}));
+                lastRestart = Date.now();
+            }, 7500 * (i-startShard));
+        }
     }
 
     var Website = require("./www");
@@ -85,20 +94,22 @@ if (cluster.isMaster) {
 
     cluster.on('exit', (deadWorker, code, signal) => {
         console.log(`worker ${deadWorker.process.pid} died`);
-        let id = workers.indexOf(deadWorker);
-        workers[id] = cluster.fork({id: id});
-        // Log the event
-        console.log(`worker ${workers[id].process.pid} born`);
+        let id = workers.indexOf(deadWorker)+startShard;
+        setTimeout(()=>{
+            workers[id] = cluster.fork({id: id, shards: shards});
+            console.log(`worker ${workers[id].process.pid} born`);
+            lastRestart = Date.now();
+        }, Math.max(0, (lastRestart + 5000) - Date.now()));
     });
 } else {
 
     var Discord = require("discord.js");
-    console.log(`Worker id ${process.env.id} Shard count ${numCPUs}`);
+    console.log(`Worker id ${process.env.id} Shard count ${process.env.shards}`);
     var client = new Discord.Client({
         forceFetchUsers: true,
         autoReconnect: true,
         shardId: parseInt(process.env.id),
-        shardCount: numCPUs
+        shardCount: parseInt(process.env.shards)
     });
 
     global.r = require('rethinkdb');
@@ -132,7 +143,7 @@ if (cluster.isMaster) {
     var id;
 
     client.on('message', (msg)=> {
-        if (msg.author.id === id) return;
+        if (msg.author && msg.author.id === id) return;
         if (!configDB) return;
         if (!perms) return;
         var t1 = now();
@@ -299,12 +310,12 @@ if (cluster.isMaster) {
             id = client.user.id;
             mention = "<@" + id + ">";
             name = client.user.name;
-            console.log(`Loading modules for Shard ${process.env.id.valueOf()} / ${numCPUs}`.cyan);
+            console.log(`Loading modules for Shard ${process.env.id.valueOf()} / ${process.env.shards}`.cyan);
             reload();
             console.log(`-------------------`.magenta);
             console.log(`Ready as ${client.user.username}`.magenta);
             console.log(`Mention ${mention}`.magenta);
-            console.log(`Shard ${process.env.id} / ${numCPUs}`.magenta);
+            console.log(`Shard ${process.env.id} / ${process.env.shards}`.magenta);
             console.log(`-------------------`.magenta);
             if (!hasBeenReady) {
                 hasBeenReady = true;
@@ -400,6 +411,11 @@ if (cluster.isMaster) {
         });
     });
 }
+
+process.on('uncaughtException', (e)=> {
+    console.error(e);
+    console.error(e.stack);
+});
 
 function reload() {
     prefix = configDB.get("prefix", ["!!", "//"], {server: "*"});
