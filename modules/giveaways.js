@@ -52,7 +52,7 @@ module.exports = class giveaways {
         //log that the module was called.
         console.log("Giveaways initiated");
 
-        if (command.commandnos === "giveaway" && perms.check(msg, "giveaway.admin.setup")) {
+        if (command.commandnos === "giveaway" && perms.check(msg, "admin.giveaway.setup")) {
             if (command.args.length > 0 && (command.args[0] === "enable" || command.args[0] === "disable")) {
                 let data = this.entries.get(null, {}, {server: msg.server.id});
                 data.enable = command.args[0] === "enable";
@@ -71,7 +71,7 @@ module.exports = class giveaways {
             return true;
         }
 
-        if (command.command === "clear" && perms.check(msg, "giveaway.admin.clear")) {
+        if (command.command === "clear" && perms.check(msg, "admin.giveaway.clear")) {
             if (!this.entries.get("channel", false, {server: msg.server.id})) {
                 msg.reply("Sorry but there is no record of a giveaway ever existing.");
                 return true;
@@ -80,7 +80,7 @@ module.exports = class giveaways {
             msg.reply(`Entries cleared`);
         }
 
-        if (command.command === "count" && perms.check(msg, "giveaway.admin.count")) {
+        if (command.command === "count" && perms.check(msg, "admin.giveaway.count")) {
             if (!this.entries.get("channel", false, {server: msg.server.id})) {
                 msg.reply("Sorry but there is no record of a giveaway ever existing.");
                 return true;
@@ -90,7 +90,7 @@ module.exports = class giveaways {
             });
         }
 
-        if (command.command === "draw" && perms.check(msg, "giveaway.admin.draw")) {
+        if (command.command === "draw" && perms.check(msg, "admin.giveaway.draw")) {
             if (!this.entries.get("channel", false, {server: msg.server.id})) {
                 msg.reply("Sorry but there is no record of a giveaway ever existing.");
                 return true;
