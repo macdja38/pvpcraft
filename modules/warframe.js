@@ -28,7 +28,10 @@ var request = require('request');
 
 var _ = require('underscore');
 
+var DBEventState = require('../lib/dbEventState');
+
 var warframe = function (e) {
+    warframe.dbEvents = new DBEventState(e);
     warframe.client = e.client;
     warframe.config = e.configDB;
     warframe.raven = e.raven;
@@ -215,7 +218,7 @@ warframe.prototype.getCommands = function () {
     return commands
 };
 
-warframe.prototype.serverCreated = function() {
+warframe.prototype.onServerCreated = function() {
     warframe.rebuildAlerts();
 };
 
@@ -464,7 +467,7 @@ warframe.prototype.onCommand = function (msg, command, perms) {
                 for (var item of state.VoidTraders[0].Manifest) {
                     rep += "item: " + parseState.getName(item.ItemType) + " - price:" + item.PrimePrice + " ducats " + item.RegularPrice + "cr\n";
                 }
-                rep += "```"
+                rep += "```";
                 warframe.client.sendMessage(msg.channel, rep);
             }
             else {

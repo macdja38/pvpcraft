@@ -572,7 +572,7 @@ module.exports = class moderation {
         //TODO: log serverUpdated, serverRoleCreated, serverRoleDeleted
     }
 
-    serverCreated() {
+    onServerCreated() {
         this.refreshMap();
     }
 

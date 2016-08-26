@@ -288,10 +288,9 @@ if (cluster.isMaster) {
         console.error(error.stack);
     });
 
-    client.on('warn', (error)=> {
-        console.error(`Warning`);
-        console.error(error);
-    });
+    /* client.on('warn', (error)=> {
+        console.error(`Warning`, error);
+    }); */
 
     client.on('disconnect', ()=> {
         console.log("Disconnect".red);
@@ -352,9 +351,9 @@ if (cluster.isMaster) {
             for (let middleware of middlewareList) {
                 if (middleware.module) {
                     try {
-                        if (middleware.module.serverCreated) {
+                        if (middleware.module.onServerCreated) {
                             console.log("Notifying a module a server was created!".green);
-                            middleware.module.serverCreated(server);
+                            middleware.module.onServerCreated(server);
                         }
                     } catch (error) {
                         console.error(error);
@@ -364,9 +363,9 @@ if (cluster.isMaster) {
             for (let module of moduleList) {
                 if (module.module) {
                     try {
-                        if (module.module.serverCreated) {
+                        if (module.module.onServerCreated) {
                             console.log("Notifying a module a server was created!".green);
-                            module.module.serverCreated(server);
+                            module.module.onServerCreated(server);
                         }
                     } catch (error) {
                         console.error(error);
@@ -452,7 +451,7 @@ function reload() {
     moduleList = [];
     var middlewares = config.get("middleware");
     var modules = config.get("modules");
-    let moduleVariables = {client, config, raven, auth, configDB, r, conn};
+    let moduleVariables = {client, config, raven, auth, configDB, r, conn, perms};
     for (let module in modules) {
         if (modules.hasOwnProperty(module)) {
             try {
@@ -525,7 +524,7 @@ function reloadTarget(msg, command, perms, l, moduleList, middlewareList) {
             delete require.cache[require.resolve(modules[command.args[0]])];
             msg.reply("Reloading " + command.args[0]);
             console.log("Reloading ".yellow + command.args[0].yellow);
-            var mod = new (require(modules[command.args[0]]))({client, config, raven, auth, configDB, r, conn});
+            var mod = new (require(modules[command.args[0]]))({client, config, raven, auth, configDB, r, conn, perms});
             if (mod.onReady) mod.onReady();
             moduleList[module].module = mod;
             moduleList[module].commands = mod.getCommands();
