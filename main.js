@@ -94,9 +94,9 @@ if (cluster.isMaster) {
 
     cluster.on('exit', (deadWorker, code, signal) => {
         console.log(`worker ${deadWorker.process.pid} died`);
-        let id = workers.indexOf(deadWorker)+startShard;
+        let id = workers.indexOf(deadWorker);
         setTimeout(()=>{
-            workers[id] = cluster.fork({id: id, shards: shards});
+            workers[id] = cluster.fork({id: id+startShard, shards: shards});
             console.log(`worker ${workers[id].process.pid} born`);
             lastRestart = Date.now();
         }, Math.max(0, (lastRestart + 5000) - Date.now()));
