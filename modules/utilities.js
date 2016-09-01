@@ -101,7 +101,7 @@ var utilities = class utilities {
                     this.client.updateMessage(message, "Ping is `" + (t2 - t1) + "`ms");
                 }
 
-            })
+            });
             return true;
         }
 

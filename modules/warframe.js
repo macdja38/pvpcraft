@@ -59,7 +59,7 @@ var warframe = function (e) {
     warframe.onAlert = new Promise((resolve)=> {
         global.conn.then((con)=> {
             let dbReady;
-            if (global.cluster.worker.id == 1) {
+            if (!global.cluster.worker || global.cluster.worker.id == 1) {
                 dbReady = createDBIfNotExists("alerts", con);
             } else {
                 dbReady = Promise.resolve();
