@@ -443,7 +443,7 @@ warframe.prototype.onCommand = function (msg, command, perms) {
                             return;
                         }
                         delete config.items[command.args[1]];
-                        warframe.config.set("warframeAlerts", config, {server: msg.channel.server.id});
+                        warframe.config.set("warframeAlerts", config, {server: msg.channel.server.id, conflict: "replace"});
                         msg.reply("Deleted role " + utils.clean(command.args[1]) + " with id `" + role.id + "`");
                     });
                     return true;
