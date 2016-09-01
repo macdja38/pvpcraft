@@ -182,7 +182,7 @@ module.exports = class music {
 
         if (command.command === "resume" && perms.check(msg, "music.resume")) {
             if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
-                if (this.boundChannels[id].connection.paused) {
+                if (this.boundChannels[id].connection.paused && this.boundChannels[id].connection.playingIntent) {
                     this.boundChannels[id].resume(msg);
                     msg.reply("Playback resumed.")
                 } else {
