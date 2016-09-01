@@ -69,7 +69,7 @@ function loadConfigs() {
   })
 }
 
-if (false && cluster.isMaster) {
+if (cluster.isMaster) {
   // Fork workers.
   var shards = config.get("shards", 2);
   var startShard = config.get("shardStart", 0);
@@ -137,6 +137,8 @@ if (false && cluster.isMaster) {
 
   var moduleList = [];
   var middlewareList = [];
+
+  var feeds;
 
   var mention;
   var name;
@@ -313,6 +315,8 @@ if (false && cluster.isMaster) {
       mention = "<@" + id + ">";
       name = client.user.name;
       console.log(`Loading modules for Shard ${process.env.id} / ${process.env.shards}`.cyan);
+      let Feeds = require('./lib/feeds');
+      feeds = new Feeds({ client, r, conn, configDB });
       reload();
       console.log(`-------------------`.magenta);
       console.log(`Ready as ${client.user.username}`.magenta);
@@ -454,7 +458,7 @@ function reload() {
   moduleList = [];
   var middlewares = config.get("middleware");
   var modules = config.get("modules");
-  let moduleVariables = { client, config, raven, auth, configDB, r, conn, perms };
+  let moduleVariables = { client, config, raven, auth, configDB, r, conn, perms, feeds };
   for (let module in modules) {
     if (modules.hasOwnProperty(module)) {
       try {
@@ -527,7 +531,7 @@ function reloadTarget(msg, command, perms, l, moduleList, middlewareList) {
       delete require.cache[require.resolve(modules[command.args[0]])];
       msg.reply("Reloading " + command.args[0]);
       console.log("Reloading ".yellow + command.args[0].yellow);
-      var mod = new (require(modules[command.args[0]]))({ client, config, raven, auth, configDB, r, conn, perms });
+      var mod = new (require(modules[command.args[0]]))({ client, config, raven, auth, configDB, r, conn, perms, feeds });
       if (mod.onReady) mod.onReady();
       moduleList[module].module = mod;
       moduleList[module].commands = mod.getCommands();
