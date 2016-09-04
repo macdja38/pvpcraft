@@ -795,7 +795,7 @@ function roleIn(role, newRoles) {
 
 function getLogs(client, channel, count, before) {
     return new Promise((resolve)=> {
-        client.getChannelLogs(channel, count, before ? {before: before} : {}).then((newMessages)=> {
+        client.getChannelLogs(channel, Math.min(100, count), before ? {before: before} : {}).then((newMessages)=> {
             count -= 100;
             if (count > 0 && newMessages.length == 100) {
                 getLogs(client, channel, count, newMessages[99]).then(
