@@ -52,7 +52,7 @@ module.exports = class feedManager {
         case "stop":
           adding = false;
           break;
-        case "default":
+        default:
           msg.reply(`Usage ${command.prefix}${command.command} <start|stop> <node>[ --channel <channel>]`);
           return true;
       }
@@ -60,7 +60,7 @@ module.exports = class feedManager {
         msg.reply(`Usage ${command.prefix}${command.command} <start|stop> <node>[ --channel <channel>]`);
         return true;
       }
-      this._feeds.set(adding, command.args[1], channel.id, channel.server.id);
+      this._feeds.set(adding, command.args[1].toLowerCase(), channel.id, channel.server.id);
 
 
       //return true, which tells the command dispatcher that we processed the command.
@@ -72,8 +72,7 @@ module.exports = class feedManager {
       if(!command.args[0]) {
         msg.reply(`Usage ${command.prefix}${command.command} <node>`)
       }
-      console.log("before", command.args[0]);
-      msg.reply(this._feeds.find(command.args[0]))
+      msg.reply(this._feeds.find(command.args[0].toLowerCase()))
     }
     //return false, telling the command dispatcher the command was not handled and to keep looking,
     //or start passing it to misc responses.
