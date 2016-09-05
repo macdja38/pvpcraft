@@ -72,7 +72,7 @@ module.exports = class feedManager {
       if(!command.args[0]) {
         msg.reply(`Usage ${command.prefix}${command.command} <node>`)
       }
-      msg.reply(this._feeds.find(command.args[0].toLowerCase()))
+      msg.reply(this._feeds.find(command.args[0].toLowerCase()).map(channelId => msg.server.channels.get("id", channelId) || channelId));
     }
     //return false, telling the command dispatcher the command was not handled and to keep looking,
     //or start passing it to misc responses.

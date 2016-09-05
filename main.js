@@ -69,7 +69,7 @@ function loadConfigs() {
   })
 }
 
-if (cluster.isMaster) {
+if (cluster.isMaster && config.get("shards", 2) > 1) {
   // Fork workers.
   var shards = config.get("shards", 2);
   var startShard = config.get("shardStart", 0);

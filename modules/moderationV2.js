@@ -84,11 +84,9 @@ module.exports = class moderationV2 {
           if (messages) {
             totalFetched += messages.length;
             purgeQueue = purgeQueue.concat(messages);
-            console.log(purgeQueue.length);
           } else {
             done = true;
           }
-          console.log(messages.length);
         }
       });
       purger = setInterval(()=> {
@@ -173,7 +171,7 @@ module.exports = class moderationV2 {
   }
 
   onReady() {
-    this.refreshMap();
+    //this.refreshMap();
     this.client.on("messageDeleted", this.messageDeleted.bind(this));
     this.client.on("messageUpdated", this.messageUpdated.bind(this));
     this.client.on("channelCreated", this.channelCreated.bind(this));
@@ -264,7 +262,7 @@ module.exports = class moderationV2 {
         if (this.tempServerIgnores.hasOwnProperty(channel.id)) {
           return;
         }
-        if (this.perms.checkUserChannel(message.author, channel, "msglog.whitelist.messagedeleted")) return;
+        if (this.perms.checkUserChannel(message.author, channel, "msglog.whitelist.message.deleted")) return;
         //grab url's to the message's attachments
         console.log(`Message deleted on ${channel.server.name}`);
         var string = utils.clean(channel.name) + " | " + utils.fullNameB(message.author) + "'s message was deleted:\n";
@@ -287,11 +285,11 @@ module.exports = class moderationV2 {
           }
         }
         //send everything off.
-        this.sendMessage("messagedeleted", string, channel.server.id)
+        this.sendMessage("message.deleted", string, channel.server.id)
       }
       else {
         if (this.tempServerIgnores.hasOwnProperty(channel.server.id)) return;
-        this.sendMessage("messagedeleted", "An un-cached message in " +
+        this.sendMessage("message.deleted", "An un-cached message in " +
           utils.clean(channel.name) + " was deleted, this probably means the bot was either recently restarted on the message was old.", channel.server.id);
 
       }
@@ -330,13 +328,13 @@ module.exports = class moderationV2 {
           if (utils.compare(message.content, newMessage.content) > changeThresh) {
             if (this.perms.checkUserChannel(message.author, newMessage.channel, "msglog.whitelist.messageupdated")) return;
             if (message.content.length > 144 || /[^0-9a-zA-Z\s\.!\?]/.test(message.content) || /[^0-9a-zA-Z\s\.!\?]/.test(newMessage.content)) {
-              this.sendMessage("messageupdated", utils.clean(newMessage.channel.name) +
+              this.sendMessage("message.updated", utils.clean(newMessage.channel.name) +
                 " | " + utils.fullNameB(newMessage.author) + " changed: " + utils.bubble(message.content) +
                 " to " + utils.bubble(newMessage.content)
                 , server.id);
             }
             else {
-              this.sendMessage("messageupdated", utils.clean(newMessage.channel.name) +
+              this.sendMessage("message.updated", utils.clean(newMessage.channel.name) +
                 " | " + utils.fullNameB(newMessage.author) + "\n```diff\n-" + utils.clean(message.content) +
                 "\n+" + utils.clean(newMessage.content) + "\n```"
                 , server.id);
@@ -344,7 +342,7 @@ module.exports = class moderationV2 {
           }
         } else {
           if (this.perms.checkUserChannel(newMessage.author, newMessage.channel, "msglog.whitelist.messageupdated")) return;
-          this.sendMessage("messageupdated", `${utils.clean(newMessage.channel.name)}` +
+          this.sendMessage("message.updated", `${utils.clean(newMessage.channel.name)}` +
             ` | ${utils.fullNameB(newMessage.author)} changed: **An un-cached message** to ${utils.bubble(newMessage.content)}`,
             server.id)
         }
@@ -368,7 +366,7 @@ module.exports = class moderationV2 {
     try {
       if (channel.server) {
         console.log("Channel " + channel.name + " deleted from " + channel.server.name);
-        this.sendMessage("channeldeleted", ":exclamation:Channel " + utils.clean(channel.name) + " was deleted, id: `" + channel.id + "`", channel.server.id);
+        this.sendMessage("channel.deleted", ":exclamation:Channel " + utils.clean(channel.name) + " was deleted, id: `" + channel.id + "`", channel.server.id);
       }
     }
     catch (err) {
@@ -421,7 +419,7 @@ module.exports = class moderationV2 {
         }
       }
       if (text !== ":exclamation:Channel change detected in " + utils.clean(oldChannel.name) + "\n") {
-        this.sendMessage("channelupdated", text, newChannel.server.id);
+        this.sendMessage("channel.updated", text, newChannel.server.id);
       }
     }
     catch (err) {
@@ -442,7 +440,7 @@ module.exports = class moderationV2 {
     try {
       if (channel.server) { //if che channel does not have a server it's a private message and we don't need to log it.
         console.log("Channel " + channel.name + " created in " + channel.server.name);
-        this.sendMessage("channelcreated", ":exclamation:Channel " + utils.clean(channel.name) + " was created, id: `" + channel.id + "`", channel.server.id);
+        this.sendMessage("channel.created", ":exclamation:Channel " + utils.clean(channel.name) + " was created, id: `" + channel.id + "`", channel.server.id);
       }
     }
     catch (err) {
@@ -473,7 +471,7 @@ module.exports = class moderationV2 {
         }
         this.client.servers.forEach(server => {
           if (server.members.has("id", newUser.id)) {
-            this.sendMessage("presence", text, server.id)
+            this.sendMessage("user", text, server.id)
           }
         });
         /*for (var serverid in this.logging) {
@@ -522,7 +520,7 @@ module.exports = class moderationV2 {
         text += "Colour changed from " + oldRole.color + " to " + newRole.color + "\n";
       }
       if (text !== oldText) {
-        this.sendMessage("roleupdated", text, newRole.server.id)
+        this.sendMessage("role.updated", text, newRole.server.id)
       }
     }
     catch (err) {
@@ -542,7 +540,7 @@ module.exports = class moderationV2 {
   memberBanned(user, server) {
     try {
       console.log("User " + user.username + " banned from " + server.name);
-      this.sendMessage("memberbanned", ":exclamation::outbox_tray: " + utils.fullName(user) + " was Banned, id: `" + user.id + "`", server.id);
+      this.sendMessage("member.banned", ":exclamation::outbox_tray: " + utils.fullName(user) + " was Banned, id: `" + user.id + "`", server.id);
     }
     catch (err) {
       console.error(err);
@@ -561,7 +559,7 @@ module.exports = class moderationV2 {
   memberUnbanned(user, server) {
     try {
       console.log("User " + user.username + " unbanned from " + server.name);
-      this.sendMessage("memberunbanned", ":exclamation::inbox_tray: " + utils.fullName(user) + " was unbanned, id: `" + user.id + "`", server.id);
+      this.sendMessage("member.unbanned", ":exclamation::inbox_tray: " + utils.fullName(user) + " was unbanned, id: `" + user.id + "`", server.id);
     }
     catch (err) {
       console.error(err);
@@ -579,7 +577,7 @@ module.exports = class moderationV2 {
 
   memberAdded(server, user) {
     try {
-      this.sendMessage("memberadded", ":inbox_tray: " + utils.fullName(user) + " Joined, id: `" + user.id + "`", server.id);
+      this.sendMessage("member.added", ":inbox_tray: " + utils.fullName(user) + " Joined, id: `" + user.id + "`", server.id);
     }
     catch (err) {
       console.error(err);
@@ -597,7 +595,7 @@ module.exports = class moderationV2 {
 
   memberRemoved(server, user) {
     try {
-      this.sendMessage("memberremoved", ":outbox_tray: " + utils.fullName(user) + " Left or was kicked, id: `" + user.id + "`", server.id);
+      this.sendMessage("member.removed", ":outbox_tray: " + utils.fullName(user) + " Left or was kicked, id: `" + user.id + "`", server.id);
     }
     catch (err) {
       console.error(err);
@@ -664,7 +662,7 @@ module.exports = class moderationV2 {
             console.error(oldMember.roles);
           }
         }
-        this.sendMessage("memberupdated", text, server.id);
+        this.sendMessage("member.updated", text, server.id);
       }
     }
     catch (err) {
@@ -684,7 +682,7 @@ module.exports = class moderationV2 {
 
   voiceJoin(channel, user) {
     try {
-      this.sendMessage("voicejoin", `:notes: ${utils.fullNameB(user)} joined voice channel ${channel.name}`, channel.server.id)
+      this.sendMessage("voice.join", `:notes: ${utils.fullNameB(user)} joined voice channel ${channel.name}`, channel.server.id)
     } catch (err) {
       console.error(err);
       console.error(err.stack);
@@ -701,7 +699,7 @@ module.exports = class moderationV2 {
 
   voiceSwitch(oldChannel, newChannel, user) {
     try {
-      this.sendMessage("voiceswitch", `:notes: ${utils.fullNameB(user)} moved from ${utils.clean(oldChannel.name)} to ${utils.clean(newChannel.name)}`, newChannel.server.id)
+      this.sendMessage("voice.switch", `:notes: ${utils.fullNameB(user)} moved from ${utils.clean(oldChannel.name)} to ${utils.clean(newChannel.name)}`, newChannel.server.id)
     } catch (err) {
       console.error(err);
       console.error(err.stack);
@@ -718,7 +716,7 @@ module.exports = class moderationV2 {
 
   voiceLeave(channel, user) {
     try {
-      this.sendMessage("voiceleave", `:notes: ${utils.fullNameB(user)} left voice channel ${channel.name}`, channel.server.id)
+      this.sendMessage("voice.leave", `:notes: ${utils.fullNameB(user)} left voice channel ${channel.name}`, channel.server.id)
     } catch (err) {
       console.error(err);
       console.error(err.stack);
