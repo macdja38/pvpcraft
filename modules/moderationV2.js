@@ -29,7 +29,7 @@ module.exports = class moderationV2 {
   }
 
   onServerCreated() {
-    this.refreshMap();
+    //this.refreshMap();
   }
 
   onCommand(msg, command, perms) {
