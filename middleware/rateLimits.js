@@ -117,6 +117,7 @@ module.exports = class rateLimits {
             console.log(`User ${msg.author.username} was rate Limited running command ${command.prefix}${command.command}, userId:${msg.author.id}`.magenta);
         }
         if (this.userCommandCount[msg.author.id] > this.userLimit) {
+            msg.rateLimited = true;
             return false;
         }
 
@@ -138,6 +139,7 @@ module.exports = class rateLimits {
                 console.log(`Channel ${msg.channel.name}:${msg.channel.id} was rate Limited running command ${command.prefix}${command.command} in ${msg.server.name}:${msg.server.id}`.magenta);
             }
             if (this.channelCommandCount[msg.channel.id] > this.channelLimit) {
+                msg.rateLimited = true;
                 return false;
             }
 
@@ -154,6 +156,7 @@ module.exports = class rateLimits {
                 console.log(`Server ${msg.server.name}:${msg.server.id} was rate Limited running command ${command.prefix}${command.command}`.magenta);
             }
             if (this.serverCommandCount[msg.server.id] > this.serverLimit) {
+                msg.rateLimited = true;
                 return false;
             }
         }
