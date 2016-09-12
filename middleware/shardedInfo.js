@@ -99,8 +99,8 @@ module.exports = class shardedInfo {
         console.log(this._standardDB.data);
         let serverData = [];
         for (let key in this._standardDB.data) {
-          if (key < process.env.shards && this._standardDB.data.hasOwnProperty(key)) {
-            serverData[key] = this._standardDB.data[key]
+          if (parseInt(key) < parseInt(process.env.shards) && this._standardDB.data.hasOwnProperty(key)) {
+            serverData[parseInt(key)] = this._standardDB.data[key]
           }
         }
         let shardsOnline = serverData.filter(s => Date.now() - s.lastUpdate < 30000).length;
