@@ -95,7 +95,7 @@ module.exports = class rank {
                 let oldRoles = this.config.get("roles", {}, {server: msg.server.id});
                 if (oldRoles.hasOwnProperty(rankToJoin)) {
                     delete oldRoles[rankToJoin];
-                    this.config.set("roles", oldRoles, {server: msg.server.id, conflict: "overwrite"});
+                    this.config.set("roles", oldRoles, {server: msg.server.id, conflict: "replace"});
                     msg.reply(":thumbsup::skin-tone-2:");
                 } else {
                     msg.reply(`Role could not be found, use \`${command.prefix}rank list\` to see the current ranks.`);
