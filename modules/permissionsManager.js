@@ -131,7 +131,7 @@ module.exports = class permissionsManager {
         if(action === "remove") action = "remov";
         console.log(command);
         var node = server + "." + channel + "." + target + "." + command.args[0];
-        msg.reply(`${utils.clean(action)}ing node \`\`\`xl\n${node}"\n\`\`\`
+        msg.reply(`${utils.clean(action)}ing node \`\`\`xl\n${node}\n\`\`\`\
 ${utils.clean(action)}ing permission node ${utils.clean(command.args[0])} in ${channel === "*" ? "all channels" : channel } for \
 ${target === "*" ? "everyone" : utils.clean(target)}`);
         console.log(node);
