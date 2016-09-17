@@ -10,8 +10,6 @@ var now = require("performance-now");
 
 var mcping = require('mc-ping-updated');
 
-var streamBuffers = require('stream-buffers');
-
 module.exports = class minecraft {
     constructor(e) {
         this.client = e.client;
