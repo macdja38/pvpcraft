@@ -15,7 +15,7 @@ module.exports = class shardedInfo {
     this._ready = false;
     this._standardDB = false;
     e.conn.then((conn)=> {
-      this._standardDB = new StandardDB("shards", this._getArray(parseInt(process.env.shards)), conn);
+      this._standardDB = new StandardDB("shards", this._getArray(parseInt(process.env.shards || 1)), conn);
       this._ready = this._standardDB.reload();
       console.log(this._ready);
     }).catch(error => console.error(error));
@@ -42,9 +42,9 @@ module.exports = class shardedInfo {
           connections: this._client.voiceConnections.length,
           playing: this._client.voiceConnections.filter(c => c.playing).length,
           users: this._client.users.length,
-          shards: process.env.id,
+          shards: parseInt(process.env.shards) || 1,
           lastUpdate: Date.now(),
-        }, {server: process.env.id})
+        }, {server: process.env.id ? process.env.id : "0"})
     }).catch(error => console.error(error))
   }
 
@@ -99,7 +99,7 @@ module.exports = class shardedInfo {
         console.log(this._standardDB.data);
         let serverData = [];
         for (let key in this._standardDB.data) {
-          if (parseInt(key) < parseInt(process.env.shards) && this._standardDB.data.hasOwnProperty(key)) {
+          if (this._standardDB.data.hasOwnProperty(key) && parseInt(key) < parseInt(process.env.shards) || 1) {
             serverData[parseInt(key)] = this._standardDB.data[key]
           }
         }
@@ -109,7 +109,7 @@ module.exports = class shardedInfo {
         let connections = serverData.map(s => s.connections).reduce((total, num) => total + num, 0);
         let playing = serverData.map(s => s.playing).reduce((total, num) => total + num, 0);
         let users = serverData.map(s => s.users).reduce((total, num) => total + num, 0);
-        msg.reply(`\`\`\`xl\nshards online: ${shardsOnline}/${process.env.shards}\nservers: ${serverCount}\nconnections: ${connections}\nplaying: ${playing}\nusers: ${users}\n\`\`\``);
+        msg.reply(`\`\`\`xl\nshards online: ${shardsOnline}/${process.env.shards || 1}\nservers: ${serverCount}\nconnections: ${connections}\nplaying: ${playing}\nusers: ${users}\n\`\`\``);
         return false;
       }
       return command;
