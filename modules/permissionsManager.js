@@ -142,7 +142,7 @@ ${target === "*" ? "everyone" : utils.clean(target)}`);
       }
       if (command.args[0].toLowerCase() === "hardreset") {
         if (msg.author.id == msg.server.owner.id) {
-          perms.set(msg.server.id, "remove");
+          perms.set(msg.server.id, "remov");
           msg.reply(`All permissions have been reset!`)
         } else {
           msg.reply(`Only the server owner can use this command.`);
