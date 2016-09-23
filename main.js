@@ -206,12 +206,14 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
       }
     }
     if (command) {
-      console.log("Command Used".blue);
-      console.dir(command, { depth: 2 });
+      //console.log("Command Used".blue);
+      //console.dir(command, { depth: 2 });
       var t2 = now();
       if (msg.channel.server) {
-        console.log("s:".blue + (process.env.id) + " s: ".magenta + msg.channel.server.name + " c: ".blue + msg.channel.name + " u: ".cyan +
-          msg.author.username + " m: ".green + msg.content.replace(/\n/g, "\n    ") + " in ".yellow + (t2 - t1) + "ms".red);
+        //console.log("s:".blue + (process.env.id) + " s: ".magenta + msg.channel.server.name + " c: ".blue +
+        // msg.channel.name + " u: ".cyan +
+        //  msg.author.username + " m: ".green + msg.content.replace(/\n/g, "\n    ") + " in ".yellow + (t2 - t1) +
+        // "ms".red);
       }
       for (mod in moduleList) {
         //console.log(moduleList[mod].commands.indexOf(command.command));
@@ -279,8 +281,8 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
       /*console.log("s:".blue + (process.env.id) + " s: ".magenta + msg.channel.server.name + " c: ".blue + msg.channel.name + " u: ".cyan +
        msg.author.username + " m: ".green + msg.content.replace(/\n/g, "\n    ") + " in ".yellow + (t2 - t1) + "ms".red); */
     } else {
-      console.log("u: ".cyan + msg.author.username + " m: ".green + msg.content.replace(/\n/g, "\n    ").rainbow +
-        " in ".yellow + (t2 - t1) + "ms".red);
+      /*console.log("u: ".cyan + msg.author.username + " m: ".green + msg.content.replace(/\n/g, "\n    ").rainbow +
+        " in ".yellow + (t2 - t1) + "ms".red);*/
     }
   });
 
