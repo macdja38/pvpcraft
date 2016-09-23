@@ -77,7 +77,7 @@ module.exports = class Warframe {
               console.log(this.alerts);
               console.log("twitter auth found, declaring onAlert");
               resolve(
-                function (tweet) {
+                (tweet) => {
                   if (tweet.user.id_str === '1344755923' && !tweet.retweeted_status) {
                     console.log("Tweet Found");
                     let alert = tweet.text.match(/(.*?): (.*?) - (.*?) - (.*)/);
@@ -93,7 +93,7 @@ module.exports = class Warframe {
                     }
                     if (alert) {
                       console.log("Logging tweet");
-                      global.r.table('alerts').insert(alert.reduce(function (o, v, i) {
+                      global.r.table('alerts').insert(alert.reduce((o, v, i) => {
                         o[i] = v;
                         return o;
                       }, {})).run(con).then(console.log);
@@ -232,7 +232,7 @@ module.exports = class Warframe {
     console.log("WARFRAME initiated");
     //console.log(command);
     if ((command.commandnos === 'deal' || command.command === 'darvo') && perms.check(msg, "warframe.deal")) {
-      worldState.get(function (state) {
+      worldState.get((state) => {
         this.client.sendMessage(msg.channel, "```xl\n" + "Darvo is selling " +
           parseState.getName(state.DailyDeals[0].StoreItem) +
           " for " + state.DailyDeals[0].SalePrice +
@@ -458,7 +458,7 @@ module.exports = class Warframe {
     }
 
     if ((command.commandnos === 'trader' || command.commandnos === 'voidtrader' || command.commandnos === 'baro') && perms.check(msg, "warframe.trader")) {
-      worldState.get(function (state) {
+      worldState.get((state) => {
         if (state.VoidTraders[0].Manifest) {
           var rep = "```xl\nBaro leaving " + state.VoidTraders[0].Node + " in " +
             utils.secondsToTime(state.VoidTraders[0].Expiry.sec - state.Time) + "\n";
@@ -483,7 +483,7 @@ module.exports = class Warframe {
     }
 
     else if (command.commandnos === 'alert' && perms.check(msg, "warframe.alert")) {
-      worldState.get(function (state) {
+      worldState.get((state) => {
         if (state.Alerts) {
           for (var alert of state.Alerts) {
             var rewards = "";
@@ -518,7 +518,7 @@ module.exports = class Warframe {
     }
 
     else if (command.commandnos === 'rift' || command.commandnos === 'fissure' && perms.check(msg, "warframe.alert")) {
-      worldState.get(function (state) {
+      worldState.get((state) => {
         if (state.ActiveMissions) {
           let string = "";
           for (let mission of state.ActiveMissions) {
@@ -548,7 +548,7 @@ module.exports = class Warframe {
           query: command.args.join(' '),
           limit: 1
         }
-      }, function (err, response, body) {
+      }, (err, response, body) => {
         if (err || response.statusCode === 404) {
           this.client.sendMessage(msg.channel, "Could not find **" + utils.clean(command.args.join(' ')) + "**");
         } else if (response.statusCode !== 200) {
@@ -566,7 +566,7 @@ module.exports = class Warframe {
     }
 
     else if (command.commandnos === 'sortie' && perms.check(msg, "warframe.sortie")) {
-      worldState.get(function (state) {
+      worldState.get((state) => {
         if (state.Sorties[0]) {
           var boss = parseState.getBoss(state.Sorties[0].Variants[0].bossIndex);
           var text = "```xl\n" + utils.secondsToTime(state.Sorties[0].Expiry.sec - state.Time) + " left to defeat " +
@@ -601,7 +601,7 @@ module.exports = class Warframe {
     }
 
     else if ((command.command === 'primeaccess' || command.command === 'access') && perms.check(msg, "warframe.access")) {
-      worldState.get(function (state) {
+      worldState.get((state) => {
         var text = "```xl\n";
         for (var event of state.Events) {
           if (event.Messages[0].Message.toLowerCase().indexOf("access") > -1) {
@@ -617,7 +617,7 @@ module.exports = class Warframe {
     }
 
     else if ((command.commandnos === 'update') && perms.check(msg, "warframe.update")) {
-      worldState.get(function (state) {
+      worldState.get((state) => {
         console.log(state.Events);
         var String = "```xl\n";
         var checks = ["update", "hotfix"];
@@ -639,7 +639,7 @@ module.exports = class Warframe {
 
     else if ((command.commandnos === 'armorstat' || command.commandnos === 'armor' ||
       command.commandnos === 'armourstat' || command.commandnos === 'armour') && perms.check(msg, "warframe.armor")) {
-      (function () {
+      (() => {
         if (command.args.length < 1 || command.args.length == 2 || command.args.length > 3) {
           this.client.sendMessage(msg.channel, "```xl\npossible uses include:\n" +
             command.prefix + "armor (Base Armor) (Base Level) (Current Level) calculate armor and stats.\n" +
