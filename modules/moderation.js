@@ -117,7 +117,6 @@ module.exports = class moderation {
                         }
                         if (ignoreMessage) return;
                         //grab url's to the message's attachments
-                        console.log("Message Delete");
                         var string = utils.clean(channel.name) + " | " + utils.fullNameB(message.author) + "'s message was deleted:\n";
                         //if their's content log it.
                         if (message.content) {
@@ -320,7 +319,6 @@ module.exports = class moderation {
 
         this.logMemberBanned = (user, server) => {
             try {
-                console.log("User " + user.username + " banned from " + server.name);
                 this.log(server, ":exclamation::outbox_tray: " + utils.fullName(user) + " was Banned, id: `" + user.id + "`");
             }
             catch (err) {
@@ -339,7 +337,6 @@ module.exports = class moderation {
 
         this.logMemberUnbanned = (user, server) => {
             try {
-                console.log("User " + user.username + " unbanned from " + server.name);
                 this.log(server, ":exclamation::inbox_tray: " + utils.fullName(user) + " was unbanned, id: `" + user.id + "`");
             }
             catch (err) {
@@ -436,7 +433,6 @@ module.exports = class moderation {
         this.logChannelCreated = (channel) => {
             try {
                 if (channel.server) { //if che channel does not have a server it's a private message and we don't need to log it.
-                    console.log("Channel " + channel.name + " created in " + channel.server.name);
                     this.log(channel.server, ":exclamation:Channel " + utils.clean(channel.name) + " was created, id: `" + channel.id + "`");
                 }
             }
@@ -509,7 +505,6 @@ module.exports = class moderation {
         this.logChannelDeleted = (channel) => {
             try {
                 if (channel.server) {
-                    console.log("Channel " + channel.name + " deleted from " + channel.server.name);
                     this.log(channel.server, ":exclamation:Channel " + utils.clean(channel.name) + " was deleted, id: `" + channel.id + "`");
                 }
             }
@@ -585,8 +580,7 @@ module.exports = class moderation {
     }
 
     onCommand(msg, command, perms) {
-        console.log("Moderation initiated");
-        if (command.command == "setlog" && perms.check(msg, "moderation.tools.setlog")) {
+                if (command.command == "setlog" && perms.check(msg, "moderation.tools.setlog")) {
             if (command.args[0] == 'false' || /<#\d+>/.test(command.options.channel)) {
                 if (this.logging.hasOwnProperty(msg.channel.server.id)) {
                     var oldLog = this.logging[msg.channel.server.id];
@@ -698,11 +692,8 @@ module.exports = class moderation {
                     console.error(error);
                 };
 
-                console.log("Loop should run " + messagesChunks.length);
-
                 let i = 0;
                 var deleteTask = setInterval(()=> {
-                    console.log("Place first " + i);
                     deleteMessageArray[i] = this.client.deleteMessages(messagesChunks[i]);
                     deleteMessageArray[i].catch(()=> {
                         clearInterval(deleteTask);

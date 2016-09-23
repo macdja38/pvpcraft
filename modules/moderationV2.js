@@ -234,11 +234,8 @@ module.exports = class moderationV2 {
    //TODO: notify the server owner their mod log has been removed and that //setlog false will make that permanent.
    }
    }
-
    }
-
    }
-   console.log(this.logging);
    }
    */
 
@@ -264,7 +261,6 @@ module.exports = class moderationV2 {
         }
         if (this.perms.checkUserChannel(message.author, channel, "msglog.whitelist.message.deleted")) return;
         //grab url's to the message's attachments
-        console.log(`Message deleted on ${channel.server.name}`);
         var string = utils.clean(channel.name) + " | " + utils.fullNameB(message.author) + "'s message was deleted:\n";
         //if their's content log it.
         if (message.content) {
@@ -310,7 +306,6 @@ module.exports = class moderationV2 {
     try {
       if (!newMessage.server) return; //it's a pm so we don't log it.
       let server = newMessage.server;
-      console.log(`message updated on ${newMessage.server.name}`);
       let changeThresh = this.configDB.data[server.id];
       if (changeThresh) {
         if (changeThresh.changeThresh) {
@@ -365,7 +360,6 @@ module.exports = class moderationV2 {
   channelDeleted(channel) {
     try {
       if (channel.server) {
-        console.log("Channel " + channel.name + " deleted from " + channel.server.name);
         this.sendMessage("channel.deleted", ":exclamation:Channel " + utils.clean(channel.name) + " was deleted, id: `" + channel.id + "`", channel.server.id);
       }
     }
@@ -405,7 +399,6 @@ module.exports = class moderationV2 {
           text += "        Channel override " + change.change + " from " + change.override.type + " " + newTargetName + "\n";
         }
         else {
-          console.log(change);
           text += "        Channel override on "
             + change.override.type
             + " " + newTargetName
@@ -439,7 +432,6 @@ module.exports = class moderationV2 {
   channelCreated(channel) {
     try {
       if (channel.server) { //if che channel does not have a server it's a private message and we don't need to log it.
-        console.log("Channel " + channel.name + " created in " + channel.server.name);
         this.sendMessage("channel.created", ":exclamation:Channel " + utils.clean(channel.name) + " was created, id: `" + channel.id + "`", channel.server.id);
       }
     }
@@ -539,7 +531,6 @@ module.exports = class moderationV2 {
 
   memberBanned(user, server) {
     try {
-      console.log("User " + user.username + " banned from " + server.name);
       this.sendMessage("member.banned", ":exclamation::outbox_tray: " + utils.fullName(user) + " was Banned, id: `" + user.id + "`", server.id);
     }
     catch (err) {
@@ -558,7 +549,6 @@ module.exports = class moderationV2 {
 
   memberUnbanned(user, server) {
     try {
-      console.log("User " + user.username + " unbanned from " + server.name);
       this.sendMessage("member.unbanned", ":exclamation::inbox_tray: " + utils.fullName(user) + " was unbanned, id: `" + user.id + "`", server.id);
     }
     catch (err) {
@@ -741,7 +731,6 @@ function findOverrideChanges(thing1, thing2) {
         if (j) {
           for (var k in i) {
             if (i.hasOwnProperty(k) && i[k] !== j[k]) {
-              console.log(i);
               changes.push({"change": k, "override": i, "from": i, "to": j});
             }
           }
