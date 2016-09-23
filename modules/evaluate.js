@@ -37,7 +37,6 @@ module.exports = class evaluate {
   }
 
   onCommand(msg, command, perms) {
-    console.log("Perms initiated");
     //id is hardcoded to prevent problems stemming from the misuse of eval.
     //no perms check because this extends paste the bounds of a server.
     //if you know what you are doing and would like to use the id in the config file you may replace msg.author.id == id, with

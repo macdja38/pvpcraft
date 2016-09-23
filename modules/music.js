@@ -43,7 +43,6 @@ module.exports = class music {
     }
 
     onCommand(msg, command, perms) {
-        console.log("Music initiated");
         if (!msg.channel.server) return; //this is a pm... we can't do music stuff here.
         var id = msg.channel.server.id;
 

@@ -22,8 +22,6 @@ module.exports = class permissionsManager {
   }
 
   onCommand(msg, command, perms) {
-    console.log("Perms initiated");
-
     //commands that deal with permissions
     if (command.command === "pex" || command.commandnos === "perm") {
 
@@ -86,9 +84,7 @@ module.exports = class permissionsManager {
           command.options.role = command.options.group
         }
         if (command.options.user) {
-          console.log(command.options.user);
           if (/<@!?\d+>/.test(command.options.user)) {
-            console.log("Found user mention");
             target = msg.channel.server.members.get("id", command.options.user.match(/<@!?(\d+)>/)[1]);
           }
           else {
@@ -103,9 +99,7 @@ module.exports = class permissionsManager {
           }
         }
         else if (command.options.role) {
-          console.log(command.options.role);
           if (/<@&\d+>/.test(command.options.role)) {
-            console.log("Found role mention");
             target = msg.channel.server.roles.get("id", command.options.role.match(/<@&(\d+)>/)[1]);
           }
           else {
@@ -122,19 +116,12 @@ module.exports = class permissionsManager {
         else {
           target = "*"
         }
-        console.log("setting permissions here".red);
-        console.log("channel:" + channel);
-        console.log("server:" + server);
-        console.log("target:" + target);
-        console.log(command);
         var action = command.args.shift();
         if(action === "remove") action = "remov";
-        console.log(command);
         var node = server + "." + channel + "." + target + "." + command.args[0];
         msg.reply(`${utils.clean(action)}ing node \`\`\`xl\n${node}\n\`\`\`\
 ${utils.clean(action)}ing permission node ${utils.clean(command.args[0])} in ${channel === "*" ? "all channels" : channel } for \
 ${target === "*" ? "everyone" : utils.clean(target)}`);
-        console.log(node);
         perms.set(node, action);
       }
       if (command.args[0] === "list") {

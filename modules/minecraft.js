@@ -20,7 +20,6 @@ module.exports = class minecraft {
     }
 
     onCommand(msg, command, perms) {
-        console.log("Minecraft initiated");
         var t1 = now();
         if (command.command === "mcping" && perms.check(msg, "minecraft.mcping")) {
             let combined = command.args.join(".").match(/(.*?):(.*)/);

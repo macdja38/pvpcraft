@@ -54,7 +54,6 @@ module.exports = class rank {
     }
 
     onCommand(msg, command, perms) {
-        console.log("autoRank");
         if (command.command === "rank") {
             if (command.args[0] === "add" && perms.check(msg, "admin.rank.add")) {
                 let roleId;
@@ -62,9 +61,7 @@ module.exports = class rank {
                     command.options.role = command.options.group;
                 }
                 if (command.options.role) {
-                    console.log(command.options.role);
                     if (/<@&\d+>/.test(command.options.role)) {
-                        console.log("Found role mention");
                         roleId = msg.channel.server.roles.get("id", command.options.role.match(/<@&(\d+)>/)[1]);
                     }
                     else {

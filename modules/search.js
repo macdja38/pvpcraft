@@ -21,8 +21,6 @@ module.exports = class template {
     }
 
     onCommand(msg, command, perms) {
-        //log that the module was called.
-        console.log("Template initiated");
 
         //check if this is a command we should handle and if the user has permissions to execute it.
         if (command.command === "google" && perms.check(msg, "search.google")) {

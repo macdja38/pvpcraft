@@ -60,7 +60,6 @@ module.exports = class welcome {
     }
 
     onCommand(msg, command, perms, l) {
-        console.log("welcomeBot initiated");
         if (command.command === "setwelcome" && perms.check(msg, "admin.welcome.set")) {
             if (!command.args && !command.channel) {
                 return true;

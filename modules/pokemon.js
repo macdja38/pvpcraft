@@ -20,7 +20,6 @@ module.exports = class pokemon {
     }
 
     onCommand(msg, command, perms) {
-        console.log("Pokemon initiated");
         if (command.command === "pokemon" && perms.check(msg, "pokemon.pokemon")) {
             let pokemon_name = command.args[0];
             if (pokemon_name && /^[^<@#\\\/>]*$/g.test(pokemon_name)) {

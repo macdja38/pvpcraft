@@ -26,8 +26,6 @@ var utilities = class utilities {
   }
 
   onCommand(msg, command, perms) {
-    console.log("Perms initiated");
-    console.log(command);
     if ((command.command === "serverinfo" || command.command === "server") && perms.check(msg, "utils.serverinfo")) {
       var botCount = 0;
       for (var i in msg.channel.server.members) {
@@ -35,8 +33,6 @@ var utilities = class utilities {
           if (msg.channel.server.members[i].bot) {
             botCount++;
           }
-        } else {
-          console.log(msg.channel.server.members[i]);
         }
       }
       msg.reply(
@@ -72,10 +68,8 @@ var utilities = class utilities {
           comaUserNameCodes = '';
           for (var i = 0; i < ment.username.length - 1; i++) {
             comaUserNameCodes += ment.username.charCodeAt(i) + ',';
-            console.log('ID:' + ment.username.charCodeAt(i) + ' Char:' + ment.username[i]);
           }
           comaUserNameCodes += ment.username.charCodeAt(i);
-          console.log('ID:' + ment.username.charCodeAt(i) + ' Char:' + ment.username[i]);
           string +=
             "```xl\n" +
             "Name: " + utils.clean(ment.username) + "\n" +

@@ -36,7 +36,6 @@ module.exports = class feedManager {
 
   onCommand(msg, command, perms) {
     //log that the module was called.
-    console.log("feedManager Initiated");
     if(!msg.server) return;
     //check if this is a command we should handle and if the user has permissions to execute it.
     if (command.commandnos === "feed" && perms.check(msg, "feed.manage")) {

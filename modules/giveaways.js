@@ -49,8 +49,6 @@ module.exports = class giveaways {
             console.log("Giveaway module called but config was not ready");
             return false;
         }
-        //log that the module was called.
-        console.log("Giveaways initiated");
 
         if (command.commandnos === "giveaway" && perms.check(msg, "admin.giveaway.setup")) {
             if (command.args.length > 0 && (command.args[0] === "enable" || command.args[0] === "disable")) {
