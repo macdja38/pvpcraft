@@ -129,7 +129,7 @@ module.exports = class music {
                         video = this.boundChannels[id].queue[index];
                     }
                     else {
-                        msg.reply("Could not find find the song");
+                        msg.reply("Could not find the song");
                         return true;
                     }
                     if (video.votes.indexOf(msg.author.id) < 0 || isForced) {
