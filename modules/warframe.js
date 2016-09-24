@@ -115,11 +115,10 @@ module.exports = class Warframe {
                 console.log(alert);
                 if (alert) {
                   console.dir(this.alerts, {depth: 2});
-                  this.alerts.forEach((server, i) => setTimeout((server)=> {
+                  this.alerts.forEach((server, i) => setTimeout(()=> {
                     try {
                       let channel = this.client.channels.get("id", server.channel);
-                      if (channel && server.tracking === true)
-                        console.log(channel.name);
+                      if (!channel || !server.tracking === true) return;
                       let things = [];
                       let madeMentionable = [];
                       for (let thing in server.items) {
