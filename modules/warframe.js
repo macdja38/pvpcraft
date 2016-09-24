@@ -26,8 +26,6 @@ var twitter;
 
 var request = require('request');
 
-var _ = require('underscore');
-
 var DBEventState = require('../lib/dbEventState');
 
 module.exports = class Warframe {
@@ -482,41 +480,44 @@ module.exports = class Warframe {
     }
 
     else if (command.commandnos === 'alert' && perms.check(msg, "warframe.alert")) {
-      worldState.get((state) => {
-        if (state.Alerts) {
-          for (var alert of state.Alerts) {
-            var rewards = "";
-            if (alert.MissionInfo.missionReward) {
-              if (alert.MissionInfo.missionReward.items) {
-                for (var reward of alert.MissionInfo.missionReward.items) {
-                  if (rewards != "") rewards += " + ";
-                  rewards += parseState.getName(reward);
+        worldState.get((state) => {
+            if (state.Alerts) {
+                let alertStringArray = [];
+                for (var alert of state.Alerts) {
+                    var rewards = "";
+                    if (alert.MissionInfo.missionReward) {
+                        if (alert.MissionInfo.missionReward.items) {
+                            for (let reward of alert.MissionInfo.missionReward.items) {
+                                if (rewards != "") rewards += " + ";
+                                rewards += parseState.getName(reward);
+                            }
+                        }
+                        if (alert.MissionInfo.missionReward.countedItems) {
+                            for (let reward of alert.MissionInfo.missionReward.countedItems) {
+                                if (rewards != "") rewards += " + ";
+                                rewards += reward.ItemCount + " " + parseState.getName(reward.ItemType);
+                            }
+                        }
+                        if (rewards != "") rewards += " + ";
+                        if (alert.MissionInfo.missionReward.credits) rewards += alert.MissionInfo.missionReward.credits + " credits";
+                    }
+                    alertStringArray.push("```\n" +
+                      parseState.getNodeName(alert.MissionInfo.location) + " levels " + alert.MissionInfo.minEnemyLevel + "-" + alert.MissionInfo.maxEnemyLevel + "\n" +
+                      parseState.getFaction(alert.MissionInfo.faction) + " " + parseState.getMissionType(alert.MissionInfo.missionType) + "\n" +
+                      rewards +
+                      "\nExpires in " + utils.secondsToTime(alert.Expiry.sec - state.Time) +
+                      "\n```"
+                    );
                 }
-              }
-              if (alert.MissionInfo.missionReward.countedItems) {
-                for (var reward of alert.MissionInfo.missionReward.countedItems) {
-                  if (rewards != "") rewards += " + ";
-                  rewards += reward.ItemCount + " " + parseState.getName(reward.ItemType);
-                }
-              }
-              if (rewards != "") rewards += " + ";
-              if (alert.MissionInfo.missionReward.credits) rewards += alert.MissionInfo.missionReward.credits + " credits";
+                this.client.sendMessage(msg.channel,
+                    alertStringArray.join("\n")
+                );
             }
-            this.client.sendMessage(msg.channel,
-              "```xl\n" +
-              parseState.getNodeName(alert.MissionInfo.location) + " levels " + alert.MissionInfo.minEnemyLevel + "-" + alert.MissionInfo.maxEnemyLevel + "\n" +
-              parseState.getFaction(alert.MissionInfo.faction) + " " + parseState.getMissionType(alert.MissionInfo.missionType) + "\n" +
-              rewards +
-              "\nExpires in " + utils.secondsToTime(alert.Expiry.sec - state.Time) +
-              "\n```"
-            );
-          }
-        }
-      });
-      return true;
+        });
+        return true;
     }
 
-    else if (command.commandnos === 'rift' || command.commandnos === 'fissure' && perms.check(msg, "warframe.alert")) {
+    else if (command.commandnos === 'rift' || command.commandnos === 'fissure' && perms.check(msg, "warframe.rift")) {
       worldState.get((state) => {
         if (state.ActiveMissions) {
           let string = "";
