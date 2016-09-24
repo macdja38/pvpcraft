@@ -77,7 +77,7 @@ var utilities = class utilities {
             ((mentInfo.nick) ? "Nick: " + utils.clean(mentInfo.nick) + "\n" : "") +
             "Id: " + ment.id + "\n" +
             "Descrim: " + ment.discriminator + "\n" +
-            "Age:" + ment.createdAt + "\n" +
+            "Joined: " + ment.createdAt + "\n" +
             "IconURL: " + ment.avatarURL + "\n" +
             "```\n";
         }
