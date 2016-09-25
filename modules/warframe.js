@@ -327,7 +327,7 @@ module.exports = class Warframe {
         return true;
       }
 
-      if (command.args[0] === "enable" && perms.check(msg, "admin.warframe.alerts")) {
+      if (command.args[0] === "enable" || command.args[0] === "disable" && perms.check(msg, "admin.warframe.alerts")) {
         let config = this.config.get("warframeAlerts",
           {
             "tracking": true,
@@ -337,11 +337,7 @@ module.exports = class Warframe {
             server: msg.server.id
           }
         );
-        if (command.args[0] && command.args[0] == "false") {
-          config.tracking = false;
-        } else if (config.tracking == false) {
-          config.tracking = true;
-        }
+        config.tracking = command.args[0] === "enable";
         if (command.channel) {
           config.channel = command.channel.id;
         } else {
