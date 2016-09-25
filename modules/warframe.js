@@ -327,7 +327,7 @@ module.exports = class Warframe {
         return true;
       }
 
-      if (command.args[0] === "enable" || command.args[0] === "disable" && perms.check(msg, "admin.warframe.alerts")) {
+      if ((command.args[0] === "enable" || command.args[0] === "disable") && perms.check(msg, "admin.warframe.alerts")) {
         let config = this.config.get("warframeAlerts",
           {
             "tracking": true,
