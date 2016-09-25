@@ -472,7 +472,6 @@ module.exports = class moderation {
             text += "        Channel override " + change.change + " from " + change.override.type + " " + newTargetName + "\n";
           }
           else {
-            console.log(change);
             text += "        Channel override on "
               + change.override.type
               + " " + newTargetName
