@@ -218,7 +218,7 @@ module.exports = class Warframe {
   }
 
   checkMisc(msg, perms) {
-    if (msg.content.toLowerCase().indexOf("soon") == 0 && msg.content.indexOf(":tm:") < 0 && perms.check(msg, "this.misc.soon")) {
+    if (msg.content.toLowerCase().indexOf("soon") == 0 && msg.content.indexOf(":tm:") < 0 && perms.check(msg, "warframe.misc.soon")) {
       this.client.sendMessage(msg.channel, "Soon:tm:");
       return true;
     }
