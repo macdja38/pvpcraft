@@ -288,14 +288,12 @@ module.exports = class moderationV2 {
     if (!channel.hasOwnProperty("server") || !channel.server.hasOwnProperty("id")) return;
     try {
       if (message) {
-        console.log("Message deleted");
         if (this.tempServerIgnores.hasOwnProperty(channel.id)) {
           console.log("Ignored because of ignore list");
           return;
         }
         if (this.perms.checkUserChannel(message.author, channel, "msglog.whitelist.message.deleted")) return;
         //grab url's to the message's attachments
-        console.log("Permission Check Succeed.");
         var string = utils.clean(channel.name) + " | " + utils.fullNameB(message.author) + "'s message was deleted:\n";
         //if their's content log it.
         if (message.content) {
