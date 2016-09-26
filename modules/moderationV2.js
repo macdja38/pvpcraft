@@ -56,7 +56,6 @@ module.exports = class moderationV2 {
       if (!isNaN(command.options.before)) {
         options.before = command.options.before;
       }
-      let after;
       if (!isNaN(command.options.after)) {
         options.after = command.options.after;
       }
