@@ -44,12 +44,19 @@ module.exports = class moderationV2 {
       } else {
         channel = msg.channel;
       }
-      let user;
+      let options = {};
       if (/<@(?:!)?\d+>/.test(command.options.user)) {
-        user = msg.channel.server.members.get("id", command.options.user.match(/<@(?:!)?(\d+)>/)[1]);
+        options.user = msg.channel.server.members.get("id", command.options.user.match(/<@(?:!)?(\d+)>/)[1]);
         if (!user) {
           msg.reply("Cannot find that user.")
         }
+      }
+      if (!isNaN(command.options.before)) {
+        options.before = command.options.before;
+      }
+      let after;
+      if (!isNaN(command.options.after)) {
+        options.after = command.options.after;
       }
       let length;
       if (command.args[0]) {
@@ -77,9 +84,12 @@ module.exports = class moderationV2 {
         }
       };
 
-      this.fetchMessages(channel, length, undefined, (messages, error)=> {
+      this.fetchMessages(channel, length, options, (messages, error)=> {
         if (error) {
-          console.error(error);
+          errorMessage = error;
+          done = true;
+          purgeQueue = [];
+          updateStatus(`\`\`\`xl\n${error}\`\`\``);
         } else {
           if (messages) {
             totalFetched += messages.length;
@@ -154,16 +164,37 @@ module.exports = class moderationV2 {
     this.tempServerIgnores = count;
   }
 
-  fetchMessages(channel, count, before, cb) {
-    this.client.getChannelLogs(channel, Math.min(100, count), before ? {before: before} : {}).then((newMessages)=> {
-      count -= 100;
+  fetchMessages(channel, count, options={}, cb) {
+    console.log("fetchMessages called", channel.name, count);
+    console.dir(options, {depth: 0});
+    this.client.getChannelLogs(channel, Math.min(100, count), options.hasOwnProperty("before") ? {before: options.before} : {}).then((newMessages)=> {
+      console.log(newMessages.length);
+      let newMessagesLength = newMessages.length;
+      let highestMessage = newMessages[newMessages.length-1];
+      if (options.hasOwnProperty("after")) {
+        let index = newMessages.findIndex((m)=> m.id === options.after);
+        if (index > -1) {
+          count = 0;
+          newMessages.splice(index);
+        }
+      } else {
+        count -= 100;
+      }
+      if (options.hasOwnProperty("user")) {
+        newMessages = newMessages.filter((m) => m.author.id === options.user.id);
+      }
       cb(newMessages, false);
-      if (count > 0 && newMessages.length == 100) {
+      if (count > 0 && newMessagesLength === 100) {
+        options.before = highestMessage;
         process.nextTick(()=> {
-          this.fetchMessages(channel, count, newMessages[99], cb)
+          this.fetchMessages(channel, count, options, cb)
         });
       } else {
-        cb(false, false);
+        if (options.hasOwnProperty("before") || newMessagesLength > 0) {
+          cb(false, false);
+        } else {
+          cb(false, 'Permission "Read Messages" required.')
+        }
       }
     }).catch((error)=> {
       cb(false, error);
@@ -256,11 +287,14 @@ module.exports = class moderationV2 {
     if (!channel.hasOwnProperty("server") || !channel.server.hasOwnProperty("id")) return;
     try {
       if (message) {
+        console.log("Message deleted");
         if (this.tempServerIgnores.hasOwnProperty(channel.id)) {
+          console.log("Ignored because of ignore list");
           return;
         }
         if (this.perms.checkUserChannel(message.author, channel, "msglog.whitelist.message.deleted")) return;
         //grab url's to the message's attachments
+        console.log("Permission Check Succeed.");
         var string = utils.clean(channel.name) + " | " + utils.fullNameB(message.author) + "'s message was deleted:\n";
         //if their's content log it.
         if (message.content) {
@@ -306,18 +340,7 @@ module.exports = class moderationV2 {
     try {
       if (!newMessage.server) return; //it's a pm so we don't log it.
       let server = newMessage.server;
-      let changeThresh = this.configDB.data[server.id];
-      if (changeThresh) {
-        if (changeThresh.changeThresh) {
-          changeThresh = changeThresh.changeThresh;
-        }
-        else {
-          changeThresh = this.configDB.get("*", {changeThresh: "1"}).changeThresh
-        }
-      }
-      else {
-        changeThresh = this.configDB.get("*", {changeThresh: "1"}).changeThresh
-      }
+      let changeThresh = this.configDB.get("changeThresh", this.configDB.get("changeThresh", 1), {server: server.id});
       if ((!message || message.content !== newMessage.content)) {
         if (message) {
           if (utils.compare(message.content, newMessage.content) > changeThresh) {
