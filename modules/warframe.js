@@ -643,16 +643,17 @@ module.exports = class Warframe {
           return true;
         }
         var text = "```xl\n";
+        let armor;
         if (command.args.length == 3) {
           if ((parseInt(command.args[2]) - parseInt(command.args[1])) < 0) {
             this.client.sendMessage(msg.channel, "```xl\nPlease check your input values\n```");
             return true;
           }
-          var armor = parseInt(command.args[0]) * (1 + (Math.pow((parseInt(command.args[2]) - parseInt(command.args[1])), 1.75) / 200));
+          armor = parseInt(command.args[0]) * (1 + (Math.pow((parseInt(command.args[2]) - parseInt(command.args[1])), 1.75) / 200));
           text += "at level " + command.args[2] + " your enemy would have " + armor + " Armor\n";
         }
         else {
-          var armor = parseInt(command.args[0]);
+          armor = parseInt(command.args[0]);
         }
         text += armor / (armor + 300) * 100 + "% damage reduction\n";
         this.client.sendMessage(msg.channel, text + "```");
