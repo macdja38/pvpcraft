@@ -60,7 +60,7 @@ module.exports = class feedManager {
         return true;
       }
       this._feeds.set(adding, command.args[1].toLowerCase(), channel.id, channel.server.id);
-
+      msg.reply(`${adding ? "Starting" : "Stopping"} ${command.args[1].toLowerCase()} in channel ${channel.mention()}`);
 
       //return true, which tells the command dispatcher that we processed the command.
       return true;
