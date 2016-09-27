@@ -120,14 +120,14 @@ module.exports = class Warframe {
                       let things = [];
                       let madeMentionable = [];
                       for (let thing in server.items) {
-                        if (server.items.hasOwnProperty(thing)) {
-                          if (alert["3"].toLowerCase().indexOf(thing) > -1) {
+                        if (server.items.hasOwnProperty(thing) && channel.server.roles.has("id", server.items[thing])) {
+                          if (alert["3"].toLowerCase().indexOf(thing) > -1 && channel.server.roles.has("id", server.items[thing])) {
                             things.push(server.items[thing]);
                             madeMentionable.push(this.client.updateRole(server.items[thing], {
                               mentionable: true
                             }));
                           }
-                          if (alert.invasion && alert["2"].toLowerCase().indexOf(thing) > -1) {
+                          if (alert.invasion && alert["2"].toLowerCase().indexOf(thing) > -1  && channel.server.roles.has("id", server.items[thing])) {
                             things.push(server.items[thing]);
                             madeMentionable.push(this.client.updateRole(server.items[thing], {
                               mentionable: true
