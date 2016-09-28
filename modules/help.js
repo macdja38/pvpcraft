@@ -21,7 +21,7 @@ module.exports = class help {
     onCommand(msg, command, perms) {
         //permissions have not yet been added, this is a preliminary version of the help command. Final version will be dynamic.        
         if (command.command === "help" || command.commandnos === "command") {
-            msg.reply("Help can be found at https://pvpcraft.ca/pvpbot");
+            msg.reply("Help can be found at https://bot.pvpcraft.ca/docs");
             return true;
         }
         return false;
