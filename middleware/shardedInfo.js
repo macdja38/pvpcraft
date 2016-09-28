@@ -98,7 +98,7 @@ module.exports = class shardedInfo {
     let token = this._auth.get("key", false);
     if (!token || token === "key") return;
     console.log("Attempting to update Carbon".green);
-    if (key) {
+    if (token) {
       request(
         {
           url: 'https://www.carbonitex.net/discord/data/botdata.php',
