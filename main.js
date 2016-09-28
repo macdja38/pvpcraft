@@ -358,11 +358,11 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
     var configs = [configDB.serverCreated(server), permsDB.serverCreated(server)];
     Promise.all(configs).then(()=> {
       for (let middleware of middlewareList) {
-        if (middleware.module) {
+        if (middleware.ware) {
           try {
-            if (middleware.module.onServerCreated) {
-              console.log("Notifying a module a server was created!".green);
-              middleware.module.onServerCreated(server);
+            if (middleware.ware.onServerCreated) {
+              console.log("Notifying a middleware a server was created!".green);
+              middleware.ware.onServerCreated(server);
             }
           } catch (error) {
             console.error(error);
