@@ -43,7 +43,6 @@ module.exports = class minecraft {
                         "Version " + res.version.name + " protocol " + res.version.protocol + "\n" +
                         "Players " + res.players.online + "/" + res.players.max + "```"
                     )
-
                 }
             }, 3000);
             return true;
@@ -51,7 +50,7 @@ module.exports = class minecraft {
 
         if (command.command === "mcavatar" && perms.check(msg, "minecraft.mcavatar")) {
             if (command.args.length < 1) {
-                msg.reply("usage " + command.prefix + "mcavatar <minecraft username>");
+                msg.reply("usage `" + command.prefix + "mcavatar <minecraft username>`");
                 return true;
             }
             msg.channel.sendMessage({
@@ -65,7 +64,7 @@ module.exports = class minecraft {
 
         if (command.command === "mcskin" && perms.check(msg, "minecraft.mcskin")) {
             if (command.args.length < 1) {
-                msg.reply("usage " + command.prefix + "mcskin <minecraft username>");
+                msg.reply("usage `" + command.prefix + "mcskin <minecraft username>`");
                 return true;
             }
             msg.channel.sendMessage({
