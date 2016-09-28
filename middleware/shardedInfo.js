@@ -88,8 +88,17 @@ module.exports = class shardedInfo {
         url: `https://bots.discord.pw/api/bots/${this._client.user.id}/stats`,
         headers: { Authorization: token },
         json: { server_count: servers }
-      }).catch((error)=>{
-        console.error(error);
+      }, (error, response, body) => {
+        if (!error && response.statusCode == 200) {
+          console.log(body)
+        }
+        else if (error) {
+          console.error(error);
+        }
+        else {
+          console.error("Bad request or other");
+          console.error(response.body);
+        }
       })
     }
   }
