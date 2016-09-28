@@ -65,7 +65,11 @@ module.exports = class music {
                         config: this.config
                     });
                     msg.reply("Binding to **" + msg.author.voiceChannel.name + "** and **" + msg.channel.name + "**");
-                    this.boundChannels[id].init(msg);/*.catch((e)=>{
+                    this.boundChannels[id].init(msg, (error)=>{
+                        console.error(error);
+                        msg.reply(error);
+                        delete this.boundChannels[id];
+                    });/*.catch((e)=>{
                         console.log("Bound thing finished maybe");
                         if (e) {
                             console.log(e);
