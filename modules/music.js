@@ -66,9 +66,13 @@ module.exports = class music {
                     });
                     msg.reply("Binding to **" + msg.author.voiceChannel.name + "** and **" + msg.channel.name + "**");
                     this.boundChannels[id].init(msg, (error)=>{
-                        console.error(error);
-                        msg.reply(error);
-                        delete this.boundChannels[id];
+                        if (error) {
+                            console.error(error);
+                            msg.reply(error);
+                            delete this.boundChannels[id];
+                        } else {
+                            msg.reply(`Bound successfully use ${command.prefix}destroy to unbind it.`)
+                        }
                     });/*.catch((e)=>{
                         console.log("Bound thing finished maybe");
                         if (e) {
