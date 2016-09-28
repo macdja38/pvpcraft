@@ -68,6 +68,11 @@ module.exports = class shardedInfo {
       }
     }
     let serverCount = serverData.map(s => s.servers).reduce((total, num) => total + num, 0);
+    console.log("Server Count", serverCount);
+    if (process.uptime() < 60) {
+      console.log("Not updating server count websites as bot has not been online for long enough".green);
+      return;
+    }
     this.updateCarbonitex(serverCount);
     this.updateAbal(serverCount);
   }
@@ -78,10 +83,6 @@ module.exports = class shardedInfo {
 
   updateAbal(servers) {
     let token = this._auth.get("abalKey", false);
-    if (process.uptime() < 60) {
-      console.log("Not updating abal's site to ensure all servers are loaded".green);
-      return;
-    }
     if(token && token.length > 1 && token !== "key") {
       request.post({
         url: `https://bots.discord.pw/api/bots/${this._client.id}/stats`,
@@ -97,10 +98,6 @@ module.exports = class shardedInfo {
     let token = this._auth.get("key", false);
     if (!token || token === "key") return;
     console.log("Attempting to update Carbon".green);
-    if (process.uptime() < 60) {
-      console.log("Not updating carbon to ensure all servers are loaded".green);
-      return;
-    }
     if (key) {
       request(
         {
