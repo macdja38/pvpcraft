@@ -87,6 +87,8 @@ module.exports = class shardedInfo {
         url: `https://bots.discord.pw/api/bots/${this._client.id}/stats`,
         header: token,
         body: {server_count: servers}
+      }).catch((error)=>{
+        console.error(error);
       })
     }
   }
@@ -118,7 +120,7 @@ module.exports = class shardedInfo {
             console.error(response.body);
           }
         }
-      );
+      )
     }
   }
 
