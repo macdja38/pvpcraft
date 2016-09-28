@@ -85,9 +85,9 @@ module.exports = class shardedInfo {
     let token = this._auth.get("abalKey", false);
     if(token && token.length > 1 && token !== "key") {
       request.post({
-        url: `https://bots.discord.pw/api/bots/${this._client.id}/stats`,
-        header: token,
-        body: {server_count: servers}
+        url: `https://bots.discord.pw/api/bots/${this._client.user.id}/stats`,
+        headers: { Authorization: token },
+        json: { server_count: servers }
       }).catch((error)=>{
         console.error(error);
       })
