@@ -27,14 +27,7 @@ var utilities = class utilities {
 
   onCommand(msg, command, perms) {
     if ((command.command === "serverinfo" || command.command === "server") && perms.check(msg, "utils.serverinfo")) {
-      var botCount = 0;
-      for (var i in msg.channel.server.members) {
-        if (msg.channel.server.members[i]) {
-          if (msg.channel.server.members[i].bot) {
-            botCount++;
-          }
-        }
-      }
+      let botCount = msg.server.members.filter(m => m.bot).length;
       msg.reply(
         "```xl\n" +
         "Name: " + utils.clean(msg.channel.server.name) + "\n" +
@@ -77,7 +70,7 @@ var utilities = class utilities {
             ((mentInfo.nick) ? "Nick: " + utils.clean(mentInfo.nick) + "\n" : "") +
             "Id: " + ment.id + "\n" +
             "Descrim: " + ment.discriminator + "\n" +
-            "Joined: " + ment.createdAt + "\n" +
+            "Age: " + ment.createdAt + "\n" +
             "IconURL: " + ment.avatarURL + "\n" +
             "```\n";
         }
