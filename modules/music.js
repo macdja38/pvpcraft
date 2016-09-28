@@ -64,15 +64,15 @@ module.exports = class music {
                         conn: this.conn,
                         config: this.config
                     });
-                    msg.reply("Binding to **" + this.boundChannels[id].voice.name + "** and **" + this.boundChannels[id].text.name + "**");
-                    this.boundChannels[id].init(msg, (error)=> {
+                    msg.reply("Binding to **" + msg.author.voiceChannel.name + "** and **" + msg.channel.name + "**");
+                    this.boundChannels[id].init(msg);/*.catch((e)=>{
                         console.log("Bound thing finished maybe");
-                        if (error) {
-                            console.log(error);
-                            msg.reply(error);
+                        if (e) {
+                            console.log(e);
+                            msg.reply(e);
                             delete this.boundChannels[id];
                         }
-                    });
+                    });*/
                 }
                 else {
                     msg.reply("You must be in a voice channel in this server to use this command here. If you are currently in a voice channel please rejoin it.")
@@ -84,7 +84,6 @@ module.exports = class music {
             return true;
         }
 
-
         if (command.command === "destroy" && perms.check(msg, "music.destroy")) {
             if (this.boundChannels.hasOwnProperty(id)) {
                 this.boundChannels[id].destroy();
@@ -94,10 +93,9 @@ module.exports = class music {
             return true;
         }
 
-
         if (command.command === "play" && perms.check(msg, "music.play")) {
-            if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection") && this.boundChannels[id].connection.voiceChannel) {
-                if (msg.author.voiceChannel && this.boundChannels[id].connection.voiceChannel.id !== msg.author.voiceChannel.id) {
+            if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].ready) {
+                if (!msg.author.voiceChannel) {
                     msg.reply("You must be in the current voice channel to queue a song. If you are already in the voice channel please leave and rejoin or toggle your mute.");
                     return true;
                 }
@@ -115,10 +113,9 @@ module.exports = class music {
 
 
         if ((command.command === "next" || command.command === "skip") && (perms.check(msg, "music.voteskip") || perms.check(msg, "music.forceskip"))) {
-            if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
+            if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].ready) {
                 if (this.boundChannels[id].currentVideo) {
                     var index = command.args[0] ? parseInt(command.args[0]) - 1 : -1;
-                    console.log(index);
                     var isForced = !!(perms.check(msg, "music.forceskip") && command.flags.indexOf('f') > -1);
                     var video;
                     if (index === -1) {

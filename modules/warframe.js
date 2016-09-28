@@ -102,15 +102,13 @@ module.exports = class Warframe {
           }
           global.r.table('alerts').changes().run(con, (err, cursor)=> {
             if (err) {
-              console.log(err);
+              console.error(err);
               return;
             }
             this.cursor = cursor;
             cursor.each((err, alert)=> {
               try {
                 alert = alert.new_val;
-                console.log(`Alert`.green);
-                console.log(alert);
                 if (alert) {
                   console.dir(this.alerts, {depth: 2});
                   this.alerts.forEach((server, i) => setTimeout(()=> {
@@ -135,9 +133,6 @@ module.exports = class Warframe {
                           }
                         }
                       }
-                      console.log(`\`\`\`xl\n${alert["0"]}\n${alert["1"]}\n${alert["2"]}\n${alert["3"]}\n\`\`\`${things.map((thing)=> {
-                        return `<@&${thing}>`
-                      })}`);
                       let sendAlert = () => {
                         return this.client.sendMessage(channel, `\`\`\`xl\n${alert["0"]}\n${alert["1"]}\n${alert["2"]}\n${alert["3"]}\n\`\`\`${things.map((thing)=> {
                           return `<@&${thing}>`;
@@ -189,7 +184,6 @@ module.exports = class Warframe {
     this.rebuildAlerts();
     if (this.twitter && master) {
       this.onAlert.then((alerts)=> {
-        console.log("Attaching Listener");
         this.stream.removeListener('tweet', alerts);
         this.stream.on('tweet', alerts);
         this.stream.start();
@@ -226,8 +220,6 @@ module.exports = class Warframe {
   }
 
   onCommand(msg, command, perms) {
-    console.log("WARFRAME initiated");
-    //console.log(command);
     if ((command.commandnos === 'deal' || command.command === 'darvo') && perms.check(msg, "warframe.deal")) {
       worldState.get((state) => {
         this.client.sendMessage(msg.channel, "```xl\n" + "Darvo is selling " +
@@ -390,7 +382,6 @@ module.exports = class Warframe {
             }
             config.items[role.name] = role.id;
             this.config.set("warframeAlerts", config, {server: msg.channel.server.id});
-            console.log(config);
             msg.reply("Created role " + utils.clean(role.name) + " with id `" + role.id + "`");
           });
           return true;
@@ -614,7 +605,6 @@ module.exports = class Warframe {
 
     else if ((command.commandnos === 'update') && perms.check(msg, "warframe.update")) {
       worldState.get((state) => {
-        console.log(state.Events);
         var String = "```xl\n";
         var checks = ["update", "hotfix"];
         for (var event of state.Events) {

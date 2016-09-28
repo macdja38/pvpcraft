@@ -62,7 +62,6 @@ module.exports = class giveaways {
                 if (!data.hasOwnProperty("entries")) {
                     data.entries = [];
                 }
-                console.log(data);
                 this.entries.set(null, data, {server: msg.server.id});
                 msg.reply(`Giveaways ${data.enable ? "enabled" : "disabled"} in channel <#${data.channel}>`);
             }
@@ -102,8 +101,6 @@ module.exports = class giveaways {
             }
             this.entries.getRandom("entries", winnersCount, {server: msg.server.id}).then((winners)=> {
                 if(winners.length > 0) {
-                    console.log("Winners");
-                    console.log(winners);
                     let string = "Congrats to";
                     winners.forEach((winnerId)=>{
                         let winnerUser = msg.server.members.get("id", winnerId);

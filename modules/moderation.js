@@ -131,8 +131,6 @@ module.exports = class moderation {
               for (var i in message.attachments) {
                 if (message.attachments.hasOwnProperty(i)) {
                   string += message.attachments[i].proxy_url;
-                  console.log("url: " + message.attachments[i].url);
-                  console.log("proxy url: " + message.attachments[i].proxy_url);
                 }
               }
             }

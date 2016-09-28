@@ -25,7 +25,6 @@ module.exports = class cleverBot {
         if (msg.isMentioned(this.client.user) && perms.check(msg, "cleverbot.misc")) {
             this.client.startTyping(msg.channel);
             var quarry = msg.content.replace(this.startRegex, "").replace(this.middleRegex, "CleverBot");
-            console.log(`Sent "${quarry}" to cleverBot`);
             CleverBot.prepare(()=>{
                 clever.write(quarry,(response)=>{
                     msg.reply(response.message).then(()=> {

@@ -166,10 +166,8 @@ module.exports = class moderationV2 {
   }
 
   fetchMessages(channel, count, options={}, cb) {
-    console.log("fetchMessages called", channel.name, count);
     console.dir(options, {depth: 0});
     this.client.getChannelLogs(channel, Math.min(100, count), options.hasOwnProperty("before") ? {before: options.before} : {}).then((newMessages)=> {
-      console.log(newMessages.length);
       let newMessagesLength = newMessages.length;
       let highestMessage = newMessages[newMessages.length-1];
       if (options.hasOwnProperty("after")) {
@@ -289,7 +287,6 @@ module.exports = class moderationV2 {
     try {
       if (message) {
         if (this.tempServerIgnores.hasOwnProperty(channel.id)) {
-          console.log("Ignored because of ignore list");
           return;
         }
         if (this.perms.checkUserChannel(message.author, channel, "msglog.whitelist.message.deleted")) return;
@@ -308,8 +305,6 @@ module.exports = class moderationV2 {
           for (var i in message.attachments) {
             if (message.attachments.hasOwnProperty(i)) {
               string += message.attachments[i].proxy_url;
-              console.log("url: " + message.attachments[i].url);
-              console.log("proxy url: " + message.attachments[i].proxy_url);
             }
           }
         }

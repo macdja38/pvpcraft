@@ -38,7 +38,6 @@ module.exports = class minecraft {
                     this.client.sendMessage(msg.channel, "```xl\n" + err + "```")
                 }
                 else {
-                    console.log(res);
                     this.client.sendMessage(msg.channel, "```xl\n" +
                         "Pinged " + command.args.join(".") + " in " + (now() - t1) + "ms\n" +
                         "Version " + res.version.name + " protocol " + res.version.protocol + "\n" +
