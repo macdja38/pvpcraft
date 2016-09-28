@@ -68,8 +68,8 @@ module.exports = class shardedInfo {
       }
     }
     let serverCount = serverData.map(s => s.servers).reduce((total, num) => total + num, 0);
-    //this.updateCarbonitex(serverCount);
-    //this.updateAbal(serverCount);
+    this.updateCarbonitex(serverCount);
+    this.updateAbal(serverCount);
   }
 
   onMessage() {
@@ -78,7 +78,11 @@ module.exports = class shardedInfo {
 
   updateAbal(servers) {
     let token = this._auth.get("abalKey", false);
-    if(token && token.length > 1) {
+    if (process.uptime() < 60) {
+      console.log("Not updating abal's site to ensure all servers are loaded".green);
+      return;
+    }
+    if(token && token.length > 1 && token !== "key") {
       request.post({
         url: `https://bots.discord.pw/api/bots/${this._client.id}/stats`,
         header: token,
@@ -88,6 +92,8 @@ module.exports = class shardedInfo {
   }
 
   updateCarbonitex(servers) {
+    let token = this._auth.get("key", false);
+    if (!token || token === "key") return;
     console.log("Attempting to update Carbon".green);
     if (process.uptime() < 60) {
       console.log("Not updating carbon to ensure all servers are loaded".green);
@@ -97,7 +103,7 @@ module.exports = class shardedInfo {
       request(
         {
           url: 'https://www.carbonitex.net/discord/data/botdata.php',
-          body: { key: this._auth.get("key"), servercount: servers },
+          body: { key: token, servercount: servers },
           json: true
         },
         function (error, response, body) {
