@@ -145,16 +145,15 @@ module.exports = class Warframe {
                             if (role) {
                               this.client.updateRole(role, {
                                 mentionable: false
-                              }).catch(console.error);
+                              }).catch(()=>{});
                             }
                           }
                         }
                       };
                       Promise.all(madeMentionable).then(()=> {
                         sendAlert().then(makeUnmentionable).catch(console.error);
-                      }).catch((error)=> {
-                        console.error(error);
-                        this.client.sendMessage(channel, "Unable to make role mentionable, please contact @```Macdja38#7770 for help after making sure the bot has sufficient permissions").catch(console.error);
+                      }).catch(()=> {
+                        this.client.sendMessage(channel, "Unable to make role mentionable, please contact @```Macdja38#7770 for help after making sure the bot has sufficient permissions");
                         sendAlert().then(makeUnmentionable).catch(console.error);
                       });
                     } catch (error) {
