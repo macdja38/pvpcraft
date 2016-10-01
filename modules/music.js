@@ -231,6 +231,18 @@ module.exports = class music {
             return true;
         }
 
+        if (command.commandnos === "link" && perms.check(msg, "music.link")) {
+            if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
+                if (this.boundChannels[id].currentVideo) {
+                    msg.channel.sendMessage(`The link to ${this.boundChannels[id].currentVideo.prettyPrint()} is https://youtube.com/watch?v=${this.boundChannels[id].currentVideo.vid}`);
+                } else {
+                    msg.channel.sendMessage("Sorry, no song's found in playlist. use " + command.prefix + "play <youtube vid or playlist> to add one.")
+                }
+            } else {
+                msg.channel.sendMessage("Sorry, Bot is not currently in a voice channel use " + command.prefix + "init while in a voice channel to bind it.")
+            }
+            return true;
+        }
 
         if (command.commandnos === "volume") {
             if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
