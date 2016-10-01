@@ -32,7 +32,7 @@ module.exports = class music {
     }
 
     getCommands() {
-        return ["init", "play", "skip", "list", "time", "pause", "resume", "volume", "shuffle", "next", "destroy", "logchannel"];
+        return ["init", "play", "skip", "list", "time", "pause", "resume", "volume", "shuffle", "next", "destroy", "logchannel", "link"];
     }
 
     onDisconnect() {
