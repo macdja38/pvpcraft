@@ -19,8 +19,8 @@ module.exports = class rateLimits {
         this.serverCommandCount = {};
 
         this.userLimit = e.config.get("userLimit", 2);
-        this.userPerTick = e.config.get("userPerTick", 2);
-        this.userTickInterval = e.config.get("userTickInterval", 4000);
+        this.userPerTick = e.config.get("userPerTick", 1);
+        this.userTickInterval = e.config.get("userTickInterval", 2500);
 
         this.channelLimit = e.config.get("channelLimit", 5);
         this.channelPerTick = e.config.get("channelPerTick", 2);

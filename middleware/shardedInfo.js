@@ -18,10 +18,8 @@ module.exports = class shardedInfo {
     this._ready = false;
     this._lastMessage = Date.now();
     this._standardDB = false;
-    e.conn.then((conn)=> {
-      this._standardDB = new StandardDB("shards", this._getArray(parseInt(process.env.shards || 1)), conn);
-      this._ready = this._standardDB.reload();
-    }).catch(error => console.error(error));
+    this._standardDB = new StandardDB("shards", this._getArray(parseInt(process.env.shards || 1)));
+    this._ready = this._standardDB.reload();
   }
 
   /**

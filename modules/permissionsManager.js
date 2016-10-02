@@ -6,7 +6,7 @@
 var Utils = require('../lib/utils');
 var utils = new Utils();
 
-var defaultURL = "https://pvpcraft.ca/pvpbot/perms/?server=";
+var defaultURL = "https://bot.pvpcraft.ca/login/";
 
 module.exports = class permissionsManager {
   constructor(e) {
@@ -125,7 +125,7 @@ ${target === "*" ? "everyone" : utils.clean(target)}`);
         perms.set(node, action);
       }
       if (command.args[0] === "list") {
-        msg.reply(this.url + msg.channel.server.id);
+        msg.reply(this.url.replace(/\$id/, msg.server.id));
       }
       if (command.args[0].toLowerCase() === "hardreset") {
         if (msg.author.id == msg.server.owner.id) {

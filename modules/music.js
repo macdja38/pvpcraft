@@ -24,6 +24,7 @@ module.exports = class music {
         this.raven = e.raven;
         this.r = e.r;
         this.conn = e.conn;
+        this.leaveChecker = false;
         /**
          * holds array of servers channels and their bound instances.
          * @type {Array}
@@ -35,10 +36,46 @@ module.exports = class music {
         return ["init", "play", "skip", "list", "time", "pause", "resume", "volume", "shuffle", "next", "destroy", "logchannel", "link"];
     }
 
+    onReady() {
+        if (!this.leaveChecker) {
+            this.leaveChecker = setInterval(this.leaveUnused.bind(this), 20000);
+        }
+    }
+
+    leaveUnused() {
+        console.log("Checking for empty channels.");
+        Object.keys(this.boundChannels).forEach((id) => {
+            let channel = this.boundChannels[id];
+            console.log(channel.connection.playing);
+            if (channel.connection.playing !== true) {
+                console.log(channel.lastPlay);
+                if (Date.now() - channel.lastPlay > 60000) {
+                    console.log("leaving");
+                    channel.text.sendMessage("Leaving voice channel due to inactivity.")
+                      .catch(()=>{
+                        channel.destroy();
+                        delete this.boundChannels[id];
+                      })
+                      .then(()=>{
+                        channel.destroy();
+                        delete this.boundChannels[id];
+                      })
+                }
+            }
+        });
+    }
+
+
+
     onDisconnect() {
+        if (this.leaveChecker) {
+            clearInterval(this.leaveChecker);
+        }
         for (var i in this.boundChannels) {
             if (this.boundChannels.hasOwnProperty(i))
+                this.boundChannels.text.sendMessage("Sorry for the inconvenience bot the bot is restarting or disconnected from discord.");
                 this.boundChannels[i].destroy();
+                delete this.boundChannels[i];
         }
     }
 
@@ -203,7 +240,7 @@ module.exports = class music {
             if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
                 if (this.boundChannels[id].currentVideo) {
                     msg.channel.sendMessage("```xl\n" + this.boundChannels[id].prettyList()
-                        + "```\n" + this.config.get("website", {musicUrl: "https://pvpcraft.ca/pvpbotmusic/?server="}).musicUrl + msg.server.id, (error)=> {
+                        + "```\n" + this.config.get("website", {musicUrl: "https://bot.pvpcraft.ca/login/"}).musicUrl.replace(/\$id/, msg.server.id), (error)=> {
                         if (error) {
                             console.log(error)
                         }
@@ -234,7 +271,7 @@ module.exports = class music {
         if (command.commandnos === "link" && perms.check(msg, "music.link")) {
             if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
                 if (this.boundChannels[id].currentVideo) {
-                    msg.channel.sendMessage(`The link to ${this.boundChannels[id].currentVideo.prettyPrint()} is https://youtube.com/watch?v=${this.boundChannels[id].currentVideo.vid}`);
+                    msg.channel.sendMessage(`The link to ${this.boundChannels[id].currentVideo.prettyPrint()} is ${this.boundChannels[id].currentVideo.link}`);
                 } else {
                     msg.channel.sendMessage("Sorry, no song's found in playlist. use " + command.prefix + "play <youtube vid or playlist> to add one.")
                 }

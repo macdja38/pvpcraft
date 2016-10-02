@@ -16,11 +16,9 @@ module.exports = class giveaways {
         this.raven = e.raven;
         this.purgedMessages = {};
         this._slowSender = new SlowSender(e);
-        e.conn.then((conn)=> {
-            this.entries = new ConfigDB("entries", e.client, conn);
-            this.entries.reload().then(()=> {
-                this.ready = true;
-            });
+        this.entries = new ConfigDB("entries", e.client);
+        this.entries.reload().then(()=> {
+            this.ready = true;
         });
     }
 

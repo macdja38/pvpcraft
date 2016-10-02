@@ -17,7 +17,6 @@ var permsDB;
 var perms;
 
 var r;
-var conn;
 
 var raven;
 var ravenClient;
@@ -57,15 +56,13 @@ if (auth.get("sentryURL", "") != "") {
 
 function loadConfigs() {
   return new Promise((resolve)=> {
-    global.conn.then((con)=> {
-      configDB = new ConfigsDB("servers", client, con);
-      global.configDB = configDB;
-      permsDB = new ConfigsDB("permissions", client, con);
-      perms = new Permissions(permsDB);
-      resolve(Promise.all([configDB.reload(), permsDB.reload()]).then(()=> {
-        resolve(true);
-      }).catch(console.error));
-    })
+    configDB = new ConfigsDB("servers", client);
+    global.configDB = configDB;
+    permsDB = new ConfigsDB("permissions", client);
+    perms = new Permissions(permsDB);
+    Promise.all([configDB.reload(), permsDB.reload()]).then(()=> {
+      resolve(true);
+    }).catch(console.error);
   })
 }
 
@@ -89,9 +86,6 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
     }
   }
 
-  var Website = require("./www");
-  var website = new Website(config.get("website", { port: 8000 }).port);
-
   cluster.on('exit', (deadWorker, code, signal) => {
     console.log(`worker ${deadWorker.process.pid} died`);
     let id = workers.indexOf(deadWorker);
@@ -112,10 +106,11 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
     shardCount: parseInt(process.env.shards || "1")
   });
 
-  global.r = require('rethinkdb');
+  var MessageSender = require('./lib/messageSender');
+  var messageSender = new MessageSender({ client });
+
+  global.r = require('rethinkdbdash')(auth.get("reThinkDB", {}));
   r = global.r;
-  global.conn = r.connect(auth.get("reThinkDB", {}));
-  conn = global.conn;
 
   var Permissions = require("./lib/permissions.js");
 
@@ -224,17 +219,20 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
             }
           } catch (error) {
             if (raven) {
+              let extra = {
+                mod: mod,
+                channel: msg.channel.id,
+                channel_name: msg.channel.name,
+                command: command,
+                msg: msg.content
+              };
+              if (msg.hasOwnProperty("server")) {
+                extra.server = msg.server.id;
+                extra.server_name = msg.server.name;
+              }
               raven.captureError(error, {
                 user: msg.author,
-                extra: {
-                  mod: mod,
-                  server: msg.channel.server.id,
-                  server_name: msg.channel.server.name,
-                  channel: msg.channel.id,
-                  channel_name: msg.channel.name,
-                  command: command,
-                  msg: msg.content
-                }
+                extra,
               }, (result)=> {
                 msg.reply("Sorry their was an error processing your command. The error is ```" + error +
                   "``` reference code `" + raven.getIdent(result) + "`");
@@ -259,17 +257,20 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
           }
         } catch (error) {
           if (raven) {
+            let extra = {
+              mod: mod,
+              channel: msg.channel.id,
+              channel_name: msg.channel.name,
+              command: command,
+              msg: msg.content
+            };
+            if (msg.hasOwnProperty("server")) {
+              extra.server = msg.server.id;
+              extra.server_name = msg.server.name;
+            }
             raven.captureError(error, {
               user: msg.author,
-              extra: {
-                mod: mod,
-                server: msg.channel.server.id,
-                server_name: msg.channel.server.name,
-                channel: msg.channel.id,
-                channel_name: msg.channel.name,
-                command: command,
-                msg: msg.content
-              }
+              extra,
             });
           }
           console.error(error);
@@ -318,7 +319,7 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
       name = client.user.name;
       console.log(`Loading modules for Shard ${process.env.id} / ${process.env.shards}`.cyan);
       let Feeds = require('./lib/feeds');
-      feeds = new Feeds({ client, r, conn, configDB });
+      feeds = new Feeds({ client, r, configDB });
       reload();
       console.log(`-------------------`.magenta);
       console.log(`Ready as ${client.user.username}`.magenta);
@@ -460,7 +461,7 @@ function reload() {
   moduleList = [];
   var middlewares = config.get("middleware");
   var modules = config.get("modules");
-  let moduleVariables = { client, config, raven, auth, configDB, r, conn, perms, feeds };
+  let moduleVariables = { client, config, raven, auth, configDB, r, perms, feeds, messageSender };
   for (let module in modules) {
     if (modules.hasOwnProperty(module)) {
       try {
@@ -489,39 +490,6 @@ function reload() {
   }
 }
 
-/**
- * Updates Carbonitrix's website telling it the bot's new server count.
- */
-
-function updateCarbon() {
-  console.log("Attempting to update Carbon".green);
-  if (process.uptime() < 60) {
-    console.log("Not updating carbon to ensure all servers are loaded".green);
-    return;
-  }
-  if (key) {
-    request(
-      {
-        url: 'https://www.carbonitex.net/discord/data/botdata.php',
-        body: { key: key, servercount: client.servers.length },
-        json: true
-      },
-      function (error, response, body) {
-        if (!error && response.statusCode == 200) {
-          console.log(body)
-        }
-        else if (error) {
-          console.error(error);
-        }
-        else {
-          console.error("Bad request or other");
-          console.error(response.body);
-        }
-      }
-    );
-  }
-}
-
 
 function reloadTarget(msg, command, perms, l, moduleList, middlewareList) {
   for (var module in moduleList) {
@@ -533,7 +501,7 @@ function reloadTarget(msg, command, perms, l, moduleList, middlewareList) {
       delete require.cache[require.resolve(modules[command.args[0]])];
       msg.reply("Reloading " + command.args[0]);
       console.log("Reloading ".yellow + command.args[0].yellow);
-      var mod = new (require(modules[command.args[0]]))({ client, config, raven, auth, configDB, r, conn, perms, feeds });
+      var mod = new (require(modules[command.args[0]]))({ client, config, raven, auth, configDB, r, perms, feeds, messageSender });
       if (mod.onReady) mod.onReady();
       moduleList[module].module = mod;
       moduleList[module].commands = mod.getCommands();
