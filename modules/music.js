@@ -38,8 +38,36 @@ module.exports = class music {
 
     onReady() {
         if (!this.leaveChecker) {
-            this.leaveChecker = setInterval(this.leaveUnused.bind(this), 20000);
+            this.leaveChecker = setInterval(this.leaveUnused.bind(this), 60000);
         }
+    }
+
+    init(id, msg, command) {
+        return new Promise((resolve, reject) =>
+        {
+            this.boundChannels[id] = new Player({
+                client: this.client,
+                voiceChannel: msg.author.voiceChannel,
+                textChannel: msg.channel,
+                apiKey: key,
+                raven: this.raven,
+                r: this.r,
+                conn: this.conn,
+                config: this.config
+            });
+            msg.reply("Binding to **" + msg.author.voiceChannel.name + "** and **" + msg.channel.name + "**");
+            this.boundChannels[id].init(msg, (error)=> {
+                if (error) {
+                    console.error(error);
+                    msg.reply(error);
+                    reject(error);
+                    delete this.boundChannels[id];
+                } else {
+                    msg.reply(`Bound successfully use ${command.prefix}destroy to unbind it.`);
+                    resolve(this.boundChannels[id]);
+                }
+            });
+        });
     }
 
     leaveUnused() {
@@ -49,7 +77,7 @@ module.exports = class music {
             console.log(channel.connection.playing);
             if (channel.connection.playing !== true) {
                 console.log(channel.lastPlay);
-                if (Date.now() - channel.lastPlay > 60000) {
+                if (Date.now() - channel.lastPlay > 600000) {
                     console.log("leaving");
                     channel.text.sendMessage("Leaving voice channel due to inactivity.")
                       .catch(()=>{
@@ -91,26 +119,8 @@ module.exports = class music {
             }
             if (msg.author.voiceChannel) {
                 if (msg.author.voiceChannel.server.id === msg.channel.server.id) {
-                    this.boundChannels[id] = new Player({
-                        client: this.client,
-                        voiceChannel: msg.author.voiceChannel,
-                        textChannel: msg.channel,
-                        apiKey: key,
-                        raven: this.raven,
-                        r: this.r,
-                        conn: this.conn,
-                        config: this.config
-                    });
-                    msg.reply("Binding to **" + msg.author.voiceChannel.name + "** and **" + msg.channel.name + "**");
-                    this.boundChannels[id].init(msg, (error)=>{
-                        if (error) {
-                            console.error(error);
-                            msg.reply(error);
-                            delete this.boundChannels[id];
-                        } else {
-                            msg.reply(`Bound successfully use ${command.prefix}destroy to unbind it.`)
-                        }
-                    });/*.catch((e)=>{
+                    this.init(id, msg, command);
+                    /*.catch((e)=>{
                         console.log("Bound thing finished maybe");
                         if (e) {
                             console.log(e);
@@ -139,20 +149,34 @@ module.exports = class music {
         }
 
         if (command.command === "play" && perms.check(msg, "music.play")) {
-            if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].ready) {
-                if (!msg.author.voiceChannel) {
-                    msg.reply("You must be in the current voice channel to queue a song. If you are already in the voice channel please leave and rejoin or toggle your mute.");
-                    return true;
-                }
-                if (command.args.length > 0) {
-                    this.boundChannels[id].enqueue(msg, command.args)
-                }
-                else {
-                    msg.reply("Please specify a youtube video!")
+            if (!msg.author.voiceChannel) {
+                msg.reply("You must be in the current voice channel to queue a song. If you are already in the voice channel please leave and rejoin or toggle your mute.");
+                return true;
+            }
+            if (command.args.length < 1) {
+                msg.reply("Please specify a youtube video search term or playlist!");
+                return true;
+            }
+            if (!this.boundChannels.hasOwnProperty(id)) {
+                if (perms.check(msg, "music.init")) {
+                    this.init(id, msg, command).then(() => {
+                        this.boundChannels[id].enqueue(msg, command.args)
+                    });
+                } else {
+                    msg.reply(`Please have someone with the permission node \`music.init\` run ${command.prefix}init`)
                 }
             } else {
-                msg.reply("Please bind a channel first using " + command.prefix + "init")
+                if (!this.boundChannels[id].ready) {
+                    msg.reply("Connection is not ready");
+                    return true;
+                }
+                this.boundChannels[id].enqueue(msg, command.args)
             }
+
+
+
+
+
             return true;
         }
 
