@@ -101,7 +101,7 @@ module.exports = class music {
         }
         for (var i in this.boundChannels) {
             if (this.boundChannels.hasOwnProperty(i))
-                this.boundChannels.text.sendMessage("Sorry for the inconvenience bot the bot is restarting or disconnected from discord.");
+                this.boundChannels[i].text.sendMessage("Sorry for the inconvenience bot the bot is restarting or disconnected from discord.");
                 this.boundChannels[i].destroy();
                 delete this.boundChannels[i];
         }
