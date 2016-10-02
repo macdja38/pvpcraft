@@ -338,14 +338,12 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
 
 //Initiate a connection To Discord.
   if (auth.get("tokens", false)) {
-    console.log(`token: ${auth.get("tokens", {})[parseInt(process.env.id)]}`.red);
     client.loginWithToken(auth.get("tokens", {})[parseInt(process.env.id)]).catch((error)=> {
       console.error("Error logging in.");
       console.error(error);
       console.error(error.stack);
     })
   } else {
-    console.log(`token: ${auth.get("token", {})}`.blue);
     client.loginWithToken(auth.get("token", {})).catch((error)=> {
       console.error("Error logging in.");
       console.error(error);
