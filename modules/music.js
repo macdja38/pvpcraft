@@ -75,7 +75,7 @@ module.exports = class music {
         Object.keys(this.boundChannels).forEach((id) => {
             let channel = this.boundChannels[id];
             console.log(channel.connection.playing);
-            if (channel.connection.playing !== true) {
+            if (channel.connection && channel.ready && channel.connection.playing !== true) {
                 console.log(channel.lastPlay);
                 if (Date.now() - channel.lastPlay > 600000) {
                     console.log("leaving");
