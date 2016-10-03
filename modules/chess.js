@@ -60,7 +60,7 @@ module.exports = class chess {
   getCommands() {
     //this needs to return a list of commands that should activate the onCommand function
     //of this class. array of strings with trailing s's removed.
-    return ["move", "startches", "hooktest"];
+    return ["move", "start", "hooktest"];
   }
 
   onCommand(msg, command, perms) {
