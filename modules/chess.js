@@ -64,7 +64,7 @@ module.exports = class chess {
   }
 
   onCommand(msg, command, perms) {
-    if (command.command === "startchess") {
+    if (command.command === "start" && perms.check(msg, "games.chess.start")) {
       if (this.games.hasOwnProperty(msg.channel.id)) {
         msg.reply("Sorry, game already in progress");
         return true;
@@ -87,7 +87,7 @@ module.exports = class chess {
       });
     }
 
-    if (command.command === "move") {
+    if (command.command === "move" && perms.check(msg, "games.chess.move")) {
       if (!this.games.hasOwnProperty(msg.channel.id)) {
         msg.reply("Sorry, no game in progress");
         return true;
