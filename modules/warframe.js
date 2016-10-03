@@ -440,7 +440,7 @@ module.exports = class Warframe {
 
     if ((command.commandnos === 'trader' || command.commandnos === 'voidtrader' || command.commandnos === 'baro') && perms.check(msg, "warframe.trader")) {
       worldState.get((state) => {
-        if (!state.voidTraders || !state.voidTraders[0]) {
+        if (!state.VoidTraders || !state.VoidTraders[0]) {
           this.client.sendMessage(msg.channel, "Baro has disappeared from the universe.");
           return true;
         }
