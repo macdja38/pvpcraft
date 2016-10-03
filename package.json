@@ -21,6 +21,6 @@
     "rethinkdbdash": "^2.3.23",
     "twit": "^2.2.4",
     "youtube-dl": "^1.11.1",
-    "ytdl-core": "^0.7.15"
+    "ytdl-core": "^0.7.18"
   }
 }

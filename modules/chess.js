@@ -130,7 +130,7 @@ module.exports = class chess {
       });
       if (status.isCheck || status.isCheckmate || status.isRepetition || status.isStalemate) {
         attachments.push({
-          "pretxt": "Game Over"
+          "pretext": "Game Over"
         })
       }
       console.log(emoteArray);
