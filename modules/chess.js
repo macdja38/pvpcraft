@@ -2,7 +2,7 @@
  * Created by macdja38 on 2016-10-01.
  */
 
-var StandardDB = require('../lib/StandardDB');
+var StandardDB = require('../lib/standardDB');
 
 var chessClient = require('chess');
 
