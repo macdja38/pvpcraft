@@ -56,10 +56,9 @@ module.exports = class Warframe {
       }
     }
     this.onAlert = new Promise((resolve)=> {
-      global.conn.then((con)=> {
         let dbReady;
         if (!global.cluster.worker || global.cluster.worker.id == 1) {
-          dbReady = createDBIfNotExists("alerts", con);
+          dbReady = createDBIfNotExists("alerts");
         } else {
           dbReady = Promise.resolve();
         }
@@ -94,13 +93,13 @@ module.exports = class Warframe {
                       global.r.table('alerts').insert(alert.reduce((o, v, i) => {
                         o[i] = v;
                         return o;
-                      }, {})).run(con).then(console.log);
+                      }, {})).run().then(console.log);
                     }
                   }
                 })
             }
           }
-          global.r.table('alerts').changes().run(con, (err, cursor)=> {
+          global.r.table('alerts').changes().run((err, cursor)=> {
             if (err) {
               console.error(err);
               return;
@@ -176,7 +175,6 @@ module.exports = class Warframe {
           }
         });
       });
-    });
   }
 
   onReady() {
@@ -657,7 +655,7 @@ module.exports = class Warframe {
   }
 };
 
-function createDBIfNotExists(name, con) {
+function createDBIfNotExists(name) {
   return global.r.tableList().contains(name)
   .do((databaseExists) => {
     return global.r.branch(
@@ -665,5 +663,5 @@ function createDBIfNotExists(name, con) {
       {dbs_created: 0},
       global.r.tableCreate(name)
     );
-  }).run(con)
+  }).run()
 }
