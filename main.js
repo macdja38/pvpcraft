@@ -72,28 +72,33 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
   var startShard = config.get("shardStart", 0);
   var localShards = config.get("localShards", 2);
   var lastRestart = 0;
-  var restartQueue = 0;
+  var restartQueue = [];
+  let restartWorker = false;
   var workers = [];
-  if (!config.get("webOnly", false)) {
-    console.log(`This is the master, starting ${shards} shards`.green);
-    for (let i = startShard; i < (startShard + localShards); i++) {
-      console.log(`Scheduling shard ${i}`);
-      setTimeout(function () {
-        console.log(`Starting worker ${i} ${typeof(i)} ${typeof(shards)}`);
-        workers.push(cluster.fork({ id: i, shards: shards }));
-        lastRestart = Date.now();
-      }, 7500 * (i - startShard));
-    }
+  console.log(`This is the master, starting ${shards} shards`.green);
+  for (let i = startShard; i < (startShard + localShards); i++) {
+    console.log(`Scheduling shard ${i}`);
+    setTimeout(function () {
+      console.log(`Starting worker ${i} ${typeof(i)} ${typeof(shards)}`);
+      workers.push(cluster.fork({ id: i, shards: shards }));
+      lastRestart = Date.now();
+    }, 7500 * (i - startShard));
   }
+
+  restartWorker = setInterval(()=>{
+    if ((restartQueue.length > 0) && Date.now() - lastRestart > 7500) {
+      lastRestart = Date.now();
+      let id;
+      let target = restartQueue.shift();
+      id = workers.indexOf(target);
+      workers[id] = cluster.fork({ id: id + startShard, shards: shards });
+      console.log(`worker ${workers[id].process.pid} born`);
+    }
+  }, 1000);
 
   cluster.on('exit', (deadWorker, code, signal) => {
     console.log(`worker ${deadWorker.process.pid} died`);
-    let id = workers.indexOf(deadWorker);
-    setTimeout(()=> {
-      workers[id] = cluster.fork({ id: id + startShard, shards: shards });
-      console.log(`worker ${workers[id].process.pid} born`);
-      lastRestart = Date.now();
-    }, Math.max(0, (lastRestart + 5000) - Date.now()));
+    restartQueue.push(deadWorker);
   });
 } else {
 
@@ -313,6 +318,9 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
 //When a connection is made initialise stuff.
   client.on('ready', ()=> {
     console.log("Got ready");
+    if (client.servers.length < 2) {
+      process.exit(258);
+    }
     loadConfigs().then(()=> {
       id = client.user.id;
       mention = "<@" + id + ">";
