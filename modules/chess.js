@@ -30,6 +30,7 @@ let emotes = {
   "BW": "<:BW:230771178057236480>",
   "bw": "<:BW:230771178057236480>", // add emote later
   "kw": "<:kw:230774531751542784>",
+  "KW": "<:kw:230774531751542784>", // add emote later
   "QW": "<:QW:230771177738600448>",
   "qw": "<:QW:230771177738600448>",
   "NW": "<:NW:230771177818161152>",
@@ -122,10 +123,13 @@ module.exports = class chess {
         }
       });
       let attachments = [{
-        "pretext": emoteArray.map(e => emotes[e]).map((c, i) => ((i+1) % 8 === 0) ? `${c}\n` : c).join("") + "   a     b     c     d     e     f     g     h"
+        "pretext": emoteArray
+          .map((e, i) => (((Math.ceil((i+1)/8)) % 2 == 0) !== ((i) % 2 == 0)) ? e.toUpperCase() : e)
+          .map(e => emotes[e]).map((c, i) => ((i+1) % 8 === 0) ? `${c} ${Math.ceil(i/8)}\n` : c)
+          .join("") + "   a     b     c     d     e     f     g     h"
       }];
       attachments.push({
-        "pretext": `Next up ${this.turns[msg.channel.id]}`,
+        "pretext": `Currently up ${this.turns[msg.channel.id]}`,
         "color": this.turns[msg.channel.id] === "white" ? "#FFFFFF" : "#111111"
       });
       if (status.isCheck || status.isCheckmate || status.isRepetition || status.isStalemate) {
