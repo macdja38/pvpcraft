@@ -124,7 +124,7 @@ module.exports = class chess {
       });
       let attachments = [{
         "pretext": emoteArray
-          .map((e, i) => (((Math.ceil((i+1)/8)) % 2 == 0) !== ((i) % 2 == 0)) ? e.toUpperCase() : e)
+          .map((e, i) => (Math.ceil((i+1)/8) % 2 !== (i % 2)) ? e.toUpperCase() : e)
           .map(e => emotes[e]).map((c, i) => ((i+1) % 8 === 0) ? `${c} ${Math.ceil(i/8)}\n` : c)
           .join("") + "   a     b     c     d     e     f     g     h"
       }];
@@ -132,9 +132,24 @@ module.exports = class chess {
         "pretext": `Currently up ${this.turns[msg.channel.id]}`,
         "color": this.turns[msg.channel.id] === "white" ? "#FFFFFF" : "#111111"
       });
-      if (status.isCheck || status.isCheckmate || status.isRepetition || status.isStalemate) {
+      if (status.isCheckmate) {
         attachments.push({
-          "pretext": "Game Over"
+          "pretext": "Checkmate"
+        })
+      }
+      else if (status.isCheck) {
+        attachments.push({
+          "pretext": "Check"
+        })
+      }
+      if (status.isRepetition) {
+        attachments.push({
+          "pretext": "Repetition"
+        })
+      }
+      if (status.isStalemate) {
+        attachments.push({
+          "pretext": "Stalemate"
         })
       }
       console.log(emoteArray);
