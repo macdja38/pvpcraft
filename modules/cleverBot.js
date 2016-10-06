@@ -23,12 +23,16 @@ module.exports = class cleverBot {
 
     checkMisc(msg, perms) {
         if (msg.isMentioned(this.client.user) && perms.check(msg, "cleverbot.misc")) {
-            this.client.startTyping(msg.channel);
+            this.client.startTyping(msg.channel).catch(()=>{
+                this.client.stopTyping(msg.channel).catch(() => {});
+            });
             var quarry = msg.content.replace(this.startRegex, "").replace(this.middleRegex, "CleverBot");
             CleverBot.prepare(()=>{
                 clever.write(quarry,(response)=>{
                     msg.reply(response.message).then(()=> {
-                        this.client.stopTyping(msg.channel);
+                        this.client.stopTyping(msg.channel).catch(() => {});
+                    }).catch(()=>{
+                        this.client.stopTyping(msg.channel).catch(() => {});
                     });
                 });
             });
