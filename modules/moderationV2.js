@@ -9,12 +9,21 @@ var SlowSender = require('../lib/slowSender');
 
 var colors = require('colors');
 
+let colorMap = {
+  "message.deleted": "#FFB600",
+  "message.updated": "#FFFF00",
+  "channel.created": "#CC0000",
+  "channel.updated": "#CC0000",
+  "channel.deleted": "#CC0000"
+};
+
 //this.logging = {"serverId": {"userJoin": ["channelId"], "msgDelete": ["channelId"]}};
 
 module.exports = class moderationV2 {
   constructor(e) {
     this.client = e.client;
     //this.logging = {};
+    this.messageSender = e.messageSender;
     this.config = e.config;
     this.perms = e.perms;
     this.configDB = e.configDB;
@@ -269,6 +278,34 @@ module.exports = class moderationV2 {
    }
    */
 
+  sendHookedMessage(eventName, options, text, serverId) {
+    this.feeds.find(`moderation.${eventName}`, serverId).forEach((channel)=> {
+      channel = this.client.channels.get("id", channel);
+      if (channel) {
+        let attachment = {text, ts: Date.now()/1000};
+        if (options.hasOwnProperty("user")) {
+          attachment.author_name = options.user.username;
+          attachment.author_icon = options.user.avatarURL;
+        }
+        if (options.hasOwnProperty("title")) {
+          attachment.title = options.hasOwnProperty("user") ? `<@${options.user.id}> | ${options.title}` : options.title;
+        }
+        if (colorMap.hasOwnProperty(eventName)) {
+          attachment.color = colorMap[eventName];
+        }
+        let hookOptions = {
+          username: this.client.user.username,
+          text: "",
+          icon_url: this.client.user.avatarURL,
+          slack: true,
+        };
+        hookOptions.attachments = [attachment];
+        let fallbackMessage = `${options.hasOwnProperty("user") ? utils.fullNameB(options) : ""} | ${options.hasOwnProperty("title") ? utils.fullNameB(options) : ""} ${text}`;
+        this.messageSender.sendMessage(channel, fallbackMessage, hookOptions);
+      }
+    })
+  }
+
   sendMessage(eventName, message, serverId) {
     this.feeds.find(`moderation.${eventName}`, serverId).forEach((channel)=> {
       channel = this.client.channels.get("id", channel);
@@ -291,16 +328,20 @@ module.exports = class moderationV2 {
         }
         if (this.perms.checkUserChannel(message.author, channel, "msglog.whitelist.message.deleted")) return;
         //grab url's to the message's attachments
-        var string = utils.clean(channel.name) + " | " + utils.fullNameB(message.author) + "'s message was deleted:\n";
+        let options = {
+          title: `Message Deleted in <#${message.channel.id}>`,
+          user: message.author,
+        };
+        let string;
         //if their's content log it.
         if (message.content) {
           if (message.content.length > 144 || /[^0-9a-zA-Z\s\.!\?]/.test(message.content)) {
-            string += utils.bubble(message.content);
+            string = utils.bubble(message.content);
           } else {
-            string += "\n```diff\n-" + utils.clean(message.content) + "\n```";
+            string = "\n```diff\n-" + utils.clean(message.content) + "\n```";
           }
         }
-        //if their are attachments log them. maybe it's possible to attach more than one?
+        //if their are attachments log them.
         if (message.attachments) {
           for (var i in message.attachments) {
             if (message.attachments.hasOwnProperty(i)) {
@@ -309,12 +350,11 @@ module.exports = class moderationV2 {
           }
         }
         //send everything off.
-        this.sendMessage("message.deleted", string, channel.server.id)
+        this.sendHookedMessage("message.deleted", options, string, channel.server.id)
       }
       else {
         if (this.tempServerIgnores.hasOwnProperty(channel.server.id)) return;
-        this.sendMessage("message.deleted", "An un-cached message in " +
-          utils.clean(channel.name) + " was deleted, this probably means the bot was either recently restarted on the message was old.", channel.server.id);
+        this.sendHookedMessage("message.deleted", {title: `Uncached message deleted in <#${channel.id}>`}, "", channel.server.id);
 
       }
     } catch (e) {
@@ -334,28 +374,23 @@ module.exports = class moderationV2 {
     try {
       if (!newMessage.server) return; //it's a pm so we don't log it.
       let server = newMessage.server;
+      let options = {
+        title: `Message Updated in <#${newMessage.channel.id}>`,
+        user: newMessage.author,
+      };
       let changeThresh = this.configDB.get("changeThresh", this.configDB.get("changeThresh", 1), {server: server.id});
       if ((!message || message.content !== newMessage.content)) {
+        if (this.perms.checkUserChannel(newMessage.author, newMessage.channel, "msglog.whitelist.messageupdated")) return;
         if (message) {
           if (utils.compare(message.content, newMessage.content) > changeThresh) {
-            if (this.perms.checkUserChannel(message.author, newMessage.channel, "msglog.whitelist.messageupdated")) return;
-            if (message.content.length > 144 || /[^0-9a-zA-Z\s\.!\?]/.test(message.content) || /[^0-9a-zA-Z\s\.!\?]/.test(newMessage.content)) {
-              this.sendMessage("message.updated", utils.clean(newMessage.channel.name) +
-                " | " + utils.fullNameB(newMessage.author) + " changed: " + utils.bubble(message.content) +
-                " to " + utils.bubble(newMessage.content)
-                , server.id);
-            }
-            else {
-              this.sendMessage("message.updated", utils.clean(newMessage.channel.name) +
-                " | " + utils.fullNameB(newMessage.author) + "\n```diff\n-" + utils.clean(message.content) +
-                "\n+" + utils.clean(newMessage.content) + "\n```"
-                , server.id);
-            }
+            let string = `${utils.bubble(message.content)} to ${utils.bubble(newMessage.content)}`;
+            this.sendHookedMessage("message.updated", options, string, server.id);
           }
         } else {
-          if (this.perms.checkUserChannel(newMessage.author, newMessage.channel, "msglog.whitelist.messageupdated")) return;
-          this.sendMessage("message.updated", `${utils.clean(newMessage.channel.name)}` +
-            ` | ${utils.fullNameB(newMessage.author)} changed: **An un-cached message** to ${utils.bubble(newMessage.content)}`,
+          this.sendHookedMessage(
+            "message.updated",
+            options,
+            `**An un-cached message** to ${utils.bubble(newMessage.content)}`,
             server.id)
         }
       }
@@ -377,7 +412,7 @@ module.exports = class moderationV2 {
   channelDeleted(channel) {
     try {
       if (channel.server) {
-        this.sendMessage("channel.deleted", ":exclamation:Channel " + utils.clean(channel.name) + " was deleted, id: `" + channel.id + "`", channel.server.id);
+        this.sendHookedMessage("channel.deleted", {title: `Channel Deleted`}, `**Name:** ${channel.name}\n**Topic:**${channel.topic}`, channel.server.id);
       }
     }
     catch (err) {
@@ -395,12 +430,12 @@ module.exports = class moderationV2 {
 
   channelUpdated(oldChannel, newChannel) {
     try {
-      var text = ":exclamation:Channel change detected in " + utils.clean(oldChannel.name) + "\n";
+      var text = "";
       if (oldChannel.name != newChannel.name) {
-        text += "        Name changed from `" + utils.removeBlocks(oldChannel.name) + "` to `" + utils.removeBlocks(newChannel.name) + "`\n";
+        text += "**Name changed from:** `" + utils.removeBlocks(oldChannel.name) + "` **to** `" + utils.removeBlocks(newChannel.name) + "`\n";
       }
       if (oldChannel.topic != newChannel.topic) {
-        text += "        Topic changed from `" + utils.removeBlocks(oldChannel.topic || null) + "` to `" + utils.removeBlocks(newChannel.topic) + "`\n";
+        text += "**Topic changed from:** `" + utils.removeBlocks(oldChannel.topic || null) + "` **to** `" + utils.removeBlocks(newChannel.topic) + "`\n";
       }
       var changes = findOverrideChanges(oldChannel.permissionOverwrites, newChannel.permissionOverwrites);
 
@@ -413,23 +448,27 @@ module.exports = class moderationV2 {
           newTargetName = utils.clean((newChannel.server.roles.get("id", change.override.id) || {name: "unknown"}).name);
         }
         if (change.change == "remove" || change.change == "add") {
-          text += "        Channel override " + change.change + " from " + change.override.type + " " + newTargetName + "\n";
+          text += "**Channel override** " + change.change + " from " + change.override.type + " " + newTargetName + "\n";
         }
         else {
-          text += "        Channel override on "
+          let before = (change.change === "allow" ? change.from.allowed : change.from.denied);
+          let after = (change.change === "allow" ? change.to.allowed : change.to.denied);
+          console.log(before);
+          console.log(after);
+          text += "**Channel override** on "
             + change.override.type
             + " " + newTargetName
             + " "
             + change.change
             + " changed `"
-            + (change.change === "allow" ? change.from.allowed : change.from.denied )
+            + (before.length > 0 ? before : " ")
             + "` to `"
-            + (change.change === "allow" ? change.to.allowed : change.to.denied )
+            + (after.length > 0 ? after : " ")
             + "`\n";
         }
       }
-      if (text !== ":exclamation:Channel change detected in " + utils.clean(oldChannel.name) + "\n") {
-        this.sendMessage("channel.updated", text, newChannel.server.id);
+      if (text !== "") {
+        this.sendHookedMessage("channel.updated", {title: `Channel Updated <#${newChannel.id}>`}, text, newChannel.server.id);
       }
     }
     catch (err) {
@@ -449,7 +488,7 @@ module.exports = class moderationV2 {
   channelCreated(channel) {
     try {
       if (channel.server) { //if che channel does not have a server it's a private message and we don't need to log it.
-        this.sendMessage("channel.created", ":exclamation:Channel " + utils.clean(channel.name) + " was created, id: `" + channel.id + "`", channel.server.id);
+        this.sendHookedMessage("channel.created", {title: `Channel Created <#${channel.id}>`}, "", channel.server.id);
       }
     }
     catch (err) {
