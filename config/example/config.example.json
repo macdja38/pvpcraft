@@ -6,6 +6,7 @@
   },
   "middleware": {
   },
+  "minDiscords": 2,
   "shards": 2,
   "localShards": 2,
   "shardStart": 0,

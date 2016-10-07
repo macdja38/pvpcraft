@@ -318,7 +318,7 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
 //When a connection is made initialise stuff.
   client.on('ready', ()=> {
     console.log("Got ready");
-    if (client.servers.length < 2) {
+    if (client.servers.length <= config.get("minDiscords", 1)) {
       process.exit(258);
     }
     loadConfigs().then(()=> {
