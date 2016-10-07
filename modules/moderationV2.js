@@ -14,7 +14,19 @@ let colorMap = {
   "message.updated": "#FFFF00",
   "channel.created": "#CC0000",
   "channel.updated": "#CC0000",
-  "channel.deleted": "#CC0000"
+  "channel.deleted": "#CC0000",
+  "voice.join": "#14D5E2",
+  "voice.leave": "#14D5E2",
+  "user": "#111180",
+  "member.updated": "#111180",
+  "member.added": "#A400A4",
+  "member.removed": "#A400A4",
+  "member.banned": "#A400A4",
+  "member.unbanned": "#A400A4",
+  "server.updated": "#FF0000",
+  "role.created": "#FF0000",
+  "role.updated": "#FF0000",
+  "role.deleted": "#FF0000",
 };
 
 //this.logging = {"serverId": {"userJoin": ["channelId"], "msgDelete": ["channelId"]}};
@@ -507,19 +519,23 @@ module.exports = class moderationV2 {
   presence(oldUser, newUser) {
     try {
       if (oldUser.username != newUser.username || oldUser.discriminator != newUser.discriminator || (oldUser.avatar != newUser.avatar && !newUser.bot)) {
-        var text = ":exclamation:User change detected in " + utils.fullNameB(oldUser) + "\n";
+        var text = "";
         if (oldUser.username != newUser.username) {
-          text += "        Username changed from " + utils.removeBlocks(oldUser.username) + " to " + utils.removeBlocks(newUser.username) + "\n";
+          text += "**Username** changed from " + utils.removeBlocks(oldUser.username) + " to " + utils.removeBlocks(newUser.username) + "\n";
         }
         if (oldUser.discriminator != newUser.discriminator) {
-          text += "        Discriminator changed from " + oldUser.discriminator + " to " + newUser.discriminator + "\n";
+          text += "**Discriminator** changed from " + oldUser.discriminator + " to " + newUser.discriminator + "\n";
         }
         if (oldUser.avatar != newUser.avatar && !newUser.bot) {
-          text += "        Avatar changed from " + oldUser.avatarURL + " to " + newUser.avatarURL + "\n";
+          text += "**Avatar** changed from " + oldUser.avatarURL + " to " + newUser.avatarURL + "\n";
         }
+        let options = {
+          title: `User Changed`,
+          user: newUser,
+        };
         this.client.servers.forEach(server => {
           if (server.members.has("id", newUser.id)) {
-            this.sendMessage("user", text, server.id)
+            this.sendHookedMessage("user", options, text, server.id)
           }
         });
         /*for (var serverid in this.logging) {
@@ -548,27 +564,26 @@ module.exports = class moderationV2 {
 
   roleUpdated(oldRole, newRole) {
     try {
-      var text = ":exclamation:Role change detected in " + utils.clean(oldRole.name) + "#" + oldRole.id + "\n";
-      var oldText = text;
+      let text = "";
       let oldPerms = arrayOfTrues(oldRole.serialize()).toString();
       let newPerms = arrayOfTrues(newRole.serialize()).toString();
       if (oldPerms !== newPerms) {
-        text += "Permissions changed from `" + oldPerms + "` to `" + newPerms + "`\n";
+        text += "**Permissions** changed from `" + oldPerms + "` to `" + newPerms + "`\n";
       }
       if (oldRole.name != newRole.name) {
-        text += "Name changed from " + utils.clean(oldRole.name) + " to " + utils.clean(newRole.name) + "\n";
+        text += "**Name** changed from " + utils.clean(oldRole.name) + " to " + utils.clean(newRole.name) + "\n";
       }
       if (oldRole.position != newRole.position) {
-        text += "Position changed from " + oldRole.position + " to " + newRole.position + "\n";
+        text += "**Position** changed from " + oldRole.position + " to " + newRole.position + "\n";
       }
       if (oldRole.hoist != newRole.hoist) {
-        text += "Hoist changed from " + oldRole.hoist + " to " + newRole.hoist + "\n";
+        text += "**Hoist** changed from " + oldRole.hoist + " to " + newRole.hoist + "\n";
       }
       if (oldRole.color != newRole.color) {
-        text += "Colour changed from " + oldRole.color + " to " + newRole.color + "\n";
+        text += "**Colour** changed from " + oldRole.color + " to " + newRole.color + "\n";
       }
-      if (text !== oldText) {
-        this.sendMessage("role.updated", text, newRole.server.id)
+      if (text !== "") {
+        this.sendHookedMessage("role.updated", {title: `Role Updated | <@&${newRole.id}>`}, text, newRole.server.id)
       }
     }
     catch (err) {
@@ -587,7 +602,11 @@ module.exports = class moderationV2 {
 
   memberBanned(user, server) {
     try {
-      this.sendMessage("member.banned", ":exclamation::outbox_tray: " + utils.fullName(user) + " was Banned, id: `" + user.id + "`", server.id);
+      let options = {
+        title: `Member Banned`,
+        user: user,
+      };
+      this.sendHookedMessage("member.banned", options, `**User:** ${utils.fullNameB(user)} Banned`, server.id);
     }
     catch (err) {
       console.error(err);
@@ -605,7 +624,11 @@ module.exports = class moderationV2 {
 
   memberUnbanned(user, server) {
     try {
-      this.sendMessage("member.unbanned", ":exclamation::inbox_tray: " + utils.fullName(user) + " was unbanned, id: `" + user.id + "`", server.id);
+      let options = {
+        title: `Member Unbanned`,
+        user: user,
+      };
+      this.sendHookedMessage("member.unbanned", options, `**User:** ${utils.fullNameB(user)} unbanned`, server.id);
     }
     catch (err) {
       console.error(err);
@@ -624,6 +647,11 @@ module.exports = class moderationV2 {
   memberAdded(server, user) {
     try {
       this.sendMessage("member.added", ":inbox_tray: " + utils.fullName(user) + " Joined, id: `" + user.id + "`", server.id);
+      let options = {
+        title: `User Joined`,
+        user: user,
+      };
+      this.sendHookedMessage("member.added", options, `**User:** ${utils.fullNameB(user)} joined`, server.id);
     }
     catch (err) {
       console.error(err);
@@ -641,7 +669,11 @@ module.exports = class moderationV2 {
 
   memberRemoved(server, user) {
     try {
-      this.sendMessage("member.removed", ":outbox_tray: " + utils.fullName(user) + " Left or was kicked, id: `" + user.id + "`", server.id);
+      let options = {
+        title: `User left or was Kicked`,
+        user: user,
+      };
+      this.sendHookedMessage("member.removed", options, `**User:** ${utils.fullNameB(user)} left or was kicked`, server.id);
     }
     catch (err) {
       console.error(err);
@@ -659,9 +691,13 @@ module.exports = class moderationV2 {
 
   memberUpdated(server, newUser, oldMember) {
     try {
+      let options = {
+        title: `Member Updated`,
+        user: newUser,
+      };
       var newMember = server.detailsOfUser(newUser);
       if (oldMember && newMember && (oldMember.roles.length != newMember.roles.length || oldMember.mute != newMember.mute || oldMember.deaf != newMember.deaf || oldMember.nick != newMember.nick)) {
-        var text = ":exclamation:User change detected in " + utils.fullNameB(newUser) + "\n";
+        var text = "";
         if (oldMember.nick != newMember.nick) {
           text += "        Nick changed from `" + utils.removeBlocks(oldMember.nick) + "` to `" + utils.removeBlocks(newMember.nick) + "`\n";
         }
@@ -708,7 +744,7 @@ module.exports = class moderationV2 {
             console.error(oldMember.roles);
           }
         }
-        this.sendMessage("member.updated", text, server.id);
+        this.sendHookedMessage("member.updated", options, text, server.id);
       }
     }
     catch (err) {
@@ -728,7 +764,11 @@ module.exports = class moderationV2 {
 
   voiceJoin(channel, user) {
     try {
-      this.sendMessage("voice.join", `:notes: ${utils.fullNameB(user)} joined voice channel ${channel.name}`, channel.server.id)
+      let options = {
+        title: `Voice Join`,
+        user: user,
+      };
+      this.sendHookedMessage("voice.join", options, `**User:** ${utils.fullNameB(user)} joined voice channel joined voice channel ${channel.name}`, channel.server.id);
     } catch (err) {
       console.error(err);
       console.error(err.stack);
@@ -762,7 +802,11 @@ module.exports = class moderationV2 {
 
   voiceLeave(channel, user) {
     try {
-      this.sendMessage("voice.leave", `:notes: ${utils.fullNameB(user)} left voice channel ${channel.name}`, channel.server.id)
+      let options = {
+        title: `Voice Leave`,
+        user: user,
+      };
+      this.sendHookedMessage("voice.leave", options, `**User:** ${utils.fullNameB(user)} left voice channel joined voice channel ${channel.name}`, channel.server.id);
     } catch (err) {
       console.error(err);
       console.error(err.stack);
