@@ -28,7 +28,7 @@ if (auth.get("sentryURL", "") != "") {
       ravenClient = require('raven');
       raven = new ravenClient.Client(auth.data.sentryURL, {
         release: commit + "-" + branch,
-        transport: new ravenClient.transports.HTTPSTransport({ rejectUnauthorized: false })
+        transport: new ravenClient.transports.HTTPSTransport({rejectUnauthorized: false})
       });
       //raven's patch global seems to have been running synchronously and delaying the execution of other code.
       raven.patchGlobal(function (result) {
@@ -80,18 +80,18 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
     console.log(`Scheduling shard ${i}`);
     setTimeout(function () {
       console.log(`Starting worker ${i} ${typeof(i)} ${typeof(shards)}`);
-      workers.push(cluster.fork({ id: i, shards: shards }));
+      workers.push(cluster.fork({id: i, shards: shards}));
       lastRestart = Date.now();
     }, 7500 * (i - startShard));
   }
 
-  restartWorker = setInterval(()=>{
+  restartWorker = setInterval(()=> {
     if ((restartQueue.length > 0) && Date.now() - lastRestart > 7500) {
       lastRestart = Date.now();
       let id;
       let target = restartQueue.shift();
       id = workers.indexOf(target);
-      workers[id] = cluster.fork({ id: id + startShard, shards: shards });
+      workers[id] = cluster.fork({id: id + startShard, shards: shards});
       console.log(`worker ${workers[id].process.pid} born`);
     }
   }, 1000);
@@ -112,7 +112,7 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
   });
 
   var MessageSender = require('./lib/messageSender');
-  var messageSender = new MessageSender({ client });
+  var messageSender = new MessageSender({client});
 
   global.r = require('rethinkdbdash')(auth.get("reThinkDB", {}));
   r = global.r;
@@ -146,7 +146,7 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
 
   var SlowSender = require('./lib/slowSender');
 
-  var slowSender = new SlowSender({ client, config });
+  var slowSender = new SlowSender({client, config});
 
   client.on('message', (msg)=> {
     if (msg.author && msg.author.id === id) return;
@@ -159,7 +159,7 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
 
     // handle per server prefixes.
     if (msg.channel.server) {
-      l = configDB.get("prefix", prefix, { server: msg.channel.server.id });
+      l = configDB.get("prefix", prefix, {server: msg.channel.server.id});
       if (l == null) {
         l = prefix;
       } else {
@@ -178,7 +178,7 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
     if (msg.author.id === "85257659694993408" && msg.content.indexOf("crashnow") > 0) {
       process.exit(0);
     }
-    var command = Parse.command(l, msg, { "allowMention": id, "botName": name });
+    var command = Parse.command(l, msg, {"allowMention": id, "botName": name});
     //Reload command starts here.
     if (command.command === "reload" && msg.author.id === "85257659694993408") {
       if (command.flags.indexOf("a") > -1) {
@@ -292,7 +292,7 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
        msg.author.username + " m: ".green + msg.content.replace(/\n/g, "\n    ") + " in ".yellow + (t2 - t1) + "ms".red); */
     } else {
       /*console.log("u: ".cyan + msg.author.username + " m: ".green + msg.content.replace(/\n/g, "\n    ").rainbow +
-        " in ".yellow + (t2 - t1) + "ms".red);*/
+       " in ".yellow + (t2 - t1) + "ms".red);*/
     }
   });
 
@@ -305,6 +305,7 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
   });
 
   client.on('warn', (error)=> {
+    if (error === "channel doesn't exist even though SPEAKING expects them to") return;
     if (raven) {
       raven.captureException(error);
     }
@@ -335,7 +336,7 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
       name = client.user.name;
       console.log(`Loading modules for Shard ${process.env.id} / ${process.env.shards}`.cyan);
       let Feeds = require('./lib/feeds');
-      feeds = new Feeds({ client, r, configDB });
+      feeds = new Feeds({client, r, configDB});
       reload();
       console.log(`-------------------`.magenta);
       console.log(`Ready as ${client.user.username}`.magenta);
@@ -348,7 +349,9 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
          setTimeout(updateCarbon, 3600000)
          */
       }
-    }).catch(e => {console.error(e)});
+    }).catch(e => {
+      console.error(e)
+    });
   });
 
 
@@ -441,7 +444,7 @@ process.on('uncaughtException', (e)=> {
 });
 
 function reload() {
-  prefix = configDB.get("prefix", ["!!", "//", "/"], { server: "*" });
+  prefix = configDB.get("prefix", ["!!", "//", "/"], {server: "*"});
   console.log("defaults");
   console.log(prefix);
   name = client.user.name;
@@ -475,14 +478,14 @@ function reload() {
   moduleList = [];
   var middlewares = config.get("middleware");
   var modules = config.get("modules");
-  let moduleVariables = { client, config, raven, auth, configDB, r, perms, feeds, messageSender, slowSender };
+  let moduleVariables = {client, config, raven, auth, configDB, r, perms, feeds, messageSender, slowSender};
   for (let module in modules) {
     if (modules.hasOwnProperty(module)) {
       try {
         let Modul = require(modules[module]);
         let mod = new Modul(moduleVariables);
         if (mod.onReady) mod.onReady();
-        moduleList.push({ "commands": mod.getCommands(), "module": mod });
+        moduleList.push({"commands": mod.getCommands(), "module": mod});
 
       }
       catch
@@ -496,7 +499,7 @@ function reload() {
       try {
         let ware = new (require(middlewares[middleware]))(moduleVariables);
         if (ware.onReady) ware.onReady();
-        middlewareList.push({ "ware": ware });
+        middlewareList.push({"ware": ware});
       } catch (error) {
         console.error(error);
       }
@@ -515,7 +518,18 @@ function reloadTarget(msg, command, perms, l, moduleList, middlewareList) {
       delete require.cache[require.resolve(modules[command.args[0]])];
       msg.reply("Reloading " + command.args[0]);
       console.log("Reloading ".yellow + command.args[0].yellow);
-      var mod = new (require(modules[command.args[0]]))({ client, config, raven, auth, configDB, r, perms, feeds, messageSender, slowSender });
+      var mod = new (require(modules[command.args[0]]))({
+        client,
+        config,
+        raven,
+        auth,
+        configDB,
+        r,
+        perms,
+        feeds,
+        messageSender,
+        slowSender
+      });
       if (mod.onReady) mod.onReady();
       moduleList[module].module = mod;
       moduleList[module].commands = mod.getCommands();
