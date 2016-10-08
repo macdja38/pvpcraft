@@ -97,7 +97,7 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
   }, 1000);
 
   cluster.on('exit', (deadWorker, code, signal) => {
-    console.log(`worker ${deadWorker.process.pid} died`);
+    console.log(`worker ${deadWorker.process.pid} died with code ${code} and signal ${signal}`);
     restartQueue.push(deadWorker);
   });
 } else {
@@ -143,6 +143,10 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
   var mention;
   var name;
   var id;
+
+  var SlowSender = require('./lib/slowSender');
+
+  var slowSender = new SlowSender({ client, config });
 
   client.on('message', (msg)=> {
     if (msg.author && msg.author.id === id) return;
@@ -296,13 +300,17 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
     if (raven) {
       raven.captureException(error);
     }
-    console.error(error);
+    console.error("Error", error);
     console.error(error.stack);
   });
 
-  /* client.on('warn', (error)=> {
-   console.error(`Warning`, error);
-   }); */
+  client.on('warn', (error)=> {
+    if (raven) {
+      raven.captureException(error);
+    }
+    console.error(`Warning`, error);
+    console.error(error.stack);
+  });
 
   client.on('disconnect', ()=> {
     console.log("Disconnect".red);
@@ -467,7 +475,7 @@ function reload() {
   moduleList = [];
   var middlewares = config.get("middleware");
   var modules = config.get("modules");
-  let moduleVariables = { client, config, raven, auth, configDB, r, perms, feeds, messageSender };
+  let moduleVariables = { client, config, raven, auth, configDB, r, perms, feeds, messageSender, slowSender };
   for (let module in modules) {
     if (modules.hasOwnProperty(module)) {
       try {
@@ -507,7 +515,7 @@ function reloadTarget(msg, command, perms, l, moduleList, middlewareList) {
       delete require.cache[require.resolve(modules[command.args[0]])];
       msg.reply("Reloading " + command.args[0]);
       console.log("Reloading ".yellow + command.args[0].yellow);
-      var mod = new (require(modules[command.args[0]]))({ client, config, raven, auth, configDB, r, perms, feeds, messageSender });
+      var mod = new (require(modules[command.args[0]]))({ client, config, raven, auth, configDB, r, perms, feeds, messageSender, slowSender });
       if (mod.onReady) mod.onReady();
       moduleList[module].module = mod;
       moduleList[module].commands = mod.getCommands();

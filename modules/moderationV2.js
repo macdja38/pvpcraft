@@ -5,7 +5,7 @@
 var Utils = require('../lib/utils');
 var utils = new Utils();
 
-var SlowSender = require('../lib/slowSender');
+
 
 var colors = require('colors');
 
@@ -42,7 +42,7 @@ module.exports = class moderationV2 {
     this.raven = e.raven;
     this.feeds = e.feeds;
     this.tempServerIgnores = {};
-    this._slowSender = new SlowSender(e);
+    this._slowSender = e.slowSender;
   }
 
   getCommands() {
@@ -385,8 +385,8 @@ module.exports = class moderationV2 {
           slack: true,
         };
         hookOptions.attachments = [attachment];
-        let fallbackMessage = `${options.hasOwnProperty("user") ? utils.fullNameB(options) : ""} | ${options.hasOwnProperty("title") ? utils.fullNameB(options) : ""} ${text}`;
-        this.messageSender.sendMessage(channel, fallbackMessage, hookOptions);
+        let fallbackMessage = `${options.hasOwnProperty("user") ? utils.fullNameB(options.user) : ""} | ${options.hasOwnProperty("title") ? utils.inline(options.title) : ""} ${text}`;
+        this.messageSender.sendQueuedMessage(channel, fallbackMessage, hookOptions);
       }
     })
   }
