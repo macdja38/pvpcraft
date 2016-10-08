@@ -46,7 +46,7 @@ module.exports = class moderationV2 {
   }
 
   getCommands() {
-    return ["purge"];
+    return ["purge", "ban", "kick"];
   }
 
   onServerCreated() {
@@ -54,6 +54,79 @@ module.exports = class moderationV2 {
   }
 
   onCommand(msg, command, perms) {
+    if (command.command === "kick" && perms.check(msg, "moderation.kick")) {
+      if (command.args.length < 1) {
+        msg.reply(`Who do you want to ban? ${command.prefix}ban <user>`);
+      }
+    }
+
+    if (command.command === "ban" && perms.check(msg, "moderation.ban")) {
+
+      // locate user
+      let user;
+      let possibleId;
+      if (command.user) {
+        user = command.user;
+      } else if(command.args.length > 0) {
+        if (msg.mentions.length > 0) {
+          user = msg.mentions[0];
+        } else {
+          if (!isNaN(parseInt(command.args[0]))) {
+            possibleId = parseInt(command.args[0]);
+          }
+        }
+      } else {
+        msg.reply(`Who do you want to ban? ${command.prefix}ban <user>`);
+        return true;
+      }
+      if (!user && !possibleId) {
+        msg.reply(`Sorry, user could not be located or their id was not a number. Please try a valid mention or id`);
+        return true;
+      }
+
+      // check to see if user has ban immunity
+      if (user && perms.checkUserChannel(user, msg.channel, "moderation.immunity.ban")) {
+        msg.reply("Sorry you do not have permission to ban this user");
+        return true;
+      }
+
+      if (possibleId && perms.checkUserChannel({id: possibleId}, msg.channel, "moderation.immunity.ban")) {
+        msg.reply("Sorry but you don't have permission to ban the user this id belongs to.");
+        return true;
+      }
+
+      let reason = command.options.reason;
+      if (!perms.check(msg, "moderation.reasonless")) {
+        if (!reason) {
+          msg.reply(`Sorry but you do not have permission to ban without providing a reason eg \`${command.prefix}ban --user @devCodex --reason Annoying\``);
+          return true;
+        }
+      }
+
+      let options = {
+        user: msg.author,
+      };
+      let text = `**Moderator:** <@${msg.author.id}>`;
+      if (user) {
+        options.title = `Moderator Banned User <@${user.id}>`;
+        text += `\n**User:** ${utils.fullNameB(user)} | <@${user.id}>`;
+      } else {
+        options.title = `Moderator Banned Id <@${possibleId}>`;
+        text += `\n**User:** <@${possibleId}>`;
+      }
+      if (reason) {
+        text += `\n**Reason:** ${utils.clean(reason)}`;
+      }
+      msg.server.banMember(user || possibleId, command.options.hasOwnProperty("time") ? command.options.time : 0)
+        .then(() => {
+          this.sendHookedMessage("action.ban", options, text, msg.server.id);
+        })
+        .catch(() => {
+          options.title += "**FAILED bot may not have sufficient permissions**";
+          this.sendHookedMessage("action.ban", options, text, msg.server.id);
+        })
+    }
+
     if (command.command === "purge" && perms.check(msg, "moderation.tools.purge")) {
       let channel;
       if (/<#\d+>/.test(command.options.channel)) {
@@ -646,7 +719,6 @@ module.exports = class moderationV2 {
 
   memberAdded(server, user) {
     try {
-      this.sendMessage("member.added", ":inbox_tray: " + utils.fullName(user) + " Joined, id: `" + user.id + "`", server.id);
       let options = {
         title: `User Joined`,
         user: user,
