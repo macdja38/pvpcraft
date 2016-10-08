@@ -538,8 +538,6 @@ module.exports = class moderationV2 {
         else {
           let before = (change.change === "allow" ? change.from.allowed : change.from.denied);
           let after = (change.change === "allow" ? change.to.allowed : change.to.denied);
-          console.log(before);
-          console.log(after);
           text += "**Channel override** on "
             + change.override.type
             + " " + newTargetName
