@@ -838,7 +838,7 @@ module.exports = class moderationV2 {
         title: `Voice Join`,
         user: user,
       };
-      this.sendHookedMessage("voice.join", options, `**User:** ${utils.fullNameB(user)} joined voice channel joined voice channel ${channel.name}`, channel.server.id);
+      this.sendHookedMessage("voice.join", options, `**User:** ${utils.fullNameB(user)} joined voice channel **${channel.name}**`, channel.server.id);
     } catch (err) {
       console.error(err);
       console.error(err.stack);
@@ -876,7 +876,7 @@ module.exports = class moderationV2 {
         title: `Voice Leave`,
         user: user,
       };
-      this.sendHookedMessage("voice.leave", options, `**User:** ${utils.fullNameB(user)} left voice channel joined voice channel ${channel.name}`, channel.server.id);
+      this.sendHookedMessage("voice.leave", options, `**User:** ${utils.fullNameB(user)} left voice channel ${channel.name}`, channel.server.id);
     } catch (err) {
       console.error(err);
       console.error(err.stack);
