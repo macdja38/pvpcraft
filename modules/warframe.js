@@ -462,8 +462,28 @@ module.exports = class Warframe {
     }
 
     else if ((command.commandnos === 'trial' || command.commandnos === 'raid' || command.commandnos === 'trialstat') && perms.check(msg, "warframe.trial")) {
-      this.client.sendMessage(msg.channel,
-        "Hek: \<http://tinyurl.com/qb752oj\> Nightmare: \<http://tinyurl.com/p8og6xf\> Jordas: \<http://tinyurl.com/prpebzh\>");
+      if (command.args.length < 1) {
+        this.client.sendMessage(msg.channel,
+          "Hek: \<http://tinyurl.com/qb752oj\> Nightmare: \<http://tinyurl.com/p8og6xf\> Jordas: \<http://tinyurl.com/prpebzh\>");
+        return true;
+      }
+      if (command.args[0].toLowerCase() === "help") {
+        msg.reply(`\`${command.prefix}${command.command} <jv | lor> <username>\``);
+        return true;
+      }
+      if (command.args.length < 2) {
+        this.client.sendMessage(msg.channel,
+          `​http://wf.christx.tw/search.php?id=${utils.clean(command.args[0])}`);
+        return true;
+      }
+      let place = command.args[0].toLowerCase();
+      let link;
+      if (place === "jv" || place === "jordasverdict") {
+        link = `https://wf.christx.tw/JordasSearch.php?id=${command.args[1]}`;
+      } else {
+        link = `https://wf.christx.tw/search.php?id=${command.args[1]}`;
+      }
+      this.client.sendMessage(msg.channel, link);
       return true;
     }
 
