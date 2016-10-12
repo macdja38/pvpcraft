@@ -100,6 +100,32 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
     console.log(`worker ${deadWorker.process.pid} died with code ${code} and signal ${signal}`);
     restartQueue.push(deadWorker);
   });
+
+  cluster.on('message', (worker, message)=> {
+    if (!message.hasOwnProperty("op")) {
+      return;
+    }
+    switch (message.op) {
+      case 1:
+        switch (message.command) {
+          case "restart":
+            if (message.global) {
+              workers.forEach((w, i) => {
+                setTimeout(()=> {
+                  console.log(`Killing worker ${w.id}`.red);
+                  w.kill();
+                }, i*10000);
+              })
+            } else {
+              console.log(`Killing worker ${worker.id}`.red);
+              worker.kill();
+            }
+            break;
+        }
+        break;
+    }
+    console.log(message);
+  });
 } else {
 
   var Discord = require("discord.js");
