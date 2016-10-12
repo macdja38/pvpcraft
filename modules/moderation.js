@@ -140,7 +140,7 @@ module.exports = class moderation {
           else {
             if (this.purgedMessages[channel.server.id] && Object.keys(this.purgedMessages[channel.server.id].messages).length > 0) return;
             this._slowSender.sendMessage(this.logging[channel.server.id], "An un-cached message in " +
-              utils.clean(channel.name) + " was deleted, this probably means the bot was either recently restarted on the message was old.");
+              utils.clean(channel.name) + " was deleted, this probably means the bot was either recently restarted or the message was old.");
 
           }
         }
