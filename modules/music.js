@@ -3,11 +3,6 @@
  */
 "use strict";
 
-var Utils = require('../lib/utils');
-var utils = new Utils();
-
-var color = require('colors');
-
 var Player = require('../lib/player.js');
 
 var key = require('../config/auth.json').youtubeApiKey || null;
@@ -71,7 +66,6 @@ module.exports = class music {
     }
 
     leaveUnused() {
-        console.log("Checking for empty channels.");
         Object.keys(this.boundChannels).forEach((id) => {
             let channel = this.boundChannels[id];
             if (channel.connection && channel.ready && channel.connection.playing !== true) {
