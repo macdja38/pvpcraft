@@ -330,10 +330,6 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
     console.error(error.stack);
   });
 
-  client.on('warn', (error)=> {
-    console.error(`Warning`, error);
-  });
-
   client.on('disconnect', ()=> {
     console.log("Disconnect".red);
     for (let i in moduleList) {
