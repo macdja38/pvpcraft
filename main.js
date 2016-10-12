@@ -331,12 +331,7 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
   });
 
   client.on('warn', (error)=> {
-    if (error === "channel doesn't exist even though SPEAKING expects them to") return;
-    if (raven) {
-      raven.captureException(error);
-    }
     console.error(`Warning`, error);
-    console.error(error.stack);
   });
 
   client.on('disconnect', ()=> {
