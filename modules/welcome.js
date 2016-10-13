@@ -20,6 +20,12 @@ module.exports = class welcome {
                     `announce it in <#77176186148499456>\n\`\`\`\nWelcome **${utils.clean(user.username)}**!\n\`\`\``
                 );
             }
+            if (server.id == "191052428228034560") {
+                this.client.sendMessage(server.channels.get("id", "215030357727117313"),
+                  `Hop to it @here, <@${user.id}> baru saja bergabung di ${utils.clean(server.name)}, umumkan di  <#191052428228034560>
+\`\`\`Selamat datang <@${user.id}> di **Warframe Indonesia Community**!\`\`\``
+                );
+            }
             var welcomeInfo = this.config.get("welcome", {}, {server: server.id});
             var pm = welcomeInfo.private;
             if (welcomeInfo.message) {
