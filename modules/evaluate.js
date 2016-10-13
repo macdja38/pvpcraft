@@ -69,7 +69,7 @@ module.exports = class evaluate {
           "\n- - - - - - - - - - - - - - - - - - -\n" +
           "In " + (t1 - t0) + " milliseconds!\n```";
         this.client.sendMessage(msg.channel, string).then(message => {
-          if (evaluated.then) {
+          if (evaluated && evaluated.then) {
             evaluated.catch((error) => {
               string = string.substring(0, string.length - 4  );
               string += "\n- - - - - Promise throws- - - - - - -\n";
