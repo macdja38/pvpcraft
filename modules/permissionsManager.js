@@ -122,7 +122,7 @@ module.exports = class permissionsManager {
         msg.reply(`${utils.clean(action)}ing node \`\`\`xl\n${node}\n\`\`\`\
 ${utils.clean(action)}ing permission node ${utils.clean(command.args[0])} in ${channel === "*" ? "all channels" : channel } for \
 ${target === "*" ? "everyone" : utils.clean(target)}`);
-        perms.set(node, action);
+        perms.set(utils.stripNull(node), action);
       }
       if (command.args[0] === "list") {
         msg.reply(this.url.replace(/\$id/, msg.server.id));
