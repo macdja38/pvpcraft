@@ -358,6 +358,7 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
       console.log(`-------------------`.magenta);
       console.log(`Ready as ${client.user.username}`.magenta);
       console.log(`Mention ${mention}`.magenta);
+      console.log(`On ${client.servers.length} Servers`.magenta);
       console.log(`Shard ${process.env.id} / ${process.env.shards}`.magenta);
       console.log(`-------------------`.magenta);
       if (!hasBeenReady) {
