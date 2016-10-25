@@ -37,9 +37,14 @@ module.exports = class music {
         }
     }
 
-    init(id, msg, command) {
+    init(id, msg, command, perms) {
         return new Promise((resolve, reject) =>
         {
+            if (!perms.checkUserChannel(msg.author, msg.author.voiceChannel, "music.initinto")) {
+              msg.reply("Sorry but you need the permission `music.initinto` in this voice channel to summon the bot here." +
+                " Please try another voice channel or contact a mod/admin if you believe this is in error.");
+              return true;
+            }
             this.boundChannels[id] = new Player({
                 client: this.client,
                 voiceChannel: msg.author.voiceChannel,
@@ -112,7 +117,7 @@ module.exports = class music {
             }
             if (msg.author.voiceChannel) {
                 if (msg.author.voiceChannel.server.id === msg.channel.server.id) {
-                    this.init(id, msg, command);
+                    this.init(id, msg, command, perms);
                     /*.catch((e)=>{
                         console.log("Bound thing finished maybe");
                         if (e) {
@@ -152,8 +157,14 @@ module.exports = class music {
             }
             if (!this.boundChannels.hasOwnProperty(id)) {
                 if (perms.check(msg, "music.init")) {
-                    this.init(id, msg, command).then(() => {
-                        this.boundChannels[id].enqueue(msg, command.args)
+                    this.init(id, msg, command, perms).then(() => {
+                        let queueCount = perms.check(msg, "music.songcount", {type: "number"});
+                        console.log("queueCount", queueCount);
+                        if (typeof(queueCount === "number")) {
+                            this.boundChannels[id].enqueue(msg, command.args, queueCount)
+                        } else {
+                            this.boundChannels[id].enqueue(msg, command.args)
+                        }
                     });
                 } else {
                     msg.reply(`Please have someone with the permission node \`music.init\` run ${command.prefix}init`)
@@ -163,7 +174,13 @@ module.exports = class music {
                     msg.reply("Connection is not ready");
                     return true;
                 }
-                this.boundChannels[id].enqueue(msg, command.args)
+                let queueCount = perms.check(msg, "music.songcount", {type: "number"});
+                console.log("queueCount", queueCount);
+                if (typeof(queueCount === "number")) {
+                    this.boundChannels[id].enqueue(msg, command.args, queueCount)
+                } else {
+                    this.boundChannels[id].enqueue(msg, command.args)
+                }
             }
 
 
