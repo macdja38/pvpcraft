@@ -219,7 +219,7 @@ module.exports = class Warframe {
   onCommand(msg, command, perms) {
     if ((command.commandnos === 'deal' || command.command === 'darvo') && perms.check(msg, "warframe.deal")) {
       worldState.get((state) => {
-        this.client.sendMessage(msg.channel, "```xl\n" + "Darvo is selling " +
+        this.client.sendMessage(msg.channel, "```haskell\n" + "Darvo is selling " +
           parseState.getName(state.DailyDeals[0].StoreItem) +
           " for " + state.DailyDeals[0].SalePrice +
           "p (" +
@@ -445,7 +445,7 @@ module.exports = class Warframe {
           return true;
         }
         if (state.VoidTraders[0].Manifest) {
-          var rep = "```xl\nBaro leaving " + state.VoidTraders[0].Node + " in " +
+          var rep = "```haskell\nBaro leaving " + state.VoidTraders[0].Node + " in " +
             utils.secondsToTime(state.VoidTraders[0].Expiry.sec - state.Time) + "\n";
           for (var item of state.VoidTraders[0].Manifest) {
             rep += "item: " + parseState.getName(item.ItemType) + " - price:" + item.PrimePrice + " ducats " + item.RegularPrice + "cr\n";
@@ -454,7 +454,7 @@ module.exports = class Warframe {
           this.client.sendMessage(msg.channel, rep);
         }
         else {
-          this.client.sendMessage(msg.channel, "```xl\nBaro appearing at " + state.VoidTraders[0].Node + " in " +
+          this.client.sendMessage(msg.channel, "```haskell\nBaro appearing at " + state.VoidTraders[0].Node + " in " +
             utils.secondsToTime(state.VoidTraders[0].Activation.sec - state.Time) + "\n```");
         }
       });
@@ -509,7 +509,7 @@ module.exports = class Warframe {
                         if (rewards != "") rewards += " + ";
                         if (alert.MissionInfo.missionReward.credits) rewards += alert.MissionInfo.missionReward.credits + " credits";
                     }
-                    alertStringArray.push("```\n" +
+                    alertStringArray.push("```haskell\n" +
                       parseState.getNodeName(alert.MissionInfo.location) + " levels " + alert.MissionInfo.minEnemyLevel + "-" + alert.MissionInfo.maxEnemyLevel + "\n" +
                       parseState.getFaction(alert.MissionInfo.faction) + " " + parseState.getMissionType(alert.MissionInfo.missionType) + "\n" +
                       rewards +
@@ -577,7 +577,7 @@ module.exports = class Warframe {
       worldState.get((state) => {
         if (state.Sorties[0]) {
           var boss = parseState.getBoss(state.Sorties[0].Variants[0].bossIndex);
-          var text = "```xl\n" + utils.secondsToTime(state.Sorties[0].Expiry.sec - state.Time) + " left to defeat " +
+          var text = "```haskell\n" + utils.secondsToTime(state.Sorties[0].Expiry.sec - state.Time) + " left to defeat " +
             boss.name + " of the " + boss.faction + "\n";
           for (var Variant of state.Sorties[0].Variants) {
             var Region = parseState.getRegion(Variant.regionIndex);
@@ -604,20 +604,20 @@ module.exports = class Warframe {
     }
 
     else if ((command.commandnos === 'damage' || command.command === 'element') && perms.check(msg, "warframe.damage")) {
-      this.client.sendMessage(msg.channel, "```xl\nDamage 2.0: https://pvpcraft.ca/wfd2.png Thanks for image Telkhines\n```");
+      this.client.sendMessage(msg.channel, "```haskell\nDamage 2.0: https://pvpcraft.ca/wfd2.png Thanks for image Telkhines\n```");
       return true;
     }
 
     else if ((command.command === 'primeaccess' || command.command === 'access') && perms.check(msg, "warframe.access")) {
       worldState.get((state) => {
-        var text = "```xl\n";
+        var text = "```haskell\n";
         for (var event of state.Events) {
           if (event.Messages[0].Message.toLowerCase().indexOf("access") > -1) {
             text += event.Messages[0].Message.toUpperCase()
               + " since " + utils.secondsToTime(state.Time - event.Date.sec) + " ago\n";
           }
         }
-        if (text != "```xl\n") {
+        if (text != "```haskell\n") {
           this.client.sendMessage(msg.channel, text + "```")
         }
       });
@@ -626,7 +626,7 @@ module.exports = class Warframe {
 
     else if ((command.commandnos === 'update') && perms.check(msg, "warframe.update")) {
       worldState.get((state) => {
-        var String = "```xl\n";
+        var String = "```haskell\n";
         var checks = ["update", "hotfix"];
         for (var event of state.Events) {
           for (var l of checks) {
@@ -637,7 +637,7 @@ module.exports = class Warframe {
             }
           }
         }
-        if (String !== "```xl\n") {
+        if (String !== "```haskell\n") {
           this.client.sendMessage(msg.channel, String + "```");
         }
       });
@@ -648,16 +648,16 @@ module.exports = class Warframe {
       command.commandnos === 'armourstat' || command.commandnos === 'armour') && perms.check(msg, "warframe.armor")) {
       (() => {
         if (command.args.length < 1 || command.args.length == 2 || command.args.length > 3) {
-          this.client.sendMessage(msg.channel, "```xl\npossible uses include:\n" +
+          this.client.sendMessage(msg.channel, "```haskell\npossible uses include:\n" +
             command.prefix + "armor (Base Armor) (Base Level) (Current Level) calculate armor and stats.\n" +
             command.prefix + "armor (Current Armor)\n```");
           return true;
         }
-        var text = "```xl\n";
+        var text = "```haskell\n";
         let armor;
         if (command.args.length == 3) {
           if ((parseInt(command.args[2]) - parseInt(command.args[1])) < 0) {
-            this.client.sendMessage(msg.channel, "```xl\nPlease check your input values\n```");
+            this.client.sendMessage(msg.channel, "```haskell\nPlease check your input values\n```");
             return true;
           }
           armor = parseInt(command.args[0]) * (1 + (Math.pow((parseInt(command.args[2]) - parseInt(command.args[1])), 1.75) / 200));
