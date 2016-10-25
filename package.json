@@ -1,17 +1,15 @@
 {
   "private": true,
   "dependencies": {
-    "body-parser": "~1.13.2",
     "chess": "^0.2.7",
     "cleverbot-node": "^0.2.2",
     "cli-table2": "^0.2.0",
     "colors": "^1.1.2",
     "deepmerge": "macdja38/deepmerge#patch-1",
     "discord.js": "hydrabolt/discord.js#v8",
-    "discordie": "^0.8.1",
     "git-rev": "^0.2.1",
     "google": "^2.0.0",
-    "google-images": "^1.0.0",
+    "google-images": "^2.0.0",
     "mc-ping-updated": "^0.1.0",
     "performance-now": "^0.2.0",
     "pokedex-promise-v2": "^2.0.0",
