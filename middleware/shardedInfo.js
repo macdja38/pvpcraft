@@ -21,6 +21,7 @@ module.exports = class shardedInfo {
     this._standardDB = new StandardDB("shards", this._getArray(parseInt(process.env.shards || 1)));
     this._ready = this._standardDB.reload();
     this.waitBeforeRestart = e.config.get("waitBeforeRestart", 120) * 1000;
+    this.logShardStatus = e.config.get("logShardStatus", false);
   }
 
   /**
@@ -39,7 +40,7 @@ module.exports = class shardedInfo {
     if (Date.now() - this._lastMessage > this.waitBeforeRestart) {
       process.exit(532);
     }
-    if (!this._ready || !this._ready.then) return;
+    if (!this._ready || !this._ready.then || !this.logShardStatus) return;
     this._ready.then(()=> {
       this._standardDB.set(null,
         {
