@@ -596,6 +596,7 @@ module.exports = class moderation {
           }
         }
         this.configDB.write({server: msg.channel.server.id, conflict: "replace"});
+        this.refreshMap();
         if (oldLog) {
           if (this.logging.hasOwnProperty(msg.channel.server.id)) {
             this.client.sendMessage(oldLog, utils.clean(`Moderation log changed to channel ${this.logging[msg.channel.server.id].name}`), (error)=> {
