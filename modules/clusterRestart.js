@@ -28,7 +28,7 @@ module.exports = class template {
   onCommand(msg, command, perms) {
     if (command.command === "restart" && this.fileConfig.get("permissions", {"permissions": {admins: []}}).admins.includes(msg.author.id)) {
       console.log(command);
-      process.send({op: 1, command: "restart", global: command.flags.indexOf("g") > -1});
+      process.send({op: 1, command: "restart", global: command.flags.indexOf("g") > -1, profile: command.flags.indexOf("p") > -1});
       return true;
     }
     return false;

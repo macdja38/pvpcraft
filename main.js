@@ -75,11 +75,13 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
   var restartQueue = [];
   let restartWorker = false;
   var workers = [];
+  let args = ["--prof"];
+  args.push(...process.argv.slice(2));
   console.log(`This is the master, starting ${shards} shards`.green);
   for (let i = startShard; i < (startShard + localShards); i++) {
     console.log(`Scheduling shard ${i}`);
     setTimeout(function () {
-      console.log(`Starting worker ${i} ${typeof(i)} ${typeof(shards)}`);
+      console.log(`Starting worker ${i} with settings`.green, cluster.settings);
       workers.push(cluster.fork({id: i, shards: shards}));
       lastRestart = Date.now();
     }, 7500 * (i - startShard));
@@ -92,7 +94,7 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
       let target = restartQueue.shift();
       id = workers.indexOf(target);
       workers[id] = cluster.fork({id: id + startShard, shards: shards});
-      console.log(`worker ${workers[id].process.pid} born`);
+      console.log(`worker ${workers[id].process.pid} born with settings`, cluster.settings);
     }
   }, 1000);
 
@@ -110,15 +112,31 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
         switch (message.command) {
           case "restart":
             if (message.global) {
+              if (message.profile) {
+                cluster.setupMaster({args, execArgv: ["--prof"]});
+              }
               workers.forEach((w, i) => {
                 setTimeout(()=> {
                   console.log(`Killing worker ${w.id}`.red);
                   w.kill();
                 }, i*10000);
-              })
+              });
+              if (message.profile) {
+                setTimeout(()=> {
+                  cluster.setupMaster({args: process.argv.slice(2), execArgv: []});
+                }, 240000);
+              }
             } else {
               console.log(`Killing worker ${worker.id}`.red);
+              if (message.profile) {
+                cluster.setupMaster({args, execArgv: ["--prof"]});
+              }
               worker.kill();
+              if (message.profile) {
+                setTimeout(()=> {
+                  cluster.setupMaster({args: process.argv.slice(2), execArgv: []});
+                }, 240000);
+              }
             }
             break;
         }
@@ -236,8 +254,8 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
       }
     }
     if (command) {
-      //console.log("Command Used".blue);
-      //console.dir(command, { depth: 2 });
+      // console.log("Command Used".blue);
+      // console.dir(command, { depth: 2 });
       var t2 = now();
       if (msg.channel.server) {
         //console.log("s:".blue + (process.env.id) + " s: ".magenta + msg.channel.server.name + " c: ".blue +
