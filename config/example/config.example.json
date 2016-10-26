@@ -11,6 +11,7 @@
   "localShards": 2,
   "shardStart": 0,
   "logShardStatus": false,
+  "waitBeforeRestart": 480,
   "website": {
     "port": 8000,
     "musicUrl": "https://pvpcraft.ca/pvpbotmusic/?server="
