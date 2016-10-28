@@ -15,6 +15,7 @@ var text;
 module.exports = class music {
     constructor(e) {
         this.client = e.client;
+        this.fileConfig = e.config;
         this.config = e.configDB;
         this.raven = e.raven;
         this.r = e.r;
@@ -274,7 +275,7 @@ module.exports = class music {
             if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
                 if (this.boundChannels[id].currentVideo) {
                     msg.channel.sendMessage("```xl\n" + this.boundChannels[id].prettyList()
-                        + "```\n" + this.config.get("website", {musicUrl: "https://bot.pvpcraft.ca/login/"}).musicUrl.replace(/\$id/, msg.server.id), (error)=> {
+                        + "```\n" + this.fileConfig.get("website", {musicUrl: "https://bot.pvpcraft.ca/login/"}).musicUrl.replace(/\$id/, msg.server.id), (error)=> {
                         if (error) {
                             console.log(error)
                         }
