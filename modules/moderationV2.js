@@ -458,6 +458,9 @@ module.exports = class moderationV2 {
   messageUpdated(message, newMessage) {
     try {
       if (!newMessage.server) return; //it's a pm so we don't log it.
+      if (this.tempServerIgnores.hasOwnProperty(newMessage.channel.id) && message.author.id === this.client.user.id) {
+        return;
+      }
       let server = newMessage.server;
       let options = {
         title: `Message Updated in <#${newMessage.channel.id}>`,
@@ -465,7 +468,7 @@ module.exports = class moderationV2 {
       };
       let changeThresh = this.configDB.get("changeThresh", this.configDB.get("changeThresh", 1), {server: server.id});
       if ((!message || message.content !== newMessage.content)) {
-        if (this.perms.checkUserChannel(newMessage.author, newMessage.channel, "msglog.whitelist.messageupdated")) return;
+        if (this.perms.checkUserChannel(newMessage.author, newMessage.channel, "msglog.whitelist.message.updated")) return;
         if (message) {
           if (utils.compare(message.content, newMessage.content) > changeThresh) {
             let string = `${utils.bubble(message.content)} to ${utils.bubble(newMessage.content)}`;
