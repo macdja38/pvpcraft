@@ -126,7 +126,12 @@ ${target === "*" ? "everyone" : utils.clean(target)}`);
         if (!isNaN(numValue)) {
           action = numValue;
         }
-        perms.set(utils.stripNull(node), action);
+        perms.set(utils.stripNull(node), action).then((result) => {
+          if (!result || result === undefined) {
+            msg.reply("Error: while saving: Database write could not be confirmed the permissions configuration," +
+              " will be cached locally but may reset in the future.")
+          }
+        }).catch(console.error);
       }
       if (command.args[0] === "list") {
         msg.reply(this.url.replace(/\$id/, msg.server.id));
