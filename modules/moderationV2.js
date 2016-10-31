@@ -53,6 +53,13 @@ module.exports = class moderationV2 {
     //this.refreshMap();
   }
 
+  /**
+   * Handles moderation commands
+   * @param msg
+   * @param command
+   * @param perms
+   * @returns {boolean}
+   */
   onCommand(msg, command, perms) {
     if (command.command === "kick" && perms.check(msg, "moderation.kick")) {
       if (command.args.length < 1) {
@@ -420,7 +427,7 @@ module.exports = class moderationV2 {
         let string;
         //if their's content log it.
         if (message.content) {
-          if (message.content.length > 144 || /[^0-9a-zA-Z\s\.!\?]/.test(message.content)) {
+          if (message.content.length > 144 || /[^0-9a-zA-Z\s.!?]/.test(message.content)) {
             string = utils.bubble(message.content);
           } else {
             string = "\n```diff\n-" + utils.clean(message.content) + "\n```";
@@ -895,6 +902,12 @@ module.exports = class moderationV2 {
   };
 };
 
+/**
+ * Finds the differences
+ * @param thing1
+ * @param thing2
+ * @returns {Array}
+ */
 function findOverrideChanges(thing1, thing2) {
   var changes = [];
   if (thing1.length >= thing2.length) {
