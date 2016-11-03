@@ -162,9 +162,9 @@ module.exports = class music {
                         let queueCount = perms.check(msg, "music.songcount", {type: "number"});
                         console.log("queueCount", queueCount);
                         if (typeof(queueCount === "number")) {
-                            this.boundChannels[id].enqueue(msg, command.args, queueCount)
+                            this.boundChannels[id].enqueue(msg, command.args, queueCount);
                         } else {
-                            this.boundChannels[id].enqueue(msg, command.args)
+                            this.boundChannels[id].enqueue(msg, command.args);
                         }
                     });
                 } else {
