@@ -13,7 +13,7 @@
     "mc-ping-updated": "^0.1.0",
     "performance-now": "^0.2.0",
     "pokedex-promise-v2": "^2.0.0",
-    "raven": "^0.11.0",
+    "raven": "^0.12.1",
     "request": "^2.7.0",
     "rethinkdb": "^2.3.1",
     "rethinkdbdash": "^2.3.23",
