@@ -6,7 +6,7 @@
     "cli-table2": "^0.2.0",
     "colors": "^1.1.2",
     "deepmerge": "macdja38/deepmerge#patch-1",
-    "discord.js": "hydrabolt/discord.js#v8",
+    "discord.js": "github:macdja38/discord.js#custom-music",
     "ebml": "^2.2.0",
     "git-rev": "^0.2.1",
     "google": "^2.0.0",
