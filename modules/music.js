@@ -193,6 +193,7 @@ module.exports = class music {
 
 
         if ((command.command === "next" || command.command === "skip") && (perms.check(msg, "music.voteskip") || perms.check(msg, "music.forceskip"))) {
+            console.log("Got Next");
             if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].ready) {
                 if (this.boundChannels[id].currentVideo) {
                     var index = command.args[0] ? parseInt(command.args[0]) - 1 : -1;
@@ -208,9 +209,10 @@ module.exports = class music {
                         msg.reply("Could not find the song");
                         return true;
                     }
+                    console.log("Next Stage 1");
                     if (video.votes.indexOf(msg.author.id) < 0 || isForced) {
                         video.votes.push(msg.author.id);
-                        if (video.votes.length > (this.boundChannels[id].connection.voiceChannel.members.length / 3) || isForced) {
+                        if (video.votes.length > (this.boundChannels[id].voice.members.length / 3) || isForced) {
                             msg.reply("Removing " + video.prettyPrint() + " From the queue");
                             if (index === -1) {
                                 this.boundChannels[id].skipSong();
@@ -220,7 +222,7 @@ module.exports = class music {
                             }
                         }
                         else {
-                            msg.reply(video.votes.length + " / " + (Math.floor(this.boundChannels[id].connection.voiceChannel.members.length / 3) + 1) + " votes needed to skip " +
+                            msg.reply(video.votes.length + " / " + (Math.floor(this.boundChannels[id].voice.members.length / 3) + 1) + " votes needed to skip " +
                                 video.prettyPrint());
                         }
                     }
