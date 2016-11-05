@@ -7,6 +7,7 @@
     "colors": "^1.1.2",
     "deepmerge": "macdja38/deepmerge#patch-1",
     "discord.js": "hydrabolt/discord.js#v8",
+    "ebml": "^2.2.0",
     "git-rev": "^0.2.1",
     "google": "^2.0.0",
     "google-images": "^2.0.0",
@@ -18,6 +19,7 @@
     "rethinkdb": "^2.3.1",
     "rethinkdbdash": "^2.3.23",
     "twit": "^2.2.4",
+    "ws": "^1.1.1",
     "youtube-dl": "^1.11.1",
     "ytdl-core": "^0.7.18"
   }
