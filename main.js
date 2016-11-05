@@ -484,7 +484,7 @@ process.on('MaxListenersExceededWarning', e => {
   if (this.raven) {
     this.raven.captureException(e);
   }
-})
+});
 
 function reload() {
   prefix = configDB.get("prefix", ["!!", "//", "/"], {server: "*"});
