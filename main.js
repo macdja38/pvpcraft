@@ -479,6 +479,13 @@ process.on('uncaughtException', (e)=> {
   console.error(e.stack);
 });
 
+process.on('MaxListenersExceededWarning', e => {
+  console.log(e);
+  if (this.raven) {
+    this.raven.captureException(e);
+  }
+})
+
 function reload() {
   prefix = configDB.get("prefix", ["!!", "//", "/"], {server: "*"});
   console.log("defaults");
