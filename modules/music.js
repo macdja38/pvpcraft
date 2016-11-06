@@ -260,7 +260,8 @@ module.exports = class music {
 
         if (command.command === "resume" && perms.check(msg, "music.resume")) {
             if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
-                if (this.boundChannels[id].connection.paused && this.boundChannels[id].connection.playingIntent) {
+              console.log("paused", this.connection.paused);
+                if (this.boundChannels[id].connection.paused) {
                     this.boundChannels[id].resume(msg);
                     msg.reply("Playback resumed.")
                 } else {
@@ -319,6 +320,7 @@ module.exports = class music {
         }
 
         if (command.commandnos === "volume") {
+          msg.reply("In order to vastly increase performance volume is currently disabled, This feature may be re-enabled in the future");
             if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
                 if (command.args[0] && perms.check(msg, "music.volume.set")) {
                     var volume = parseInt(command.args[0]);
