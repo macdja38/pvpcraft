@@ -16,6 +16,7 @@ module.exports = class shardedInfo {
     this._client = e.client;
     this._timer = false;
     this._ready = false;
+    this._modules = e.modules;
     this._lastMessage = Date.now();
     this._standardDB = false;
     this._standardDB = new StandardDB("shards", this._getArray(parseInt(process.env.shards || 1)));
@@ -45,8 +46,8 @@ module.exports = class shardedInfo {
       this._standardDB.set(null,
         {
           servers: this._client.servers.length,
-          connections: this._client.voiceConnections.length,
-          playing: this._client.voiceConnections.filter(c => c.playing).length,
+          connections: this._modules.find(m => m.commands.indexOf("play") >-1).module.boundChannels.length,
+          playing: this._modules.find(m => m.commands.indexOf("play") >-1).module.boundChannels.filter(c => c.connection && c.connection.playing).length,
           users: this._client.users.length,
           shards: parseInt(process.env.shards) || 1,
           lastUpdate: Date.now(),
