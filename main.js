@@ -521,7 +521,7 @@ function reload() {
   moduleList = [];
   var middlewares = config.get("middleware");
   var modules = config.get("modules");
-  let moduleVariables = {client, config, raven, auth, configDB, r, perms, feeds, messageSender, slowSender};
+  let moduleVariables = {client, config, raven, auth, configDB, r, perms, feeds, messageSender, slowSender, modules: moduleList, middleWares: middlewareList};
   for (let module in modules) {
     if (modules.hasOwnProperty(module)) {
       try {
