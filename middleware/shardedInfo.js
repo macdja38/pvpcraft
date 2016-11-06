@@ -43,11 +43,18 @@ module.exports = class shardedInfo {
     }
     if (!this._ready || !this._ready.then || !this.logShardStatus) return;
     this._ready.then(()=> {
+      let musicModule = this._modules.find(m => m.commands.indexOf("play") > -1);
+      let connectionDiscordsIds = 0;
+      let connectionBoundChannels = 0;
+      if (musicModule) {
+        connectionDiscordsIds = Object.keys(musicModule.module.boundChannels);
+        connectionBoundChannels = connectionDiscordsIds.map(id => musicModule.module.boundChannels[id]);
+      }
       this._standardDB.set(null,
         {
           servers: this._client.servers.length,
-          connections: this._modules.find(m => m.commands.indexOf("play") >-1).module.boundChannels.length,
-          playing: this._modules.find(m => m.commands.indexOf("play") >-1).module.boundChannels.filter(c => c.connection && c.connection.playing).length,
+          connections: connectionDiscordsIds.length,
+          playing: connectionBoundChannels.filter(c => c.connection.playing).length,
           users: this._client.users.length,
           shards: parseInt(process.env.shards) || 1,
           lastUpdate: Date.now(),
