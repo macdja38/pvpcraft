@@ -244,6 +244,8 @@ module.exports = class music {
 
 
         if (command.command === "pause" && perms.check(msg, "music.pause")) {
+            msg.reply("Pausing has been temporarily disabled to vastly improve voice performance, expect to see this feature return soon.");
+            return true;
             if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
                 if (this.boundChannels[id].connection.playing) {
                     this.boundChannels[id].pause();
@@ -259,6 +261,8 @@ module.exports = class music {
 
 
         if (command.command === "resume" && perms.check(msg, "music.resume")) {
+            msg.reply("Pausing has been temporarily disabled to vastly improve voice performance, expect to see this feature return soon.");
+            return true;
             if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
               console.log("paused", this.connection.paused);
                 if (this.boundChannels[id].connection.paused) {
