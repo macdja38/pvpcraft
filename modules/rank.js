@@ -138,65 +138,63 @@ module.exports = class rank {
                 }
                 role = msg.server.roles.get("id", roles[rankToJoin]);
                 if (role) {
-                    this.client.addMemberToRole(msg.author, role, (error)=> {
+                    this.client.addMemberToRole(msg.author, role).then(()=>{
+                        let logChannel = this.config.get("msgLog", false, {server: msg.server.id});
+                        if (logChannel) {
+                            logChannel = msg.server.channels.get("id", logChannel);
+                            if (logChannel) {
+                                this.client.sendMessage(logChannel, `${utils.removeBlocks(msg.author.username)} added themselves to ${utils.removeBlocks(role.name)}!`)
+                            }
+                        }
+                        msg.reply(":thumbsup::skin-tone-2:");
+                    }).catch((error)=> {
                         if (error) {
                             let logChannel = this.config.get("msgLog", false, {server: msg.server.id});
                             if (logChannel) {
                                 logChannel = msg.server.channels.get("id", logChannel);
                                 if (logChannel) {
-                                    this.client.sendMessage(logChannel, `Error ${error} promoting ${utils.removeBlocks(msg.author.username)} try redefining your rank and making sure the bot has enough permissions.`).catch(console.error)
-                                } else {
-                                    msg.reply(`Error ${error} promoting ${utils.removeBlocks(msg.author.username)} try redefining your rank and making sure the bot has enough permissions.`)
+                                    this.client.sendMessage(logChannel, `${error} encountered when promoting ${utils.removeBlocks(msg.author.username)} try redefining your rank and making sure the bot has enough permissions.`).catch(console.error)
                                 }
                             }
-                        } else {
-                            let logChannel = this.config.get("msgLog", false, {server: msg.server.id});
-                            if (logChannel) {
-                                logChannel = msg.server.channels.get("id", logChannel);
-                                if (logChannel) {
-                                    this.client.sendMessage(logChannel, `${utils.removeBlocks(msg.author.username)} added themselves to ${utils.removeBlocks(role.name)}!`)
-                                }
-                            }
-                            msg.reply(":thumbsup::skin-tone-2:");
+                            msg.reply(`Error ${error} promoting ${utils.removeBlocks(msg.author.username)} try redefining your rank and making sure the bot has enough permissions.`)
                         }
-                    })
+                    });
                 } else {
                     msg.reply(`Role could not be found, have an administrator use \`${command.prefix}rank add\` to update it.`);
                 }
                 return true;
             }
             if (command.args[0] === "leave" && perms.check(msg, "rank.leave.use")) {
-                let roles = this.config.get("roles", command.args[1], {server: msg.server.id});
-                if (!command.args[1] || !roles[command.args[1]]) {
+                if (!command.args[1]) {
                     msg.reply(`Please supply a rank to leave using \`${command.prefix}rank leave \<rank\>\`, for a list of ranks use \`${command.prefix}rank list\``);
                     return true;
                 }
-                roles = this.config.get("roles", command.args[1].toLowerCase(), {server: msg.server.id});
-                if (!perms.check(msg, `rank.leave.${command.args[1]}`)) {
-                    msg.reply(`You do not have perms to join this rank for a list of ranks use \`${command.prefix}rank list\``);
+                let rankToLeave = command.args[1].toLowerCase();
+                if (rankToLeave[0] == "+" || rankToLeave[0] == "-") {
+                    rankToLeave = rankToLeave.substring(1);
+                }
+                let roles = this.config.get("roles", rankToLeave, {server: msg.server.id});
+                if (!roles[rankToLeave]) {
+                    msg.reply(`Invalid rank, for a list of ranks use \`${command.prefix}rank list\``);
                     return true;
                 }
-                role = msg.server.roles.get("id", roles[command.args[1]]);
+                if (!perms.check(msg, `rank.leave.${rankToLeave}`)) {
+                    msg.reply(`You do not have perms to leave this rank for a list of ranks use \`${command.prefix}rank list\``);
+                    return true;
+                }
+                role = msg.server.roles.get("id", roles[rankToLeave]);
                 if (role) {
-                    this.client.removeMemberFromRole(msg.author, role, (error)=> {
-                        if (error) {
-                            let logChannel = this.config.get("msgLog", false, {server: msg.server.id});
+                    this.client.removeMemberFromRole(msg.author, role).then(() => {
+                        let logChannel = this.config.get("msgLog", false, {server: msg.server.id});
+                        if (logChannel) {
+                            logChannel = msg.server.channels.get("id", logChannel);
                             if (logChannel) {
-                                logChannel = msg.server.channels.get("id", logChannel);
-                                if (logChannel) {
-                                    this.client.sendMessage(logChannel, `Error ${error} demoting ${utils.removeBlocks(msg.author.username)} try redefining your rank and making sure the bot has enough permissions.`).catch(console.error)
-                                }
+                                this.client.sendMessage(logChannel, `${utils.removeBlocks(msg.author.username)} removed themselves from ${utils.removeBlocks(role.name)}!`)
                             }
-                        } else {
-                            let logChannel = this.config.get("msgLog", false, {server: msg.server.id});
-                            if (logChannel) {
-                                logChannel = msg.server.channels.get("id", logChannel);
-                                if (logChannel) {
-                                    this.client.sendMessage(logChannel, `${utils.removeBlocks(msg.author.username)} removed themselves from ${utils.removeBlocks(role.name)}!`)
-                                }
-                            }
-                            msg.reply(":thumbsup::skin-tone-2:");
                         }
+                        msg.reply(":thumbsup::skin-tone-2:");
+                    }).catch((error) => {
+                        this.client.sendMessage(msg.channel, `${error} demoting ${utils.removeBlocks(msg.author.username)} try redefining your rank and making sure the bot has enough permissions.`).catch(console.error)
                     })
                 } else {
                     msg.reply(`Role could not be found, have an administrator use \`${command.prefix}rank add\` to update it.`);
