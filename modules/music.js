@@ -143,6 +143,8 @@ module.exports = class music {
                 this.boundChannels[id].destroy();
                 msg.reply("Disconnecting from voice chat and unbinding from text chat.");
                 delete this.boundChannels[id];
+            } else {
+                msg.reply("Not bound.");
             }
             return true;
         }
