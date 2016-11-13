@@ -222,7 +222,27 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
     if (msg.author.id === "85257659694993408" && msg.content.indexOf("crashnow") > 0) {
       process.exit(0);
     }
-    var command = Parse.command(l, msg, {"allowMention": id, "botName": name});
+    try {
+      var command = Parse.command(l, msg, {"allowMention": id, "botName": name});
+    } catch (error) {
+      if (raven) {
+        let extra = {
+          channel: msg.channel.id,
+          channel_name: msg.channel.name,
+          command: command,
+          msg: msg.content
+        };
+        if (msg.hasOwnProperty("server")) {
+          extra.server = msg.server.id;
+          extra.server_name = msg.server.name;
+        }
+        raven.captureError(error, {
+          user: msg.author,
+          extra,
+        });
+      }
+      msg.reply("Sorry about that an unknown problem occurred processing your command, an error report has been logged and we are looking into the problem.")
+    }
     //Reload command starts here.
     if (command.command === "reload" && msg.author.id === "85257659694993408") {
       if (command.flags.indexOf("a") > -1) {
