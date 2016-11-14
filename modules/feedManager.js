@@ -38,7 +38,7 @@ module.exports = class feedManager {
     //log that the module was called.
     if(!msg.server) return;
     //check if this is a command we should handle and if the user has permissions to execute it.
-    if (command.commandnos === "feed" && perms.check(msg, "feed.manage")) {
+    if (command.commandnos === "feed" && perms.check(msg, "feeds.manage")) {
       let channel = command.channel;
       if(!channel) {
         channel = msg.channel;
@@ -66,7 +66,7 @@ module.exports = class feedManager {
       return true;
     }
 
-    if (command.command === "find" && perms.check(msg, "feed.find")) {
+    if (command.command === "find" && perms.check(msg, "feeds.find")) {
       let server = msg.server.id;
       if(!command.args[0]) {
         msg.reply(`Usage ${command.prefix}${command.command} <node>`)
