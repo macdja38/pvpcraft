@@ -27,7 +27,7 @@ module.exports = class permissionsManager {
 
       //if no command is supplied supply help url
       if (command.args.length === 0) {
-        msg.reply("You need help! visit \<https://pvpcraft.ca/pvpbot\> for more info");
+        msg.reply("You need help! visit \<https://bot.pvpcraft.ca/docs\> for more info");
         return true;
       }
       if (!msg.channel.server) {
