@@ -1,25 +1,36 @@
 /**
  * Created by macdja38 on 2016-04-17.
  */
+/* var module = require('module');
+module.wrapper[0] += '"use strict";';
+Object.freeze(module.wrap);
+*/
 "use strict";
 const cluster = require('cluster');
 global.cluster = cluster;
 
-var Configs = require("./lib/config.js");
-var config = new Configs("config");
-var auth = new Configs("auth");
+let Configs = require("./lib/config.js");
+let config = new Configs("config");
+let auth = new Configs("auth");
 
-var git = require('git-rev');
+let trackingId = auth.get("googleAnalyticsId", "trackingId");
+if (trackingId === "trackingId") {
+  trackingId = false;
+}
 
-var ConfigsDB = require("./lib/configDB.js");
-var configDB;
-var permsDB;
-var perms;
+let analytics = new (require('./lib/analytics'))(trackingId);
 
-var r;
+let git = require('git-rev');
 
-var raven;
-var ravenClient;
+let ConfigsDB = require("./lib/configDB.js");
+let configDB;
+let permsDB;
+let perms;
+
+let r;
+
+let raven;
+let ravenClient;
 
 if (auth.get("sentryURL", "") != "") {
   console.log("Sentry Started".yellow);
@@ -59,7 +70,7 @@ function loadConfigs() {
     configDB = new ConfigsDB("servers", client);
     global.configDB = configDB;
     permsDB = new ConfigsDB("permissions", client);
-    perms = new Permissions(permsDB);
+    perms = new Permissions(permsDB, analytics);
     Promise.all([configDB.reload(), permsDB.reload()]).then(()=> {
       resolve(true);
     }).catch(console.error);
@@ -291,6 +302,7 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
               return;
             }
           } catch (error) {
+            console.log(error);
             if (raven) {
               let extra = {
                 mod: mod,

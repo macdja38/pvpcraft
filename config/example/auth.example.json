@@ -7,5 +7,6 @@
     "host": "localhost",
     "port": "28015"
   },
-  "sentryURL": ""
+  "sentryURL": "",
+  "googleAnalyticsId": "trackingId"
 }
