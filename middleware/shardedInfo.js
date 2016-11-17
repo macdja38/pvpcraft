@@ -15,14 +15,17 @@ module.exports = class shardedInfo {
     this._auth = e.auth;
     this._client = e.client;
     this._timer = false;
+    this._raven = e.raven;
     this._ready = false;
     this._modules = e.modules;
     this._lastMessage = Date.now();
-    this._standardDB = false;
     this._standardDB = new StandardDB("shards", this._getArray(parseInt(process.env.shards || 1)));
     this._ready = this._standardDB.reload();
     this.waitBeforeRestart = e.config.get("waitBeforeRestart", 120) * 1000;
     this.logShardStatus = e.config.get("logShardStatus", false);
+    this._joinLeaveHooks = e.config.get("joinLeaveHooks", false);
+    this._pmHooks = e.config.get("pmHooks", false);
+    this._admins = e.config.get("permissions", {"admins": []}).admins;
   }
 
   /**
@@ -70,7 +73,7 @@ module.exports = class shardedInfo {
     if (this._timer) clearInterval(this._timer);
   }
 
-  onServerCreated() {
+  onServerCreated(server) {
     if (!this._standardDB.data) return;
     let serverData = [];
     for (let key in this._standardDB.data) {
@@ -86,10 +89,66 @@ module.exports = class shardedInfo {
     }
     this.updateCarbonitex(serverCount);
     this.updateAbal(serverCount);
+    this.logServerChange(server, "Added to");
   }
 
-  onMessage() {
+  onServerDeleted(server) {
+    this.logServerChange(server, "Removed from");
+  }
+
+  logServerChange(server, type) { // "Added to" or "Removed from"
+    try {
+      let attachment = {
+        footer: process.env.shardId || "Sharding not active",
+        footerIcon: this._client.user.avatarURL,
+        ts: Date.now() / 1000
+      };
+      if (server.hasOwnProperty("name")) {
+        attachment.author_name = server.name;
+      }
+      attachment.author_link = `https://bot.pvpcraft.ca/server/${server.id}/`;
+      if (server.hasOwnProperty("iconURL")) {
+        attachment.author_icon = server.iconURL;
+      }
+      attachment.title = `${type} ${server.name}`;
+      attachment.color = type === "Added to" ? "#00ff00" : "#ff0000";
+      let hookOptions = {
+        username: this._client.user.username,
+        text: "",
+        icon_url: this._client.user.avatarURL,
+        slack: true,
+      };
+      hookOptions.attachments = [attachment];
+      this._joinLeaveHooks.forEach(hook => this._client.sendWebhookMessage(hook, "", hookOptions))
+    } catch(error) {
+      this._raven.captureException(error);
+    }
+  }
+
+  onMessage(message) {
     this._lastMessage = Date.now();
+    try {
+      if (!message.server && this._admins.indexOf(message.author.id) < 0) {
+        let attachment = {text: message.content, ts: Date.now() / 1000};
+        if (message.hasOwnProperty("author")) {
+          attachment.author_name = message.author.username;
+          attachment.author_link = `https://bot.pvpcraft.ca/user/${message.author.id}`;
+          attachment.author_icon = message.author.avatarURL;
+        }
+        attachment.title = message.hasOwnProperty("author") ? `<@${message.author.id}> | Private Message` : "Private Message";
+        attachment.color = "#00ff00";
+        let hookOptions = {
+          username: this._client.user.username,
+          text: "",
+          icon_url: this._client.user.avatarURL,
+          slack: true,
+        };
+        hookOptions.attachments = [attachment];
+        this._pmHooks.forEach(hook => this._client.sendWebhookMessage(hook, "", hookOptions))
+      }
+    } catch(error) {
+      this._raven.captureException(error);
+    }
   }
 
   updateAbal(servers) {

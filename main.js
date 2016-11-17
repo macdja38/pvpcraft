@@ -471,6 +471,43 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
     }).catch(console.error)
   });
 
+  //When bot is added to a new server tell carbon about it.
+  client.on('serverDeleted', (server)=> {
+    for (let middleware of middlewareList) {
+      if (middleware.ware) {
+        try {
+          if (middleware.ware.onServerDeleted) {
+            console.log("Notifying a middleware a server was Deleted!".green);
+            middleware.ware.onServerDeleted(server);
+          }
+        } catch (error) {
+          if (raven) {
+            raven.captureException(error);
+          } else {
+            console.log(error);
+          }
+        }
+      }
+    }
+    for (let module of moduleList) {
+      if (module.module) {
+        try {
+          if (module.module.onServerDeleted) {
+            console.log("Notifying a module a server was Deleted!".green);
+            module.module.onServerDeleted(server);
+          }
+        } catch (error) {
+          if (raven) {
+            raven.captureException(error);
+          } else {
+            console.log(error);
+          }
+        }
+      }
+
+    }
+  });
+
 
   /**
    * logout on SIGINT
