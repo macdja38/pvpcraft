@@ -79,7 +79,7 @@ module.exports = class moderationV2 {
           user = msg.mentions[0];
         } else {
           if (!isNaN(parseInt(command.args[0]))) {
-            possibleId = parseInt(command.args[0]);
+            possibleId = command.args[0];
           }
         }
       } else {
@@ -124,14 +124,16 @@ module.exports = class moderationV2 {
       if (reason) {
         text += `\n**Reason:** ${utils.clean(reason)}`;
       }
-      msg.server.banMember(user || possibleId, command.options.hasOwnProperty("time") ? command.options.time : 0)
+      msg.server.banMember(user || possibleId, command.options.hasOwnProperty("time") ? command.options.time : 1)
         .then(() => {
-          this.sendHookedMessage("action.ban", options, text, msg.server.id);
+          return this.sendHookedMessage("action.ban", options, text, msg.server.id);
         })
-        .catch(() => {
-          options.title += "**FAILED bot may not have sufficient permissions**";
+        .catch((error) => {
+          options.title += " **FAILED bot may not have sufficient permissions**";
+          text += `/nError: ${error}`;
           this.sendHookedMessage("action.ban", options, text, msg.server.id);
-        })
+        });
+      msg.reply(`${user || possibleId} has been banned!`);
     }
 
     if (command.command === "purge" && perms.check(msg, "moderation.tools.purge")) {
