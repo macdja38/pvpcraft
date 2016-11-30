@@ -73,7 +73,7 @@ module.exports = class moderationV2 {
   }
 
   getCommands() {
-    return ["purge", "ban", "kick"];
+    return ["purge", "ban", "kick", "unban"];
   }
 
   onServerCreated() {
@@ -136,19 +136,7 @@ module.exports = class moderationV2 {
     if (reason) {
       text += `\n**Reason:** ${utils.clean(reason)}`;
     }
-    let actionFunction;
-    switch (action) {
-      case "ban":
-        actionFunction = msg.server.banMember;
-        break;
-      case "unban":
-        actionFunction = msg.server.unbanMember;
-        break;
-      case "kick":
-        actionFunction = msg.server.kickMember;
-        break
-    }
-    actionFunction(user || possibleId, command.options.hasOwnProperty("time") ? command.options.time : 1)
+    msg.server[`${action}Member`](user || possibleId, command.options.hasOwnProperty("time") ? command.options.time : 1)
       .then(() => {
         return this.sendHookedMessage(`action.${action}`, options, text, msg.server.id);
       })
