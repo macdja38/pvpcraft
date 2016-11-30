@@ -2,14 +2,13 @@
  * Created by macdja38 on 2016-08-23.
  */
 
-var Utils = require('../lib/utils');
-var utils = new Utils();
+let Utils = require('../lib/utils');
+let utils = new Utils();
 
 
+let colors = require('colors');
 
-var colors = require('colors');
-
-let colorMap = {
+/* let colorMap = {
   "message.deleted": "#FFB600",
   "message.updated": "#FFFF00",
   "channel.created": "#CC0000",
@@ -27,6 +26,34 @@ let colorMap = {
   "role.created": "#FF0000",
   "role.updated": "#FF0000",
   "role.deleted": "#FF0000",
+  "action.kick": "#04ff00",
+  "action.ban": "#009966",
+  "action.unban": "#009966"
+}; */
+
+// 00 3F 7F BE FF
+
+let colorMap = {
+  "voice.join": "#003FE2",
+  "voice.leave": "#00BEE2",
+  "message.deleted": "#3F0000",
+  "message.updated": "#3F7F00",
+  "member.updated": "#3F7F00",
+  "member.added": "#7FFF00",
+  "member.removed": "#7F3F00",
+  "member.banned": "#7F0000",
+  "member.unbanned": "#7FBE00",
+  "user": "#117F00",
+  "channel.created": "#BEFF00",
+  "channel.updated": "#BE7F00",
+  "channel.deleted": "#BE0000",
+  "role.created": "#FFFF00",
+  "role.updated": "#FF7F00",
+  "role.deleted": "#FF0000",
+  "server.updated": "#FF7F00",
+  "action.kick": "#BE3F3F",
+  "action.ban": "#BE003F",
+  "action.unban": "#BEBE3F"
 };
 
 //this.logging = {"serverId": {"userJoin": ["channelId"], "msgDelete": ["channelId"]}};
@@ -53,6 +80,86 @@ module.exports = class moderationV2 {
     //this.refreshMap();
   }
 
+  moderationAction(msg, command, perms, action) {
+    // locate user
+    let user;
+    let possibleId;
+    if (command.user) {
+      user = command.user;
+    } else if (command.args.length > 0) {
+      if (msg.mentions.length > 0) {
+        user = msg.mentions[0];
+      } else {
+        if (!isNaN(parseInt(command.args[0]))) {
+          possibleId = command.args[0];
+        }
+      }
+    } else {
+      msg.reply(`Who do you want to ${action}? ${command.prefix}${action} <user>`);
+      return true;
+    }
+    if (!user && !possibleId) {
+      msg.reply(`Sorry, user could not be located or their id was not a number. Please try a valid mention or id`);
+      return true;
+    }
+
+    // check to see if user has ban immunity
+    if (user && perms.checkUserChannel(user, msg.channel, `moderation.immunity.${action}`)) {
+      msg.reply(`Sorry you do not have permission to ${action} this user`);
+      return true;
+    }
+
+    if (possibleId && perms.checkUserChannel({id: possibleId}, msg.channel, `moderation.immunity.${action}`)) {
+      msg.reply("Sorry but you don't have permission to ban the user this id belongs to.");
+      return true;
+    }
+
+    let reason = command.options.reason;
+    if (!perms.check(msg, "moderation.reasonless")) {
+      if (!reason) {
+        msg.reply(`Sorry but you do not have permission to ban without providing a reason eg \`${command.prefix}${action} --user @devCodex --reason Annoying\``);
+        return true;
+      }
+    }
+
+    let options = {
+      user: msg.author,
+    };
+    let text = `**Moderator:** <@${msg.author.id}>`;
+    if (user) {
+      options.title = `Moderator ${action}ned User <@${user.id}>`;
+      text += `\n**User:** ${utils.fullNameB(user)} | <@${user.id}>`;
+    } else {
+      options.title = `Moderator ${action}ned Id <@${possibleId}>`;
+      text += `\n**User:** <@${possibleId}>`;
+    }
+    if (reason) {
+      text += `\n**Reason:** ${utils.clean(reason)}`;
+    }
+    let actionFunction;
+    switch (action) {
+      case "ban":
+        actionFunction = msg.server.banMember;
+        break;
+      case "unban":
+        actionFunction = msg.server.unbanMember;
+        break;
+      case "kick":
+        actionFunction = msg.server.kickMember;
+        break
+    }
+    actionFunction(user || possibleId, command.options.hasOwnProperty("time") ? command.options.time : 1)
+      .then(() => {
+        return this.sendHookedMessage(`action.${action}`, options, text, msg.server.id);
+      })
+      .catch((error) => {
+        options.title += " **FAILED bot may not have sufficient permissions**";
+        text += `/nError: ${error}`;
+        this.sendHookedMessage(`action.${action}`, options, text, msg.server.id);
+      });
+    msg.reply(`${user || possibleId} has been ${action}ned!`);
+  }
+
   /**
    * Handles moderation commands
    * @param msg
@@ -61,79 +168,19 @@ module.exports = class moderationV2 {
    * @returns {boolean}
    */
   onCommand(msg, command, perms) {
-    if (command.command === "kick" && perms.check(msg, "moderation.kick")) {
-      if (command.args.length < 1) {
-        msg.reply(`Who do you want to ban? ${command.prefix}ban <user>`);
-      }
+    if (command.command === "ban" && perms.check(msg, "moderation.ban")) {
+      this.moderationAction(msg, command, perms, "ban");
+      return true;
     }
 
-    if (command.command === "ban" && perms.check(msg, "moderation.ban")) {
+    if (command.command === "kick" && perms.check(msg, "moderation.kick")) {
+      this.moderationAction(msg, command, perms, "kick");
+      return true;
+    }
 
-      // locate user
-      let user;
-      let possibleId;
-      if (command.user) {
-        user = command.user;
-      } else if(command.args.length > 0) {
-        if (msg.mentions.length > 0) {
-          user = msg.mentions[0];
-        } else {
-          if (!isNaN(parseInt(command.args[0]))) {
-            possibleId = command.args[0];
-          }
-        }
-      } else {
-        msg.reply(`Who do you want to ban? ${command.prefix}ban <user>`);
-        return true;
-      }
-      if (!user && !possibleId) {
-        msg.reply(`Sorry, user could not be located or their id was not a number. Please try a valid mention or id`);
-        return true;
-      }
-
-      // check to see if user has ban immunity
-      if (user && perms.checkUserChannel(user, msg.channel, "moderation.immunity.ban")) {
-        msg.reply("Sorry you do not have permission to ban this user");
-        return true;
-      }
-
-      if (possibleId && perms.checkUserChannel({id: possibleId}, msg.channel, "moderation.immunity.ban")) {
-        msg.reply("Sorry but you don't have permission to ban the user this id belongs to.");
-        return true;
-      }
-
-      let reason = command.options.reason;
-      if (!perms.check(msg, "moderation.reasonless")) {
-        if (!reason) {
-          msg.reply(`Sorry but you do not have permission to ban without providing a reason eg \`${command.prefix}ban --user @devCodex --reason Annoying\``);
-          return true;
-        }
-      }
-
-      let options = {
-        user: msg.author,
-      };
-      let text = `**Moderator:** <@${msg.author.id}>`;
-      if (user) {
-        options.title = `Moderator Banned User <@${user.id}>`;
-        text += `\n**User:** ${utils.fullNameB(user)} | <@${user.id}>`;
-      } else {
-        options.title = `Moderator Banned Id <@${possibleId}>`;
-        text += `\n**User:** <@${possibleId}>`;
-      }
-      if (reason) {
-        text += `\n**Reason:** ${utils.clean(reason)}`;
-      }
-      msg.server.banMember(user || possibleId, command.options.hasOwnProperty("time") ? command.options.time : 1)
-        .then(() => {
-          return this.sendHookedMessage("action.ban", options, text, msg.server.id);
-        })
-        .catch((error) => {
-          options.title += " **FAILED bot may not have sufficient permissions**";
-          text += `/nError: ${error}`;
-          this.sendHookedMessage("action.ban", options, text, msg.server.id);
-        });
-      msg.reply(`${user || possibleId} has been banned!`);
+    if (command.command === "unban" && perms.check(msg, "moderation.unban")) {
+      this.moderationAction(msg, command, perms, "unban");
+      return true;
     }
 
     if (command.command === "purge" && perms.check(msg, "moderation.tools.purge")) {
@@ -188,7 +235,7 @@ module.exports = class moderationV2 {
         }
       };
 
-      this.fetchMessages(channel, length, options, (messages, error)=> {
+      this.fetchMessages(channel, length, options, (messages, error) => {
         if (error) {
           errorMessage = error;
           done = true;
@@ -203,12 +250,12 @@ module.exports = class moderationV2 {
           }
         }
       });
-      purger = setInterval(()=> {
+      purger = setInterval(() => {
         if (purgeQueue.length > 0 && !errorMessage) {
           let messagesToPurge = purgeQueue.splice(0, 100);
-          this.client.deleteMessages(messagesToPurge).then(()=> {
+          this.client.deleteMessages(messagesToPurge).then(() => {
             totalPurged += messagesToPurge.length;
-          }).catch((error)=> {
+          }).catch((error) => {
             if (error.response.body.code === 50013) {
               errorMessage = error.response.body.message;
               done = true;
@@ -226,7 +273,7 @@ module.exports = class moderationV2 {
         }
       }, 1100);
 
-      let updateStatusFunction = ()=> {
+      let updateStatusFunction = () => {
         if (done && purgeQueue.length === 0) {
           if (!errorMessage) {
             updateStatus(this.getStatus(totalPurged, totalFetched, length));
@@ -268,13 +315,13 @@ module.exports = class moderationV2 {
     this.tempServerIgnores = count;
   }
 
-  fetchMessages(channel, count, options={}, cb) {
+  fetchMessages(channel, count, options = {}, cb) {
     console.dir(options, {depth: 0});
-    this.client.getChannelLogs(channel, Math.min(100, count), options.hasOwnProperty("before") ? {before: options.before} : {}).then((newMessages)=> {
+    this.client.getChannelLogs(channel, Math.min(100, count), options.hasOwnProperty("before") ? {before: options.before} : {}).then((newMessages) => {
       let newMessagesLength = newMessages.length;
-      let highestMessage = newMessages[newMessages.length-1];
+      let highestMessage = newMessages[newMessages.length - 1];
       if (options.hasOwnProperty("after")) {
-        let index = newMessages.findIndex((m)=> m.id === options.after);
+        let index = newMessages.findIndex((m) => m.id === options.after);
         if (index > -1) {
           count = 0;
           newMessages.splice(index);
@@ -288,7 +335,7 @@ module.exports = class moderationV2 {
       cb(newMessages, false);
       if (count > 0 && newMessagesLength === 100) {
         options.before = highestMessage;
-        process.nextTick(()=> {
+        process.nextTick(() => {
           this.fetchMessages(channel, count, options, cb)
         });
       } else {
@@ -298,7 +345,7 @@ module.exports = class moderationV2 {
           cb(false, 'Permission "Read Messages" required.')
         }
       }
-    }).catch((error)=> {
+    }).catch((error) => {
       cb(false, error);
     })
   }
@@ -373,10 +420,10 @@ module.exports = class moderationV2 {
    */
 
   sendHookedMessage(eventName, options, text, serverId) {
-    this.feeds.find(`moderation.${eventName}`, serverId).forEach((channel)=> {
+    this.feeds.find(`moderation.${eventName}`, serverId).forEach((channel) => {
       channel = this.client.channels.get("id", channel);
       if (channel) {
-        let attachment = {text, ts: Date.now()/1000};
+        let attachment = {text, ts: Date.now() / 1000};
         if (options.hasOwnProperty("user")) {
           attachment.author_name = options.user.username;
           attachment.author_icon = options.user.avatarURL;
@@ -401,10 +448,10 @@ module.exports = class moderationV2 {
   }
 
   sendMessage(eventName, message, serverId) {
-    this.feeds.find(`moderation.${eventName}`, serverId).forEach((channel)=> {
+    this.feeds.find(`moderation.${eventName}`, serverId).forEach((channel) => {
       channel = this.client.channels.get("id", channel);
       if (channel) {
-        this._slowSender.sendMessage(channel, message, (error)=> {
+        this._slowSender.sendMessage(channel, message, (error) => {
           if (error) {
             console.error(error);
           }
@@ -914,7 +961,7 @@ function findOverrideChanges(thing1, thing2) {
   var changes = [];
   if (thing1.length >= thing2.length) {
     thing1.forEach(
-      (i)=> {
+      (i) => {
         var j = thing2.get("id", i.id);
         if (j) {
           for (var k in i) {
@@ -930,7 +977,7 @@ function findOverrideChanges(thing1, thing2) {
     );
   } else {
     thing2.forEach(
-      (i)=> {
+      (i) => {
         if (!thing1.get("id", i.id)) {
           changes.push({"change": "add", "override": i})
         }
