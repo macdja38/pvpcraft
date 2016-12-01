@@ -142,7 +142,7 @@ module.exports = class moderationV2 {
       })
       .catch((error) => {
         options.title += " **FAILED bot may not have sufficient permissions**";
-        text += `/nError: ${error}`;
+        text += `\n**Error:** ${error}`;
         this.sendHookedMessage(`action.${action}`, options, text, msg.server.id);
       });
     msg.reply(`${user || possibleId} has been ${action}ned!`);
