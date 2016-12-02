@@ -136,7 +136,11 @@ module.exports = class moderationV2 {
     if (reason) {
       text += `\n**Reason:** ${utils.clean(reason)}`;
     }
-    msg.server[`${action}Member`](user || possibleId, command.options.hasOwnProperty("time") ? command.options.time : 1)
+    let args = [user || possibleId];
+    if (action === "ban") {
+      args.push(command.options.hasOwnProperty("time") ? command.options.time : 1);
+    }
+    msg.server[`${action}Member`](...args)
       .then(() => {
         return this.sendHookedMessage(`action.${action}`, options, text, msg.server.id);
       })
