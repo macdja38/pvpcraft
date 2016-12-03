@@ -413,7 +413,9 @@ module.exports = class moderationV2 {
 
   sendHookedMessage(eventName, options, text, serverId) {
     this.feeds.find(`moderation.${eventName}`, serverId).forEach((channel) => {
-      channel = this.client.channels.get("id", channel);
+      if (channel.indexOf("http") < 0) {
+        channel = this.client.channels.get("id", channel);
+      }
       if (channel) {
         let attachment = {text, ts: Date.now() / 1000};
         if (options.hasOwnProperty("user")) {
