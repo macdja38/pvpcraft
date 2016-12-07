@@ -1002,7 +1002,7 @@ function arrayOfTrues(object) {
  * @param less {Object} group of role's that has less role's than more.
  */
 function findNewRoles(more, less) {
-  for (var i of more) {
+  for (let i of more) {
     if (!i) console.error(new Error("Found a null role 1?"));
     else if (!roleIn(i, less)) {
       return i;
@@ -1012,10 +1012,16 @@ function findNewRoles(more, less) {
 }
 
 function roleIn(role, newRoles) {
-  for (var j of newRoles) {
+  for (let j of newRoles) {
     if (!j) console.error(new Error("Found a null role"));
-    else if (role.id == j.id) {
-      return true;
+    else if (j.hasOwnProperty("id")) {
+      if (role.id == j.id) {
+        return true;
+      }
+    } else {
+      if (role.id === j) {
+        return true;
+      }
     }
   }
   return false;
