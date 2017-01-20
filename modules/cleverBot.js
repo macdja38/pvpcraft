@@ -8,6 +8,8 @@ var utils = new Utils();
 
 var CleverBot = require('cleverbot-node');
 var clever = new CleverBot();
+clever.configure({botapi: "https://bot.pvpcraft.ca:contact:pvpcraft@icloud.com"});
+
 
 module.exports = class cleverBot {
     constructor(e) {
