@@ -2,9 +2,9 @@
  * Created by macdja38 on 2016-04-17.
  */
 /* var module = require('module');
-module.wrapper[0] += '"use strict";';
-Object.freeze(module.wrap);
-*/
+ module.wrapper[0] += '"use strict";';
+ Object.freeze(module.wrap);
+ */
 "use strict";
 const cluster = require('cluster');
 global.cluster = cluster;
@@ -12,6 +12,8 @@ global.cluster = cluster;
 let Configs = require("./lib/config.js");
 let config = new Configs("config");
 let auth = new Configs("auth");
+
+let blocked = require("blocked");
 
 let trackingId = auth.get("googleAnalyticsId", "trackingId");
 if (trackingId === "trackingId") {
@@ -34,8 +36,8 @@ let ravenClient;
 
 if (auth.get("sentryURL", "") != "") {
   console.log("Sentry Started".yellow);
-  git.long((commit)=> {
-    git.branch((branch)=> {
+  git.long((commit) => {
+    git.branch((branch) => {
       ravenClient = require('raven');
       raven = new ravenClient.Client(auth.data.sentryURL, {
         release: commit + "-" + branch,
@@ -66,12 +68,12 @@ if (auth.get("sentryURL", "") != "") {
 }
 
 function loadConfigs() {
-  return new Promise((resolve)=> {
+  return new Promise((resolve) => {
     configDB = new ConfigsDB("servers", client);
     global.configDB = configDB;
     permsDB = new ConfigsDB("permissions", client);
     perms = new Permissions(permsDB, analytics);
-    Promise.all([configDB.reload(), permsDB.reload()]).then(()=> {
+    Promise.all([configDB.reload(), permsDB.reload()]).then(() => {
       resolve(true);
     }).catch(console.error);
   })
@@ -98,7 +100,7 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
     }, 7500 * (i - startShard));
   }
 
-  restartWorker = setInterval(()=> {
+  restartWorker = setInterval(() => {
     if ((restartQueue.length > 0) && Date.now() - lastRestart > 7500) {
       lastRestart = Date.now();
       let id;
@@ -114,7 +116,7 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
     restartQueue.push(deadWorker);
   });
 
-  cluster.on('message', (worker, message)=> {
+  cluster.on('message', (worker, message) => {
     if (!message.hasOwnProperty("op")) {
       return;
     }
@@ -127,13 +129,13 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
                 cluster.setupMaster({args, execArgv: ["--prof"]});
               }
               workers.forEach((w, i) => {
-                setTimeout(()=> {
+                setTimeout(() => {
                   console.log(`Killing worker ${w.id}`.red);
                   w.kill();
-                }, i*10000);
+                }, i * 10000);
               });
               if (message.profile) {
-                setTimeout(()=> {
+                setTimeout(() => {
                   cluster.setupMaster({args: process.argv.slice(2), execArgv: []});
                 }, 240000);
               }
@@ -144,7 +146,7 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
               }
               worker.kill();
               if (message.profile) {
-                setTimeout(()=> {
+                setTimeout(() => {
                   cluster.setupMaster({args: process.argv.slice(2), execArgv: []});
                 }, 240000);
               }
@@ -203,7 +205,27 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
 
   var slowSender = new SlowSender({client, config});
 
-  client.on('message', (msg)=> {
+  /**
+   * log blocking events
+   */
+
+  blocked(ms => {
+    const text = `C${process.env.id}/${process.env.shardId} blocked for ${ms}ms`;
+    let attachment = {text, ts: Date.now() / 1000};
+    attachment.title = "Event loop blocked";
+    attachment.color = "#ff0000";
+    let hookOptions = {
+      username: client.user.username,
+      text: "",
+      icon_url: client.user.avatarURL,
+      slack: true,
+    };
+    hookOptions.attachments = [attachment];
+    config.get("pmHooks").forEach(hook => this._client.sendWebhookMessage(hook, "", hookOptions));
+  }, {threshold: 250});
+
+
+  client.on('message', (msg) => {
     if (msg.author && msg.author.id === id) return;
     if (!configDB) return;
     if (!perms) return;
@@ -318,7 +340,7 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
               raven.captureError(error, {
                 user: msg.author,
                 extra,
-              }, (result)=> {
+              }, (result) => {
                 msg.reply("Sorry their was an error processing your command. The error is ```" + error +
                   "``` reference code `" + raven.getIdent(result) + "`");
                 console.error(error, raven.getIdent(result));
@@ -372,7 +394,7 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
     }
   });
 
-  client.on('error', (error)=> {
+  client.on('error', (error) => {
     if (raven) {
       raven.captureException(error);
     }
@@ -380,7 +402,7 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
     console.error(error.stack);
   });
 
-  client.on('disconnect', ()=> {
+  client.on('disconnect', () => {
     console.log("Disconnect".red);
     for (let i in moduleList) {
       if (moduleList.hasOwnProperty(i)) {
@@ -392,12 +414,12 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
   });
 
 //When a connection is made initialise stuff.
-  client.on('ready', ()=> {
+  client.on('ready', () => {
     console.log("Got ready");
     if (client.servers.length <= config.get("minDiscords", 1)) {
       process.exit(258);
     }
-    loadConfigs().then(()=> {
+    loadConfigs().then(() => {
       id = client.user.id;
       mention = "<@" + id + ">";
       name = client.user.name;
@@ -425,13 +447,13 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
 
 //Initiate a connection To Discord.
   if (auth.get("tokens", false)) {
-    client.loginWithToken(auth.get("tokens", {})[parseInt(process.env.id)]).catch((error)=> {
+    client.loginWithToken(auth.get("tokens", {})[parseInt(process.env.id)]).catch((error) => {
       console.error("Error logging in.");
       console.error(error);
       console.error(error.stack);
     })
   } else {
-    client.loginWithToken(auth.get("token", {})).catch((error)=> {
+    client.loginWithToken(auth.get("token", {})).catch((error) => {
       console.error("Error logging in.");
       console.error(error);
       console.error(error.stack);
@@ -440,9 +462,9 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
 
 
   //When bot is added to a new server tell carbon about it.
-  client.on('serverCreated', (server)=> {
+  client.on('serverCreated', (server) => {
     var configs = [configDB.serverCreated(server), permsDB.serverCreated(server)];
-    Promise.all(configs).then(()=> {
+    Promise.all(configs).then(() => {
       for (let middleware of middlewareList) {
         if (middleware.ware) {
           try {
@@ -472,7 +494,7 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
   });
 
   //When bot is added to a new server tell carbon about it.
-  client.on('serverDeleted', (server)=> {
+  client.on('serverDeleted', (server) => {
     for (let middleware of middlewareList) {
       if (middleware.ware) {
         try {
@@ -513,7 +535,7 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
    * logout on SIGINT
    * if logging out does not happen within 5s exit with an error.
    */
-  process.on('SIGINT', ()=> {
+  process.on('SIGINT', () => {
     setTimeout(() => {
       process.exit(1)
     }, 5000);
@@ -536,14 +558,14 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
     }
     middlewareList = [];
     moduleList = [];
-    client.logout(()=> {
+    client.logout(() => {
       console.log("Bye");
       process.exit(0);
     });
   });
 }
 
-process.on('uncaughtException', (e)=> {
+process.on('uncaughtException', (e) => {
   console.error(e);
   console.error(e.stack);
 });
@@ -590,7 +612,20 @@ function reload() {
   moduleList = [];
   var middlewares = config.get("middleware");
   var modules = config.get("modules");
-  let moduleVariables = {client, config, raven, auth, configDB, r, perms, feeds, messageSender, slowSender, modules: moduleList, middleWares: middlewareList};
+  let moduleVariables = {
+    client,
+    config,
+    raven,
+    auth,
+    configDB,
+    r,
+    perms,
+    feeds,
+    messageSender,
+    slowSender,
+    modules: moduleList,
+    middleWares: middlewareList
+  };
   for (let module in modules) {
     if (modules.hasOwnProperty(module)) {
       try {

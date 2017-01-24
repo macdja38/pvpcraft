@@ -6,6 +6,12 @@
   },
   "middleware": {
   },
+  "blockHooks" :[
+    {
+      "id": "IdHere",
+      "token": "tokenHere"
+    }
+  ],
   "minDiscords": 2,
   "shards": 2,
   "localShards": 2,
