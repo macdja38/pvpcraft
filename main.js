@@ -209,20 +209,22 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
    * log blocking events
    */
 
-  blocked(ms => {
-    const text = `C${process.env.id}/${process.env.shardId} blocked for ${ms}ms`;
-    let attachment = {text, ts: Date.now() / 1000};
-    attachment.title = "Event loop blocked";
-    attachment.color = "#ff0000";
-    let hookOptions = {
-      username: client.user.username,
-      text: "",
-      icon_url: client.user.avatarURL,
-      slack: true,
-    };
-    hookOptions.attachments = [attachment];
-    config.get("blockHooks").forEach(hook => client.sendWebhookMessage(hook, "", hookOptions));
-  }, {threshold: 250});
+  setTimeout(() => {
+    blocked(ms => {
+      const text = `C${process.env.id}/${process.env.shardId} blocked for ${ms}ms`;
+      let attachment = {text, ts: Date.now() / 1000};
+      attachment.title = "Event loop blocked";
+      attachment.color = "#ff0000";
+      let hookOptions = {
+        username: client.user.username,
+        text: "",
+        icon_url: client.user.avatarURL,
+        slack: true,
+      };
+      hookOptions.attachments = [attachment];
+      config.get("blockHooks").forEach(hook => client.sendWebhookMessage(hook, "", hookOptions));
+    }, {threshold: 100});
+  }, 5000);
 
 
   client.on('message', (msg) => {
