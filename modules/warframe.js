@@ -581,6 +581,7 @@ module.exports = class Warframe {
             boss.name + " of the " + boss.faction + "\n";
           for (var Variant of state.Sorties[0].Variants) {
             var Region = parseState.getRegion(Variant.regionIndex);
+            if (!Region) continue;
             if (Region.missions[Variant.missionIndex] != "Assassination") {
               text += Region.missions[Variant.missionIndex] + " on " + Region.name + " with " +
                 parseState.getModifiers(Variant.modifierIndex) + "\n";

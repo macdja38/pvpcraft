@@ -39,10 +39,6 @@ module.exports = class feedManager {
     if(!msg.server) return;
     //check if this is a command we should handle and if the user has permissions to execute it.
     if (command.commandnos === "feed" && perms.check(msg, "feeds.manage")) {
-      let channel = command.channel;
-      if(!channel) {
-        channel = msg.channel;
-      }
       let adding;
       switch(command.args[0]) {
         case "start":
@@ -58,6 +54,22 @@ module.exports = class feedManager {
       if(!command.args[1]) {
         msg.reply(`Usage ${command.prefix}${command.command} <start|stop> <node>[ --channel <channel>]`);
         return true;
+      }
+      let channel = command.channel;
+      if (command.options.hasOwnProperty("webhook")
+        && /https:\/\/(?:ptb.|canary\.)?discordapp\.com\/api\/webhooks\/(\d+)\/(.+)/.test(command.options.webhook)) {
+        let matches = command.options.webhook
+          .match(/https:\/\/(?:ptb.|canary\.)?discordapp\.com\/api\/webhooks\/(\d+)\/(.+)/i);
+        channel = {
+          id:`https://discordapp.com/api/webhooks/${matches[1]}/${matches[2]}`,
+          server: {id: msg.server.id},
+          mention: function mention() {
+            return `another Discord`;
+          }
+        };
+      }
+      else if(!channel) {
+        channel = msg.channel;
       }
       this._feeds.set(adding, utils.stripNull(command.args[1].toLowerCase()), channel.id, channel.server.id);
       msg.reply(`${adding ? "Starting" : "Stopping"} ${command.args[1].toLowerCase()} in channel ${channel.mention()}`);

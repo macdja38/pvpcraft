@@ -119,7 +119,7 @@ module.exports = class shardedInfo {
         slack: true,
       };
       hookOptions.attachments = [attachment];
-      this._joinLeaveHooks.forEach(hook => this._client.sendWebhookMessage(hook, "", hookOptions))
+      this._joinLeaveHooks.forEach(hook => this._client.sendWebhookMessage(hook, "", hookOptions).catch(this._raven.captureException))
     } catch(error) {
       this._raven.captureException(error);
     }
@@ -144,7 +144,7 @@ module.exports = class shardedInfo {
           slack: true,
         };
         hookOptions.attachments = [attachment];
-        this._pmHooks.forEach(hook => this._client.sendWebhookMessage(hook, "", hookOptions))
+        this._pmHooks.forEach(hook => this._client.sendWebhookMessage(hook, "", hookOptions).catch(this._raven.captureException))
       }
     } catch(error) {
       this._raven.captureException(error);
