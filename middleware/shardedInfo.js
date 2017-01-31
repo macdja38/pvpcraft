@@ -58,7 +58,7 @@ module.exports = class shardedInfo {
       let connectionDiscordsIds = 0;
       let connectionBoundChannels = 0;
       let playing = 0;
-      if (musicModule) {
+      if (musicModule && musicModule.module.hasOwnProperty("boundChannels")) {
         connectionDiscordsIds = Object.keys(musicModule.module.boundChannels);
         connectionBoundChannels = connectionDiscordsIds.map(id => musicModule.module.boundChannels[id]);
         playing = connectionBoundChannels.filter(c => c.connection.playing).length
