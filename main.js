@@ -321,12 +321,17 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
       for (mod in moduleList) {
         //console.log(moduleList[mod].commands.indexOf(command.command));
         if (moduleList.hasOwnProperty(mod) && moduleList[mod].commands.indexOf(command.commandnos) > -1) {
+          let returnValue = false;
           try {
-            if (moduleList[mod].module.onCommand(msg, command, perms, moduleList, mod) === true) {
+            returnValue = moduleList[mod].module.onCommand(msg, command, perms, moduleList, mod);
+            if (returnValue === true) {
               return;
             }
           } catch (error) {
-            console.log(error);
+            returnValue = Promise.reject(error);
+          }
+          console.log(returnValue);
+          returnValue.catch((error) => {
             if (raven) {
               let extra = {
                 mod: mod,
@@ -350,7 +355,7 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
             } else {
               console.error(error);
             }
-          }
+          })
         }
       }
     }
