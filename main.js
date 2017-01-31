@@ -211,7 +211,7 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
 
   setTimeout(() => {
     blocked(ms => {
-      const text = `C${process.env.id}/${process.env.shardId} blocked for ${ms}ms`;
+      const text = `C${process.env.id}/${process.env.shards} blocked for ${ms}ms\nup-time ${process.uptime()}`;
       let attachment = {text, ts: Date.now() / 1000};
       attachment.title = "Event loop blocked";
       attachment.color = "#ff0000";
@@ -501,7 +501,7 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
       if (middleware.ware) {
         try {
           if (middleware.ware.onServerDeleted) {
-            console.log("Notifying a middleware a server was Deleted!".green);
+            console.log(`Notifying a middleware a server was Deleted! shard ${process.env.id}`.green);
             middleware.ware.onServerDeleted(server);
           }
         } catch (error) {
@@ -517,7 +517,7 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
       if (module.module) {
         try {
           if (module.module.onServerDeleted) {
-            console.log("Notifying a module a server was Deleted!".green);
+            console.log(`Notifying a module a server was Deleted! shard ${process.env.id}`.green);
             module.module.onServerDeleted(server);
           }
         } catch (error) {
