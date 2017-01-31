@@ -320,7 +320,7 @@ module.exports = class music {
 
     if (command.commandnos === "volume") {
       msg.reply("In order to vastly increase performance volume is currently disabled, This feature may be re-enabled in the future");
-      return;
+      return true;
       if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
         if (command.args[0] && perms.check(msg, "music.volume.set")) {
           var volume = parseInt(command.args[0]);
