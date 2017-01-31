@@ -49,15 +49,17 @@ module.exports = class shardedInfo {
       let musicModule = this._modules.find(m => m.commands.indexOf("play") > -1);
       let connectionDiscordsIds = 0;
       let connectionBoundChannels = 0;
+      let playing = 0;
       if (musicModule) {
         connectionDiscordsIds = Object.keys(musicModule.module.boundChannels);
         connectionBoundChannels = connectionDiscordsIds.map(id => musicModule.module.boundChannels[id]);
+        playing = connectionBoundChannels.filter(c => c.connection.playing).length
       }
       this._standardDB.set(null,
         {
           servers: this._client.servers.length,
           connections: connectionDiscordsIds.length,
-          playing: connectionBoundChannels.filter(c => c.connection.playing).length,
+          playing,
           users: this._client.users.length,
           shards: parseInt(process.env.shards) || 1,
           lastUpdate: Date.now(),
