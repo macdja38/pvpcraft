@@ -330,32 +330,33 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
           } catch (error) {
             returnValue = Promise.reject(error);
           }
-          console.log(returnValue);
-          returnValue.catch((error) => {
-            if (raven) {
-              let extra = {
-                mod: mod,
-                channel: msg.channel.id,
-                channel_name: msg.channel.name,
-                command: command,
-                msg: msg.content
-              };
-              if (msg.hasOwnProperty("server")) {
-                extra.server = msg.server.id;
-                extra.server_name = msg.server.name;
+          if (returnValue.hasOwnProperty("catch")) {
+            returnValue.catch((error) => {
+              if (raven) {
+                let extra = {
+                  mod: mod,
+                  channel: msg.channel.id,
+                  channel_name: msg.channel.name,
+                  command: command,
+                  msg: msg.content
+                };
+                if (msg.hasOwnProperty("server")) {
+                  extra.server = msg.server.id;
+                  extra.server_name = msg.server.name;
+                }
+                raven.captureError(error, {
+                  user: msg.author,
+                  extra,
+                }, (result) => {
+                  msg.reply("Sorry their was an error processing your command. The error is ```" + error +
+                    "``` reference code `" + raven.getIdent(result) + "`");
+                  console.error(error, raven.getIdent(result));
+                });
+              } else {
+                console.error(error);
               }
-              raven.captureError(error, {
-                user: msg.author,
-                extra,
-              }, (result) => {
-                msg.reply("Sorry their was an error processing your command. The error is ```" + error +
-                  "``` reference code `" + raven.getIdent(result) + "`");
-                console.error(error, raven.getIdent(result));
-              });
-            } else {
-              console.error(error);
-            }
-          })
+            })
+          }
         }
       }
     }
