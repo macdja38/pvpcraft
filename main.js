@@ -330,7 +330,7 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
           } catch (error) {
             returnValue = Promise.reject(error);
           }
-          if (returnValue.hasOwnProperty("catch")) {
+          if (returnValue && returnValue.catch) {
             returnValue.catch((error) => {
               if (raven) {
                 let extra = {
