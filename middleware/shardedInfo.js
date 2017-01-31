@@ -26,6 +26,9 @@ module.exports = class shardedInfo {
     this._joinLeaveHooks = e.config.get("joinLeaveHooks", false);
     this._pmHooks = e.config.get("pmHooks", false);
     this._admins = e.config.get("permissions", {"admins": []}).admins;
+    this.botReady = new Promise((resolve) => {
+      this.botReadyResolve = resolve;
+    })
   }
 
   /**
@@ -34,6 +37,7 @@ module.exports = class shardedInfo {
   onReady() {
     if (this._timer) clearInterval(this._timer);
     this._timer = setInterval(this._updateDB.bind(this), 10000);
+    this.botReadyResolve(true);
   }
 
   _getArray(n) {
@@ -45,7 +49,11 @@ module.exports = class shardedInfo {
       process.exit(532);
     }
     if (!this._ready || !this._ready.then || !this.logShardStatus) return;
-    this._ready.then(()=> {
+    this._ready
+      .then(() => {
+        return this.botReady;
+      })
+      .then(()=> {
       let musicModule = this._modules.find(m => m.commands.indexOf("play") > -1);
       let connectionDiscordsIds = 0;
       let connectionBoundChannels = 0;
