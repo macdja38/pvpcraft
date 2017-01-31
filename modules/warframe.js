@@ -3,43 +3,47 @@
  */
 "use strict";
 
-var StateGrabber = require("../lib/worldState.js");
-var worldState = new StateGrabber();
+const StateGrabber = require("../lib/worldState.js");
+const worldState = new StateGrabber();
 
-var ParseState = require('../lib/parseState');
-var parseState = new ParseState();
+const ParseState = require('../lib/parseState');
+const parseState = new ParseState();
 
-var Utils = require('../lib/utils');
-var utils = new Utils();
+const Utils = require('../lib/utils');
+const utils = new Utils();
 
-var Twitter = require('twit');
+const Twitter = require('twit');
 
-var newStateGrabber = require("../lib/newWorldState");
-var newWorldState = new newStateGrabber("http://content.warframe.com/dynamic/worldState.php", "pc");
+const newStateGrabber = require("../lib/newWorldState");
+const newWorldState = new newStateGrabber("http://content.warframe.com/dynamic/worldState.php", "pc");
 
-var master;
+let master;
 if (process.env.id == 0) {
   master = true;
 }
 
-var twitter;
+let twitter;
 
-var request = require('request');
+const request = require('request');
 
-var DBEventState = require('../lib/dbEventState');
+// const DBEventState = require('../lib/dbEventState');
 
 module.exports = class Warframe {
   constructor(e) {
-    this.dbEvents = new DBEventState(e);
+    // this.dbEvents = new DBEventState(e);
+    //noinspection JSUnresolvedVariable
     this.client = e.client;
+    //noinspection JSUnresolvedVariable
     this.config = e.configDB;
+    //noinspection JSUnresolvedVariable
     this.raven = e.raven;
     this.alerts = [];
     this.rebuildAlerts = () => {
       this.alerts = [];
-      for (var item in this.config.data) {
+      for (let item in this.config.data) {
         if (this.config.data.hasOwnProperty(item) && this.config.data[item].hasOwnProperty("warframeAlerts")) {
           if (this.client.channels.get("id", this.config.data[item]["warframeAlerts"].channel) != null) {
+            //noinspection JSUnresolvedVariable
             this.alerts.push(this.config.data[item].warframeAlerts);
           } else {
             //TODO: notify the server owner their mod alerts channel has been removed and that //setalerts false will make that permanent.
@@ -47,140 +51,143 @@ module.exports = class Warframe {
         }
       }
     };
+    let twitter_auth;
     if (master) {
-      var twitter_auth = e.auth.get("twitter", false);
+      twitter_auth = e.auth.get("twitter", false);
       if (twitter_auth) {
         console.log(`Found twitter auth, starting twitter stream`.blue);
+        //noinspection JSUnresolvedVariable
         this.twitter = new Twitter(twitter_auth);
         this.stream = this.twitter.stream('statuses/filter', {follow: "1344755923"});
       }
     }
-    this.onAlert = new Promise((resolve)=> {
-        let dbReady;
-        if (!global.cluster.worker || global.cluster.worker.id == 1) {
-          dbReady = createDBIfNotExists("alerts");
-        } else {
-          dbReady = Promise.resolve();
-        }
-        return dbReady.then(()=> {
-          /*global.r.table(this.table).insert([{id: "*", prefix: "//", "changeThresh": 1}]).run(this.con).then((res)=>{
-           console.log(res);
-           });*/
-          console.log("Did, DB Thing");
-          if (master) {
-            console.log(`Shard ${process.env.id} is the Master Shard!`);
-            if (twitter_auth) {
-              //build the map of server id's and logging channels.
-              console.log(this.alerts);
-              console.log("twitter auth found, declaring onAlert");
-              resolve(
-                (tweet) => {
-                  if (tweet.user.id_str === '1344755923' && !tweet.retweeted_status) {
-                    console.log("Tweet Found");
-                    let alert = tweet.text.match(/(.*?): (.*?) - (.*?) - (.*)/);
+    this.onAlert = new Promise((resolve) => {
+      let dbReady;
+      if (!global.cluster.worker || global.cluster.worker.id == 1) {
+        dbReady = createDBIfNotExists("alerts");
+      } else {
+        dbReady = Promise.resolve();
+      }
+      return dbReady.then(() => {
+        /*global.r.table(this.table).insert([{id: "*", prefix: "//", "changeThresh": 1}]).run(this.con).then((res)=>{
+         console.log(res);
+         });*/
+        console.log("Did, DB Thing");
+        if (master) {
+          console.log(`Shard ${process.env.id} is the Master Shard!`);
+          if (twitter_auth) {
+            //build the map of server id's and logging channels.
+            console.log(this.alerts);
+            console.log("twitter auth found, declaring onAlert");
+            resolve(
+              (tweet) => {
+                if (tweet.user.id_str === '1344755923' && !tweet.retweeted_status) {
+                  console.log("Tweet Found");
+                  let alert = tweet.text.match(/(.*?): (.*?) - (.*?) - (.*)/);
+                  if (alert) {
+                    alert = alert.slice(1, 5);
+                    alert.invasion = false;
+                  } else {
+                    alert = tweet.text.match(/(.*?): (.*?) (VS\.) (.*)/);
                     if (alert) {
                       alert = alert.slice(1, 5);
-                      alert.invasion = false;
-                    } else {
-                      alert = tweet.text.match(/(.*?): (.*?) (VS\.) (.*)/);
-                      if (alert) {
-                        alert = alert.slice(1, 5);
-                        alert.invasion = true;
-                      }
-                    }
-                    if (alert) {
-                      console.log("Logging tweet");
-                      global.r.table('alerts').insert(alert.reduce((o, v, i) => {
-                        o[i] = v;
-                        return o;
-                      }, {})).run().then(console.log);
+                      alert.invasion = true;
                     }
                   }
-                })
-            }
+                  if (alert) {
+                    console.log("Logging tweet");
+                    global.r.table('alerts').insert(alert.reduce((o, v, i) => {
+                      o[i] = v;
+                      return o;
+                    }, {})).run().then(console.log);
+                  }
+                }
+              })
           }
-          global.r.table('alerts').changes().run((err, cursor)=> {
-            if (err) {
-              console.error(err);
-              return;
-            }
-            this.cursor = cursor;
-            cursor.each((err, alert)=> {
-              try {
-                alert = alert.new_val;
-                if (alert) {
-                  console.dir(this.alerts, {depth: 2});
-                  this.alerts.forEach((server, i) => setTimeout(()=> {
-                    try {
-                      let channel = this.client.channels.get("id", server.channel);
-                      if (!channel || !server.tracking === true) return;
-                      let things = [];
-                      let madeMentionable = [];
-                      for (let thing in server.items) {
-                        if (server.items.hasOwnProperty(thing) && channel.server.roles.has("id", server.items[thing])) {
-                          if (alert["3"].toLowerCase().indexOf(thing) > -1 && channel.server.roles.has("id", server.items[thing])) {
-                            things.push(server.items[thing]);
-                            madeMentionable.push(this.client.updateRole(server.items[thing], {
-                              mentionable: true
-                            }));
-                          }
-                          if (alert.invasion && alert["2"].toLowerCase().indexOf(thing) > -1  && channel.server.roles.has("id", server.items[thing])) {
-                            things.push(server.items[thing]);
-                            madeMentionable.push(this.client.updateRole(server.items[thing], {
-                              mentionable: true
-                            }));
-                          }
+        }
+        global.r.table('alerts').changes().run((err, cursor) => {
+          if (err) {
+            console.error(err);
+            return;
+          }
+          this.cursor = cursor;
+          cursor.each((err, alert) => {
+            try {
+              alert = alert.new_val;
+              if (alert) {
+                console.dir(this.alerts, {depth: 2});
+                this.alerts.forEach((server, i) => setTimeout(() => {
+                  try {
+                    let channel = this.client.channels.get("id", server.channel);
+                    if (!channel || !server.tracking === true) return;
+                    let things = [];
+                    let madeMentionable = [];
+                    for (let thing in server.items) {
+                      if (server.items.hasOwnProperty(thing) && channel.server.roles.has("id", server.items[thing])) {
+                        if (alert["3"].toLowerCase().indexOf(thing) > -1 && channel.server.roles.has("id", server.items[thing])) {
+                          things.push(server.items[thing]);
+                          madeMentionable.push(this.client.updateRole(server.items[thing], {
+                            mentionable: true
+                          }));
                         }
-                      }
-                      let sendAlert = () => {
-                        return this.client.sendMessage(channel, `\`\`\`xl\n${alert["0"]}\n${alert["1"]}\n${alert["2"]}\n${alert["3"]}\n\`\`\`${things.map((thing)=> {
-                          return `<@&${thing}>`;
-                        })}`);
-                      };
-                      let makeUnmentionable = () => {
-                        for (let thing in things) {
-                          if (things.hasOwnProperty(thing)) {
-                            let role = channel.server.roles.get("id", things[thing]);
-                            if (role) {
-                              this.client.updateRole(role, {
-                                mentionable: false
-                              }).catch(()=>{});
-                            }
-                          }
+                        if (alert.invasion && alert["2"].toLowerCase().indexOf(thing) > -1 && channel.server.roles.has("id", server.items[thing])) {
+                          things.push(server.items[thing]);
+                          madeMentionable.push(this.client.updateRole(server.items[thing], {
+                            mentionable: true
+                          }));
                         }
-                      };
-                      Promise.all(madeMentionable).then(()=> {
-                        sendAlert().then(makeUnmentionable).catch(console.error);
-                      }).catch(()=> {
-                        this.client.sendMessage(channel, "Unable to make role mentionable, please contact @```Macdja38#7770 for help after making sure the bot has sufficient permissions");
-                        sendAlert().then(makeUnmentionable).catch(console.error);
-                      });
-                    } catch (error) {
-                      console.error(error);
-                      if (this.raven) {
-                        this.raven.captureException(error);
                       }
                     }
-                  }, i*5000));
-                }
-              } catch (error) {
-                console.error(error);
+                    let sendAlert = () => {
+                      return this.client.sendMessage(channel, `\`\`\`xl\n${alert["0"]}\n${alert["1"]}\n${alert["2"]}\n${alert["3"]}\n\`\`\`${things.map((thing) => {
+                        return `<@&${thing}>`;
+                      })}`);
+                    };
+                    let makeUnmentionable = () => {
+                      for (let thing in things) {
+                        if (things.hasOwnProperty(thing)) {
+                          let role = channel.server.roles.get("id", things[thing]);
+                          if (role) {
+                            this.client.updateRole(role, {
+                              mentionable: false
+                            }).catch(() => {
+                            });
+                          }
+                        }
+                      }
+                    };
+                    Promise.all(madeMentionable).then(() => {
+                      sendAlert().then(makeUnmentionable).catch(console.error);
+                    }).catch(() => {
+                      this.client.sendMessage(channel, "Unable to make role mentionable, please contact @```Macdja38#7770 for help after making sure the bot has sufficient permissions");
+                      sendAlert().then(makeUnmentionable).catch(console.error);
+                    });
+                  } catch (error) {
+                    console.error(error);
+                    if (this.raven) {
+                      this.raven.captureException(error);
+                    }
+                  }
+                }, i * 5000));
               }
-            });
-          })
-        }).catch(error => {
-          console.error(error);
-          if (this.raven) {
-            this.raven.captureException(error);
-          }
-        });
+            } catch (error) {
+              console.error(error);
+            }
+          });
+        })
+      }).catch(error => {
+        console.error(error);
+        if (this.raven) {
+          this.raven.captureException(error);
+        }
       });
+    });
   }
 
   onReady() {
     this.rebuildAlerts();
     if (this.twitter && master) {
-      this.onAlert.then((alerts)=> {
+      this.onAlert.then((alerts) => {
         this.stream.removeListener('tweet', alerts);
         this.stream.on('tweet', alerts);
         this.stream.start();
@@ -190,7 +197,7 @@ module.exports = class Warframe {
 
   onDisconnect() {
     if (this.twitter && master) {
-      this.onAlert.then((alerts)=> {
+      this.onAlert.then((alerts) => {
         this.stream.removeListener('tweet', alerts);
         this.stream.stop();
       });
@@ -218,7 +225,7 @@ module.exports = class Warframe {
 
   onCommand(msg, command, perms) {
     if ((command.commandnos === 'deal' || command.command === 'darvo') && perms.check(msg, "warframe.deal")) {
-      worldState.get((state) => {
+      return worldState.get().then().then((state) => {
         this.client.sendMessage(msg.channel, "```haskell\n" + "Darvo is selling " +
           parseState.getName(state.DailyDeals[0].StoreItem) +
           " for " + state.DailyDeals[0].SalePrice +
@@ -228,14 +235,13 @@ module.exports = class Warframe {
           ")" +
           "\n```");
       });
-      return true;
     }
 
     if (command.commandnos === "alert") {
       if (command.args[0] === "list" && perms.check(msg, "warframe.alerts.list")) {
         let roles = this.config.get("warframeAlerts", {items: {}}, {server: msg.server.id}).items;
         let coloredRolesList = "";
-        for (var role in roles) {
+        for (let role in roles) {
           if (roles.hasOwnProperty(role) && role != "joinrole") {
             coloredRolesList += `${role}\n`;
           }
@@ -254,9 +260,9 @@ module.exports = class Warframe {
           return true;
         }
         let rankToJoin = command.args[1].toLowerCase();
-        role = msg.server.roles.get("id", roles[rankToJoin]);
+        let role = msg.server.roles.get("id", roles[rankToJoin]);
         if (role) {
-          this.client.addMemberToRole(msg.author, role, (error)=> {
+          this.client.addMemberToRole(msg.author, role, (error) => {
             let logChannel = this.config.get("msgLog", false, {server: msg.server.id});
             if (error) {
               if (logChannel) {
@@ -288,9 +294,9 @@ module.exports = class Warframe {
           msg.reply(`Please supply a rank to leave using \`${command.prefix}alerts leave \<rank\>\`, for a list of items use \`${command.prefix}alerts list\``);
           return true;
         }
-        role = msg.server.roles.get("id", roles[command.args[1]]);
+        let role = msg.server.roles.get("id", roles[command.args[1]]);
         if (role) {
-          this.client.removeMemberFromRole(msg.author, role, (error)=> {
+          this.client.removeMemberFromRole(msg.author, role, (error) => {
             let logChannel = this.config.get("msgLog", false, {server: msg.server.id});
             if (error) {
               if (logChannel) {
@@ -439,7 +445,7 @@ module.exports = class Warframe {
     }
 
     if ((command.commandnos === 'trader' || command.commandnos === 'voidtrader' || command.commandnos === 'baro') && perms.check(msg, "warframe.trader")) {
-      worldState.get((state) => {
+      return worldState.get().then((state) => {
         if (!state.VoidTraders || !state.VoidTraders[0]) {
           this.client.sendMessage(msg.channel, "Baro has disappeared from the universe.");
           return true;
@@ -458,7 +464,6 @@ module.exports = class Warframe {
             utils.secondsToTime(state.VoidTraders[0].Activation.sec - state.Time) + "\n```");
         }
       });
-      return true;
     }
 
     else if ((command.commandnos === 'trial' || command.commandnos === 'raid' || command.commandnos === 'trialstat') && perms.check(msg, "warframe.trial")) {
@@ -488,45 +493,44 @@ module.exports = class Warframe {
     }
 
     else if (command.commandnos === 'alert' && perms.check(msg, "warframe.alert")) {
-        worldState.get((state) => {
-            if (state.Alerts) {
-                let alertStringArray = [];
-                for (var alert of state.Alerts) {
-                    var rewards = "";
-                    if (alert.MissionInfo.missionReward) {
-                        if (alert.MissionInfo.missionReward.items) {
-                            for (let reward of alert.MissionInfo.missionReward.items) {
-                                if (rewards != "") rewards += " + ";
-                                rewards += parseState.getName(reward);
-                            }
-                        }
-                        if (alert.MissionInfo.missionReward.countedItems) {
-                            for (let reward of alert.MissionInfo.missionReward.countedItems) {
-                                if (rewards != "") rewards += " + ";
-                                rewards += reward.ItemCount + " " + parseState.getName(reward.ItemType);
-                            }
-                        }
-                        if (rewards != "") rewards += " + ";
-                        if (alert.MissionInfo.missionReward.credits) rewards += alert.MissionInfo.missionReward.credits + " credits";
-                    }
-                    alertStringArray.push("```haskell\n" +
-                      parseState.getNodeName(alert.MissionInfo.location) + " levels " + alert.MissionInfo.minEnemyLevel + "-" + alert.MissionInfo.maxEnemyLevel + "\n" +
-                      parseState.getFaction(alert.MissionInfo.faction) + " " + parseState.getMissionType(alert.MissionInfo.missionType) + "\n" +
-                      rewards +
-                      "\nExpires in " + utils.secondsToTime(alert.Expiry.sec - state.Time) +
-                      "\n```"
-                    );
+      return worldState.get().then((state) => {
+        if (state.Alerts) {
+          let alertStringArray = [];
+          for (let alert of state.Alerts) {
+            let rewards = "";
+            if (alert.MissionInfo.missionReward) {
+              if (alert.MissionInfo.missionReward.items) {
+                for (let reward of alert.MissionInfo.missionReward.items) {
+                  if (rewards != "") rewards += " + ";
+                  rewards += parseState.getName(reward);
                 }
-                this.client.sendMessage(msg.channel,
-                    alertStringArray.join("\n")
-                );
+              }
+              if (alert.MissionInfo.missionReward.countedItems) {
+                for (let reward of alert.MissionInfo.missionReward.countedItems) {
+                  if (rewards != "") rewards += " + ";
+                  rewards += reward.ItemCount + " " + parseState.getName(reward.ItemType);
+                }
+              }
+              if (rewards != "") rewards += " + ";
+              if (alert.MissionInfo.missionReward.credits) rewards += alert.MissionInfo.missionReward.credits + " credits";
             }
-        });
-        return true;
+            alertStringArray.push("```haskell\n" +
+              parseState.getNodeName(alert.MissionInfo.location) + " levels " + alert.MissionInfo.minEnemyLevel + "-" + alert.MissionInfo.maxEnemyLevel + "\n" +
+              parseState.getFaction(alert.MissionInfo.faction) + " " + parseState.getMissionType(alert.MissionInfo.missionType) + "\n" +
+              rewards +
+              "\nExpires in " + utils.secondsToTime(alert.Expiry.sec - state.Time) +
+              "\n```"
+            );
+          }
+          this.client.sendMessage(msg.channel,
+            alertStringArray.join("\n")
+          );
+        }
+      });
     }
 
     else if (command.commandnos === 'rift' || command.commandnos === 'fissure' && perms.check(msg, "warframe.rift")) {
-      worldState.get((state) => {
+      return worldState.get().then((state) => {
         if (state.ActiveMissions) {
           let string = "";
           for (let mission of state.ActiveMissions) {
@@ -542,7 +546,6 @@ module.exports = class Warframe {
           this.client.sendMessage(msg.channel, string);
         }
       });
-      return true;
     }
 
     else if (command.command === 'wiki' && perms.check(msg, "warframe.wiki")) {
@@ -570,17 +573,16 @@ module.exports = class Warframe {
         }
       });
       return true;
-
     }
 
     else if (command.commandnos === 'sortie' && perms.check(msg, "warframe.sortie")) {
-      worldState.get((state) => {
+      return worldState.get().then((state) => {
         if (state.Sorties[0]) {
-          var boss = parseState.getBoss(state.Sorties[0].Variants[0].bossIndex);
-          var text = "```haskell\n" + utils.secondsToTime(state.Sorties[0].Expiry.sec - state.Time) + " left to defeat " +
+          let boss = parseState.getBoss(state.Sorties[0].Variants[0].bossIndex);
+          let text = "```haskell\n" + utils.secondsToTime(state.Sorties[0].Expiry.sec - state.Time) + " left to defeat " +
             boss.name + " of the " + boss.faction + "\n";
-          for (var Variant of state.Sorties[0].Variants) {
-            var Region = parseState.getRegion(Variant.regionIndex);
+          for (let Variant of state.Sorties[0].Variants) {
+            let Region = parseState.getRegion(Variant.regionIndex);
             if (!Region) continue;
             if (Region.missions[Variant.missionIndex] != "Assassination") {
               text += Region.missions[Variant.missionIndex] + " on " + Region.name + " with " +
@@ -596,7 +598,6 @@ module.exports = class Warframe {
           return true;
         }
       });
-      return true;
     }
 
     else if (command.command === 'farm' && perms.check(msg, "warframe.farm")) {
@@ -610,9 +611,9 @@ module.exports = class Warframe {
     }
 
     else if ((command.command === 'primeaccess' || command.command === 'access') && perms.check(msg, "warframe.access")) {
-      worldState.get((state) => {
-        var text = "```haskell\n";
-        for (var event of state.Events) {
+      return worldState.get().then((state) => {
+        let text = "```haskell\n";
+        for (let event of state.Events) {
           if (event.Messages[0].Message.toLowerCase().indexOf("access") > -1) {
             text += event.Messages[0].Message.toUpperCase()
               + " since " + utils.secondsToTime(state.Time - event.Date.sec) + " ago\n";
@@ -622,54 +623,50 @@ module.exports = class Warframe {
           this.client.sendMessage(msg.channel, text + "```")
         }
       });
-      return true;
     }
 
     else if ((command.commandnos === 'update') && perms.check(msg, "warframe.update")) {
-      worldState.get((state) => {
-        var String = "```haskell\n";
-        var checks = ["update", "hotfix"];
-        for (var event of state.Events) {
-          for (var l of checks) {
+      return worldState.get().then((state) => {
+        let text = "```haskell\n";
+        let checks = ["update", "hotfix"];
+        for (let event of state.Events) {
+          for (let l of checks) {
             if (event.Messages[0].Message.toLowerCase().indexOf(l) > -1) {
-              String += event.Messages[0].Message.toUpperCase() + " since " +
+              text += event.Messages[0].Message.toUpperCase() + " since " +
                 utils.secondsToTime(state.Time - event.Date.sec) + " ago \n learn more here: " + event.Prop + "\n";
               checks.slice(l);
             }
           }
         }
-        if (String !== "```haskell\n") {
-          this.client.sendMessage(msg.channel, String + "```");
+        if (text !== "```haskell\n") {
+          this.client.sendMessage(msg.channel, text + "```");
         }
       });
-      return true;
     }
 
     else if ((command.commandnos === 'armorstat' || command.commandnos === 'armor' ||
       command.commandnos === 'armourstat' || command.commandnos === 'armour') && perms.check(msg, "warframe.armor")) {
-      (() => {
-        if (command.args.length < 1 || command.args.length == 2 || command.args.length > 3) {
-          this.client.sendMessage(msg.channel, "```haskell\npossible uses include:\n" +
-            command.prefix + "armor (Base Armor) (Base Level) (Current Level) calculate armor and stats.\n" +
-            command.prefix + "armor (Current Armor)\n```");
+      if (command.args.length < 1 || command.args.length == 2 || command.args.length > 3) {
+        this.client.sendMessage(msg.channel, "```haskell\npossible uses include:\n" +
+          command.prefix + "armor (Base Armor) (Base Level) (Current Level) calculate armor and stats.\n" +
+          command.prefix + "armor (Current Armor)\n```");
+        return true;
+      }
+      let text = "```haskell\n";
+      let armor;
+      if (command.args.length == 3) {
+        if ((parseInt(command.args[2]) - parseInt(command.args[1])) < 0) {
+          this.client.sendMessage(msg.channel, "```haskell\nPlease check your input values\n```");
           return true;
         }
-        var text = "```haskell\n";
-        let armor;
-        if (command.args.length == 3) {
-          if ((parseInt(command.args[2]) - parseInt(command.args[1])) < 0) {
-            this.client.sendMessage(msg.channel, "```haskell\nPlease check your input values\n```");
-            return true;
-          }
-          armor = parseInt(command.args[0]) * (1 + (Math.pow((parseInt(command.args[2]) - parseInt(command.args[1])), 1.75) / 200));
-          text += "at level " + command.args[2] + " your enemy would have " + armor + " Armor\n";
-        }
-        else {
-          armor = parseInt(command.args[0]);
-        }
-        text += armor / (armor + 300) * 100 + "% damage reduction\n";
-        this.client.sendMessage(msg.channel, text + "```");
-      })();
+        armor = parseInt(command.args[0]) * (1 + (Math.pow((parseInt(command.args[2]) - parseInt(command.args[1])), 1.75) / 200));
+        text += "at level " + command.args[2] + " your enemy would have " + armor + " Armor\n";
+      }
+      else {
+        armor = parseInt(command.args[0]);
+      }
+      text += armor / (armor + 300) * 100 + "% damage reduction\n";
+      this.client.sendMessage(msg.channel, text + "```");
       return true;
     }
     return false;
@@ -678,11 +675,11 @@ module.exports = class Warframe {
 
 function createDBIfNotExists(name) {
   return global.r.tableList().contains(name)
-  .do((databaseExists) => {
-    return global.r.branch(
-      databaseExists,
-      {dbs_created: 0},
-      global.r.tableCreate(name)
-    );
-  }).run()
+    .do((databaseExists) => {
+      return global.r.branch(
+        databaseExists,
+        {dbs_created: 0},
+        global.r.tableCreate(name)
+      );
+    }).run()
 }
