@@ -48,6 +48,10 @@ if (auth.get("sentryURL", "") != "") {
         process.exit(1);
       });
 
+      raven.setTagsContext({
+        shardId: process.env.id,
+      });
+
       raven.on('logged', function (e) {
         console.log("Error reported to sentry!: ".green + e.id);
       });
@@ -58,7 +62,7 @@ if (auth.get("sentryURL", "") != "") {
         //   e.statusCode -- response status code
         //   e.response -- raw http response object
 
-        console.error('Could not report event to sentry');
+        console.error('Could not report event to sentry:', e.reason);
         //console.error(e.reason);
         //console.error(e.statusCode);
         //console.error(e.response);
