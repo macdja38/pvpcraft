@@ -152,6 +152,11 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
               }
             }
             break;
+          case "logrestarts": {
+            console.log("Workers", workers);
+            console.log("Restart Queue", restartQueue);
+            break;
+          }
         }
         break;
     }
