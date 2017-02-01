@@ -205,6 +205,10 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
 
   var slowSender = new SlowSender({client, config});
 
+  var lastMessage = Date.now();
+
+  var waitBeforeRestart = 30000;
+
   /**
    * log blocking events
    */
@@ -224,6 +228,13 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
       hookOptions.attachments = [attachment];
       config.get("blockHooks").forEach(hook => client.sendWebhookMessage(hook, "", hookOptions));
     }, {threshold: 250});
+
+    setInterval(() => {
+      if (Date.now() - lastMessage > waitBeforeRestart) {
+        raven.captureException(new Error("Did not recieve messages in " + waitBeforeRestart));
+        process.exit(533);
+      }
+    }, 10000)
   }, 30000);
 
 
@@ -231,6 +242,7 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
     if (msg.author && msg.author.id === id) return;
     if (!configDB) return;
     if (!perms) return;
+    lastMessage = Date.now();
     let t1 = now();
     let l;
     let mod;
