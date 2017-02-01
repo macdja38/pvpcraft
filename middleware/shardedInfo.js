@@ -54,7 +54,7 @@ module.exports = class shardedInfo {
         return this.botReady;
       })
       .then(()=> {
-      let musicModule = this._modules.find(m => m.commands.indexOf("play") > -1);
+      let musicModule = this._modules.find(m => m && (m.commands.indexOf("play") > -1));
       let connectionDiscordsIds = 0;
       let connectionBoundChannels = 0;
       let playing = 0;
