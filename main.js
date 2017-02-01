@@ -236,7 +236,7 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
       };
       hookOptions.attachments = [attachment];
       config.get("blockHooks").forEach(hook => client.sendWebhookMessage(hook, "", hookOptions));
-    }, {threshold: 250});
+    }, {threshold: 500});
 
     setInterval(() => {
       if (Date.now() - lastMessage > waitBeforeRestart) {
