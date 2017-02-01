@@ -696,7 +696,7 @@ function reloadTarget(msg, command, perms, l, moduleList, middlewareList) {
 
 process.on('unhandledRejection', (reason, p) => {
   if (raven) {
-    raven.captureError(error, {
+    raven.captureError(reason, {
       extra: {promise: p},
     }, (result) => {
       console.error('Unhandled Rejection at: Promise', p, 'reason:', reason, " sentry Id: ", raven.getIdent(result));
