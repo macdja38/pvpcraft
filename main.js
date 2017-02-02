@@ -252,7 +252,6 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
     if (!configDB) return;
     if (!perms) return;
     lastMessage = Date.now();
-    let t1 = now();
     let l;
     let mod;
     let ware;
@@ -297,7 +296,7 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
           extra,
         });
       }
-      msg.reply("Sorry about that an unknown problem occurred processing your command, an error report has been logged and we are looking into the problem.")
+      msg.reply("Sorry about that an unknown problem occurred processing your command, an error report has been logged and we are looking into the problem.");
     }
     //Reload command starts here.
     if (command.command === "reload" && msg.author.id === "85257659694993408") {
@@ -313,113 +312,50 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
     if (command) {
       for (ware in middlewareList) {
         if (middlewareList.hasOwnProperty(ware) && middlewareList[ware].ware.onCommand) {
-          middlewareList[ware].ware.onCommand(msg, command, perms, l)
+          commandWrapper(ware, command, msg, () => {
+            middlewareList[ware].ware.onCommand(msg, command, perms, l)
+          })
         }
       }
     }
     for (ware in middlewareList) {
       if (middlewareList.hasOwnProperty(ware) && middlewareList[ware].ware.changeMessage) {
-        msg = middlewareList[ware].ware.changeMessage(msg, perms)
+        commandWrapper(ware, command, msg, () => {
+          msg = middlewareList[ware].ware.changeMessage(msg, perms);
+        });
       }
     }
     if (command) {
       for (ware in middlewareList) {
         if (middlewareList.hasOwnProperty(ware) && middlewareList[ware].ware.changeCommand) {
-          command = middlewareList[ware].ware.changeCommand(msg, command, perms, l)
+          commandWrapper(ware, command, msg, () => {
+            command = middlewareList[ware].ware.changeCommand(msg, command, perms, l);
+          });
         }
       }
     }
     if (command) {
-      // console.log("Command Used".blue);
-      // console.dir(command, { depth: 2 });
-      var t2 = now();
-      if (msg.channel.server) {
-        //console.log("s:".blue + (process.env.id) + " s: ".magenta + msg.channel.server.name + " c: ".blue +
-        // msg.channel.name + " u: ".cyan +
-        //  msg.author.username + " m: ".green + msg.content.replace(/\n/g, "\n    ") + " in ".yellow + (t2 - t1) +
-        // "ms".red);
-      }
       for (mod in moduleList) {
-        //console.log(moduleList[mod].commands.indexOf(command.command));
         if (moduleList.hasOwnProperty(mod) && moduleList[mod].commands.indexOf(command.commandnos) > -1) {
-          let returnValue = false;
-          try {
-            returnValue = moduleList[mod].module.onCommand(msg, command, perms, moduleList, mod);
-            if (returnValue === true) {
-              return;
-            }
-          } catch (error) {
-            returnValue = Promise.reject(error);
-          }
-          if (returnValue && returnValue.catch) {
-            returnValue.catch((error) => {
-              if (raven) {
-                let extra = {
-                  mod: mod,
-                  channel: msg.channel.id,
-                  channel_name: msg.channel.name,
-                  command: command,
-                  msg: msg.content
-                };
-                if (msg.hasOwnProperty("server")) {
-                  extra.server = msg.server.id;
-                  extra.server_name = msg.server.name;
-                }
-                raven.captureError(error, {
-                  user: userObjectify(msg.author),
-                  extra,
-                }, (result) => {
-                  msg.reply("Sorry their was an error processing your command. The error is ```" + error +
-                    "``` reference code `" + raven.getIdent(result) + "`");
-                  console.error(error, raven.getIdent(result));
-                });
-              } else {
-                console.error(error);
-              }
-            })
-          }
+          let shouldReturn;
+          commandWrapper(mod, command, msg, () => {
+            shouldReturn = moduleList[mod].module.onCommand(msg, command, perms, moduleList, mod);
+            return shouldReturn;
+          });
+          if (shouldReturn) return;
         }
       }
     }
     //apply misc responses.
     for (mod in moduleList) {
-      //console.log(command.command);
-      //console.log(moduleList[mod].commands);
-      //console.log(moduleList[mod].commands.indexOf(command.command));
       if (moduleList.hasOwnProperty(mod) && moduleList[mod].module.checkMisc) {
-        try {
-          if (moduleList[mod].module.checkMisc(msg, perms, l) === true) {
-            break;
-          }
-        } catch (error) {
-          if (raven) {
-            let extra = {
-              mod: mod,
-              channel: msg.channel.id,
-              channel_name: msg.channel.name,
-              command: command,
-              msg: msg.content
-            };
-            if (msg.hasOwnProperty("server")) {
-              extra.server = msg.server.id;
-              extra.server_name = msg.server.name;
-            }
-            raven.captureError(error, {
-              user: userObjectify(msg.author),
-              extra,
-            });
-          }
-          console.error(error);
-          console.error(error.stack);
-        }
+        let shouldReturn;
+        commandWrapper(mod, command, msg, () => {
+          shouldReturn = moduleList[mod].module.checkMisc(msg, perms, l);
+          return shouldReturn;
+        });
+        if (shouldReturn) return;
       }
-    }
-    if (msg.channel.server) {
-      /*console.log("s:".blue + (process.env.id) + " s: ".magenta + msg.channel.server.name + " c: ".blue + msg.channel.name + " u: ".cyan +
-       msg.author.username + " m: ".green + msg.content.replace(/\n/g, "\n    ") + " in ".yellow + (t2 - t1) + "ms".red); */
-    } else {
-      /*console.log("u: ".cyan + msg.author.username + " m: ".green + msg.content.replace(/\n/g, "\n    ").rainbow +
-       " in ".yellow + (t2 - t1) + "ms".red);*/
     }
   });
 
@@ -733,4 +669,50 @@ function userObjectify(user) {
     status: user.status,
     username: user.username,
   };
+}
+
+/**
+ * Wraps the command to capture any exceptions thrown asynchronously or synchronously with sentry
+ * @param mod error is originating from
+ * @param command that triggered the error
+ * @param msg containing offending command
+ * @param callCommandFunction function to call and capture errors from
+ */
+function commandWrapper(mod, command, msg, callCommandFunction) {
+  let returnValue = false;
+  try {
+    returnValue = callCommandFunction();
+    if (returnValue === true) {
+      return;
+    }
+  } catch (error) {
+    returnValue = Promise.reject(error);
+  }
+  if (returnValue && returnValue.catch) {
+    returnValue.catch((error) => {
+      if (raven) {
+        let extra = {
+          mod: mod,
+          channel: msg.channel.id,
+          channel_name: msg.channel.name,
+          command: command,
+          msg: msg.content
+        };
+        if (msg.hasOwnProperty("server")) {
+          extra.server = msg.server.id;
+          extra.server_name = msg.server.name;
+        }
+        raven.captureError(error, {
+          user: userObjectify(msg.author),
+          extra,
+        }, (result) => {
+          msg.reply("Sorry their was an error processing your command. The error is ```" + error +
+            "``` reference code `" + raven.getIdent(result) + "`");
+          console.error(error, raven.getIdent(result));
+        });
+      } else {
+        console.error(error);
+      }
+    })
+  }
 }
