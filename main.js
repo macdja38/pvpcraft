@@ -729,7 +729,6 @@ process.on('unhandledRejection', (reason, p) => {
 
 function userObjectify(user) {
   return {
-    avatar: user.avatar,
     id: user.id,
     status: user.status,
     username: user.username,
