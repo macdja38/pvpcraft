@@ -732,7 +732,6 @@ function userObjectify(user) {
     avatar: user.avatar,
     id: user.id,
     status: user.status,
-    typing: user.typing,
     username: user.username,
   };
 }
