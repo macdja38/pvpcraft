@@ -79,8 +79,7 @@ module.exports = class music {
           console.log("leaving");
           channel.text.sendMessage("Leaving voice channel due to inactivity.")
             .catch(() => {
-              channel.destroy();
-              delete this.boundChannels[id];
+              // does not matter if it fails to send the message, we leave anyway
             })
             .then(() => {
               channel.destroy();
