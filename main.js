@@ -241,7 +241,7 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
     setInterval(() => {
       if (Date.now() - lastMessage > waitBeforeRestart) {
         raven.captureException(new Error("Did not recieve messages in " + waitBeforeRestart));
-        process.exit(533);
+        setTimeout(() => process.exit(533), 3000); //allow time to report sentry exception before exiting
       }
     }, 10000)
   }, 30000);
@@ -293,7 +293,7 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
           extra.server_name = msg.server.name;
         }
         raven.captureError(error, {
-          user: msg.author,
+          user: userObjectify(msg.author),
           extra,
         });
       }
@@ -366,7 +366,7 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
                   extra.server_name = msg.server.name;
                 }
                 raven.captureError(error, {
-                  user: msg.author,
+                  user: userObjectify(msg.author),
                   extra,
                 }, (result) => {
                   msg.reply("Sorry their was an error processing your command. The error is ```" + error +
@@ -405,7 +405,7 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
               extra.server_name = msg.server.name;
             }
             raven.captureError(error, {
-              user: msg.author,
+              user: userObjectify(msg.author),
               extra,
             });
           }
@@ -726,3 +726,13 @@ process.on('unhandledRejection', (reason, p) => {
     console.error('Unhandled Rejection at: Promise', p, 'reason:', reason);
   }
 });
+
+function userObjectify(user) {
+  return {
+    avatar: user.avatar,
+    id: user.id,
+    status: user.status,
+    typing: user.typing,
+    username: user.username,
+  };
+}
