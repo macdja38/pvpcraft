@@ -34,15 +34,21 @@ let r;
 let raven;
 let ravenClient;
 
+let sentryEnv = config.get("sentryEnv", "");
+
 if (auth.get("sentryURL", "") != "") {
   console.log("Sentry Started".yellow);
   git.long((commit) => {
     git.branch((branch) => {
       ravenClient = require('raven');
-      raven = new ravenClient.Client(auth.data.sentryURL, {
+      let ravenConfig = {
         release: commit + "-" + branch,
         transport: new ravenClient.transports.HTTPSTransport({rejectUnauthorized: false})
-      });
+      };
+      if (sentryEnv) {
+        ravenConfig.environment = sentryEnv
+      }
+      raven = new ravenClient.Client(auth.data.sentryURL, ravenConfig);
       //raven's patch global seems to have been running synchronously and delaying the execution of other code.
       raven.patchGlobal(function (result) {
         process.exit(1);

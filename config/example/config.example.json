@@ -12,6 +12,7 @@
       "token": "tokenHere"
     }
   ],
+  "sentryEnv": "development",
   "minDiscords": 2,
   "shards": 2,
   "localShards": 2,
