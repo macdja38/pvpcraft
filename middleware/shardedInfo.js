@@ -61,7 +61,7 @@ module.exports = class shardedInfo {
       if (musicModule && musicModule.module.hasOwnProperty("boundChannels")) {
         connectionDiscordsIds = Object.keys(musicModule.module.boundChannels);
         connectionBoundChannels = connectionDiscordsIds.map(id => musicModule.module.boundChannels[id]);
-        playing = connectionBoundChannels.filter(c => c.connection.playing).length
+        playing = connectionBoundChannels.filter(c => c.connection && c.connection.playing).length
       }
       this._standardDB.set(null,
         {
