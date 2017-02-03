@@ -18,11 +18,18 @@ module.exports = class permissionsManager {
   }
 
   getCommands() {
-    return ["pex", "perm"];
+    return ["pex", "perm", "setting"];
   }
 
   onCommand(msg, command, perms) {
     //commands that deal with permissions
+
+    if (command.commandnos === "setting") {
+      let urlRoot = this.config.get("website", {"settingsRoot": "https://bot.pvpcraft.ca"}).settingsRoot;
+      msg.reply(`${urlRoot}/bot/${this.client.user.id}/server/${msg.server.id}/ranks`);
+      return true;
+    }
+
     if (command.command === "pex" || command.commandnos === "perm") {
 
       //if no command is supplied supply help url

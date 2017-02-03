@@ -8,5 +8,7 @@
     "port": "28015"
   },
   "sentryURL": "",
-  "googleAnalyticsId": "trackingId"
+  "googleAnalyticsId": "trackingId",
+  "pvpApiToken": "tokenGoesHere",
+  "pvpApiEndpoint": "wss://api.pvpcraft.ca/botconfig/v1/ws",
 }

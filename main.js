@@ -24,6 +24,9 @@ let analytics = new (require('./lib/analytics'))(trackingId);
 
 let git = require('git-rev');
 
+var PvpClient = require('pvpclient');
+var pvpClient;
+
 let ConfigsDB = require("./lib/configDB.js");
 let configDB;
 let permsDB;
@@ -283,16 +286,19 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
     if (msg.author.id === "85257659694993408" && msg.content.indexOf("crashnow") > 0) {
       process.exit(0);
     }
+    let command;
     try {
-      var command = Parse.command(l, msg, {"allowMention": id, "botName": name});
+      command = Parse.command(l, msg, {"allowMention": id, "botName": name});
     } catch (error) {
       if (raven) {
         let extra = {
           channel: msg.channel.id,
           channel_name: msg.channel.name,
-          command: command,
           msg: msg.content
         };
+        if (command) {
+          extra.command = command;
+        }
         if (msg.hasOwnProperty("server")) {
           extra.server = msg.server.id;
           extra.server_name = msg.server.name;
@@ -386,6 +392,10 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
 
 //When a connection is made initialise stuff.
   client.on('ready', () => {
+    if (!hasBeenReady) {
+      pvpClient = new PvpClient(auth.get("pvpApiEndpoint"), auth.get("pvpApiToken"), client.user.id, client.servers.map(g => g.id));
+      pvpClient.connect();
+    }
     console.log("Got ready");
     if (client.servers.length <= config.get("minDiscords", 1)) {
       process.exit(258);
@@ -434,6 +444,7 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
 
   //When bot is added to a new server tell carbon about it.
   client.on('serverCreated', (server) => {
+    pvpClient.addGuild(server.id);
     var configs = [configDB.serverCreated(server), permsDB.serverCreated(server)];
     Promise.all(configs).then(() => {
       for (let middleware of middlewareList) {
@@ -594,6 +605,7 @@ function reload() {
     feeds,
     messageSender,
     slowSender,
+    pvpClient,
     modules: moduleList,
     middleWares: middlewareList
   };
@@ -646,7 +658,8 @@ function reloadTarget(msg, command, perms, l, moduleList, middlewareList) {
         perms,
         feeds,
         messageSender,
-        slowSender
+        slowSender,
+        pvpClient
       });
       if (mod.onReady) mod.onReady();
       moduleList[module].module = mod;

@@ -20,6 +20,7 @@ module.exports = class evaluate {
     this.modules = e.modules;
     this.config = e.config;
     this.configDB = e.configDB;
+    this.pvpClient = e.pvpClient;
     this.messageSender = e.messageSender;
     this.fileConfig = e.config;
     this.slowSender = new SlowSender(e);
@@ -43,7 +44,7 @@ module.exports = class evaluate {
     //if you know what you are doing and would like to use the id in the config file you may replace msg.author.id == id, with
     //this.config.get("permissions", {"permissions": {admins: []}}).admins.includes(msg.author.id)
     if (command.command === "eval" && msg.author.id === "85257659694993408") {
-      var code = command.args.join(" ");
+      let code = command.args.join(" ");
 
       //these are so that others code will run in the eval if they depend on things.
       let client = this.client;
@@ -60,7 +61,7 @@ module.exports = class evaluate {
       let t1;
       t0 = now();
       try {
-        var evaluated = eval(code);
+        let evaluated = eval(code);
         t1 = now();
         let string = "```xl\n" +
           utils.clean(code) +
