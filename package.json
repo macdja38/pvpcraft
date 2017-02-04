@@ -6,7 +6,7 @@
     "cli-table2": "^0.2.0",
     "colors": "^1.1.2",
     "deepmerge": "macdja38/deepmerge#patch-1",
-    "discord.js": "hydrabolt/discord.js#v8",
+    "discord.js": "macdja38/discord.js#v8-es6",
     "git-rev": "^0.2.1",
     "google": "^2.0.0",
     "google-images": "^2.0.0",
