@@ -42,3 +42,6 @@ index.html
 public/images/
 public/javascripts/
 test.js
+
+#warframeData
+warframeData/*.json
