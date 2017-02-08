@@ -582,8 +582,8 @@ module.exports = class Warframe {
           let sortie = state.Sorties[0];
           let fields = sortie.Variants.map(mission => {
             return {
-              name: `  ${parseState.getNodeName(mission.node)}`,
-              value: `  ${parseState.getMissionType(mission.missionType)} with ${parseState.getSortieModifier(mission.modifierType)}`,
+              name: `  ${parseState.getNodeName(mission.node)} `,
+              value: `  ${parseState.getMissionType(mission.missionType)} with ${parseState.getSortieModifier(mission.modifierType)} ‎`,
               inline: true
             };
           });
