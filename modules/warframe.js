@@ -580,7 +580,6 @@ module.exports = class Warframe {
       return worldState.get().then((state) => {
         if (state.Sorties.length > 0) {
           let sortie = state.Sorties[0];
-          console.log(sortie);
           let fields = sortie.Variants.map(mission => {
             return {
               name: `  ${parseState.getNodeName(mission.node)}`,
@@ -592,11 +591,10 @@ module.exports = class Warframe {
             title: `${(sortie.Boss || "").split("_").pop()} Sortie`,
             timestamp: parseState.toISOTime(sortie.Expiry),
             footer: {
-              text: `Expires in ${parseState.toTimeDifference(sortie.Expiry, state)} which is on `
+              text: `Expires in ${parseState.toTimeDifference(state, sortie.Expiry)} which is on `
             },
             fields,
           };
-          console.log(embed);
           this.client.sendMessage(msg.channel, "", { embed });
           return true;
         }
