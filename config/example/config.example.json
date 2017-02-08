@@ -13,9 +13,9 @@
     }
   ],
   "sentryEnv": "development",
-  "minDiscords": 2,
-  "shards": 2,
-  "localShards": 2,
+  "minDiscords": 1,
+  "shards": 1,
+  "localShards": 1,
   "shardStart": 0,
   "logShardStatus": false,
   "waitBeforeRestart": 480,
@@ -37,12 +37,9 @@
     "rank": "./modules/rank.js",
     "cleverBot": "./modules/cleverBot.js"
   },
-  "default": {
-    "prefix": [
-      "//"
-    ],
-    "changeThresh": 1
-  },
   "purgeLength": 25,
-  "maxPurgeLength": 100
+  "maxPurgeLength": 100,
+  "channelRateLimitWhiteList": [
+    "enter"
+  ]
 }
