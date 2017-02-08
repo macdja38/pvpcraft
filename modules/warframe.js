@@ -446,14 +446,15 @@ module.exports = class Warframe {
 
     if ((command.commandnos === 'trader' || command.commandnos === 'voidtrader' || command.commandnos === 'baro') && perms.check(msg, "warframe.trader")) {
       return worldState.get().then((state) => {
+        console.log(state.VoidTraders[0]);
         if (!state.VoidTraders || !state.VoidTraders[0]) {
           this.client.sendMessage(msg.channel, "Baro has disappeared from the universe.");
           return true;
         }
         if (state.VoidTraders[0].Manifest) {
-          var rep = "```haskell\nBaro leaving " + state.VoidTraders[0].Node + " in " +
-            utils.secondsToTime(state.VoidTraders[0].Expiry.sec - state.Time) + "\n";
-          for (var item of state.VoidTraders[0].Manifest) {
+          let rep = "```haskell\nBaro leaving " + state.VoidTraders[0].Node + " in " +
+            utils.secondsToTime(state.VoidTraders[0].Expiry.$date.$numberLong/1000 - state.Time) + "\n";
+          for (let item of state.VoidTraders[0].Manifest) {
             rep += "item: " + parseState.getName(item.ItemType) + " - price:" + item.PrimePrice + " ducats " + item.RegularPrice + "cr\n";
           }
           rep += "```";
@@ -461,7 +462,7 @@ module.exports = class Warframe {
         }
         else {
           this.client.sendMessage(msg.channel, "```haskell\nBaro appearing at " + state.VoidTraders[0].Node + " in " +
-            utils.secondsToTime(state.VoidTraders[0].Activation.sec - state.Time) + "\n```");
+            parseState.toTimeDifference(state, state.VoidTraders[0].Activation) + "\n```");
         }
       });
     }
@@ -518,7 +519,7 @@ module.exports = class Warframe {
               parseState.getNodeName(alert.MissionInfo.location) + " levels " + alert.MissionInfo.minEnemyLevel + "-" + alert.MissionInfo.maxEnemyLevel + "\n" +
               parseState.getFaction(alert.MissionInfo.faction) + " " + parseState.getMissionType(alert.MissionInfo.missionType) + "\n" +
               rewards +
-              "\nExpires in " + utils.secondsToTime(alert.Expiry.sec - state.Time) +
+              "\nExpires in " + parseState.toTimeDifference(state, alert.Expiry) +
               "\n```"
             );
           }
@@ -577,24 +578,25 @@ module.exports = class Warframe {
 
     else if (command.commandnos === 'sortie' && perms.check(msg, "warframe.sortie")) {
       return worldState.get().then((state) => {
-        if (state.Sorties[0]) {
-          let boss = parseState.getBoss(state.Sorties[0].Variants[0].bossIndex);
-          let text = "```haskell\n" + utils.secondsToTime(state.Sorties[0].Expiry.sec - state.Time) + " left to defeat " +
-            boss.name + " of the " + boss.faction + "\n";
-          for (let Variant of state.Sorties[0].Variants) {
-            let Region = parseState.getRegion(Variant.regionIndex);
-            if (!Region) continue;
-            if (Region.missions[Variant.missionIndex] != "Assassination") {
-              text += Region.missions[Variant.missionIndex] + " on " + Region.name + " with " +
-                parseState.getModifiers(Variant.modifierIndex) + "\n";
-            }
-            else {
-              text += "Assassinate " + boss.name + " on " + Region.name + " with " +
-                parseState.getModifiers(Variant.modifierIndex) + "\n";
-            }
-          }
-          text += "```";
-          this.client.sendMessage(msg.channel, text);
+        if (state.Sorties.length > 0) {
+          let sortie = state.Sorties[0];
+          let fields = sortie.Variants.map(mission => {
+            return {
+              name: `  ${parseState.getNodeName(mission.node)}`,
+              value: `  ${parseState.getMissionType(mission.missionType)} with ${parseState.getSortieModifier(mission.modifierType)}`,
+              inline: true
+            };
+          });
+          let embed = {
+            title: `${(sortie.Boss || "").split("_").pop()} Sortie`,
+            timestamp: parseState.toISOTime(sortie.Expiry),
+            footer: {
+              text: `Expires in ${parseState.toTimeDifference(sortie.Expiry, state)} which is on `
+            },
+            fields,
+          };
+          console.log(embed);
+          this.client.sendMessage(msg.channel, "", { embed });
           return true;
         }
       });
@@ -621,26 +623,36 @@ module.exports = class Warframe {
         }
         if (text != "```haskell\n") {
           this.client.sendMessage(msg.channel, text + "```")
+        } else {
+          this.client.sendMessage("No prime access could be found");
         }
       });
     }
 
     else if ((command.commandnos === 'update') && perms.check(msg, "warframe.update")) {
       return worldState.get().then((state) => {
-        let text = "```haskell\n";
+        let fields = [];
+        let embed = {
+          title: "Warframe updates",
+          fields,
+        };
         let checks = ["update", "hotfix"];
         for (let event of state.Events) {
           for (let l of checks) {
             if (event.Messages[0].Message.toLowerCase().indexOf(l) > -1) {
-              text += event.Messages[0].Message.toUpperCase() + " since " +
-                utils.secondsToTime(state.Time - event.Date.sec) + " ago \n learn more here: " + event.Prop + "\n";
+              fields.push({
+                value: `[${event.Messages[0].Message.toLowerCase()}](${event.Prop}) Since ${parseState.toTimeDifferenceInPast(state, event.Date)} ago.`,
+                name: "\u00A0\u200A\u000B\u3000\uFEFF\u2004\u2000\u200E",
+                inline: false,
+              });
               checks.slice(l);
+              if (checks.length === 0) break;
             }
           }
         }
-        if (text !== "```haskell\n") {
-          this.client.sendMessage(msg.channel, text + "```");
-        }
+        console.log(embed);
+        this.client.sendMessage(msg.channel, "", { embed });
+        return true;
       });
     }
 
