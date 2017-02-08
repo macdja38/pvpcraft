@@ -580,6 +580,7 @@ module.exports = class Warframe {
       return worldState.get().then((state) => {
         if (state.Sorties.length > 0) {
           let sortie = state.Sorties[0];
+          console.log(sortie);
           let fields = sortie.Variants.map(mission => {
             return {
               name: `  ${parseState.getNodeName(mission.node)}`,
