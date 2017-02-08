@@ -72,14 +72,14 @@ module.exports = class evaluate {
         this.client.sendMessage(msg.channel, string).then(message => {
           if (evaluated && evaluated.then) {
             evaluated.catch((error) => {
-              string = string.substring(0, string.length - 4  );
+              string = string.substring(0, string.length - 4);
               string += "\n- - - - - Promise throws- - - - - - -\n";
               string += utils.clean(error);
               string += "\n- - - - - - - - - - - - - - - - - - -\n";
               string += "In " + (now() - t0) + " milliseconds!\n```";
               this.client.updateMessage(message, string).catch(error => console.error(error));
             }).then((result) => {
-              string = string.substring(0, string.length - 4  );
+              string = string.substring(0, string.length - 4);
               string += "\n- - - - -Promise resolves to- - - - -\n";
               string += utils.clean(result);
               string += "\n- - - - - - - - - - - - - - - - - - -\n";
