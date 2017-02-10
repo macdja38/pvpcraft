@@ -244,7 +244,7 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
         slack: true,
       };
       hookOptions.attachments = [attachment];
-      config.get("blockHooks").forEach(hook => client.sendWebhookMessage(hook, "", hookOptions));
+      config.get("blockHooks").forEach(hook => client.sendWebhookMessage(hook, "", hookOptions).catch(() => {}));
     }, {threshold: 500});
 
     setInterval(() => {
