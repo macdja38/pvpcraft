@@ -249,7 +249,9 @@ if (cluster.isMaster && config.get("shards", 2) > 1) {
 
     setInterval(() => {
       if (Date.now() - lastMessage > waitBeforeRestart) {
-        raven.captureException(new Error("Did not recieve messages in " + waitBeforeRestart));
+        if (raven) {
+          raven.captureException(new Error("Did not recieve messages in " + waitBeforeRestart));
+        }
         setTimeout(() => process.exit(533), 3000); //allow time to report sentry exception before exiting
       }
     }, 10000)

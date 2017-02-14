@@ -325,22 +325,22 @@ module.exports = class music {
           var volume = parseInt(command.args[0]);
           if (111 > volume && volume > 4) {
             this.boundChannels[id].setVolume(volume);
-            msg.reply("Volume set to **" + volume + "**")
+            msg.reply(`Volume set to **${volume}**`).catch(perms.getAutoDeny(msg));;
 
           } else {
-            msg.reply("Sorry, invalid volume, please enter a number between 5 and 110")
+            msg.reply("Sorry, invalid volume, please enter a number between 5 and 110").catch(perms.getAutoDeny(msg));
           }
           return true;
         } else {
           if (perms.check(msg, "music.volume.list")) {
-            msg.reply("Current volume is **" + this.boundChannels[id].getVolume() + "**");
+            msg.reply("Current volume is **" + this.boundChannels[id].getVolume() + "**").catch(perms.getAutoDeny(msg));
             return true;
           }
           return false;
         }
       } else {
         if (perms.check(msg, "music.volume.list") || perms.check(msg, "music.volume.set")) {
-          msg.channel.sendMessage("Sorry, Bot is not currently in a voice channel use " + command.prefix + "init while in a voice channel to bind it.");
+          msg.channel.sendMessage(`Sorry, Bot is not currently in a voice channel use ${command.prefix} init while in a voice channel to bind it.`);
           return true;
         }
         else {

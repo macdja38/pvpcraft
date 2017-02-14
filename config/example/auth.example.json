@@ -5,10 +5,11 @@
   "abalKey": "key",
   "reThinkDB": {
     "host": "localhost",
-    "port": "28015"
+    "port": "28015",
+    "db": "tau"
   },
   "sentryURL": "",
   "googleAnalyticsId": "trackingId",
   "pvpApiToken": "tokenGoesHere",
-  "pvpApiEndpoint": "wss://api.pvpcraft.ca/botconfig/v1/ws",
+  "pvpApiEndpoint": "wss://api.pvpcraft.ca/botconfig/v1/ws"
 }
