@@ -3,7 +3,7 @@
   "dependencies": {
     "blocked": "^1.2.1",
     "chess": "^0.2.7",
-    "cleverbot-node": "^0.2.2",
+    "cleverbot.io": "^1.0.4",
     "cli-table2": "^0.2.0",
     "colors": "^1.1.2",
     "deepmerge": "macdja38/deepmerge#patch-1",
