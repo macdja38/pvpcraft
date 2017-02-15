@@ -105,7 +105,7 @@ module.exports = class music {
 
   onCommand(msg, command, perms) {
     if (!msg.channel.server) return; //this is a pm... we can't do music stuff here.
-    var id = msg.channel.server.id;
+    let id = msg.channel.server.id;
 
 
     if (command.command === "init" && perms.check(msg, "music.init")) {
@@ -115,15 +115,9 @@ module.exports = class music {
       }
       if (msg.author.voiceChannel) {
         if (msg.author.voiceChannel.server.id === msg.channel.server.id) {
-          this.init(id, msg, command, perms);
-          /*.catch((e)=>{
-           console.log("Bound thing finished maybe");
-           if (e) {
-           console.log(e);
-           msg.reply(e);
-           delete this.boundChannels[id];
-           }
-           });*/
+          this.init(id, msg, command, perms)
+            .catch(() => { /* failure is handled up the chain, this can be used by other things to determine if it fails, but this command does not care. */
+            });
         }
         else {
           msg.reply("You must be in a voice channel in this server to use this command here. If you are currently in a voice channel please rejoin it.")
@@ -317,7 +311,7 @@ module.exports = class music {
       return true;
     }
 
-    if (command.commandnos === "volume") {
+    if (command.commandnos === "volume" && (perms.check(msg, "music.volume.set") || perms.check(msg, "music.volume.list"))) {
       msg.reply("In order to vastly increase performance volume is currently disabled, This feature may be re-enabled in the future");
       return true;
       if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
@@ -325,7 +319,7 @@ module.exports = class music {
           var volume = parseInt(command.args[0]);
           if (111 > volume && volume > 4) {
             this.boundChannels[id].setVolume(volume);
-            msg.reply(`Volume set to **${volume}**`).catch(perms.getAutoDeny(msg));;
+            msg.reply(`Volume set to **${volume}**`).catch(perms.getAutoDeny(msg));
 
           } else {
             msg.reply("Sorry, invalid volume, please enter a number between 5 and 110").catch(perms.getAutoDeny(msg));
@@ -366,7 +360,7 @@ module.exports = class music {
 
     if (command.commandnos === "logchannel" && perms.check(msg, "music.logchannels")) {
       text = "Playing Music in:\n";
-      for (var i in this.boundChannels) {
+      for (let i in this.boundChannels) {
         if (this.boundChannels.hasOwnProperty(i)) {
           text += `Server: ${this.boundChannels[i].server.name} in voice channel ${this.boundChannels[i].text.name}\n`
         }
