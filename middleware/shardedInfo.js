@@ -13,6 +13,7 @@ var StandardDB = require('../lib/standardDB');
 module.exports = class shardedInfo {
   constructor(e) {
     this._auth = e.auth;
+    this._configDB = e.configDB;
     this._client = e.client;
     this._timer = false;
     this._raven = e.raven;
@@ -25,6 +26,7 @@ module.exports = class shardedInfo {
     this.logShardStatus = e.config.get("logShardStatus", false);
     this._joinLeaveHooks = e.config.get("joinLeaveHooks", false);
     this._pmHooks = e.config.get("pmHooks", false);
+    this.currentStatus = null;
     this._admins = e.config.get("permissions", {"admins": []}).admins;
     this.botReady = new Promise((resolve) => {
       this.botReadyResolve = resolve;
@@ -38,6 +40,13 @@ module.exports = class shardedInfo {
     if (this._timer) clearInterval(this._timer);
     this._timer = setInterval(this._updateDB.bind(this), 10000);
     this.botReadyResolve(true);
+    this._statusInterval = setInterval(() => {
+      let newStatus = this._configDB.get("status", null, {server: "*"});
+      if (this.currentStatus != newStatus) {
+        this.currentStatus = newStatus;
+        this._client.setStatus("online", newStatus);
+      }
+    }, 30000);
   }
 
   _getArray(n) {
@@ -81,6 +90,7 @@ module.exports = class shardedInfo {
    */
   onDisconnect() {
     if (this._timer) clearInterval(this._timer);
+    if (this._statusInterval) clearInterval(this._statusInterval);
   }
 
   onServerCreated(server) {
