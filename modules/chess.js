@@ -45,12 +45,12 @@ module.exports = class chess {
     this.games = {};
     this.turns = {};
     this.messageSender = e.messageSender;
-    global.r.tableList().contains(table)
+    this.r.tableList().contains(table)
       .do((databaseExists) => {
-        return global.r.branch(
+        return this.r.branch(
           databaseExists,
           {dbs_created: 0},
-          global.r
+          this.r
             .tableCreate(table, {})
             .do(()=>this.r.table(table).indexCreate("channel1"))
             .do(()=>this.r.table(table).indexCreate("channel2"))
