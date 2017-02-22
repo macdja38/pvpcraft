@@ -327,7 +327,7 @@ module.exports = class PvPCraft {
 
           this.raven.on("error", function (e) {
             console.error("Could not report event to sentry:", e.reason);
-          })
+          });
           resolve(true);
         })
       });
@@ -600,7 +600,7 @@ module.exports = class PvPCraft {
       process.exit(1);
     });
     process.on("MaxListenersExceededWarning", this.captureError.bind(this));
-    process.on("SIGINT", this.shutDown);
+    process.on("SIGINT", this.shutDown.bind(this));
   }
 
   /**
