@@ -17,6 +17,8 @@ const Twitter = require('twit');
 const newStateGrabber = require("../lib/newWorldState");
 const newWorldState = new newStateGrabber("http://content.warframe.com/dynamic/worldState.php", "pc");
 
+let cluster = require("cluster");
+
 let master;
 if (process.env.id == 0) {
   master = true;
@@ -37,6 +39,8 @@ module.exports = class Warframe {
     this.config = e.configDB;
     //noinspection JSUnresolvedVariable
     this.raven = e.raven;
+    //noinspection JSUnresolvedVariable
+    this.r = e.r;
     this.alerts = [];
     this.rebuildAlerts = () => {
       this.alerts = [];
@@ -63,13 +67,13 @@ module.exports = class Warframe {
     }
     this.onAlert = new Promise((resolve) => {
       let dbReady;
-      if (!global.cluster.worker || global.cluster.worker.id == 1) {
-        dbReady = createDBIfNotExists("alerts");
+      if (!cluster.worker || cluster.worker.id == 1) {
+        dbReady = this.createDBIfNotExists("alerts");
       } else {
         dbReady = Promise.resolve();
       }
       return dbReady.then(() => {
-        /*global.r.table(this.table).insert([{id: "*", prefix: "//", "changeThresh": 1}]).run(this.con).then((res)=>{
+        /*this.r.table(this.table).insert([{id: "*", prefix: "//", "changeThresh": 1}]).run(this.con).then((res)=>{
          console.log(res);
          });*/
         console.log("Did, DB Thing");
@@ -96,7 +100,7 @@ module.exports = class Warframe {
                   }
                   if (alert) {
                     console.log("Logging tweet");
-                    global.r.table('alerts').insert(alert.reduce((o, v, i) => {
+                    this.r.table('alerts').insert(alert.reduce((o, v, i) => {
                       o[i] = v;
                       return o;
                     }, {})).run().then(console.log);
@@ -105,7 +109,7 @@ module.exports = class Warframe {
               })
           }
         }
-        global.r.table('alerts').changes().run((err, cursor) => {
+        this.r.table('alerts').changes().run((err, cursor) => {
           if (err) {
             console.error(err);
             return;
@@ -682,15 +686,15 @@ module.exports = class Warframe {
     }
     return false;
   }
-};
 
-function createDBIfNotExists(name) {
-  return global.r.tableList().contains(name)
-    .do((databaseExists) => {
-      return global.r.branch(
-        databaseExists,
-        {dbs_created: 0},
-        global.r.tableCreate(name)
-      );
-    }).run()
-}
+  createDBIfNotExists(name) {
+    return this.r.tableList().contains(name)
+      .do((databaseExists) => {
+        return this.r.branch(
+          databaseExists,
+          {dbs_created: 0},
+          this.r.tableCreate(name)
+        );
+      }).run()
+  }
+};
