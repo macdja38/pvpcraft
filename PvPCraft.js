@@ -30,7 +30,7 @@ const R = require("rethinkdbdash");
 
 let lastMessage = Date.now();
 
-let waitBeforeRestart = 30000+300000000000000;
+let waitBeforeRestart = 30000;
 
 /**
  * log blocking events
