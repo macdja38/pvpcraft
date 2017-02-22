@@ -4,28 +4,28 @@
 /**
  * Created by macdja38 on 2016-04-17.
  */
-/* var module = require('module');
- module.wrapper[0] += '"use strict";';
+/* var module = require("module");
+ module.wrapper[0] += ""use strict";";
  Object.freeze(module.wrap);
  */
 "use strict";
-const cluster = require('cluster');
+const cluster = require("cluster");
 const Configs = require("./lib/config.js");
 const blocked = require("blocked");
-const git = require('git-rev');
-const ravenClient = require('raven');
-const PvPClient = require('pvpclient');
+const git = require("git-rev");
+const ravenClient = require("raven");
+const PvPClient = require("pvpclient");
 const ConfigsDB = require("./lib/configDB.js");
 const Discord = require("discord.js");
-const MessageSender = require('./lib/messageSender');
+const MessageSender = require("./lib/messageSender");
 const Permissions = require("./lib/permissions.js");
-const Analytics = require('./lib/analytics');
+const Analytics = require("./lib/analytics");
 const now = require("performance-now");
 const Parse = require("./lib/newParser.js");
-const colors = require('colors');
-const request = require('request');
-const SlowSender = require('./lib/slowSender');
-const Feeds = require('./lib/feeds');
+const colors = require("colors");
+const request = require("request");
+const SlowSender = require("./lib/slowSender");
+const Feeds = require("./lib/feeds");
 
 let lastMessage = Date.now();
 
@@ -111,7 +111,7 @@ module.exports = class PvPCraft {
   }
 
   readyRethinkDB() {
-    this.r = require('rethinkdbdash')(this.fileAuth.get("reThinkDB", {}));
+    this.r = require("rethinkdbdash")(this.fileAuth.get("reThinkDB", {}));
   }
 
   resolveWhenReady() {
@@ -151,11 +151,11 @@ module.exports = class PvPCraft {
   }
 
   registerClientListeners() {
-    this.client.on('serverDeleted', this.onServerDeleted.bind(this));
-    this.client.on('serverCreated', this.onServerCreated.bind(this));
-    this.client.on('message', this.onMessage.bind(this));
-    this.client.on('error', this.onError.bind(this));
-    this.client.on('disconnect', this.onDisconnect.bind(this));
+    this.client.on("serverDeleted", this.onServerDeleted.bind(this));
+    this.client.on("serverCreated", this.onServerCreated.bind(this));
+    this.client.on("message", this.onMessage.bind(this));
+    this.client.on("error", this.onError.bind(this));
+    this.client.on("disconnect", this.onDisconnect.bind(this));
   }
 
   onError() {
@@ -321,12 +321,12 @@ module.exports = class PvPCraft {
             shardId: process.env.id,
           });
 
-          this.raven.on('logged', function (e) {
+          this.raven.on("logged", function (e) {
             console.log("Error reported to sentry!: ".green + e.id);
           });
 
-          this.raven.on('error', function (e) {
-            console.error('Could not report event to sentry:', e.reason);
+          this.raven.on("error", function (e) {
+            console.error("Could not report event to sentry:", e.reason);
           })
           resolve(true);
         })
@@ -594,13 +594,13 @@ module.exports = class PvPCraft {
   }
 
   registerProcessListeners() {
-    process.on('unhandledRejection', this.captureError.bind(this));
+    process.on("unhandledRejection", this.captureError.bind(this));
     this.raven.install(function () {
-      console.log('This is thy sheath; there rust, and let me die.');
+      console.log("This is thy sheath; there rust, and let me die.");
       process.exit(1);
     });
-    process.on('MaxListenersExceededWarning', this.captureError.bind(this));
-    process.on('SIGINT', this.shutDown);
+    process.on("MaxListenersExceededWarning", this.captureError.bind(this));
+    process.on("SIGINT", this.shutDown);
   }
 
   /**
