@@ -26,6 +26,7 @@ const colors = require("colors");
 const request = require("request");
 const SlowSender = require("./lib/slowSender");
 const Feeds = require("./lib/feeds");
+const R = require("rethinkdbdash");
 
 let lastMessage = Date.now();
 
@@ -111,7 +112,7 @@ module.exports = class PvPCraft {
   }
 
   readyRethinkDB() {
-    this.r = require("rethinkdbdash")(this.fileAuth.get("reThinkDB", {}));
+    this.r = R(this.fileAuth.get("reThinkDB", {}));
   }
 
   resolveWhenReady() {
