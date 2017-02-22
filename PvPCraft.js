@@ -180,7 +180,7 @@ module.exports = class PvPCraft {
 
   onServerCreated(server) {
     this.pvpClient.addGuild(server.id);
-    let configs = [configDB.serverCreated(server), permsDB.serverCreated(server)];
+    let configs = [this.configDB.serverCreated(server), this.permsDB.serverCreated(server)];
     Promise.all(configs).then(() => {
       for (let middleware of this.middlewareList) {
         if (middleware.ware) {
