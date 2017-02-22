@@ -643,7 +643,7 @@ module.exports = class moderationV2 {
   presence(oldUser, newUser) {
     try {
       if (oldUser.username != newUser.username || oldUser.discriminator != newUser.discriminator || (oldUser.avatar != newUser.avatar && !newUser.bot)) {
-        var text = "";
+        let text = "";
         if (oldUser.username != newUser.username) {
           text += "**Username** changed from " + utils.removeBlocks(oldUser.username) + " to " + utils.removeBlocks(newUser.username) + "\n";
         }
@@ -662,14 +662,6 @@ module.exports = class moderationV2 {
             this.sendHookedMessage("user", options, text, server.id)
           }
         });
-        /*for (var serverid in this.logging) {
-         if (this.logging.hasOwnProperty(serverid)) {
-         var server = this.client.servers.get("id", serverid);
-         if (server && server.members.get("id", newUser.id)) {
-         this.log(server, text)
-         }
-         }
-         }*/
       }
     }
     catch (err) {
@@ -678,8 +670,8 @@ module.exports = class moderationV2 {
       if (this.raven) {
         this.raven.captureException(err, {
           extra: {
-            oldUser: oldUser,
-            newUser: newUser
+            oldUser: userObjectify(oldUser),
+            newUser: userObjectify(newUser)
           }
         });
       }
@@ -1030,4 +1022,12 @@ function roleIn(role, newRoles) {
 function getBar(current, total, length, char = "=") {
   let progress = Math.ceil(current / total * length);
   return `[${char.repeat(progress)}${" ".repeat(length - progress)}] ${current}/${total}`;
+}
+
+function userObjectify(user) {
+  return {
+    id: user.id,
+    status: user.status,
+    username: user.username,
+  };
 }
