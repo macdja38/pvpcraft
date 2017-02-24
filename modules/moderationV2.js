@@ -887,7 +887,6 @@ module.exports = class moderationV2 {
   };
 
   memberUpdated(guild, member, oldMember) {
-    throw "woa, problem";
     if (!oldMember) return;
     let fields = [{
       title: "User",
