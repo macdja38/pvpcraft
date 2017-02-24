@@ -440,7 +440,7 @@ module.exports = class moderationV2 {
       slack: true,
     };
     let fallbackMessage = "";
-    if (options.hasOwnProperty("user")) {
+    if (options.hasOwnProperty("user") && options.user.hasOwnProperty("username")) {
       attachment.author_name = options.user.username;
       attachment.author_icon = options.user.avatarURL;
       fallbackMessage += `${attachment.title} | `;
@@ -884,10 +884,11 @@ module.exports = class moderationV2 {
   };
 
   memberRemoved(server, user) {
+    if (!user || !user.id) return;
     this.sendHookedMessage("member.removed", {user}, {
       title: "User Left or was Kicked", fields: [{
         title: "User",
-        value: user.mention,
+        value: `<@${user.id}>`,
         short: true,
       }]
     }, server.id);
