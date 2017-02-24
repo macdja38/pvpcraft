@@ -19,7 +19,7 @@ module.exports = class minecraft {
   }
 
   onCommand(msg, command, perms) {
-    var t1 = now();
+    let t1 = now();
     if (command.command === "mcping" && perms.check(msg, "minecraft.mcping")) {
       let combined = command.args.join(".").match(/(.*?):(.*)/);
       let address;
@@ -52,7 +52,7 @@ module.exports = class minecraft {
         msg.channel.createMessage(msg.author.mention + ", " + "usage `" + command.prefix + "mcavatar <minecraft username>`");
         return true;
       }
-      msg.channel.sendMessage({
+      msg.channel.createMessage({
         file: {
           file: "https://mcapi.ca/avatar/2d/" + command.args[0] + "/100/" + ((command.flags.includes("b")) ? "false" : "true"),
           name: command.args[0] + ".png"
@@ -66,7 +66,7 @@ module.exports = class minecraft {
         msg.channel.createMessage(msg.author.mention + ", " + "usage `" + command.prefix + "mcskin <minecraft username>`");
         return true;
       }
-      msg.channel.sendMessage({
+      msg.channel.createMessage({
         file: {
           file: "https://visage.surgeplay.com/full/404/" + command.args[0] + ".png",
           name: command.args[0] + ".png"
