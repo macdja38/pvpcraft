@@ -128,7 +128,7 @@ module.exports = class Warframe {
                     let madeMentionable = [];
                     for (let thing in server.items) {
                       if (server.items.hasOwnProperty(thing) && guild.roles.get(server.items[thing])) {
-                        if (alert["3"].toLowerCase().indexOf(thing) > -1 && channel.server.roles.has("id", server.items[thing])) {
+                        if (alert["3"].toLowerCase().indexOf(thing) > -1 && channel.guild.roles.get(server.items[thing])) {
                           things.push(server.items[thing]);
                           madeMentionable.push(guild.editRole(server.items[thing], {
                             mentionable: true
@@ -264,13 +264,13 @@ module.exports = class Warframe {
           return true;
         }
         let rankToJoin = command.args[1].toLowerCase();
-        let role = msg.server.roles.get("id", roles[rankToJoin]);
+        let role = msg.channel.guild.roles.get(roles[rankToJoin]);
         if (role) {
           msg.channel.guild.addMemberRole(msg.author.id, role.id, (error) => {
             let logChannel = this.config.get("msgLog", false, {server: msg.channel.guild.id});
             if (error) {
               if (logChannel) {
-                logChannel = msg.server.channels.get("id", logChannel);
+                logChannel = msg.guild.channels.get(logChannel);
                 if (logChannel) {
                   this.client.createMessage(logChannel, `Error ${error} promoting ${utils.removeBlocks(msg.author.username)} try redefining your rank and making sure the bot has enough permissions.`).catch(console.error)
                 } else {
@@ -279,7 +279,7 @@ module.exports = class Warframe {
               }
             } else {
               if (logChannel) {
-                logChannel = msg.server.channels.get("id", logChannel);
+                logChannel = msg.guild.channels.get(logChannel);
                 if (logChannel) {
                   this.client.createMessage(logChannel, `${utils.removeBlocks(msg.author.username)} added themselves to ${utils.removeBlocks(role.name)}!`)
                 }
@@ -298,20 +298,20 @@ module.exports = class Warframe {
           msg.channel.createMessage(msg.author.mention + ", " + `Please supply a rank to leave using \`${command.prefix}alerts leave \<rank\>\`, for a list of items use \`${command.prefix}alerts list\``);
           return true;
         }
-        let role = msg.server.roles.get("id", roles[command.args[1]]);
+        let role = msg.channel.guild.roles.get(roles[command.args[1]]);
         if (role) {
           msg.channel.guild.removeMemberRole(msg.author.id, role.id, (error) => {
             let logChannel = this.config.get("msgLog", false, {server: msg.channel.guild.id});
             if (error) {
               if (logChannel) {
-                logChannel = msg.server.channels.get("id", logChannel);
+                logChannel = msg.channel.guild.channels.get(logChannel);
                 if (logChannel) {
                   this.client.createMessage(logChannel, `Error ${error} demoting ${utils.removeBlocks(msg.author.username)} try redefining your rank and making sure the bot has enough permissions.`).catch(console.error)
                 }
               }
             } else {
               if (logChannel) {
-                logChannel = msg.server.channels.get("id", logChannel);
+                logChannel = msg.channel.guild.channels.get(logChannel);
                 if (logChannel) {
                   this.client.createMessage(logChannel, `${utils.removeBlocks(msg.author.username)} removed themselves from ${utils.removeBlocks(role.name)}!`)
                 }
