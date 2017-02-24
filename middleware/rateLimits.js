@@ -3,10 +3,9 @@
  */
 "use strict";
 
-var Utils = require('../lib/utils');
-var utils = new Utils();
+let utils = require('../lib/utils');
 
-var colors = require('colors');
+let colors = require('colors');
 
 module.exports = class rateLimits {
     constructor(e) {
@@ -113,7 +112,7 @@ module.exports = class rateLimits {
         }
         if (this.userCommandCount[msg.author.id] === this.userLimit + 1) {
             this.userCommandCount[msg.author.id] += this.userLimit * 2;
-            msg.reply("WOAH THERE. WAY TOO SPICY\nYou have exceeded the rate limit.");
+            msg.channel.createMessage(msg.author.mention + ", " +"WOAH THERE. WAY TOO SPICY\nYou have exceeded the rate limit.");
             console.log(`User ${msg.author.username} was rate Limited running command ${command.prefix}${command.command}, userId:${msg.author.id}`.magenta);
         }
         if (this.userCommandCount[msg.author.id] > this.userLimit) {
@@ -135,7 +134,7 @@ module.exports = class rateLimits {
             }
             if (this.channelCommandCount[msg.channel.id] === this.channelLimit + 1) {
                 this.channelCommandCount[msg.channel.id] += this.channelLimit * 2;
-                msg.reply("WOAH THERE. WAY TOO SPICY\nChannel has exceeded the rate limit.");
+                msg.channel.createMessage(msg.author.mention + ", " +"WOAH THERE. WAY TOO SPICY\nChannel has exceeded the rate limit.");
                 console.log(`Channel ${msg.channel.name}:${msg.channel.id} was rate Limited running command ${command.prefix}${command.command} in ${msg.server.name}:${msg.server.id}`.magenta);
             }
             if (this.channelCommandCount[msg.channel.id] > this.channelLimit) {
@@ -152,7 +151,7 @@ module.exports = class rateLimits {
             }
             if (this.serverCommandCount[msg.server.id] === this.serverLimit + 1) {
                 this.serverCommandCount[msg.server.id] += this.serverLimit * 2;
-                msg.reply("WOAH THERE. WAY TOO SPICY\nServer has exceeded the rate limit.");
+                msg.channel.createMessage(msg.author.mention + ", " +"WOAH THERE. WAY TOO SPICY\nServer has exceeded the rate limit.");
                 console.log(`Server ${msg.server.name}:${msg.server.id} was rate Limited running command ${command.prefix}${command.command}`.magenta);
             }
             if (this.serverCommandCount[msg.server.id] > this.serverLimit) {

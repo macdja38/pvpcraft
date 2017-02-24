@@ -3,16 +3,16 @@
  */
 "use strict";
 
-var colors = require('colors');
+let colors = require('colors');
 
-var request = require('request');
+let request = require('request');
 
-var now = require("performance-now");
+let now = require("performance-now");
 
-var SlowSender = require('../lib/slowSender');
+let SlowSender = require('../lib/slowSender');
 
-var Utils = require('../lib/utils');
-var utils = new Utils();
+let utils = require('../lib/utils');
+let util = require('util');
 
 module.exports = class evaluate {
   constructor(e) {
@@ -55,12 +55,12 @@ module.exports = class evaluate {
 
       let raven = this.raven;
       let modules = this.modules;
-      let server = message.channel.server;
+      let guild = message.channel.guild;
       let channel = msg.channel;
-      let t0;
-      let t1;
+      let t0, t1, t2;
       t0 = now();
       try {
+        t0 = now();
         let evaluated = eval(code);
         t1 = now();
         let string = "```xl\n" +
@@ -69,22 +69,29 @@ module.exports = class evaluate {
           utils.clean(evaluated) +
           "\n- - - - - - - - - - - - - - - - - - -\n" +
           "In " + (t1 - t0) + " milliseconds!\n```";
-        this.client.sendMessage(msg.channel, string).then(message => {
+        if (evaluated && evaluated.then) {
+          evaluated.catch(() => {
+          }).then(() => {
+            t2 = now();
+          })
+        }
+
+        this.client.createMessage(msg.channel.id, string).then(message => {
           if (evaluated && evaluated.then) {
             evaluated.catch((error) => {
               string = string.substring(0, string.length - 4);
               string += "\n- - - - - Promise throws- - - - - - -\n";
               string += utils.clean(error);
               string += "\n- - - - - - - - - - - - - - - - - - -\n";
-              string += "In " + (now() - t0) + " milliseconds!\n```";
-              this.client.updateMessage(message, string).catch(error => console.error(error));
+              string += "In " + (t2 - t0) + " milliseconds!\n```";
+              this.client.editMessage(message.channel.id, message.id, string).catch(error => console.error(error));
             }).then((result) => {
               string = string.substring(0, string.length - 4);
               string += "\n- - - - -Promise resolves to- - - - -\n";
               string += utils.clean(result);
               string += "\n- - - - - - - - - - - - - - - - - - -\n";
-              string += "In " + (now() - t0) + " milliseconds!\n```";
-              this.client.updateMessage(message, string).catch(error => console.error(error));
+              string += "In " + (t2 - t0) + " milliseconds!\n```";
+              this.client.editMessage(message.channel.id, message.id, string).catch(error => console.error(error));
             }).catch(error => console.error(error))
           }
         });
@@ -92,7 +99,7 @@ module.exports = class evaluate {
       }
       catch (error) {
         t1 = now();
-        this.client.sendMessage(msg.channel, "```xl\n" +
+        this.client.createMessage(msg.channel.id, "```xl\n" +
           utils.clean(code) +
           "\n- - - - - - - errors-in- - - - - - - \n" +
           utils.clean(error) +
@@ -110,15 +117,15 @@ module.exports = class evaluate {
         encoding: null
       }, (err, res, image) => {
         if (err) {
-          this.client.sendMessage(msg.channel, "Failed to get a valid image.");
+          this.client.createMessage(msg.channel.id, "Failed to get a valid image.");
           return true;
         }
         this.client.setAvatar(image, (err) => {
           if (err) {
-            this.client.sendMessage(msg.channel, "Failed setting avatar.");
+            this.client.createMessage(msg.channel.id, "Failed setting avatar.");
             return true;
           }
-          this.client.sendMessage(msg.channel, "Changed avatar.");
+          this.client.createMessage(msg.channel.id, "Changed avatar.");
         });
       });
       return true;

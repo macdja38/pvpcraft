@@ -3,8 +3,7 @@
  */
 "use strict";
 
-let Utils = require('../lib/utils');
-let utils = new Utils();
+let utils = require('../lib/utils');
 
 let now = require("performance-now");
 
@@ -35,10 +34,10 @@ module.exports = class minecraft {
       mcping(address, port, (err, res) => {
         if (err) {
           console.error(err);
-          this.client.sendMessage(msg.channel, "```xl\n" + err + "```")
+          this.client.createMessage(msg.channel.id, "```xl\n" + err + "```")
         }
         else {
-          this.client.sendMessage(msg.channel, "```xl\n" +
+          this.client.createMessage(msg.channel.id, "```xl\n" +
             "Pinged " + command.args.join(".") + " in " + (now() - t1) + "ms\n" +
             "Version " + res.version.name + " protocol " + res.version.protocol + "\n" +
             "Players " + res.players.online + "/" + res.players.max + "```"
@@ -50,7 +49,7 @@ module.exports = class minecraft {
 
     if (command.command === "mcavatar" && perms.check(msg, "minecraft.mcavatar")) {
       if (command.args.length < 1) {
-        msg.reply("usage `" + command.prefix + "mcavatar <minecraft username>`");
+        msg.channel.createMessage(msg.author.mention + ", " + "usage `" + command.prefix + "mcavatar <minecraft username>`");
         return true;
       }
       msg.channel.sendMessage({
@@ -64,7 +63,7 @@ module.exports = class minecraft {
 
     if (command.command === "mcskin" && perms.check(msg, "minecraft.mcskin")) {
       if (command.args.length < 1) {
-        msg.reply("usage `" + command.prefix + "mcskin <minecraft username>`");
+        msg.channel.createMessage(msg.author.mention + ", " + "usage `" + command.prefix + "mcskin <minecraft username>`");
         return true;
       }
       msg.channel.sendMessage({

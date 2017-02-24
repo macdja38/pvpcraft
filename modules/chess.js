@@ -52,8 +52,8 @@ module.exports = class chess {
           {dbs_created: 0},
           this.r
             .tableCreate(table, {})
-            .do(()=>this.r.table(table).indexCreate("channel1"))
-            .do(()=>this.r.table(table).indexCreate("channel2"))
+            .do(() => this.r.table(table).indexCreate("channel1"))
+            .do(() => this.r.table(table).indexCreate("channel2"))
         );
       }).run()
   }
@@ -67,12 +67,12 @@ module.exports = class chess {
   onCommand(msg, command, perms) {
     if (command.command === "start" && perms.check(msg, "games.chess.start")) {
       if (this.games.hasOwnProperty(msg.channel.id)) {
-        msg.reply("Sorry, game already in progress");
+        msg.channel.createMessage(msg.author.mention + ", " + "Sorry, game already in progress");
         return true;
       }
       this.games[msg.channel.id] = chessClient.create();
       this.turns[msg.channel.id] = "white";
-      msg.reply("Game started");
+      msg.channel.createMessage(msg.author.mention + ", " + "Game started");
       //r.table(table).insert({})
     }
 
@@ -90,7 +90,7 @@ module.exports = class chess {
 
     if (command.command === "move" && perms.check(msg, "games.chess.move")) {
       if (!this.games.hasOwnProperty(msg.channel.id)) {
-        msg.reply("Sorry, no game in progress");
+        msg.channel.createMessage(msg.author.mention + ", " + "Sorry, no game in progress");
         return true;
       }
       if (command.args.length > 0) {
@@ -98,7 +98,7 @@ module.exports = class chess {
         try {
           m1 = this.games[msg.channel.id].move(command.args[0]);
         } catch (error) {
-          msg.reply(error);
+          msg.channel.createMessage(msg.author.mention + ", " + error);
           console.log(error);
         }
         if (m1) {
@@ -113,7 +113,7 @@ module.exports = class chess {
       let status = this.games[msg.channel.id].getStatus();
       let squares = status.board.squares;
       let emoteArray = squares.map(p => {
-        if(p.hasOwnProperty("piece") && p.piece !== null) {
+        if (p.hasOwnProperty("piece") && p.piece !== null) {
           if (p.piece.type === "pawn") {
             return `p${p.piece.side.name[0]}`
           }
@@ -124,8 +124,8 @@ module.exports = class chess {
       });
       let attachments = [{
         "pretext": emoteArray
-          .map((e, i) => (Math.ceil((i+1)/8) % 2 !== (i % 2)) ? e.toUpperCase() : e)
-          .map(e => emotes[e]).map((c, i) => ((i+1) % 8 === 0) ? `${c} ${Math.ceil(i/8)}\n` : c)
+          .map((e, i) => (Math.ceil((i + 1) / 8) % 2 !== (i % 2)) ? e.toUpperCase() : e)
+          .map(e => emotes[e]).map((c, i) => ((i + 1) % 8 === 0) ? `${c} ${Math.ceil(i / 8)}\n` : c)
           .join("") + "   a     b     c     d     e     f     g     h"
       }];
       attachments.push({
