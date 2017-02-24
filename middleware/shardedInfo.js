@@ -3,8 +3,7 @@
  */
 "use strict";
 
-var Utils = require('../lib/utils');
-var utils = new Utils();
+let utils = require('../lib/utils');
 
 var request = require('request');
 
@@ -44,7 +43,7 @@ module.exports = class shardedInfo {
       let newStatus = this._configDB.get("status", null, {server: "*"});
       if (this.currentStatus != newStatus) {
         this.currentStatus = newStatus;
-        this._client.setStatus("online", newStatus);
+        this._client.editStatus("online", newStatus);
       }
     }, 30000);
   }
@@ -74,10 +73,10 @@ module.exports = class shardedInfo {
       }
       this._standardDB.set(null,
         {
-          servers: this._client.servers.length,
+          servers: this._client.guilds.size,
           connections: connectionDiscordsIds.length,
           playing,
-          users: this._client.users.length,
+          users: this._client.users.size,
           shards: parseInt(process.env.shards) || 1,
           lastUpdate: Date.now(),
           lastMessage: this._lastMessage,
@@ -139,7 +138,7 @@ module.exports = class shardedInfo {
         slack: true,
       };
       hookOptions.attachments = [attachment];
-      this._joinLeaveHooks.forEach(hook => this._client.sendWebhookMessage(hook, "", hookOptions).catch(this._raven.captureException))
+      this._joinLeaveHooks.forEach(hook => this._client.executeSlackWebhook(hook.id, hook.token, hookOptions).catch(this._raven.captureException))
     } catch(error) {
       this._raven.captureException(error);
     }
@@ -148,7 +147,7 @@ module.exports = class shardedInfo {
   onMessage(message) {
     this._lastMessage = Date.now();
     try {
-      if (!message.server && this._admins.indexOf(message.author.id) < 0) {
+      if (!message.channel.guild && this._admins.indexOf(message.author.id) < 0) {
         let attachment = {text: message.content, ts: Date.now() / 1000};
         if (message.hasOwnProperty("author")) {
           attachment.author_name = message.author.username;
@@ -164,7 +163,7 @@ module.exports = class shardedInfo {
           slack: true,
         };
         hookOptions.attachments = [attachment];
-        this._pmHooks.forEach(hook => this._client.sendWebhookMessage(hook, "", hookOptions).catch(this._raven.captureException))
+        this._pmHooks.forEach(hook => this._client.executeSlackWebhook(hook.id, hook.token, hookOptions).catch(this._raven.captureException))
       }
     } catch(error) {
       this._raven.captureException(error);

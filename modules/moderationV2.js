@@ -2,34 +2,33 @@
  * Created by macdja38 on 2016-08-23.
  */
 
-let Utils = require('../lib/utils');
-let utils = new Utils();
-
-
+let utils = require('../lib/utils');
+let util = require('util');
 let colors = require('colors');
+var Eris = require("eris");
 
 /* let colorMap = {
-  "message.deleted": "#FFB600",
-  "message.updated": "#FFFF00",
-  "channel.created": "#CC0000",
-  "channel.updated": "#CC0000",
-  "channel.deleted": "#CC0000",
-  "voice.join": "#14D5E2",
-  "voice.leave": "#14D5E2",
-  "user": "#111180",
-  "member.updated": "#111180",
-  "member.added": "#A400A4",
-  "member.removed": "#A400A4",
-  "member.banned": "#A400A4",
-  "member.unbanned": "#A400A4",
-  "server.updated": "#FF0000",
-  "role.created": "#FF0000",
-  "role.updated": "#FF0000",
-  "role.deleted": "#FF0000",
-  "action.kick": "#04ff00",
-  "action.ban": "#009966",
-  "action.unban": "#009966"
-}; */
+ "message.deleted": "#FFB600",
+ "message.updated": "#FFFF00",
+ "channel.created": "#CC0000",
+ "channel.updated": "#CC0000",
+ "channel.deleted": "#CC0000",
+ "voice.join": "#14D5E2",
+ "voice.leave": "#14D5E2",
+ "user": "#111180",
+ "member.updated": "#111180",
+ "member.added": "#A400A4",
+ "member.removed": "#A400A4",
+ "member.banned": "#A400A4",
+ "member.unbanned": "#A400A4",
+ "server.updated": "#FF0000",
+ "role.created": "#FF0000",
+ "role.updated": "#FF0000",
+ "role.deleted": "#FF0000",
+ "action.kick": "#04ff00",
+ "action.ban": "#009966",
+ "action.unban": "#009966"
+ }; */
 
 // 00 3F 7F BE FF
 
@@ -56,8 +55,6 @@ let colorMap = {
   "action.unban": "#BEBE3F"
 };
 
-//this.logging = {"serverId": {"userJoin": ["channelId"], "msgDelete": ["channelId"]}};
-
 module.exports = class moderationV2 {
   constructor(e) {
     this.client = e.client;
@@ -70,6 +67,85 @@ module.exports = class moderationV2 {
     this.feeds = e.feeds;
     this.tempServerIgnores = {};
     this._slowSender = e.slowSender;
+    this.messageDeleted = this.tryAndLog(this.messageDeleted);
+    this.messageDeletedBulk = this.tryAndLog(this.messageDeletedBulk);
+    this.messageUpdated = this.tryAndLog(this.messageUpdated);
+    this.channelCreated = this.tryAndLog(this.channelCreated);
+    this.channelUpdated = this.tryAndLog(this.channelUpdated);
+    this.channelDeleted = this.tryAndLog(this.channelDeleted);
+    this.roleCreated = this.tryAndLog(this.roleCreated);
+    this.roleUpdated = this.tryAndLog(this.roleUpdated);
+    this.roleDeleted = this.tryAndLog(this.roleDeleted);
+    this.memberUpdated = this.tryAndLog(this.memberUpdated);
+    this.memberAdded = this.tryAndLog(this.memberAdded);
+    this.memberRemoved = this.tryAndLog(this.memberRemoved);
+    this.memberUnbanned = this.tryAndLog(this.memberUnbanned);
+    this.memberBanned = this.tryAndLog(this.memberBanned);
+    this.userUpdate = this.tryAndLog(this.userUpdate);
+    this.voiceJoin = this.tryAndLog(this.voiceJoin);
+    this.voiceSwitch = this.tryAndLog(this.voiceSwitch);
+    this.voiceLeave = this.tryAndLog(this.voiceLeave);
+  }
+
+  onReady() {
+    //this.refreshMap();
+    this.client.on("messageDelete", this.messageDeleted);
+    this.client.on("messageDeleteBulk", this.messageDeletedBulk);
+    this.client.on("messageUpdate", this.messageUpdated);
+    this.client.on("channelCreate", this.channelCreated);
+    this.client.on("channelUpdate", this.channelUpdated);
+    this.client.on("channelDelete", this.channelDeleted);
+    this.client.on("guildRoleCreate", this.roleCreated);
+    this.client.on("guildRoleUpdate", this.roleUpdated);
+    this.client.on("guildRoleDelete", this.roleDeleted);
+    this.client.on("guildMemberUpdate", this.memberUpdated);
+    this.client.on("guildMemberAdd", this.memberAdded);
+    this.client.on("guildMemberRemove", this.memberRemoved);
+    this.client.on("guildBanAdd", this.memberUnbanned);
+    this.client.on("guildBanRemove", this.memberBanned);
+    this.client.on("userUpdate", this.userUpdate);
+    this.client.on("voiceChannelJoin", this.voiceJoin);
+    this.client.on("voiceChannelSwitch", this.voiceSwitch);
+    this.client.on("voiceChannelLeave", this.voiceLeave);
+    this._slowSender.onReady();
+  }
+
+  onDisconnect() {
+    this.client.removeListener("messageDelete", this.messageDeleted);
+    this.client.removeListener("messageDeleteBulk", this.messageDeletedBulk);
+    this.client.removeListener("messageUpdate", this.messageUpdated);
+    this.client.removeListener("channelCreate", this.channelCreated);
+    this.client.removeListener("channelUpdate", this.channelUpdated);
+    this.client.removeListener("channelDelete", this.channelDeleted);
+    this.client.removeListener("guildRoleUpdate", this.roleUpdated);
+    this.client.removeListener("guildMemberUpdate", this.memberUpdated);
+    this.client.removeListener("guildMemberAdd", this.memberAdded);
+    this.client.removeListener("guildMemberRemove", this.memberRemoved);
+    this.client.removeListener("guildBanAdd", this.memberUnbanned);
+    this.client.removeListener("guildBanRemove", this.memberBanned);
+    this.client.removeListener("userUpdate", this.userUpdate);
+    this.client.removeListener("voiceChannelJoin", this.voiceJoin);
+    this.client.removeListener("voiceChannelSwitch", this.voiceSwitch);
+    this.client.removeListener("voiceChannelLeave", this.voiceLeave);
+    this._slowSender.onDisconnect();
+  }
+
+  tryAndLog(callable) {
+    return (...args) => {
+      try {
+        return callable.call(this, ...args);
+      } catch (err) {
+        console.error(err);
+        if (this.raven) {
+          this.raven.captureException(err, {
+            extra: {
+              args: args.map(a => util.inspect(a, {depth: 2})),
+            }
+          });
+        }
+        return null;
+      }
+    }
   }
 
   getCommands() {
@@ -95,29 +171,29 @@ module.exports = class moderationV2 {
         }
       }
     } else {
-      msg.reply(`Who do you want to ${action}? ${command.prefix}${action} <user>`);
+      msg.channel.createMessage(msg.author.mention + ", " + `Who do you want to ${action}? ${command.prefix}${action} <user>`);
       return true;
     }
     if (!user && !possibleId) {
-      msg.reply(`Sorry, user could not be located or their id was not a number. Please try a valid mention or id`);
+      msg.channel.createMessage(msg.author.mention + ", " + `Sorry, user could not be located or their id was not a number. Please try a valid mention or id`);
       return true;
     }
 
     // check to see if user has ban immunity
     if (user && perms.checkUserChannel(user, msg.channel, `moderation.immunity.${action}`)) {
-      msg.reply(`Sorry you do not have permission to ${action} this user`);
+      msg.channel.createMessage(msg.author.mention + ", " + `Sorry you do not have permission to ${action} this user`);
       return true;
     }
 
     if (possibleId && perms.checkUserChannel({id: possibleId}, msg.channel, `moderation.immunity.${action}`)) {
-      msg.reply("Sorry but you don't have permission to ban the user this id belongs to.");
+      msg.channel.createMessage(msg.author.mention + ", " + "Sorry but you don't have permission to ban the user this id belongs to.");
       return true;
     }
 
     let reason = command.options.reason;
     if (!perms.check(msg, "moderation.reasonless")) {
       if (!reason) {
-        msg.reply(`Sorry but you do not have permission to ban without providing a reason eg \`${command.prefix}${action} --user @devCodex --reason Annoying\``);
+        msg.channel.createMessage(msg.author.mention + ", " + `Sorry but you do not have permission to ban without providing a reason eg \`${command.prefix}${action} --user @devCodex --reason Annoying\``);
         return true;
       }
     }
@@ -149,7 +225,7 @@ module.exports = class moderationV2 {
         text += `\n**Error:** ${error}`;
         this.sendHookedMessage(`action.${action}`, options, text, msg.server.id);
       });
-    msg.reply(`${user || possibleId} has been ${action}ned!`);
+    msg.channel.createMessage(msg.author.mention + ", " + `${user || possibleId} has been ${action}ned!`);
   }
 
   /**
@@ -178,9 +254,9 @@ module.exports = class moderationV2 {
     if (command.command === "purge" && perms.check(msg, "moderation.tools.purge")) {
       let channel;
       if (/<#\d+>/.test(command.options.channel)) {
-        channel = msg.channel.server.channels.get("id", command.options.channel.match(/<#(\d+)>/)[1]);
+        channel = msg.channel.guild.channels.get(command.options.channel.match(/<#(\d+)>/)[1]);
         if (!channel) {
-          msg.reply("Cannot find that channel.")
+          msg.channel.createMessage(msg.author.mention + ", Cannot find that channel.")
         }
         return true;
       } else {
@@ -188,11 +264,11 @@ module.exports = class moderationV2 {
       }
       let options = {};
       if (/<@!?\d+>/.test(command.options.user)) {
-        let user = msg.channel.server.members.get("id", command.options.user.match(/<@!?(\d+)>/)[1]);
+        let user = msg.channel.guild.members.get(command.options.user.match(/<@!?(\d+)>/)[1]);
         if (user) {
           options.user = user;
         } else {
-          msg.reply("Cannot find that user.")
+          msg.channel.createMessage(msg.author.mention + ", " + "Cannot find that user.")
         }
       }
       if (!isNaN(command.options.before)) {
@@ -207,7 +283,7 @@ module.exports = class moderationV2 {
       } else {
         length = this.config.get("purgeLength", 100)
       }
-      this.updateServerIgnores(1, channel.server.id);
+      this.updateServerIgnores(1, channel.guild.id);
       let purger;
       let status;
       let purgeQueue = [];
@@ -219,9 +295,9 @@ module.exports = class moderationV2 {
 
       let updateStatus = (text) => {
         if (statusMessage) {
-          this.client.updateMessage(statusMessage, text);
+          statusMessage.channel.editMessage(statusMessage.id, text);
         } else {
-          this.client.sendMessage(channel, text)
+          channel.createMessage(text)
             .then(message => statusMessage = message)
             .catch(error => console.error(error));
         }
@@ -245,7 +321,7 @@ module.exports = class moderationV2 {
       purger = setInterval(() => {
         if (purgeQueue.length > 0 && !errorMessage) {
           let messagesToPurge = purgeQueue.splice(0, 100);
-          this.client.deleteMessages(messagesToPurge).then(() => {
+          channel.deleteMessages(messagesToPurge.map(m => m.id)).then(() => {
             totalPurged += messagesToPurge.length;
           }).catch((error) => {
             if (error.response.body.code === 50013) {
@@ -271,8 +347,8 @@ module.exports = class moderationV2 {
             updateStatus(this.getStatus(totalPurged, totalFetched, length));
           }
           setTimeout(() => {
-            this.client.deleteMessage(statusMessage);
-            this.updateServerIgnores(-1, channel.server.id);
+            channel.deleteMessage(statusMessage.id);
+            this.updateServerIgnores(-1, channel.guild.id);
           }, 5000);
           clearInterval(status);
         }
@@ -308,8 +384,7 @@ module.exports = class moderationV2 {
   }
 
   fetchMessages(channel, count, options = {}, cb) {
-    console.dir(options, {depth: 0});
-    this.client.getChannelLogs(channel, Math.min(100, count), options.hasOwnProperty("before") ? {before: options.before} : {}).then((newMessages) => {
+    channel.getMessages(Math.min(100, count), options.before).then((newMessages) => {
       let newMessagesLength = newMessages.length;
       let highestMessage = newMessages[newMessages.length - 1];
       if (options.hasOwnProperty("after")) {
@@ -342,102 +417,47 @@ module.exports = class moderationV2 {
     })
   }
 
-  onReady() {
-    //this.refreshMap();
-    this.client.on("messageDeleted", this.messageDeleted.bind(this));
-    this.client.on("messageUpdated", this.messageUpdated.bind(this));
-    this.client.on("channelCreated", this.channelCreated.bind(this));
-    this.client.on("channelUpdated", this.channelUpdated.bind(this));
-    this.client.on("channelDeleted", this.channelDeleted.bind(this));
-    this.client.on("serverRoleUpdated", this.roleUpdated.bind(this));
-    this.client.on("serverMemberUpdated", this.memberUpdated.bind(this));
-    this.client.on("serverNewMember", this.memberAdded.bind(this));
-    this.client.on("serverMemberRemoved", this.memberRemoved.bind(this));
-    this.client.on("userUnbanned", this.memberUnbanned.bind(this));
-    this.client.on("userBanned", this.memberBanned.bind(this));
-    this.client.on("presence", this.presence.bind(this));
-    this.client.on("voiceJoin", this.voiceJoin.bind(this));
-    this.client.on("voiceLeave", this.voiceLeave.bind(this));
-    this._slowSender.onReady();
-  }
-
-  onDisconnect() {
-    this.client.removeListener("messageDeleted", this.messageDeleted);
-    this.client.removeListener("messageUpdated", this.messageUpdated);
-    this.client.removeListener("channelCreated", this.channelCreated);
-    this.client.removeListener("channelUpdated", this.channelUpdated);
-    this.client.removeListener("channelDeleted", this.channelDeleted);
-    this.client.removeListener("serverRoleUpdated", this.roleUpdated);
-    this.client.removeListener("serverMemberUpdated", this.memberUpdated);
-    this.client.removeListener("serverNewMember", this.memberAdded);
-    this.client.removeListener("serverMemberRemoved", this.memberRemoved);
-    this.client.removeListener("userUnbanned", this.memberUnbanned);
-    this.client.removeListener("userBanned", this.memberBanned);
-    this.client.removeListener("presence", this.presence);
-    this.client.removeListener("voiceJoin", this.voiceJoin);
-    this.client.removeListener("voiceLeave", this.voiceLeave);
-    //this.logging = [];
-    this._slowSender.onDisconnect();
-  }
-
-  /*
-   /**
-   * Rebuild the map of what get's logged where.
+  /**
+   * Send a message using webhooks or fallback to the events channel
+   * @param {string} eventName
+   * @param {Object?} options
+   * @param {Object?} options.user
+   * @param {Object} attachment
+   * @param {string} serverId
    */
-  /*
-   refreshMap() {
-   for (let server in this.configDB.data) {
-   if (!this.configDB.data.hasOwnProperty(server) || !this.configDB.data[server].hasOwnProperty("logs")) continue;
-   let serverLogConfig = this.configDB.data[server]["logs"];
-   for (let event in serverLogConfig) { //logItem is event name, serverLogConfig["logItem"] is an array of id's
-   if (!serverLogConfig.hasOwnProperty(event)) continue;
-   let eventChannelList = serverLogConfig[event];
-   for (let id of eventChannelList) {
-   let channel = this.client.channels.get("id", id);
-   if (channel != null) {
-   if (!this.logging.hasOwnProperty(server)) {
-   this.logging[server] = {};
-   }
-   if (!this.logging[server].hasOwnProperty(event)) {
-   this.logging[server][event] = [];
-   }
-   this.logging[server][event].push(channel);
-   } else {
-   //TODO: notify the server owner their mod log has been removed and that //setlog false will make that permanent.
-   }
-   }
-   }
-   }
-   }
-   */
-
-  sendHookedMessage(eventName, options, text, serverId) {
+  sendHookedMessage(eventName, options, attachment, serverId) {
+    console.dir(options, {colors: true, depth: 1});
+    console.dir(attachment, {colors: true, depth: 4});
+    attachment.ts = Date.now() / 1000;
+    if (colorMap.hasOwnProperty(eventName)) {
+      attachment.color = colorMap[eventName];
+    }
+    let payload = {
+      username: options.username || this.client.user.username,
+      attachments: [attachment],
+      icon_url: options.icon_url || this.client.user.avatarURL,
+      slack: true,
+    };
+    let fallbackMessage = "";
+    if (options.hasOwnProperty("user")) {
+      attachment.author_name = options.user.username;
+      attachment.author_icon = options.user.avatarURL;
+      fallbackMessage += `${attachment.title} | `;
+    }
+    if (attachment.hasOwnProperty("fields")) {
+      attachment.fields.forEach((field => {
+        fallbackMessage += `   **${utils.clean(field.title)}**: ${utils.clean(field.value)}`
+      }))
+    }
     this.feeds.find(`moderation.${eventName}`, serverId).forEach((channel) => {
       if (channel.indexOf("http") < 0) {
-        channel = this.client.channels.get("id", channel);
+        let guild = this.client.guilds.get(serverId);
+        if (guild) {
+          channel = guild.channels.get(channel);
+        }
       }
-      if (channel) {
-        let attachment = {text, ts: Date.now() / 1000};
-        if (options.hasOwnProperty("user")) {
-          attachment.author_name = options.user.username;
-          attachment.author_icon = options.user.avatarURL;
-        }
-        if (options.hasOwnProperty("title")) {
-          attachment.title = options.hasOwnProperty("user") ? `<@${options.user.id}> | ${options.title}` : options.title;
-        }
-        if (colorMap.hasOwnProperty(eventName)) {
-          attachment.color = colorMap[eventName];
-        }
-        let hookOptions = {
-          username: this.client.user.username,
-          text: "",
-          icon_url: this.client.user.avatarURL,
-          slack: true,
-        };
-        hookOptions.attachments = [attachment];
-        let fallbackMessage = `${options.hasOwnProperty("user") ? utils.fullNameB(options.user) : ""} | ${options.hasOwnProperty("title") ? utils.inline(options.title) : ""} ${text}`;
-        this.messageSender.sendQueuedMessage(channel, fallbackMessage, hookOptions);
-      }
+      if (!channel) return;
+      this.messageSender.sendQueuedMessage(channel, fallbackMessage, payload);
     })
   }
 
@@ -454,523 +474,552 @@ module.exports = class moderationV2 {
     })
   }
 
-  messageDeleted(message, channel) {
-    if (!channel.hasOwnProperty("server") || !channel.server.hasOwnProperty("id")) return;
-    try {
-      if (message) {
-        if (this.tempServerIgnores.hasOwnProperty(channel.id)) {
-          return;
-        }
-        if (this.perms.checkUserChannel(message.author, channel, "msglog.whitelist.message.deleted")) return;
-        //grab url's to the message's attachments
-        let options = {
-          title: `Message Deleted in <#${message.channel.id}>`,
-          user: message.author,
-        };
-        let string;
-        //if their's content log it.
-        if (message.content) {
-          if (message.content.length > 144 || /[^0-9a-zA-Z\s.!?]/.test(message.content)) {
-            string = utils.bubble(message.content);
-          } else {
-            string = "\n```diff\n-" + utils.clean(message.content) + "\n```";
-          }
-        }
-        //if their are attachments log them.
-        if (message.attachments) {
-          for (var i in message.attachments) {
-            if (message.attachments.hasOwnProperty(i)) {
-              string += message.attachments[i].proxy_url;
-            }
-          }
-        }
-        //send everything off.
-        this.sendHookedMessage("message.deleted", options, string, channel.server.id)
-      }
-      else {
-        if (this.tempServerIgnores.hasOwnProperty(channel.server.id)) return;
-        this.sendHookedMessage("message.deleted", {title: `Uncached message deleted in <#${channel.id}>`}, "", channel.server.id);
-
-      }
-    } catch (e) {
-      console.error(e);
-      if (this.raven) {
-        this.raven.captureException(e, {
-          extra: {
-            message: message,
-            channel: channel
-          }
-        });
-      }
+  messageDeletedBulk(messages) {
+    if (!messages[0].channel.guild) return;
+    let message = messages[0];
+    //grab url's to the message's attachments
+    let fields = [];
+    let attachment = {
+      title: `Bulk Delete`,
+      fields,
+    };
+    if (message.channel) {
+      fields.push({
+        title: "Channel",
+        value: message.channel.mention,
+        short: true,
+      })
     }
+    //send everything off.
+    this.sendHookedMessage("message.deleted", {}, attachment, message.channel.guild.id)
   }
 
-  messageUpdated(message, newMessage) {
-    try {
-      if (!newMessage.server) return; //it's a pm so we don't log it.
-      if (this.tempServerIgnores.hasOwnProperty(newMessage.channel.id) && message.author.id === this.client.user.id) {
-        return;
-      }
-      let server = newMessage.server;
-      let options = {
-        title: `Message Updated in <#${newMessage.channel.id}>`,
-        user: newMessage.author,
+  messageDeleted(message) {
+    if (!message || !message.channel.guild) return;
+    if (message.author && this.perms.checkUserChannel(message.author, message.channel, "msglog.whitelist.message.deleted")) return;
+    //grab url's to the message's attachments
+    let options = {};
+    let fields = [];
+    let attachment = {
+      title: `Message Deleted`,
+      fields,
+    };
+    if (message.member) {
+      options.user = message.member;
+    }
+    if (message.id) {
+      fields.push({
+        title: "Age",
+        value: utils.idToUTCString(message.id),
+        short: true,
+      })
+    }
+    if (message.channel) {
+      fields.push({
+        title: "Channel",
+        value: message.channel.mention,
+        short: true,
+      })
+    }
+    if (message.author) {
+      fields.push({
+        title: "User",
+        value: message.author.mention,
+        short: true,
+      })
+    }
+    if (message.content) {
+      let field = {
+        title: "Content",
+        short: true,
       };
-      let changeThresh = this.configDB.get("changeThresh", this.configDB.get("changeThresh", 1), {server: server.id});
-      if ((!message || message.content !== newMessage.content)) {
-        if (this.perms.checkUserChannel(newMessage.author, newMessage.channel, "msglog.whitelist.message.updated")) return;
-        if (message) {
-          if (utils.compare(message.content, newMessage.content) > changeThresh) {
-            let string = `${utils.bubble(message.content)} to ${utils.bubble(newMessage.content)}`;
-            this.sendHookedMessage("message.updated", options, string, server.id);
-          }
+      if (message.content) {
+        if (message.content.length > 144 || /[^0-9a-zA-Z\s.!?]/.test(message.content)) {
+          field.value = utils.bubble(message.content);
         } else {
-          this.sendHookedMessage(
-            "message.updated",
-            options,
-            `**An un-cached message** to ${utils.bubble(newMessage.content)}`,
-            server.id)
+          field.value = "\n```diff\n-" + utils.clean(message.content) + "\n```";
+        }
+      }
+      fields.push(field)
+    }
+    //if their are attachments log them.
+    if (message.attachments) {
+      for (let i in message.attachments) {
+        if (message.attachments.hasOwnProperty(i)) {
+          fields.push({
+            title: "Attachment",
+            value: message.attachments[i].proxy_url,
+            short: true,
+          });
         }
       }
     }
-    catch (err) {
-      console.error(err);
-      console.error(err.stack);
-      if (this.raven) {
-        this.raven.captureException(err, {
-          extra: {
-            message: message,
-            newMessage: newMessage
-          }
-        });
+    //send everything off.
+    this.sendHookedMessage("message.deleted", options, attachment, message.channel.guild.id)
+  }
+
+  messageUpdated(message, oldMessage) {
+    if (!message || !message.channel.guild) return;
+    if (oldMessage && message.content === oldMessage.content) return;
+    if (message.author && this.perms.checkUserChannel(message.author, message.channel, "msglog.whitelist.message.updated")) return;
+    //grab url's to the message's attachments
+    let options = {};
+    let fields = [];
+    let attachment = {
+      title: `Message Updated`,
+      fields,
+    };
+    if (message.member) {
+      options.user = message.member;
+    }
+    let content = false;
+    let changeThresh = this.configDB.get("changeThresh", this.configDB.get("changeThresh", 1), {server: message.channel.guild.id});
+    if (oldMessage && oldMessage.content) {
+      if (utils.compare(message.content, oldMessage.content) > changeThresh) {
+        content = `${utils.bubble(oldMessage.content)} to ${utils.bubble(message.content)}`;
+      } else {
+        return;
+      }
+    } else {
+      content = `**Uncached** to ${utils.bubble(message.content)}`;
+    }
+    if (message.id) {
+      fields.push({
+        title: "Age",
+        value: utils.idToUTCString(message.id),
+        short: true,
+      })
+    }
+    if (message.channel) {
+      fields.push({
+        title: "Channel",
+        value: message.channel.mention,
+        short: true,
+      })
+    }
+    if (message.author) {
+      fields.push({
+        title: "User",
+        value: message.author.mention,
+        short: true,
+      })
+    }
+    if (content) {
+      let field = {
+        title: "Content",
+        value: content,
+        short: true,
+      };
+      fields.push(field)
+    }
+    //if their are attachments log them.
+    if (message.attachments) {
+      for (let i in message.attachments) {
+        if (message.attachments.hasOwnProperty(i)) {
+          fields.push({
+            title: "Attachment",
+            value: message.attachments[i].proxy_url,
+            short: true,
+          });
+        }
       }
     }
+    //send everything off.
+    this.sendHookedMessage("message.updated", options, attachment, message.channel.guild.id)
   };
 
   channelDeleted(channel) {
-    try {
-      if (channel.server) {
-        this.sendHookedMessage("channel.deleted", {title: `Channel Deleted`}, `**Name:** ${channel.name}\n**Topic:**${channel.topic}`, channel.server.id);
-      }
+    if (!channel.guild) return;
+    let fields = [{
+      title: "Name",
+      value: channel.name,
+      short: true
+    }, {
+      title: "Age",
+      value: utils.idToUTCString(channel.id),
+      short: true
+    }];
+    if (channel.topic) {
+      fields.push({
+        title: "Topic",
+        value: channel.topic,
+        short: true
+      })
     }
-    catch (err) {
-      console.error(err);
-      console.error(err.stack);
-      if (this.raven) {
-        this.raven.captureException(err, {
-          extra: {
-            channel: channel
-          }
-        });
-      }
-    }
-  };
-
-  channelUpdated(oldChannel, newChannel) {
-    try {
-      var text = "";
-      if (oldChannel.name != newChannel.name) {
-        text += "**Name changed from:** `" + utils.removeBlocks(oldChannel.name) + "` **to** `" + utils.removeBlocks(newChannel.name) + "`\n";
-      }
-      if (oldChannel.topic != newChannel.topic) {
-        text += "**Topic changed from:** `" + utils.removeBlocks(oldChannel.topic || null) + "` **to** `" + utils.removeBlocks(newChannel.topic) + "`\n";
-      }
-      var changes = findOverrideChanges(oldChannel.permissionOverwrites, newChannel.permissionOverwrites);
-
-      for (var change of changes) {
-        var newTargetName;
-        if (change.override.type === "member") {
-          newTargetName = utils.fullName(newChannel.server.members.get("id", change.override.id));
-        }
-        if (change.override.type === "role") {
-          newTargetName = utils.clean((newChannel.server.roles.get("id", change.override.id) || {name: "unknown"}).name);
-        }
-        if (change.change == "remove" || change.change == "add") {
-          text += "**Channel override** " + change.change + " from " + change.override.type + " " + newTargetName + "\n";
-        }
-        else {
-          let before = (change.change === "allow" ? change.from.allowed : change.from.denied);
-          let after = (change.change === "allow" ? change.to.allowed : change.to.denied);
-          text += "**Channel override** on "
-            + change.override.type
-            + " " + newTargetName
-            + " "
-            + change.change
-            + " changed `"
-            + (before.length > 0 ? before : " ")
-            + "` to `"
-            + (after.length > 0 ? after : " ")
-            + "`\n";
-        }
-      }
-      if (text !== "") {
-        this.sendHookedMessage("channel.updated", {title: `Channel Updated <#${newChannel.id}>`}, text, newChannel.server.id);
-      }
-    }
-    catch (err) {
-      console.error(err);
-      console.error(err.stack);
-      if (this.raven) {
-        this.raven.captureException(err, {
-          extra: {
-            oldChannel: oldChannel,
-            newChannel: newChannel
-          }
-        });
-      }
-    }
+    this.sendHookedMessage("channel.deleted", {}, {
+      title: "Channel Deleted",
+      fields,
+    }, channel.guild.id);
   };
 
   channelCreated(channel) {
-    try {
-      if (channel.server) { //if che channel does not have a server it's a private message and we don't need to log it.
-        this.sendHookedMessage("channel.created", {title: `Channel Created <#${channel.id}>`}, "", channel.server.id);
-      }
-    }
-    catch (err) {
-      console.error(err);
-      console.error(err.stack);
-      if (this.raven) {
-        this.raven.captureException(err, {
-          extra: {
-            channel: channel
-          }
-        });
-      }
-    }
+    if (!channel.guild) return;
+    this.sendHookedMessage("channel.created", {}, {
+      title: "Channel Created",
+      fields: [{
+        title: "Channel",
+        value: channel.mention,
+        short: true
+      }]
+    }, channel.guild.id);
   };
 
-  presence(oldUser, newUser) {
-    try {
-      if (oldUser.username != newUser.username || oldUser.discriminator != newUser.discriminator || (oldUser.avatar != newUser.avatar && !newUser.bot)) {
-        let text = "";
-        if (oldUser.username != newUser.username) {
-          text += "**Username** changed from " + utils.removeBlocks(oldUser.username) + " to " + utils.removeBlocks(newUser.username) + "\n";
+  channelUpdated(channel, oldChannel) {
+    let fields = [{
+      title: "Channel",
+      value: channel.mention,
+      short: true,
+    }, {
+      title: "Age",
+      value: utils.idToUTCString(channel.id),
+      short: true,
+    }];
+    if (oldChannel.name != channel.name) {
+      fields.push({
+        title: "Name changed",
+        value: `${utils.removeBlocks(oldChannel.name)} **to** ${utils.removeBlocks(channel.name)}`,
+        short: true,
+      })
+    }
+    if (oldChannel.topic != channel.topic) {
+      fields.push({
+        title: "Topic changed",
+        value: `${utils.removeBlocks(oldChannel.topic)} **to** ${utils.removeBlocks(channel.topic)}`,
+        short: true,
+      });
+    }
+
+    console.log("Before", oldChannel.permissionOverwrites);
+    console.log("After", channel.permissionOverwrites);
+
+    let changes = findOverrideChanges(channel.permissionOverwrites, oldChannel.permissionOverwrites);
+
+    console.dir("Change in Channel Overrides");
+    console.dir(changes, {colors: true, depth: 4});
+
+    for (let change of changes) {
+      let newField = {short: true, value: ""};
+      fields.push(newField);
+      if (change.overwrite.type === "member") {
+        newField.title = "User Overwrite";
+        newField.value = `<@${change.overwrite.id}>`;
+      }
+      if (change.overwrite.type === "role") {
+        newField.title = "Role Overwrite";
+        newField.value = `<@&${change.overwrite.id}>`;
+      }
+      if (change.change == "remove" || change.change == "add") {
+        newField.value += ` ${change.change}ed ${permissionsListFromNumber(change.overwrite)}`;
+      }
+      else {
+        let before = change.from;
+        let after = change.to;
+
+        if (before.allow !== after.allow) {
+          if (before.allow > after.allow) {
+            newField.value += ` Add allow ${permissionsListFromNumber(before.allow - after.allow)}`;
+          } else {
+            newField.value += ` Remove allow ${permissionsListFromNumber(after.allow - before.allow)}`;
+          }
         }
-        if (oldUser.discriminator != newUser.discriminator) {
-          text += "**Discriminator** changed from " + oldUser.discriminator + " to " + newUser.discriminator + "\n";
+
+        if (before.deny !== after.deny) {
+          if (before.deny > after.deny) {
+            newField.value += ` Add deny ${permissionsListFromNumber(before.deny - after.deny)}`;
+          } else {
+            newField.value += ` Remove deny ${permissionsListFromNumber(after.deny - before.deny)}`;
+          }
         }
-        if (oldUser.avatar != newUser.avatar && !newUser.bot) {
-          text += "**Avatar** changed from " + oldUser.avatarURL + " to " + newUser.avatarURL + "\n";
-        }
-        let options = {
-          title: `User Changed`,
-          user: newUser,
-        };
-        this.client.servers.forEach(server => {
-          if (server.members.has("id", newUser.id)) {
-            this.sendHookedMessage("user", options, text, server.id)
-          }
-        });
       }
     }
-    catch (err) {
-      console.error(err);
-      console.error(err.stack);
-      if (this.raven) {
-        this.raven.captureException(err, {
-          extra: {
-            oldUser: userObjectify(oldUser),
-            newUser: userObjectify(newUser)
-          }
-        });
-      }
+    if (fields.length > 2) {
+      this.sendHookedMessage("channel.updated", {}, {title: "Channel Updated", fields}, channel.guild.id);
     }
   };
 
-  roleUpdated(oldRole, newRole) {
-    try {
-      let text = "";
-      let oldPerms = arrayOfTrues(oldRole.serialize()).toString();
-      let newPerms = arrayOfTrues(newRole.serialize()).toString();
-      if (oldPerms !== newPerms) {
-        text += "**Permissions** changed from `" + oldPerms + "` to `" + newPerms + "`\n";
-      }
-      if (oldRole.name != newRole.name) {
-        text += "**Name** changed from " + utils.clean(oldRole.name) + " to " + utils.clean(newRole.name) + "\n";
-      }
-      if (oldRole.position != newRole.position) {
-        text += "**Position** changed from " + oldRole.position + " to " + newRole.position + "\n";
-      }
-      if (oldRole.hoist != newRole.hoist) {
-        text += "**Hoist** changed from " + oldRole.hoist + " to " + newRole.hoist + "\n";
-      }
-      if (oldRole.color != newRole.color) {
-        text += "**Colour** changed from " + oldRole.color + " to " + newRole.color + "\n";
-      }
-      if (text !== "") {
-        this.sendHookedMessage("role.updated", {title: `Role Updated | <@&${newRole.id}>`}, text, newRole.server.id)
-      }
+  userUpdate(user, oldUser) {
+    if (!oldUser) return;
+    let fields = [{
+      title: "User",
+      value: user.mention,
+      short: true,
+    }];
+    if (oldUser.username != user.username) {
+      fields.push({
+        title: "Username",
+        value: `${utils.clean(oldUser.username)} to ${utils.clean(user.username)}`,
+        short: true,
+      });
     }
-    catch (err) {
-      console.error(err);
-      console.error(err.stack);
-      if (this.raven) {
-        this.raven.captureException(err, {
-          extra: {
-            oldRole: oldRole,
-            newRole: newRole
-          }
-        });
-      }
+    if (oldUser.discriminator != user.discriminator) {
+      fields.push({
+        title: "Discriminator",
+        value: `${oldUser.discriminator} to ${user.discriminator}`,
+        short: true,
+      });
     }
+    if (oldUser.avatar != user.avatar) {
+      fields.push({
+        title: "Avatar",
+        value: `${oldUser.avatarURL} to ${user.avatarURL}`,
+        short: true,
+      });
+    }
+    if (fields.length < 2) return;
+    this.client.guilds.forEach(guild => {
+      if (guild.members.get(user.id)) {
+        this.sendHookedMessage("member.updated", {user}, {title: `Member Updated`, fields}, guild.id);
+      }
+    });
   };
 
-  memberBanned(user, server) {
-    try {
-      let options = {
-        title: `Member Banned`,
-        user: user,
-      };
-      this.sendHookedMessage("member.banned", options, `**User:** ${utils.fullNameB(user)} Banned`, server.id);
+  roleCreated(guild, role) {
+    this.sendHookedMessage("role.created", {}, {
+      title: "Role Created", fields: [{
+        title: "Role",
+        value: role.mention,
+        short: true,
+      }]
+    }, guild.id);
+  }
+
+  roleDeleted(guild, role) {
+    this.sendHookedMessage("role.deleted", {}, {
+      title: "Role Deleted", fields: [{
+        title: "Role",
+        value: role.mention,
+        short: true,
+      }, {
+        title: "Name",
+        value: role.name,
+        short: true,
+      }, {
+        title: "Created",
+        value: utils.idToUTCString(role.id),
+        short: true,
+      }]
+    }, guild.id);
+  }
+
+  roleUpdated(guild, role, oldRole) {
+    let fields = [{
+      title: "Role",
+      value: role.mention,
+      short: true,
+    }, {
+      title: "Created",
+      value: utils.idToUTCString(role.id),
+      short: true,
+    }];
+    let oldPerms = arrayOfTrues(oldRole.permissions.json).toString();
+    let newPerms = arrayOfTrues(role.permissions.json).toString();
+    if (oldPerms !== newPerms) {
+      fields.push({
+        title: "Permissions",
+        value: `${oldPerms} to ${newPerms}`,
+        short: true,
+      });
     }
-    catch (err) {
-      console.error(err);
-      console.error(err.stack);
-      if (this.raven) {
-        this.raven.captureException(err, {
-          extra: {
-            server: server,
-            user: user
-          }
-        });
-      }
+    if (oldRole.name != role.name) {
+      fields.push({
+        title: "Name Changed",
+        value: `${utils.clean(oldRole.name)} to ${utils.clean(role.name)}`,
+        short: true,
+      });
     }
+    if (oldRole.position != role.position) {
+      fields.push({
+        title: "Position Changed",
+        value: `${oldRole.position} to ${role.position}`,
+        short: true,
+      });
+    }
+    if (oldRole.hoist != role.hoist) {
+      fields.push({
+        title: "Display separately",
+        value: `${oldRole.hoist} to ${role.hoist}`,
+        short: true,
+      });
+    }
+    if (oldRole.color != role.color) {
+      fields.push({
+        title: "Color",
+        value: `${oldRole.color} to ${role.color}`,
+        short: true,
+      });
+    }
+    if (fields.length < 3) return;
+    this.sendHookedMessage("role.updated", {}, {title: `Role Updated`, fields}, guild.id)
   };
 
-  memberUnbanned(user, server) {
-    try {
-      let options = {
-        title: `Member Unbanned`,
-        user: user,
-      };
-      this.sendHookedMessage("member.unbanned", options, `**User:** ${utils.fullNameB(user)} unbanned`, server.id);
-    }
-    catch (err) {
-      console.error(err);
-      console.error(err.stack);
-      if (this.raven) {
-        this.raven.captureException(err, {
-          extra: {
-            server: server,
-            user: user
-          }
-        });
-      }
-    }
+  memberBanned(server, user) {
+    this.sendHookedMessage("member.banned", {user}, {
+      title: "User Unbanned", fields: [{
+        title: "User",
+        value: user.mention,
+        short: true,
+      }]
+    }, server.id);
+  };
+
+  memberUnbanned(server, user) {
+    this.sendHookedMessage("member.unbanned", {user}, {
+      title: "User Unbanned", fields: [{
+        title: "User",
+        value: user.mention,
+        short: true,
+      }]
+    }, server.id);
   };
 
   memberAdded(server, user) {
-    try {
-      let options = {
-        title: `User Joined`,
-        user: user,
-      };
-      this.sendHookedMessage("member.added", options, `**User:** ${utils.fullNameB(user)} joined`, server.id);
-    }
-    catch (err) {
-      console.error(err);
-      console.error(err.stack);
-      if (this.raven) {
-        this.raven.captureException(err, {
-          extra: {
-            server: server,
-            user: user
-          }
-        });
-      }
-    }
+    this.sendHookedMessage("member.added", {user}, {
+      title: "User Joined", fields: [{
+        title: "User",
+        value: user.mention,
+        short: true,
+      }]
+    }, server.id);
   };
 
   memberRemoved(server, user) {
-    try {
-      let options = {
-        title: `User left or was Kicked`,
-        user: user,
-      };
-      this.sendHookedMessage("member.removed", options, `**User:** ${utils.fullNameB(user)} left or was kicked`, server.id);
-    }
-    catch (err) {
-      console.error(err);
-      console.error(err.stack);
-      if (this.raven) {
-        this.raven.captureException(err, {
-          extra: {
-            server: server,
-            user: user
-          }
-        });
-      }
-    }
+    this.sendHookedMessage("member.removed", {user}, {
+      title: "User Left or was Kicked", fields: [{
+        title: "User",
+        value: user.mention,
+        short: true,
+      }]
+    }, server.id);
   };
 
-  memberUpdated(server, newUser, oldMember) {
-    try {
-      let options = {
-        title: `Member Updated`,
-        user: newUser,
-      };
-      var newMember = server.detailsOfUser(newUser);
-      if (oldMember && newMember && (oldMember.roles.length != newMember.roles.length || oldMember.mute != newMember.mute || oldMember.deaf != newMember.deaf || oldMember.nick != newMember.nick)) {
-        var text = "";
-        if (oldMember.nick != newMember.nick) {
-          text += "        Nick changed from `" + utils.removeBlocks(oldMember.nick) + "` to `" + utils.removeBlocks(newMember.nick) + "`\n";
-        }
-
-        if (oldMember.mute != newMember.mute) {
-          text += "        Is-muted changed from `" + oldMember.mute + "` to `" + newMember.mute + "`\n";
-        }
-        if (oldMember.deaf != newMember.deaf) {
-          text += "        Is-deaf changed from `" + oldMember.deaf + "` to `" + newMember.deaf + "`\n";
-        }
-
-
-        if (oldMember.roles.length < newMember.roles.length) {
-          var newRole = findNewRoles(newMember.roles, oldMember.roles);
-          if (newRole) {
-            text += "        Role added `" + newRole.name + "`\n";
-          } else {
-            this.raven.captureError(new Error("Error finding role difference", {
-              user: newUser,
-              extra: {
-                oldMemberRoles: oldMember.roles,
-                newMemberRoles: newMember.roles
-              }
-            }));
-            console.error("Error finding adding new Role");
-            console.error(newMember.roles);
-            console.error(oldMember.roles);
-          }
-        }
-        else if (oldMember.roles.length > newMember.roles.length) {
-          var oldRole = findNewRoles(oldMember.roles, newMember.roles);
-          if (oldRole) {
-            text += "        Role removed `" + oldRole.name + "`\n";
-          } else {
-            this.raven.captureError(new Error("Error finding role difference", {
-              user: newUser,
-              extra: {
-                oldMemberRoles: oldMember.roles,
-                newMemberRoles: newMember.roles
-              }
-            }));
-            console.error("Error removed Role");
-            console.error(newMember.roles);
-            console.error(oldMember.roles);
-          }
-        }
-        this.sendHookedMessage("member.updated", options, text, server.id);
-      }
+  memberUpdated(guild, member, oldMember) {
+    let fields = [{
+      title: "User",
+      value: member.mention,
+      short: true,
+    }];
+    if (oldMember.nick != member.nick) {
+      fields.push({
+        title: "Nick",
+        value: `${utils.clean(oldMember.nick)} to ${utils.clean(member.nick)}`,
+        short: true,
+      });
     }
-    catch (err) {
-      console.error(err);
-      console.error(err.stack);
-      if (this.raven) {
-        this.raven.captureException(err, {
-          extra: {
-            server: server,
-            newUser: newUser,
-            oldMember: oldMember
-          }
-        });
-      }
+    if (oldMember.voiceState.mute != member.voiceState.mute) {
+      fields.push({
+        title: "Muted",
+        value: `${oldMember.voiceState.mute} to ${member.voiceState.mute}`,
+        short: true,
+      });
     }
+    if (oldMember.voiceState.deaf != member.voiceState.deaf) {
+      fields.push({
+        title: "Death",
+        value: `${oldMember.voiceState.deaf} to ${member.voiceState.deaf}`,
+        short: true,
+      });
+    }
+    if (oldMember.roles.length < member.roles.length) {
+      let newRole = findNewRoles(member.roles, oldMember.roles);
+      fields.push({
+        title: "Role Added",
+        value: `<@&${newRole}>`,
+        short: true,
+      });
+    }
+    else if (oldMember.roles.length > member.roles.length) {
+      let oldRole = findNewRoles(oldMember.roles, member.roles);
+      console.log("Old Role", oldRole);
+      fields.push({
+        title: "Role Removed",
+        value: `<@&${oldRole}>`,
+        short: true,
+      });
+    }
+    if (fields.length < 2) return;
+    this.sendHookedMessage("member.updated", {user: member}, {title: `Member Updated`, fields}, guild.id);
   };
 
-  voiceJoin(channel, user) {
-    try {
-      let options = {
-        title: `Voice Join`,
-        user: user,
-      };
-      this.sendHookedMessage("voice.join", options, `**User:** ${utils.fullNameB(user)} joined voice channel **${channel.name}**`, channel.server.id);
-    } catch (err) {
-      console.error(err);
-      console.error(err.stack);
-      if (this.raven) {
-        this.raven.captureException(err, {
-          extra: {
-            message: message,
-            channel: channel
-          }
-        });
-      }
-    }
-  };
+  voiceJoin(member, newChannel) {
+    this.sendHookedMessage("voice.join", {user: member}, {
+      title: "Voice Join", fields: [{
+        title: "User",
+        value: member.mention,
+        short: true,
+      }, {
+        title: "Channel",
+        value: newChannel.mention,
+        short: true,
+      }]
+    }, newChannel.guild.id);
+  }
 
-  voiceSwitch(oldChannel, newChannel, user) {
-    try {
-      this.sendMessage("voice.switch", `:notes: ${utils.fullNameB(user)} moved from ${utils.clean(oldChannel.name)} to ${utils.clean(newChannel.name)}`, newChannel.server.id)
-    } catch (err) {
-      console.error(err);
-      console.error(err.stack);
-      if (this.raven) {
-        this.raven.captureException(err, {
-          extra: {
-            message: message,
-            channel: channel
-          }
-        });
-      }
-    }
-  };
+  voiceSwitch(member, newChannel, oldChannel) {
+    this.sendHookedMessage("voice.switch", {user: member}, {
+      title: "Voice Switch", fields: [{
+        title: "User",
+        value: member.mention,
+        short: true,
+      }, {
+        title: "Old Channel",
+        value: oldChannel.mention,
+        short: true,
+      }, {
+        title: "New Channel",
+        value: newChannel.mention,
+        short: true,
+      }]
+    }, newChannel.guild.id);
+  }
 
-  voiceLeave(channel, user) {
-    try {
-      let options = {
-        title: `Voice Leave`,
-        user: user,
-      };
-      this.sendHookedMessage("voice.leave", options, `**User:** ${utils.fullNameB(user)} left voice channel ${channel.name}`, channel.server.id);
-    } catch (err) {
-      console.error(err);
-      console.error(err.stack);
-      if (this.raven) {
-        this.raven.captureException(err, {
-          extra: {
-            message: message,
-            channel: channel
-          }
-        });
-      }
-    }
-  };
+  voiceLeave(member, oldChannel) {
+    this.sendHookedMessage("voice.leave", {user: member}, {
+      title: "Voice Leave", fields: [{
+        title: "User",
+        value: member.mention,
+        short: true,
+      }, {
+        title: "Channel",
+        value: oldChannel.mention,
+        short: true,
+      }]
+    }, oldChannel.guild.id);
+  }
 };
 
 /**
  * Finds the differences
- * @param thing1
- * @param thing2
- * @returns {Array}
+ * @param thing1 new
+ * @param thing2 old
+ * @returns {Array} of differences
  */
 function findOverrideChanges(thing1, thing2) {
-  var changes = [];
-  if (thing1.length >= thing2.length) {
-    thing1.forEach(
-      (i) => {
-        var j = thing2.get("id", i.id);
-        if (j) {
-          for (var k in i) {
-            if (i.hasOwnProperty(k) && i[k] !== j[k]) {
-              changes.push({"change": k, "override": i, "from": i, "to": j});
-            }
-          }
-        }
-        else {
-          changes.push({"change": "remove", "override": i})
-        }
+  let changes = [];
+  thing1.forEach(permissionOverwrite => {
+    let thing2Overwrite = thing2.get(permissionOverwrite.id);
+    if (thing2Overwrite) {
+      if (thing2Overwrite.allow !== permissionOverwrite.allow || thing2Overwrite.deny !== permissionOverwrite.deny) {
+        changes.push({change: "change", from: permissionOverwrite, to: thing2Overwrite, overwrite: thing2Overwrite});
       }
-    );
-  } else {
-    thing2.forEach(
-      (i) => {
-        if (!thing1.get("id", i.id)) {
-          changes.push({"change": "add", "override": i})
-        }
-      }
-    );
-  }
+    } else {
+      changes.push({change: "add", overwrite: permissionOverwrite, type: permissionOverwrite.type});
+    }
+  });
+  thing2.forEach(permissionOverwrite => {
+    let thing1Overwrite = thing1.get(permissionOverwrite.id);
+    if (!thing1Overwrite) {
+      changes.push({change: "remove", overwrite: permissionOverwrite, type: permissionOverwrite.type});
+    }
+  });
   return changes;
+}
+
+/**
+ *
+ * @param {number} permissions
+ */
+function permissionsListFromNumber(permissions) {
+  return arrayOfTrues(new Eris.Permission(permissions).json).toString()
 }
 
 /**
@@ -979,7 +1028,7 @@ function findOverrideChanges(thing1, thing2) {
  * @returns {Array}
  */
 function arrayOfTrues(object) {
-  var arr = [];
+  let arr = [];
   for (let key in object) {
     if (object.hasOwnProperty(key) && object[key] === true) {
       arr.push(key)

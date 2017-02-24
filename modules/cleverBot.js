@@ -3,8 +3,7 @@
  */
 "use strict";
 
-let Utils = require('../lib/utils');
-let utils = new Utils();
+let utils = require('../lib/utils');
 
 let CleverBot = require('cleverbot.io');
 
@@ -29,15 +28,12 @@ module.exports = class cleverBot {
   }
 
   checkMisc(msg, perms) {
-    if (msg.isMentioned(this.client.user) && perms.check(msg, "cleverbot.misc")) {
+    if (msg.mentions.includes(this.client.user) && perms.check(msg, "cleverbot.misc")) {
       if (!this.cleverEnabled) {
-        msg.reply("Bot was not configured with an api key and is therefore disabled.").catch(perms.getAutoDeny(msg));
+        msg.channel.createMessage(msg.author.mention + ", " + "Bot was not configured with an api key and is therefore disabled.").catch(perms.getAutoDeny(msg));
         return true;
       }
-      this.client.startTyping(msg.channel).catch(() => {
-        this.client.stopTyping(msg.channel).catch(() => {
-        });
-      });
+      msg.channel.sendTyping();
       let query = msg.content.replace(this.startRegex, "").replace(this.middleRegex, "CleverBot");
       console.log(query);
       let bot;
@@ -58,24 +54,14 @@ module.exports = class cleverBot {
         this.sessionMap.set(msg.channel, bot);
       }
       return bot.then((botInstance) => {
-        console.log(botInstance);
         botInstance.ask(query, (err, response) => {
           console.log(err, response);
           if (err) {
-            msg.reply(`Encountered error "${response}" when trying to query cleverbot`).catch(perms.getAutoDeny(msg));
-            this.client.stopTyping(msg.channel).catch(() => {
-            });
+            msg.channel.createMessage(msg.author.mention + ", " + `Encountered error "${response}" when trying to query cleverbot`).catch(perms.getAutoDeny(msg));
             this.raven.captureException(err);
             return true;
           }
-          msg.reply(utils.clean(response)).then(() => {
-            this.client.stopTyping(msg.channel).catch(() => {
-            });
-          }).catch((err) => {
-            this.client.stopTyping(msg.channel).catch(() => {
-            });
-            return err;
-          }).catch(perms.getAutoDeny(msg));
+          msg.channel.createMessage(msg.author.mention + ", " + utils.clean(response)).catch(perms.getAutoDeny(msg));
         });
       });
     }

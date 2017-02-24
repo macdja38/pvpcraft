@@ -3,8 +3,7 @@
  */
 "use strict";
 
-var Utils = require('../lib/utils');
-var utils = new Utils();
+let utils = require('../lib/utils');
 
 module.exports = class feedManager {
   constructor(e) {
@@ -36,7 +35,7 @@ module.exports = class feedManager {
 
   onCommand(msg, command, perms) {
     //log that the module was called.
-    if(!msg.server) return;
+    if(!msg.channel.guild) return;
     //check if this is a command we should handle and if the user has permissions to execute it.
     if (command.commandnos === "feed" && perms.check(msg, "feeds.manage")) {
       let adding;
@@ -48,11 +47,11 @@ module.exports = class feedManager {
           adding = false;
           break;
         default:
-          msg.reply(`Usage ${command.prefix}${command.command} <start|stop> <node>[ --channel <channel>]`);
+          msg.channel.createMessage(msg.author.mention + ", " +`Usage ${command.prefix}${command.command} <start|stop> <node>[ --channel <channel>]`);
           return true;
       }
       if(!command.args[1]) {
-        msg.reply(`Usage ${command.prefix}${command.command} <start|stop> <node>[ --channel <channel>]`);
+        msg.channel.createMessage(msg.author.mention + ", " +`Usage ${command.prefix}${command.command} <start|stop> <node>[ --channel <channel>]`);
         return true;
       }
       let channel = command.channel;
@@ -62,7 +61,7 @@ module.exports = class feedManager {
           .match(/https:\/\/(?:ptb.|canary\.)?discordapp\.com\/api\/webhooks\/(\d+)\/(.+)/i);
         channel = {
           id:`https://discordapp.com/api/webhooks/${matches[1]}/${matches[2]}`,
-          server: {id: msg.server.id},
+          server: {id: msg.channel.guild.id},
           mention: function mention() {
             return `another Discord`;
           }
@@ -71,19 +70,19 @@ module.exports = class feedManager {
       else if(!channel) {
         channel = msg.channel;
       }
-      this._feeds.set(adding, utils.stripNull(command.args[1].toLowerCase()), channel.id, channel.server.id);
-      msg.reply(`${adding ? "Starting" : "Stopping"} ${command.args[1].toLowerCase()} in channel ${channel.mention()}`);
+      this._feeds.set(adding, utils.stripNull(command.args[1].toLowerCase()), channel.id, channel.guild.id);
+      msg.channel.createMessage(msg.author.mention + ", " +`${adding ? "Starting" : "Stopping"} ${command.args[1].toLowerCase()} in channel ${channel.mention}`);
 
       //return true, which tells the command dispatcher that we processed the command.
       return true;
     }
 
     if (command.command === "find" && perms.check(msg, "feeds.find")) {
-      let server = msg.server.id;
+      let server = msg.channel.guild.id;
       if(!command.args[0]) {
-        msg.reply(`Usage ${command.prefix}${command.command} <node>`)
+        msg.channel.createMessage(`${msg.author.mention}, Usage ${command.prefix}${command.command} <node>`)
       }
-      msg.reply(this._feeds.find(command.args[0].toLowerCase()).map(channelId => msg.server.channels.get("id", channelId) || channelId));
+      msg.channel.createMessage(msg.author.mention + ", " +this._feeds.find(command.args[0].toLowerCase()).map(channelId => msg.channel.guild.channels.get(channelId) || channelId));
     }
     //return false, telling the command dispatcher the command was not handled and to keep looking,
     //or start passing it to misc responses.

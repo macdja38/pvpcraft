@@ -3,8 +3,7 @@
  */
 "use strict";
 
-var Utils = require('../lib/utils');
-var utils = new Utils();
+let utils = require('../lib/utils');
 
 module.exports = class template {
     constructor(e) {

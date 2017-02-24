@@ -16,7 +16,11 @@ const git = require("git-rev");
 const ravenClient = require("raven");
 const PvPClient = require("pvpclient");
 const ConfigsDB = require("./lib/configDB.js");
-const Discord = require("discord.js");
+const Eris = require("eris");
+for(let thing in Eris) {
+  console.log(thing);
+  if (Eris.hasOwnProperty(thing) && typeof Eris[thing] === "object" && Eris[thing].hasOwnProperty("prototype")) delete Eris[thing].prototype.toJSON; // remove broken eris toJSON methods
+}
 const MessageSender = require("./lib/messageSender");
 const Permissions = require("./lib/permissions.js");
 const Analytics = require("./lib/analytics");
@@ -66,6 +70,8 @@ module.exports = class PvPCraft {
     this.hasBeenReady = false;
     this.moduleList = [];
     this.middlewareList = [];
+    this.shardId = parseInt(process.env.id || "0");
+    this.shardCount = parseInt(process.env.shards || "1");
     this.readyPromise = new Promise((resolve /*, reject */) => {
       this.resolveReadyPromise = resolve;
       // this.rejectReadyPromise = reject;
@@ -104,11 +110,11 @@ module.exports = class PvPCraft {
   }
 
   readyMessageSender() {
-    this.messageSender = new MessageSender({ client: this.client });
+    this.messageSender = new MessageSender({client: this.client});
   }
 
   readySlowSender() {
-    this.slowSender = new SlowSender({ client: this.client, config: this.fileConfig});
+    this.slowSender = new SlowSender({client: this.client, config: this.fileConfig});
   }
 
   readyRethinkDB() {
@@ -120,7 +126,7 @@ module.exports = class PvPCraft {
   }
 
   readyPvPClient() {
-    this.pvpClient = new PvPClient(this.fileAuth.get("pvpApiEndpoint"), this.fileAuth.get("pvpApiToken"), this.client.user.id, this.client.servers.map(g => g.id));
+    this.pvpClient = new PvPClient(this.fileAuth.get("pvpApiEndpoint"), this.fileAuth.get("pvpApiToken"), this.client.user.id, this.client.guilds.map(g => g.id));
     this.pvpClient.connect();
   }
 
@@ -132,34 +138,35 @@ module.exports = class PvPCraft {
     console.log(`-------------------`.magenta);
     console.log(`Ready as ${name}`.magenta);
     console.log(`Mention ${mention}`.magenta);
-    console.log(`On ${this.client.servers.length} Servers`.magenta);
+    console.log(`On ${this.client.guilds.size} Servers`.magenta);
     console.log(`Shard ${process.env.id} / ${process.env.shards}`.magenta);
     console.log(`-------------------`.magenta);
   }
 
   readyFeeds() {
-    this.feeds = new Feeds({ client: this.client, r: this.r, configDB: this.configDB });
+    this.feeds = new Feeds({client: this.client, r: this.r, configDB: this.configDB});
   }
 
   registerReadyListener() {
     this.client.on("ready", () => {
       this.resolveReadyPromise(true);
       console.log("Got ready");
-      if (this.client.servers.length <= this.fileConfig.get("minDiscords", 1)) {
+      if (this.client.guilds.length <= this.fileConfig.get("minDiscords", 1)) {
         process.exit(258);
       }
     });
   }
 
   registerClientListeners() {
-    this.client.on("serverDeleted", this.onServerDeleted.bind(this));
-    this.client.on("serverCreated", this.onServerCreated.bind(this));
-    this.client.on("message", this.onMessage.bind(this));
+    this.client.on("guildDelete", this.onGuildDelete.bind(this));
+    this.client.on("unavailableGuildCreate", this.onGuildCreate.bind(this));
+    this.client.on("guildCreate", this.onGuildCreate.bind(this));
+    this.client.on("messageCreate", this.onMessage.bind(this));
     this.client.on("error", this.onError.bind(this));
     this.client.on("disconnect", this.onDisconnect.bind(this));
   }
 
-  onError() {
+  onError(error) {
     if (this.raven) {
       this.raven.captureException(error);
     }
@@ -178,16 +185,16 @@ module.exports = class PvPCraft {
     }
   }
 
-  onServerCreated(server) {
+  onGuildCreate(server) {
     this.pvpClient.addGuild(server.id);
     let configs = [this.configDB.serverCreated(server), this.permsDB.serverCreated(server)];
     Promise.all(configs).then(() => {
       for (let middleware of this.middlewareList) {
         if (middleware.ware) {
           try {
-            if (middleware.ware.onServerCreated) {
+            if (middleware.ware.onGuildCreate) {
               console.log("Notifying a middleware a server was created!".green);
-              middleware.ware.onServerCreated(server);
+              middleware.ware.onGuildCreate(server);
             }
           } catch (error) {
             console.error(error);
@@ -197,9 +204,9 @@ module.exports = class PvPCraft {
       for (let module of this.moduleList) {
         if (module.module) {
           try {
-            if (module.module.onServerCreated) {
+            if (module.module.onGuildCreate) {
               console.log("Notifying a module a server was created!".green);
-              module.module.onServerCreated(server);
+              module.module.onGuildCreate(server);
             }
           } catch (error) {
             console.error(error);
@@ -210,13 +217,13 @@ module.exports = class PvPCraft {
     }).catch(console.error)
   }
 
-  onServerDeleted(server) {
+  onGuildDelete(server) {
     for (let middleware of this.middlewareList) {
       if (middleware.ware) {
         try {
-          if (middleware.ware.onServerDeleted) {
+          if (middleware.ware.onGuildDelete) {
             console.log(`Notifying a middleware a server was Deleted! shard ${process.env.id}`.green);
-            middleware.ware.onServerDeleted(server);
+            middleware.ware.onGuildDelete(server);
           }
         } catch (error) {
           if (this.raven) {
@@ -230,9 +237,9 @@ module.exports = class PvPCraft {
     for (let module of this.moduleList) {
       if (module.module) {
         try {
-          if (module.module.onServerDeleted) {
+          if (module.module.onGuildDelete) {
             console.log(`Notifying a module a server was Deleted! shard ${process.env.id}`.green);
-            module.module.onServerDeleted(server);
+            module.module.onGuildDelete(server);
           }
         } catch (error) {
           if (this.raven) {
@@ -246,31 +253,32 @@ module.exports = class PvPCraft {
     }
   }
 
+  /**
+   * Creates a new instance of the client used to connect to discord.
+   */
   createClient() {
-    this.client = new Discord.Client({
+    let token;
+    if (this.fileAuth.get("tokens", false)) {
+      token = this.fileAuth.get("tokens", {})[parseInt(process.env.id)];
+    } else {
+      token = this.fileAuth.get("token", {});
+    }
+    this.client = new Eris(token, {
       forceFetchUsers: true,
       autoReconnect: true,
-      shardId: parseInt(process.env.id || "0"),
-      shardCount: parseInt(process.env.shards || "1")
+      compress: true,
+      disableEveryone: false,
+      firstShardId: this.shardId,
+      lastShardId: this.shardId + 1,
+      maxShards: this.shardCount
     });
-    return Promise.resolve();
   }
 
+  /**
+   * Initiates the connection to discord.
+   */
   login() {
-    //Initiate a connection To Discord.
-    if (this.fileAuth.get("tokens", false)) {
-      this.client.loginWithToken(this.fileAuth.get("tokens", {})[parseInt(process.env.id)]).catch((error) => {
-        console.error("Error logging in.");
-        console.error(error);
-        console.error(error.stack);
-      })
-    } else {
-      this.client.loginWithToken(this.fileAuth.get("token", {})).catch((error) => {
-        console.error("Error logging in.");
-        console.error(error);
-        console.error(error.stack);
-      })
-    }
+    this.client.connect();
   }
 
   loadFileConfigs() {
@@ -299,40 +307,43 @@ module.exports = class PvPCraft {
 
   readyRaven() {
     return new Promise((resolve) => {
-    let sentryEnv = this.fileConfig.get("sentryEnv", "");
+      let sentryEnv = this.fileConfig.get("sentryEnv", "");
 
-    if (this.fileAuth.get("sentryURL", "") != "") {
-      console.log("Sentry Started".yellow);
-      git.long((commit) => {
-        git.branch((branch) => {
-          let ravenConfig = {
-            release: commit + "-" + branch,
-            transport: new ravenClient.transports.HTTPSTransport({rejectUnauthorized: false})
-          };
-          if (sentryEnv) {
-            ravenConfig.environment = sentryEnv
-          }
-          this.raven = new ravenClient.Client(this.fileAuth.data.sentryURL, ravenConfig);
-          //raven's patch global seems to have been running synchronously and delaying the execution of other code.
-          this.raven.patchGlobal(function () {
-            process.exit(1);
-          });
+      if (this.fileAuth.get("sentryURL", "") != "") {
+        console.log("Sentry Started".yellow);
+        git.long((commit) => {
+          git.branch((branch) => {
+            let ravenConfig = {
+              release: commit + "-" + branch,
+              transport: new ravenClient.transports.HTTPSTransport({rejectUnauthorized: false})
+            };
+            if (sentryEnv) {
+              ravenConfig.environment = sentryEnv
+            }
+            this.raven = new ravenClient.Client(this.fileAuth.data.sentryURL, ravenConfig);
+            //raven's patch global seems to have been running synchronously and delaying the execution of other code.
+            this.raven.patchGlobal(function (error) {
+              if (process.env.dev == "true") {
+                console.error(error);
+              }
+              process.exit(1);
+            });
 
-          this.raven.setTagsContext({
-            shardId: process.env.id,
-          });
+            this.raven.setTagsContext({
+              shardId: process.env.id,
+            });
 
-          this.raven.on("logged", function (e) {
-            console.log("Error reported to sentry!: ".green + e.id);
-          });
+            this.raven.on("logged", function (e) {
+              console.log("Error reported to sentry!: ".green + e);
+            });
 
-          this.raven.on("error", function (e) {
-            console.error("Could not report event to sentry:", e.reason);
-          });
-          resolve(true);
-        })
-      });
-    }
+            this.raven.on("error", function (e) {
+              console.error("Could not report event to sentry:", e.reason);
+            });
+            resolve(true);
+          })
+        });
+      }
     })
   }
 
@@ -367,10 +378,11 @@ module.exports = class PvPCraft {
     }
     this.middlewareList = [];
     this.moduleList = [];
-    client.logout(() => {
+    this.client.disconnect({reconnect: false});
+    setTimeout(() => {
       console.log("Bye");
       process.exit(0);
-    });
+    }, 4000);
   }
 
   reload() {
@@ -453,6 +465,7 @@ module.exports = class PvPCraft {
   }
 
   reloadTarget(msg, command) {
+    let channel = msg.channel;
     for (let module in this.moduleList) {
       if (this.moduleList.hasOwnProperty(module) && this.moduleList[module].module.constructor.name === command.args[0]) {
         if (this.moduleList[module].module.onDisconnect) {
@@ -460,7 +473,7 @@ module.exports = class PvPCraft {
         }
         let modules = this.fileConfig.get("modules");
         delete require.cache[require.resolve(modules[command.args[0]])];
-        msg.reply("Reloading " + command.args[0]);
+        channel.createMessage("Reloading " + command.args[0]);
         console.log("Reloading ".yellow + command.args[0].yellow);
         let mod = new (require(modules[command.args[0]]))({
           client: this.client,
@@ -479,7 +492,7 @@ module.exports = class PvPCraft {
         this.moduleList[module].module = mod;
         this.moduleList[module].commands = mod.getCommands();
         console.log("Reloded ".yellow + command.args[0].yellow);
-        msg.reply("Reloded " + command.args[0]);
+        channel.createMessage("Reloded " + command.args[0]);
       }
     }
   }
@@ -492,8 +505,8 @@ module.exports = class PvPCraft {
     let ware;
 
     // handle per server prefixes.
-    if (msg.channel.server) {
-      l = this.configDB.get("prefix", this.prefix, {server: msg.channel.server.id});
+    if (msg.channel.guild) {
+      l = this.configDB.get("prefix", this.prefix, {server: msg.channel.guild.id});
       if (l == null) {
         l = this.prefix;
       } else {
@@ -523,24 +536,27 @@ module.exports = class PvPCraft {
           extra.command = command;
         }
         if (msg.hasOwnProperty("server")) {
-          extra.server = msg.server.id;
-          extra.server_name = msg.server.name;
+          extra.guild = msg.channel.guild.id;
+          extra.guild_name = msg.channel.guild.name;
         }
         this.raven.captureException(error, {
           user: PvPCraft.userObjectify(msg.author),
           extra,
         });
       }
-      msg.reply("Sorry about that an unknown problem occurred processing your command, an error report has been logged and we are looking into the problem.");
+      msg.channel.createMessage(`${msg.author.mention}, Sorry about that an unknown problem occurred processing your command, an error report has been logged and we are looking into the problem.`);
     }
-    //Reload command starts here.
-    if (command.command === "reload" && msg.author.id === "85257659694993408") {
-      if (command.flags.indexOf("a") > -1) {
-        this.reload();
-      } else {
-        this.reloadTarget(msg, command, this.perms, l)
+
+    if (command) {
+      //Reload command starts here.
+      if (command.command === "reload" && msg.author.id === "85257659694993408") {
+        if (command.flags.indexOf("a") > -1) {
+          this.reload();
+        } else {
+          this.reloadTarget(msg, command, this.perms, l)
+        }
+        return;
       }
-      return;
     }
 
     //Command middleware starts here.
@@ -596,6 +612,11 @@ module.exports = class PvPCraft {
 
   registerProcessListeners() {
     process.on("unhandledRejection", this.captureError.bind(this));
+    if (process.env.dev == "true") {
+      process.on("uncaughtException", (error) => {
+        console.error(error);
+      });
+    }
     this.raven.install(function () {
       console.log("This is thy sheath; there rust, and let me die.");
       process.exit(1);
@@ -632,16 +653,19 @@ module.exports = class PvPCraft {
             msg: msg.content
           };
           if (msg.hasOwnProperty("server")) {
-            extra.server = msg.server.id;
-            extra.server_name = msg.server.name;
+            extra.guild = msg.guild.id;
+            extra.guild_name = msg.guild.name;
+          }
+          if (process.env.dev == "true") {
+            console.error(error);
           }
           this.raven.captureException(error, {
             user: PvPCraft.userObjectify(msg.author),
             extra,
-          }, (error, id) => {
+          }, (id) => {
             if (error) console.error(error);
             else {
-              msg.reply("Sorry their was an error processing your command. The error is ```" + error +
+              msg.channel.createMessage("Sorry their was an error processing your command. The error is ```" + error +
                 "``` reference code `" + id + "`");
             }
           });
@@ -659,6 +683,9 @@ module.exports = class PvPCraft {
           console.error("Failed to report", error)
         }
         console.log(`Logged error ID:${resultId} to sentry`);
+        if (process.env.dev == "true") {
+          console.error(error);
+        }
       });
     } else {
       console.error(error);

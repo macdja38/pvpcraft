@@ -9,8 +9,7 @@ const worldState = new StateGrabber();
 const ParseState = require('../lib/parseState');
 const parseState = new ParseState();
 
-const Utils = require('../lib/utils');
-const utils = new Utils();
+const utils = require('../lib/utils');
 
 const Twitter = require('twit');
 
@@ -46,7 +45,7 @@ module.exports = class Warframe {
       this.alerts = [];
       for (let item in this.config.data) {
         if (this.config.data.hasOwnProperty(item) && this.config.data[item].hasOwnProperty("warframeAlerts")) {
-          if (this.client.channels.get("id", this.config.data[item]["warframeAlerts"].channel) != null) {
+          if (this.client.channelGuildMap.hasOwnProperty(this.config.data[item]["warframeAlerts"].channel)) {
             //noinspection JSUnresolvedVariable
             this.alerts.push(this.config.data[item].warframeAlerts);
           } else {
@@ -76,12 +75,10 @@ module.exports = class Warframe {
         /*this.r.table(this.table).insert([{id: "*", prefix: "//", "changeThresh": 1}]).run(this.con).then((res)=>{
          console.log(res);
          });*/
-        console.log("Did, DB Thing");
         if (master) {
           console.log(`Shard ${process.env.id} is the Master Shard!`);
           if (twitter_auth) {
             //build the map of server id's and logging channels.
-            console.log(this.alerts);
             console.log("twitter auth found, declaring onAlert");
             resolve(
               (tweet) => {
@@ -122,37 +119,38 @@ module.exports = class Warframe {
                 console.dir(this.alerts, {depth: 2});
                 this.alerts.forEach((server, i) => setTimeout(() => {
                   try {
-                    let channel = this.client.channels.get("id", server.channel);
+                    let guild = this.client.guilds.get(server.id);
+                    let channel = guild.channels.get("id", server.channel);
                     if (!channel || !server.tracking === true) return;
                     let things = [];
                     let madeMentionable = [];
                     for (let thing in server.items) {
-                      if (server.items.hasOwnProperty(thing) && channel.server.roles.has("id", server.items[thing])) {
+                      if (server.items.hasOwnProperty(thing) && guild.roles.get(server.items[thing])) {
                         if (alert["3"].toLowerCase().indexOf(thing) > -1 && channel.server.roles.has("id", server.items[thing])) {
                           things.push(server.items[thing]);
-                          madeMentionable.push(this.client.updateRole(server.items[thing], {
+                          madeMentionable.push(guild.editRole(server.items[thing], {
                             mentionable: true
                           }));
                         }
-                        if (alert.invasion && alert["2"].toLowerCase().indexOf(thing) > -1 && channel.server.roles.has("id", server.items[thing])) {
+                        if (alert.invasion && alert["1"].toLowerCase().indexOf(thing) > -1 && guild.roles.get(server.items[thing])) {
                           things.push(server.items[thing]);
-                          madeMentionable.push(this.client.updateRole(server.items[thing], {
+                          madeMentionable.push(guild.editRole(server.items[thing], {
                             mentionable: true
                           }));
                         }
                       }
                     }
                     let sendAlert = () => {
-                      return this.client.sendMessage(channel, `\`\`\`xl\n${alert["0"]}\n${alert["1"]}\n${alert["2"]}\n${alert["3"]}\n\`\`\`${things.map((thing) => {
+                      return this.client.createMessage(channel, `\`\`\`xl\n${alert["0"]}\n${alert["1"]}\n${alert["2"]}\n${alert["3"]}\n\`\`\`${things.map((thing) => {
                         return `<@&${thing}>`;
                       })}`);
                     };
                     let makeUnmentionable = () => {
                       for (let thing in things) {
                         if (things.hasOwnProperty(thing)) {
-                          let role = channel.server.roles.get("id", things[thing]);
+                          let role = guild.roles.get(things[thing]);
                           if (role) {
-                            this.client.updateRole(role, {
+                            this.client.updateRole(role.id, {
                               mentionable: false
                             }).catch(() => {
                             });
@@ -163,7 +161,7 @@ module.exports = class Warframe {
                     Promise.all(madeMentionable).then(() => {
                       sendAlert().then(makeUnmentionable).catch(console.error);
                     }).catch(() => {
-                      this.client.sendMessage(channel, "Unable to make role mentionable, please contact @```Macdja38#7770 for help after making sure the bot has sufficient permissions");
+                      this.client.createMessage(channel, "Unable to make role mentionable, please contact @```Macdja38#7770 for help after making sure the bot has sufficient permissions");
                       sendAlert().then(makeUnmentionable).catch(console.error);
                     });
                   } catch (error) {
@@ -221,7 +219,7 @@ module.exports = class Warframe {
 
   checkMisc(msg, perms) {
     if (msg.content.toLowerCase().indexOf("soon") == 0 && msg.content.indexOf(":tm:") < 0 && perms.check(msg, "warframe.misc.soon")) {
-      this.client.sendMessage(msg.channel, "Soon:tm:");
+      this.client.createMessage(msg.channel.id, "Soon:tm:");
       return true;
     }
     return false;
@@ -230,7 +228,7 @@ module.exports = class Warframe {
   onCommand(msg, command, perms) {
     if ((command.commandnos === 'deal' || command.command === 'darvo') && perms.check(msg, "warframe.deal")) {
       return worldState.get().then().then((state) => {
-        this.client.sendMessage(msg.channel, "```haskell\n" + "Darvo is selling " +
+        this.client.createMessage(msg.channel.id, "```haskell\n" + "Darvo is selling " +
           parseState.getName(state.DailyDeals[0].StoreItem) +
           " for " + state.DailyDeals[0].SalePrice +
           "p (" +
@@ -243,7 +241,7 @@ module.exports = class Warframe {
 
     if (command.commandnos === "alert") {
       if (command.args[0] === "list" && perms.check(msg, "warframe.alerts.list")) {
-        let roles = this.config.get("warframeAlerts", {items: {}}, {server: msg.server.id}).items;
+        let roles = this.config.get("warframeAlerts", {items: {}}, {server: msg.channel.guild.id}).items;
         let coloredRolesList = "";
         for (let role in roles) {
           if (roles.hasOwnProperty(role) && role != "joinrole") {
@@ -251,76 +249,76 @@ module.exports = class Warframe {
           }
         }
         if (coloredRolesList != "") {
-          msg.channel.sendMessage(`Available alerts include \`\`\`xl\n${coloredRolesList}\`\`\``)
+          msg.channel.createMessage(`Available alerts include \`\`\`xl\n${coloredRolesList}\`\`\``)
         } else {
-          msg.reply(`No alerts are being tracked.`)
+          msg.channel.createMessage(msg.author.mention + ", " + `No alerts are being tracked.`)
         }
         return true;
       }
       if (command.args[0] === "join" && perms.check(msg, "warframe.alerts.join")) {
-        let roles = this.config.get("warframeAlerts", {items: {}}, {server: msg.server.id}).items;
+        let roles = this.config.get("warframeAlerts", {items: {}}, {server: msg.channel.guild.id}).items;
         if (!command.args[1] || !roles[command.args[1]]) {
-          msg.reply(`Please supply an item to join using \`${command.prefix}alert join \<rank\>\`, for a list of items use \`${command.prefix}alert list\``);
+          msg.channel.createMessage(msg.author.mention + ", " + `Please supply an item to join using \`${command.prefix}alert join \<rank\>\`, for a list of items use \`${command.prefix}alert list\``);
           return true;
         }
         let rankToJoin = command.args[1].toLowerCase();
         let role = msg.server.roles.get("id", roles[rankToJoin]);
         if (role) {
-          this.client.addMemberToRole(msg.author, role, (error) => {
-            let logChannel = this.config.get("msgLog", false, {server: msg.server.id});
+          msg.channel.guild.addMemberRole(msg.author.id, role.id, (error) => {
+            let logChannel = this.config.get("msgLog", false, {server: msg.channel.guild.id});
             if (error) {
               if (logChannel) {
                 logChannel = msg.server.channels.get("id", logChannel);
                 if (logChannel) {
-                  this.client.sendMessage(logChannel, `Error ${error} promoting ${utils.removeBlocks(msg.author.username)} try redefining your rank and making sure the bot has enough permissions.`).catch(console.error)
+                  this.client.createMessage(logChannel, `Error ${error} promoting ${utils.removeBlocks(msg.author.username)} try redefining your rank and making sure the bot has enough permissions.`).catch(console.error)
                 } else {
-                  msg.reply(`Error ${error} promoting ${utils.removeBlocks(msg.author.username)} try redefining your rank and making sure the bot has enough permissions.`)
+                  msg.channel.createMessage(msg.author.mention + ", " + `Error ${error} promoting ${utils.removeBlocks(msg.author.username)} try redefining your rank and making sure the bot has enough permissions.`)
                 }
               }
             } else {
               if (logChannel) {
                 logChannel = msg.server.channels.get("id", logChannel);
                 if (logChannel) {
-                  this.client.sendMessage(logChannel, `${utils.removeBlocks(msg.author.username)} added themselves to ${utils.removeBlocks(role.name)}!`)
+                  this.client.createMessage(logChannel, `${utils.removeBlocks(msg.author.username)} added themselves to ${utils.removeBlocks(role.name)}!`)
                 }
               }
-              msg.reply(":thumbsup::skin-tone-2:");
+              msg.channel.createMessage(msg.author.mention + ", " + ":thumbsup::skin-tone-2:");
             }
           })
         } else {
-          msg.reply(`Role could not be found, have an administrator use \`${command.prefix}tracking --add <item>\` to add it.`);
+          msg.channel.createMessage(msg.author.mention + ", " + `Role could not be found, have an administrator use \`${command.prefix}tracking --add <item>\` to add it.`);
         }
         return true;
       }
       if (command.args[0] === "leave" && perms.check(msg, "warframe.alerts.leave")) {
-        let roles = this.config.get("warframeAlerts", {items: {}}, {server: msg.server.id}).items;
+        let roles = this.config.get("warframeAlerts", {items: {}}, {server: msg.channel.guild.id}).items;
         if (!command.args[1] || !roles[command.args[1]]) {
-          msg.reply(`Please supply a rank to leave using \`${command.prefix}alerts leave \<rank\>\`, for a list of items use \`${command.prefix}alerts list\``);
+          msg.channel.createMessage(msg.author.mention + ", " + `Please supply a rank to leave using \`${command.prefix}alerts leave \<rank\>\`, for a list of items use \`${command.prefix}alerts list\``);
           return true;
         }
         let role = msg.server.roles.get("id", roles[command.args[1]]);
         if (role) {
-          this.client.removeMemberFromRole(msg.author, role, (error) => {
-            let logChannel = this.config.get("msgLog", false, {server: msg.server.id});
+          msg.channel.guild.removeMemberRole(msg.author.id, role.id, (error) => {
+            let logChannel = this.config.get("msgLog", false, {server: msg.channel.guild.id});
             if (error) {
               if (logChannel) {
                 logChannel = msg.server.channels.get("id", logChannel);
                 if (logChannel) {
-                  this.client.sendMessage(logChannel, `Error ${error} demoting ${utils.removeBlocks(msg.author.username)} try redefining your rank and making sure the bot has enough permissions.`).catch(console.error)
+                  this.client.createMessage(logChannel, `Error ${error} demoting ${utils.removeBlocks(msg.author.username)} try redefining your rank and making sure the bot has enough permissions.`).catch(console.error)
                 }
               }
             } else {
               if (logChannel) {
                 logChannel = msg.server.channels.get("id", logChannel);
                 if (logChannel) {
-                  this.client.sendMessage(logChannel, `${utils.removeBlocks(msg.author.username)} removed themselves from ${utils.removeBlocks(role.name)}!`)
+                  this.client.createMessage(logChannel, `${utils.removeBlocks(msg.author.username)} removed themselves from ${utils.removeBlocks(role.name)}!`)
                 }
               }
-              msg.reply(":thumbsup::skin-tone-2:");
+              msg.channel.createMessage(msg.author.mention + ", " + ":thumbsup::skin-tone-2:");
             }
           })
         } else {
-          msg.reply(`Role could not be found, have an administrator use \`${command.prefix}alerts add <item>\` to add it.`);
+          msg.channel.createMessage(msg.author.mention + ", " + `Role could not be found, have an administrator use \`${command.prefix}alerts add <item>\` to add it.`);
           return true;
         }
         return true;
@@ -333,7 +331,7 @@ module.exports = class Warframe {
             "channel": "",
             "items": {}
           }, {
-            server: msg.server.id
+            server: msg.channel.guild.id
           }
         );
         config.tracking = command.args[0] === "enable";
@@ -345,9 +343,9 @@ module.exports = class Warframe {
         if (!config.items) {
           config.items = {};
         }
-        this.config.set("warframeAlerts", config, {server: msg.channel.server.id});
+        this.config.set("warframeAlerts", config, {server: msg.channel.guild.id});
         this.rebuildAlerts();
-        msg.reply(":thumbsup::skin-tone-2:");
+        msg.channel.createMessage(msg.author.mention + ", " + ":thumbsup::skin-tone-2:");
         return true;
       }
 
@@ -360,7 +358,7 @@ module.exports = class Warframe {
               "items": {}
             }
 
-            , {server: msg.server.id});
+            , {server: msg.channel.guild.id});
           if (typeof(config.tracking) !== "boolean") {
             config.tracking = false;
           }
@@ -368,32 +366,30 @@ module.exports = class Warframe {
             config.items = {};
           }
           if (config.items.hasOwnProperty(command.args[1].toLowerCase())) {
-            msg.reply(`Resource is already being tracked, use \`${command.prefix}alert join ${utils.clean(command.args[1])}\` to join it.`);
+            msg.channel.createMessage(`${msg.author.mention}, Resource is already being tracked, use \`${command.prefix}alert join ${utils.clean(command.args[1])}\` to join it.`);
             return;
           }
-          msg.channel.server.createRole({
+          let options = {
             name: command.args[1].toLowerCase(),
-            permissions: [],
-            mentionable: true
-          }, (error, role) => {
-            if (error) {
-              if (error.status == 403) {
-                msg.reply("Error, insufficient permissions, please give me manage roles.");
-              }
-              else {
-                msg.reply("Unexpected error please report the issue https://pvpcraft.ca/pvpbot");
-                console.log(error);
-                console.log(error.stack);
-              }
-              return;
-            }
+            permissions: 0,
+            mentionable: false
+          };
+          msg.channel.guild.createRole(options).then((role) => {
             config.items[role.name] = role.id;
-            this.config.set("warframeAlerts", config, {server: msg.channel.server.id});
-            msg.reply("Created role " + utils.clean(role.name) + " with id `" + role.id + "`");
+            this.config.set("warframeAlerts", config, {server: msg.channel.guild.id});
+            msg.channel.createMessage(`${msg.author.mention}", Created role ${utils.clean(role.name)} with id ${role.id}`);
+          }).catch((error) => {
+            if (error.code == 50013) {
+              msg.channel.createMessage(msg.author.mention + ", Error, insufficient permissions, please give me manage roles.");
+            }
+            else {
+              msg.channel.createMessage(`${msg.author.mention} Unexpected error \`${error}\` please report the issue https://invite.pvpcraft.ca/`);
+              console.dir(error, {depth: 2, color: true});
+            }
           });
           return true;
         }
-        msg.reply("invalid option's please specify the name of a resource to track to change tracking options");
+        msg.channel.createMessage(msg.author.mention + ", " + "invalid option's please specify the name of a resource to track to change tracking options");
         return true;
       }
 
@@ -405,8 +401,7 @@ module.exports = class Warframe {
               "channel": "",
               "items": {}
             }
-
-            , {server: msg.server.id});
+            , {server: msg.channel.guild.id});
           if (typeof(config.tracking) !== "boolean") {
             config.tracking = false;
           }
@@ -414,36 +409,37 @@ module.exports = class Warframe {
             config.items = {};
           }
           if (!config.items.hasOwnProperty(command.args[1])) {
-            msg.reply(`Resource is not being tracked, use \`${command.prefix}alert add ${utils.clean(command.args[1])}\` to add it.`);
+            msg.channel.createMessage(msg.author.mention + ", " + `Resource is not being tracked, use \`${command.prefix}alert add ${utils.clean(command.args[1])}\` to add it.`);
             return;
           }
-          let role = msg.server.roles.get("name", command.args[1]);
+          let roleName = command.args[1].toLowerCase();
+          let role = msg.channel.guild.roles.find(r  => r.name.toLowerCase() === roleName);
           if (role) {
-            this.client.deleteRole(role, (error) => {
+            msg.channel.guild.deleteRole(role.id).then(() => {
+              delete config.items[command.args[1]];
+              this.config.set("warframeAlerts", config, {server: msg.channel.guild.id, conflict: "replace"});
+              msg.channel.createMessage(msg.author.mention + ", " + "Deleted role " + utils.clean(command.args[1]) + " with id `" + role.id + "`");
+            }).catch((error) => {
               if (error) {
                 if (error.status == 403) {
-                  msg.reply("Error, insufficient permissions, please give me manage roles.");
+                  msg.channel.createMessage(msg.author.mention + ", " + "Error, insufficient permissions, please give me manage roles.");
                 }
                 else {
-                  msg.reply("Unexpected error please report the issue https://pvpcraft.ca/pvpbot");
+                  msg.channel.createMessage(msg.author.mention + ", " + "Unexpected error please report the issue https://pvpcraft.ca/pvpbot");
                   console.log(error);
                   console.log(error.stack);
                 }
-                return;
               }
-              delete config.items[command.args[1]];
-              this.config.set("warframeAlerts", config, {server: msg.channel.server.id, conflict: "replace"});
-              msg.reply("Deleted role " + utils.clean(command.args[1]) + " with id `" + role.id + "`");
             });
             return true;
           } else {
             delete config.items[command.args[1]];
-            this.config.set("warframeAlerts", config, {server: msg.channel.server.id, conflict: "replace"});
-            msg.reply("Role not found, removed " + utils.clean(command.args[1]) + " from list.");
+            this.config.set("warframeAlerts", config, {server: msg.channel.guild.id, conflict: "replace"});
+            msg.channel.createMessage(msg.author.mention + ", " + "Role not found, removed " + utils.clean(command.args[1]) + " from list.");
             return true;
           }
         }
-        msg.reply("Invalid option's please specify the name of a resource to track to change tracking options");
+        msg.channel.createMessage(msg.author.mention + ", " + "Invalid option's please specify the name of a resource to track to change tracking options");
         return true;
       }
     }
@@ -452,20 +448,20 @@ module.exports = class Warframe {
       return worldState.get().then((state) => {
         console.log(state.VoidTraders[0]);
         if (!state.VoidTraders || !state.VoidTraders[0]) {
-          this.client.sendMessage(msg.channel, "Baro has disappeared from the universe.");
+          this.client.createMessage(msg.channel.id, "Baro has disappeared from the universe.");
           return true;
         }
         if (state.VoidTraders[0].Manifest) {
           let rep = "```haskell\nBaro leaving " + state.VoidTraders[0].Node + " in " +
-            utils.secondsToTime(state.VoidTraders[0].Expiry.$date.$numberLong/1000 - state.Time) + "\n";
+            utils.secondsToTime(state.VoidTraders[0].Expiry.$date.$numberLong / 1000 - state.Time) + "\n";
           for (let item of state.VoidTraders[0].Manifest) {
             rep += "item: " + parseState.getName(item.ItemType) + " - price:" + item.PrimePrice + " ducats " + item.RegularPrice + "cr\n";
           }
           rep += "```";
-          this.client.sendMessage(msg.channel, rep);
+          this.client.createMessage(msg.channel.id, rep);
         }
         else {
-          this.client.sendMessage(msg.channel, "```haskell\nBaro appearing at " + state.VoidTraders[0].Node + " in " +
+          this.client.createMessage(msg.channel.id, "```haskell\nBaro appearing at " + state.VoidTraders[0].Node + " in " +
             parseState.toTimeDifference(state, state.VoidTraders[0].Activation) + "\n```");
         }
       });
@@ -473,16 +469,16 @@ module.exports = class Warframe {
 
     else if ((command.commandnos === 'trial' || command.commandnos === 'raid' || command.commandnos === 'trialstat') && perms.check(msg, "warframe.trial")) {
       if (command.args.length < 1) {
-        this.client.sendMessage(msg.channel,
+        this.client.createMessage(msg.channel.id,
           "Hek: \<http://tinyurl.com/qb752oj\> Nightmare: \<http://tinyurl.com/p8og6xf\> Jordas: \<http://tinyurl.com/prpebzh\>");
         return true;
       }
       if (command.args[0].toLowerCase() === "help") {
-        msg.reply(`\`${command.prefix}${command.command} <jv | lor> <username>\``);
+        msg.channel.createMessage(msg.author.mention + ", " + `\`${command.prefix}${command.command} <jv | lor> <username>\``);
         return true;
       }
       if (command.args.length < 2) {
-        this.client.sendMessage(msg.channel,
+        this.client.createMessage(msg.channel.id,
           `​http://wf.christx.tw/search.php?id=${utils.clean(command.args[0])}`);
         return true;
       }
@@ -493,7 +489,7 @@ module.exports = class Warframe {
       } else {
         link = `https://wf.christx.tw/search.php?id=${command.args[1]}`;
       }
-      this.client.sendMessage(msg.channel, link);
+      this.client.createMessage(msg.channel.id, link);
       return true;
     }
 
@@ -527,7 +523,7 @@ module.exports = class Warframe {
               "\n```"
             );
           }
-          this.client.sendMessage(msg.channel,
+          this.client.createMessage(msg.channel.id,
             alertStringArray.join("\n")
           );
         }
@@ -548,7 +544,7 @@ module.exports = class Warframe {
               string += `\`\`\`xl\n${parseState.getTierName(mission.Modifier).name} (${mission.Modifier.slice(4)}) rift active for ${utils.secondsToTime(mission.Expiry.sec - state.Time)}\n\`\`\``;
             }
           }
-          this.client.sendMessage(msg.channel, string);
+          this.client.createMessage(msg.channel.id, string);
         }
       });
     }
@@ -556,7 +552,7 @@ module.exports = class Warframe {
     else if (command.command === 'wiki' && perms.check(msg, "warframe.wiki")) {
       //use wikia's api to search for the item.
       if (command.args.length === 0) {
-        this.client.sendMessage(msg.channel, "Please provide something to search for!");
+        this.client.createMessage(msg.channel.id, "Please provide something to search for!");
         return true;
       }
       request.post("http://warframe.wikia.com/api/v1/Search/List", {
@@ -566,12 +562,12 @@ module.exports = class Warframe {
         }
       }, (err, response, body) => {
         if (err || response.statusCode === 404) {
-          this.client.sendMessage(msg.channel, "Could not find **" + utils.clean(command.args.join(' ')) + "**");
+          this.client.createMessage(msg.channel.id, "Could not find **" + utils.clean(command.args.join(' ')) + "**");
         } else if (response.statusCode !== 200) {
           console.error(' returned HTTP status ' + response.statusCode);
         } else {
           try {
-            this.client.sendMessage(msg.channel, JSON.parse(body).items[0].url);
+            this.client.createMessage(msg.channel.id, JSON.parse(body).items[0].url);
           } catch (e) {
             console.error('Invalid JSON from http://warframe.wikia.com/api/v1/Search/List while searching the wiki');
           }
@@ -599,19 +595,19 @@ module.exports = class Warframe {
             },
             fields,
           };
-          this.client.sendMessage(msg.channel, "", { embed });
+          this.client.createMessage(msg.channel.id, "", {embed});
           return true;
         }
       });
     }
 
     else if (command.command === 'farm' && perms.check(msg, "warframe.farm")) {
-      this.client.sendMessage(msg.channel, "You can probably find that resource here: \<https://steamcommunity.com/sharedfiles/filedetails/?id=181630751\>");
+      this.client.createMessage(msg.channel.id, "You can probably find that resource here: \<https://steamcommunity.com/sharedfiles/filedetails/?id=181630751\>");
       return true;
     }
 
     else if ((command.commandnos === 'damage' || command.command === 'element') && perms.check(msg, "warframe.damage")) {
-      this.client.sendMessage(msg.channel, "```haskell\nDamage 2.0: https://pvpcraft.ca/wfd2.png Thanks for image Telkhines\n```");
+      this.client.createMessage(msg.channel.id, "```haskell\nDamage 2.0: https://pvpcraft.ca/wfd2.png Thanks for image Telkhines\n```");
       return true;
     }
 
@@ -625,9 +621,9 @@ module.exports = class Warframe {
           }
         }
         if (text != "```haskell\n") {
-          this.client.sendMessage(msg.channel, text + "```")
+          this.client.createMessage(msg.channel.id, text + "```")
         } else {
-          this.client.sendMessage("No prime access could be found");
+          this.client.createMessage("No prime access could be found");
         }
       });
     }
@@ -654,7 +650,7 @@ module.exports = class Warframe {
           }
         }
         console.log(embed);
-        this.client.sendMessage(msg.channel, "", { embed });
+        this.client.createMessage(msg.channel.id, "", {embed});
         return true;
       });
     }
@@ -662,7 +658,7 @@ module.exports = class Warframe {
     else if ((command.commandnos === 'armorstat' || command.commandnos === 'armor' ||
       command.commandnos === 'armourstat' || command.commandnos === 'armour') && perms.check(msg, "warframe.armor")) {
       if (command.args.length < 1 || command.args.length == 2 || command.args.length > 3) {
-        this.client.sendMessage(msg.channel, "```haskell\npossible uses include:\n" +
+        this.client.createMessage(msg.channel.id, "```haskell\npossible uses include:\n" +
           command.prefix + "armor (Base Armor) (Base Level) (Current Level) calculate armor and stats.\n" +
           command.prefix + "armor (Current Armor)\n```");
         return true;
@@ -671,7 +667,7 @@ module.exports = class Warframe {
       let armor;
       if (command.args.length == 3) {
         if ((parseInt(command.args[2]) - parseInt(command.args[1])) < 0) {
-          this.client.sendMessage(msg.channel, "```haskell\nPlease check your input values\n```");
+          this.client.createMessage(msg.channel.id, "```haskell\nPlease check your input values\n```");
           return true;
         }
         armor = parseInt(command.args[0]) * (1 + (Math.pow((parseInt(command.args[2]) - parseInt(command.args[1])), 1.75) / 200));
@@ -681,7 +677,7 @@ module.exports = class Warframe {
         armor = parseInt(command.args[0]);
       }
       text += armor / (armor + 300) * 100 + "% damage reduction\n";
-      this.client.sendMessage(msg.channel, text + "```");
+      this.client.createMessage(msg.channel.id, text + "```");
       return true;
     }
     return false;

@@ -3,27 +3,26 @@
  */
 "use strict";
 
-var Utils = require('../lib/utils');
-var utils = new Utils();
+let utils = require('../lib/utils');
 
 var colors = require('colors');
 
 module.exports = class help {
-    constructor(e) {
-        this.client = e.client;
-        this.raven = e.raven;
-    }
+  constructor(e) {
+    this.client = e.client;
+    this.raven = e.raven;
+  }
 
-    getCommands() {
-        return ["help", "command"];
-    }
+  getCommands() {
+    return ["help", "command"];
+  }
 
-    onCommand(msg, command, perms) {
-        //permissions have not yet been added, this is a preliminary version of the help command. Final version will be dynamic.        
-        if (command.command === "help" || command.commandnos === "command") {
-            msg.reply("Help can be found at https://bot.pvpcraft.ca/docs");
-            return true;
-        }
-        return false;
+  onCommand(msg, command, perms) {
+    //permissions have not yet been added, this is a preliminary version of the help command. Final version will be dynamic.
+    if (command.command === "help" || command.commandnos === "command") {
+      msg.channel.createMessage(`${msg.author.mention}, Help can be found at https://bot.pvpcraft.ca/docs`);
+      return true;
     }
+    return false;
+  }
 };
