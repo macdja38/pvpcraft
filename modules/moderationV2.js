@@ -140,7 +140,7 @@ module.exports = class moderationV2 {
         if (this.raven) {
           this.raven.captureException(err, {
             extra: {
-              args: args.map(a => util.inspect(a, {depth: 2})),
+              args: args.map(a => util.inspect(a, {depth: 1})),
             }
           });
         }
@@ -887,6 +887,7 @@ module.exports = class moderationV2 {
   };
 
   memberUpdated(guild, member, oldMember) {
+    throw "woa, problem";
     if (!oldMember) return;
     let fields = [{
       title: "User",
