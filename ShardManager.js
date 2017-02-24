@@ -2,8 +2,9 @@
  * Created by macdja38 on 2017-02-21.
  */
 
+let cluster = require("cluster");
 
-module.exports = new class ShardManager{
+module.exports = class ShardManager {
   constructor(config) {
     let shards = config.get("shards", 2);
     let startShard = config.get("shardStart", 0);
