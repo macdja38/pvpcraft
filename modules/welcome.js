@@ -42,10 +42,10 @@ module.exports = class welcome {
         let message = welcomeInfo.message.replace(/\$user/gi, utils.clean(user.username)).replace(/\$mention/gi, user.mention).replace(/\$server/gi, utils.clean(server.name));
         if (welcomeInfo.delay && welcomeInfo.delay > 1000) {
           setTimeout(() => {
-            this.client.createMessage(welcomeChannel, message);
+            this.client.createMessage(welcomeChannel.id, message);
           }, welcomeInfo.delay);
         } else {
-          this.client.createMessage(welcomeChannel, message)
+          this.client.createMessage(welcomeChannel.id, message)
         }
       }
 
@@ -53,11 +53,11 @@ module.exports = class welcome {
   }
 
   onDisconnect() {
-    this.client.removeListener("serverNewMember", this.onJoin);
+    this.client.removeListener("guildMemberAdd", this.onJoin);
   }
 
   onReady() {
-    this.client.on("serverNewMember", this.onJoin);
+    this.client.on("guildMemberAdd", this.onJoin);
   }
 
   getCommands() {
