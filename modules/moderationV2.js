@@ -427,8 +427,6 @@ module.exports = class moderationV2 {
    * @param {string} serverId
    */
   sendHookedMessage(eventName, options, attachment, serverId) {
-    console.dir(options, {colors: true, depth: 1});
-    console.dir(attachment, {colors: true, depth: 4});
     attachment.ts = Date.now() / 1000;
     if (colorMap.hasOwnProperty(eventName)) {
       attachment.color = colorMap[eventName];
@@ -690,13 +688,7 @@ module.exports = class moderationV2 {
       });
     }
 
-    console.log("Before", oldChannel.permissionOverwrites);
-    console.log("After", channel.permissionOverwrites);
-
     let changes = findOverrideChanges(channel.permissionOverwrites, oldChannel.permissionOverwrites);
-
-    console.dir("Change in Channel Overrides");
-    console.dir(changes, {colors: true, depth: 4});
 
     for (let change of changes) {
       let newField = {short: true, value: ""};
@@ -933,7 +925,6 @@ module.exports = class moderationV2 {
     }
     else if (oldMember.roles.length > member.roles.length) {
       let oldRole = findNewRoles(oldMember.roles, member.roles);
-      console.log("Old Role", oldRole);
       fields.push({
         title: "Role Removed",
         value: `<@&${oldRole}>`,
