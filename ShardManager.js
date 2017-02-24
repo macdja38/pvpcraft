@@ -4,7 +4,7 @@
 
 
 module.exports = new class ShardManager{
-  constructor() {
+  constructor(config) {
     let shards = config.get("shards", 2);
     let startShard = config.get("shardStart", 0);
     let localShards = config.get("localShards", 2);
