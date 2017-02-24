@@ -101,10 +101,10 @@ module.exports = class permissionsManager {
         }
         else if (command.options.role) {
           if (/<@&\d+>/.test(command.options.role)) {
-            target = msg.channel.server.roles.get("id", command.options.role.match(/<@&(\d+)>/)[1]);
+            target = msg.channel.guild.roles.get(command.options.role.match(/<@&(\d+)>/)[1]);
           }
           else {
-            target = msg.channel.server.roles.get("name", command.options.role);
+            target = msg.channel.guild.roles.find(r => r.name === command.options.role);
           }
           if (target) {
             target = "g" + target.id
