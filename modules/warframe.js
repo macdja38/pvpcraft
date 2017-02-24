@@ -120,7 +120,7 @@ module.exports = class Warframe {
                 console.dir(this.alerts, {depth: 2});
                 this.alerts.forEach((server, i) => setTimeout(() => {
                   try {
-                    let guildID = this.client.channelGuildMap.get(server.channel);
+                    let guildID = this.client.channelGuildMap[server.channel];
                     let guild = this.client.guilds.get(guildID);
                     let channel = guild.channels.get(server.channel);
                     if (!channel || !server.tracking === true) return;
