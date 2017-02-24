@@ -143,7 +143,7 @@ module.exports = class Warframe {
                       }
                     }
                     let sendAlert = () => {
-                      return this.client.createMessage(channel, `\`\`\`xl\n${alert["0"]}\n${alert["1"]}\n${alert["2"]}\n${alert["3"]}\n\`\`\`${things.map((thing) => {
+                      return this.client.createMessage(channel.id, `\`\`\`xl\n${alert["0"]}\n${alert["1"]}\n${alert["2"]}\n${alert["3"]}\n\`\`\`${things.map((thing) => {
                         return `<@&${thing}>`;
                       })}`);
                     };
@@ -163,7 +163,7 @@ module.exports = class Warframe {
                     Promise.all(madeMentionable).then(() => {
                       sendAlert().then(makeUnmentionable).catch(console.error);
                     }).catch(() => {
-                      this.client.createMessage(channel, "Unable to make role mentionable, please contact @```Macdja38#7770 for help after making sure the bot has sufficient permissions");
+                      this.client.createMessage(channel.id, "Unable to make role mentionable, please contact @```Macdja38#7770 for help after making sure the bot has sufficient permissions");
                       sendAlert().then(makeUnmentionable).catch(console.error);
                     });
                   } catch (error) {
