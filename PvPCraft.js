@@ -17,8 +17,34 @@ const ravenClient = require("raven");
 const PvPClient = require("pvpclient");
 const ConfigsDB = require("./lib/configDB.js");
 const Eris = require("eris");
-for(let thing in Eris) {
-  if (Eris.hasOwnProperty(thing) && typeof Eris[thing] === "object" && Eris[thing].hasOwnProperty("prototype")) delete Eris[thing].prototype.toJSON; // remove broken eris toJSON methods
+for (let thing in Eris) {
+  if (Eris.hasOwnProperty(thing) && typeof Eris[thing] === "function") {
+    Eris[thing].prototype.toJSON = function toJSON() {
+      let copy = {};
+      keyLoop: for (let key in this) {
+        if (this.hasOwnProperty(key) && !key.startsWith("_")) {
+          for (let erisProp in Eris) {
+            if (Eris.hasOwnProperty(erisProp)) {
+              if (typeof Eris[erisProp] === "function" && this[key] instanceof Eris[erisProp]) {
+                copy[key] = `[ Eris ${erisProp} ]`;
+                continue keyLoop;
+              }
+            }
+          }
+          if (!this[key]) {
+            copy[key] = this[key];
+          } else if (this[key] instanceof Set) {
+            copy[key] = "[ Set ]"
+          } else if (this[key] instanceof Map) {
+            copy[key] = "[ Map ]"
+          } else {
+            copy[key] = this[key];
+          }
+        }
+      }
+      return copy;
+    }
+  }
 }
 const MessageSender = require("./lib/messageSender");
 const Permissions = require("./lib/permissions.js");
