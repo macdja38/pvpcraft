@@ -18,7 +18,6 @@ const PvPClient = require("pvpclient");
 const ConfigsDB = require("./lib/configDB.js");
 const Eris = require("eris");
 for(let thing in Eris) {
-  console.log(thing);
   if (Eris.hasOwnProperty(thing) && typeof Eris[thing] === "object" && Eris[thing].hasOwnProperty("prototype")) delete Eris[thing].prototype.toJSON; // remove broken eris toJSON methods
 }
 const MessageSender = require("./lib/messageSender");
@@ -315,22 +314,20 @@ module.exports = class PvPCraft {
           git.branch((branch) => {
             let ravenConfig = {
               release: commit + "-" + branch,
-              transport: new ravenClient.transports.HTTPSTransport({rejectUnauthorized: false})
+              transport: new ravenClient.transports.HTTPSTransport({rejectUnauthorized: false}),
+              tags: {
+                shardId: process.env.id,
+              },
+              autoBreadcrumbs: true,
             };
             if (sentryEnv) {
               ravenConfig.environment = sentryEnv
             }
             this.raven = new ravenClient.Client(this.fileAuth.data.sentryURL, ravenConfig);
-            //raven's patch global seems to have been running synchronously and delaying the execution of other code.
-            this.raven.patchGlobal(function (error) {
-              if (process.env.dev == "true") {
-                console.error(error);
-              }
-              process.exit(1);
-            });
 
-            this.raven.setTagsContext({
-              shardId: process.env.id,
+            this.raven.install(function () {
+              console.log("This is thy sheath; there rust, and let me die.");
+              process.exit(1);
             });
 
             this.raven.on("logged", function (e) {
@@ -617,10 +614,6 @@ module.exports = class PvPCraft {
         console.error(error);
       });
     }
-    this.raven.install(function () {
-      console.log("This is thy sheath; there rust, and let me die.");
-      process.exit(1);
-    });
     process.on("MaxListenersExceededWarning", this.captureError.bind(this));
     process.on("SIGINT", this.shutDown.bind(this));
   }
