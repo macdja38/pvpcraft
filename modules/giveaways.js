@@ -100,7 +100,7 @@ module.exports = class giveaways {
         if (winners.length > 0) {
           let string = "Congrats to";
           winners.forEach((winnerId) => {
-            let winnerUser = msg.server.members.get("id", winnerId);
+            let winnerUser = msg.guild.members.get(winnerId);
             if (winnerUser) {
               string += ` ${winnerUser}, `;
             } else {
