@@ -61,27 +61,27 @@ module.exports = class shardedInfo {
       .then(() => {
         return this.botReady;
       })
-      .then(()=> {
-      let musicModule = this._modules.find(m => m && (m.commands.indexOf("play") > -1));
-      let connectionDiscordsIds = 0;
-      let connectionBoundChannels = 0;
-      let playing = 0;
-      if (musicModule && musicModule.module.hasOwnProperty("boundChannels")) {
-        connectionDiscordsIds = Object.keys(musicModule.module.boundChannels);
-        connectionBoundChannels = connectionDiscordsIds.map(id => musicModule.module.boundChannels[id]);
-        playing = connectionBoundChannels.filter(c => c.connection && c.connection.playing).length
-      }
-      this._standardDB.set(null,
-        {
-          servers: this._client.guilds.size,
-          connections: connectionDiscordsIds.length,
-          playing,
-          users: this._client.users.size,
-          shards: parseInt(process.env.shards) || 1,
-          lastUpdate: Date.now(),
-          lastMessage: this._lastMessage,
-        }, {server: process.env.id ? process.env.id : "0"})
-    }).catch(error => console.error(error))
+      .then(() => {
+        let musicModule = this._modules.find(m => m && (m.commands.indexOf("play") > -1));
+        let connectionDiscordsIds = 0;
+        let connectionBoundChannels = 0;
+        let playing = 0;
+        if (musicModule && musicModule.module.hasOwnProperty("boundChannels")) {
+          connectionDiscordsIds = Object.keys(musicModule.module.boundChannels);
+          connectionBoundChannels = connectionDiscordsIds.map(id => musicModule.module.boundChannels[id]);
+          playing = connectionBoundChannels.filter(c => c.connection && c.connection.playing).length
+        }
+        this._standardDB.set(null,
+          {
+            servers: this._client.guilds.size,
+            connections: connectionDiscordsIds.length,
+            playing,
+            users: this._client.users.size,
+            shards: parseInt(process.env.shards) || 1,
+            lastUpdate: Date.now(),
+            lastMessage: this._lastMessage,
+          }, {server: process.env.id ? process.env.id : "0"})
+      }).catch(error => console.error(error))
   }
 
   /**
@@ -139,7 +139,7 @@ module.exports = class shardedInfo {
       };
       hookOptions.attachments = [attachment];
       this._joinLeaveHooks.forEach(hook => this._client.executeSlackWebhook(hook.id, hook.token, hookOptions).catch(this._raven.captureException))
-    } catch(error) {
+    } catch (error) {
       this._raven.captureException(error);
     }
   }
@@ -165,18 +165,18 @@ module.exports = class shardedInfo {
         hookOptions.attachments = [attachment];
         this._pmHooks.forEach(hook => this._client.executeSlackWebhook(hook.id, hook.token, hookOptions).catch(this._raven.captureException))
       }
-    } catch(error) {
+    } catch (error) {
       this._raven.captureException(error);
     }
   }
 
   updateAbal(servers) {
     let token = this._auth.get("abalKey", false);
-    if(token && token.length > 1 && token !== "key") {
+    if (token && token.length > 1 && token !== "key") {
       request.post({
         url: `https://bots.discord.pw/api/bots/${this._client.user.id}/stats`,
-        headers: { Authorization: token },
-        json: { server_count: servers }
+        headers: {Authorization: token},
+        json: {server_count: servers}
       }, (error, response, body) => {
         if (!error && response.statusCode == 200) {
           console.log(body)
@@ -200,7 +200,7 @@ module.exports = class shardedInfo {
       request(
         {
           url: 'https://www.carbonitex.net/discord/data/botdata.php',
-          body: { key: token, servercount: servers },
+          body: {key: token, servercount: servers},
           json: true
         },
         function (error, response, body) {
@@ -246,11 +246,19 @@ module.exports = class shardedInfo {
         let connections = serverData.map(s => s.connections).reduce((total, num) => total + num, 0);
         let playing = serverData.map(s => s.playing).reduce((total, num) => total + num, 0);
         let users = serverData.map(s => s.users).reduce((total, num) => total + num, 0);
-        msg.reply(`\`\`\`xl\nshards online: ${shardsOnline}/${process.env.shards || 1}\nshards connected: ${shardsReceivingMessages}/${process.env.shards || 1}\nservers: ${serverCount}\nconnections: ${connections}\nplaying: ${playing}\nusers: ${users}\n\`\`\``);
+        msg.channel.createMessage({
+          embed: {
+            title: `Status info`,
+            description: `\`\`\`xl\nshards online: ${shardsOnline}/${process.env.shards || 1}\n` +
+            `shards connected: ${shardsReceivingMessages}/${process.env.shards || 1}\n` +
+            `servers: ${serverCount}\nconnections: ${connections}\nplaying: ${playing}\nusers: ${users}\n\`\`\``,
+            thumbnail: {url: this._client.user.avatarURL},
+          }
+        });
         return false;
       }
       return command;
-    } catch(error) {
+    } catch (error) {
       console.error(error);
       return command;
     }
