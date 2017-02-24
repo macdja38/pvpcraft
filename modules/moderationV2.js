@@ -5,7 +5,7 @@
 let utils = require('../lib/utils');
 let util = require('util');
 let colors = require('colors');
-var Eris = require("eris");
+let Eris = require("eris");
 
 /* let colorMap = {
  "message.deleted": "#FFB600",
@@ -34,6 +34,7 @@ var Eris = require("eris");
 
 let colorMap = {
   "voice.join": "#003FE2",
+  "voice.switch": "#007FE2",
   "voice.leave": "#00BEE2",
   "message.deleted": "#3F0000",
   "message.updated": "#3F7F00",
@@ -905,19 +906,21 @@ module.exports = class moderationV2 {
         short: true,
       });
     }
-    if (oldMember.voiceState.mute != member.voiceState.mute) {
-      fields.push({
-        title: "Muted",
-        value: `${oldMember.voiceState.mute} to ${member.voiceState.mute}`,
-        short: true,
-      });
-    }
-    if (oldMember.voiceState.deaf != member.voiceState.deaf) {
-      fields.push({
-        title: "Death",
-        value: `${oldMember.voiceState.deaf} to ${member.voiceState.deaf}`,
-        short: true,
-      });
+    if (oldMember.voiceState) { // eris does not currently supply previous voice states. This will probably be added in the future.
+      if (oldMember.voiceState.mute != member.voiceState.mute) {
+        fields.push({
+          title: "Muted",
+          value: `${oldMember.voiceState.mute} to ${member.voiceState.mute}`,
+          short: true,
+        });
+      }
+      if (oldMember.voiceState.deaf != member.voiceState.deaf) {
+        fields.push({
+          title: "Death",
+          value: `${oldMember.voiceState.deaf} to ${member.voiceState.deaf}`,
+          short: true,
+        });
+      }
     }
     if (oldMember.roles.length < member.roles.length) {
       let newRole = findNewRoles(member.roles, oldMember.roles);
