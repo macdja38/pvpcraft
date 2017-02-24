@@ -11,6 +11,7 @@ let now = require("performance-now");
 
 let SlowSender = require('../lib/slowSender');
 
+let Eris = require('eris');
 let utils = require('../lib/utils');
 let util = require('util');
 
