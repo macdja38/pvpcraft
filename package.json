@@ -3,6 +3,7 @@
   "dependencies": {
     "blocked": "^1.2.1",
     "bluebird": "^3.4.7",
+    "bufferutil": "^2.0.1",
     "chess": "^0.2.7",
     "cleverbot.io": "^1.0.4",
     "cli-table2": "^0.2.0",
