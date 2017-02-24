@@ -597,7 +597,7 @@ module.exports = class Warframe {
             },
             fields,
           };
-          this.client.createMessage(msg.channel.id, "", {embed});
+          this.client.createMessage(msg.channel.id, {embed});
           return true;
         }
       });
@@ -652,7 +652,7 @@ module.exports = class Warframe {
           }
         }
         console.log(embed);
-        this.client.createMessage(msg.channel.id, "", {embed});
+        this.client.createMessage(msg.channel.id, {embed});
         return true;
       });
     }
