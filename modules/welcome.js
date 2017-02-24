@@ -71,7 +71,7 @@ module.exports = class welcome {
       }
       let settings = this.config.get("welcome", {}, {server: msg.channel.guild.id});
       if (command.args.length > 0 && command.args[0].toLowerCase() === "false") {
-        this.config.set("welcome", {}, {server: msg.server.id, conflict: "replace"});
+        this.config.set("welcome", {}, {server: msg.channel.guild.id, conflict: "replace"});
         msg.channel.createMessage(msg.author.mention + ", " + ":thumbsup::skin-tone-2:");
         return true;
       }
@@ -85,7 +85,7 @@ module.exports = class welcome {
       if (command.options.delay) {
         settings.delay = Math.max(Math.min(command.options.delay.valueOf() || 0, 20), 0) * 1000;
       }
-      this.config.set("welcome", settings, {server: msg.server.id});
+      this.config.set("welcome", settings, {server: msg.channel.guild.id});
       msg.channel.createMessage(msg.author.mention + ", " + ":thumbsup::skin-tone-2:");
       return true;
     }
