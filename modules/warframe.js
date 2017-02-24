@@ -47,6 +47,7 @@ module.exports = class Warframe {
         if (this.config.data.hasOwnProperty(item) && this.config.data[item].hasOwnProperty("warframeAlerts")) {
           if (this.client.channelGuildMap.hasOwnProperty(this.config.data[item]["warframeAlerts"].channel)) {
             //noinspection JSUnresolvedVariable
+            console.log("Thing", this.config.data[item].warframeAlerts);
             this.alerts.push(this.config.data[item].warframeAlerts);
           } else {
             //TODO: notify the server owner their mod alerts channel has been removed and that //setalerts false will make that permanent.
@@ -119,8 +120,9 @@ module.exports = class Warframe {
                 console.dir(this.alerts, {depth: 2});
                 this.alerts.forEach((server, i) => setTimeout(() => {
                   try {
-                    let guild = this.client.guilds.get(server.id);
-                    let channel = guild.channels.get("id", server.channel);
+                    let guildID = this.client.channelGuildMap.get(server.channel);
+                    let guild = this.client.guilds.get(guildID);
+                    let channel = guild.channels.get(server.channel);
                     if (!channel || !server.tracking === true) return;
                     let things = [];
                     let madeMentionable = [];
