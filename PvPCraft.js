@@ -268,7 +268,7 @@ module.exports = class PvPCraft {
       compress: true,
       disableEveryone: false,
       firstShardID: this.shardId,
-      lastShardID: this.shardId + 1,
+      lastShardID: this.shardId,
       maxShards: this.shardCount
     });
   }
