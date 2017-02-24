@@ -17,21 +17,18 @@
     "google": "^2.0.0",
     "google-images": "^2.0.0",
     "mc-ping-updated": "^0.1.0",
-    "performance-now": "^0.2.0",
+    "performance-now": "^2.1.0",
     "pokedex-promise-v2": "^3.0.0",
     "pvpclient": "github:macdja38/pvpclient",
     "raven": "^1.1.1",
     "request": "^2.7.0",
-    "rethinkdb": "^2.3.1",
     "rethinkdbdash": "^2.3.23",
     "sodium-native": "^1.5.1",
     "superagent": "latest",
     "twit": "^2.2.4",
     "universal-analytics": "latest",
-    "winston": "^2.3.1",
-    "winston-sentry": "^0.1.5",
-    "ws": "^2.0.1",
+    "uws": "^0.13.0",
     "youtube-dl": "^1.11.1",
-    "ytdl-core": "^0.8.0"
+    "ytdl-core": "^0.9.1"
   }
 }
