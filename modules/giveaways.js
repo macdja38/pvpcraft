@@ -100,11 +100,11 @@ module.exports = class giveaways {
         if (winners.length > 0) {
           let string = "Congrats to";
           winners.forEach((winnerId) => {
-            let winnerUser = msg.guild.members.get(winnerId);
+            let winnerUser = msg.channel.guild.members.get(winnerId);
             if (winnerUser) {
-              string += ` ${winnerUser}, `;
+              string += ` ${winnerUser.mention}, `;
             } else {
-              string += ` \`User number ${winnerId}\`, `;
+              string += ` \`User <@${winnerId}>\`, `;
             }
           });
           msg.channel.createMessage(msg.author.mention + ", " + string + "for winning!");
@@ -123,15 +123,15 @@ module.exports = class giveaways {
         }).then((result) => {
           console.log(result);
           if (result.replaced === 1) {
-            this._slowSender.sendMessage(msg.channel, `${msg.author}, You have entered.`);
+            this._slowSender.sendMessage(msg.channel, `${msg.author.mention}, You have entered.`);
           } else if (result.unchanged === 1) {
-            this._slowSender.sendMessage(msg.channel, `${msg.author}, Sorry but you can only enter once.`);
+            this._slowSender.sendMessage(msg.channel, `${msg.author.mention}, Sorry but you can only enter once.`);
           } else {
-            this._slowSender.sendMessage(msg.channel, `${msg.author}, Error processing entry.`);
+            this._slowSender.sendMessage(msg.channel, `${msg.author.mention}, Error processing entry.`);
           }
         });
       } else {
-        this._slowSender.sendMessage(msg.channel, `${msg.author}, Sorry but there are no giveaways open at this time.`);
+        this._slowSender.sendMessage(msg.channel, `${msg.author.mention}, Sorry but there are no giveaways open at this time.`);
       }
       return true;
     }
