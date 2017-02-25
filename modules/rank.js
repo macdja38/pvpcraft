@@ -51,6 +51,10 @@ module.exports = class rank {
     if (command.command === "rank") {
 
       if (command.args[0] === "add" && perms.check(msg, "admin.rank.add")) {
+        if (command.args.length < 2 || (!command.options.group && !command.options.role)) {
+          msg.channel.createMessage(`Usage \`${utils.clean(command.prefix)}rank add <simpleName> --role <role>\``);
+          return;
+        }
         let roleId;
         if (command.options.group && !command.options.role) {
           command.options.role = command.options.group;
@@ -60,7 +64,7 @@ module.exports = class rank {
             roleId = msg.channel.guild.roles.get(command.options.role.match(/<@&(\d+)>/)[1]);
           }
           else {
-            roleId = msg.channel.guild.roles.get("name", command.options.role);
+            roleId = msg.channel.guild.roles.find(r => r.name === command.options.role);
           }
           if (roleId) {
             roleId = roleId.id
