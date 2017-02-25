@@ -213,18 +213,18 @@ module.exports = class moderationV2 {
     if (reason) {
       text += `\n**Reason:** ${utils.clean(reason)}`;
     }
-    let args = [user || possibleId];
+    let args = [user ? user.id :possibleId];
     if (action === "ban") {
       args.push(command.options.hasOwnProperty("time") ? command.options.time : 1);
     }
-    msg.server[`${action}Member`](...args)
+    msg.guild[`${action}Member`](...args)
       .then(() => {
-        return this.sendHookedMessage(`action.${action}`, options, text, msg.server.id);
+        return this.sendHookedMessage(`action.${action}`, options, text, msg.guild.id);
       })
       .catch((error) => {
         options.title += " **FAILED bot may not have sufficient permissions**";
         text += `\n**Error:** ${error}`;
-        this.sendHookedMessage(`action.${action}`, options, text, msg.server.id);
+        this.sendHookedMessage(`action.${action}`, options, text, msg.guild.id);
       });
     msg.channel.createMessage(msg.author.mention + ", " + `${user || possibleId} has been ${action}ned!`);
   }
