@@ -37,11 +37,33 @@ module.exports = class minecraft {
           this.client.createMessage(msg.channel.id, "```xl\n" + err + "```")
         }
         else {
-          this.client.createMessage(msg.channel.id, "```xl\n" +
-            "Pinged " + command.args.join(".") + " in " + (now() - t1) + "ms\n" +
-            "Version " + res.version.name + " protocol " + res.version.protocol + "\n" +
-            "Players " + res.players.online + "/" + res.players.max + "```"
-          )
+          let description = res.description;
+          msg.channel.createMessage({
+            embed: {
+              title: `Server info of ${utils.clean(`${address}:${port}`)}`,
+              fields: [{
+                name: "Ping",
+                value: `${now() - t1}`,
+                inline: true
+              }, {
+                name: "Version",
+                value: `${res.version.name}`,
+                inline: true
+              }, {
+                name: "Protocal",
+                value: `${res.version.protocol}`,
+                inline: true
+              },{
+                name: "Players",
+                value: `${res.players.online}/${res.players.max}`,
+                inline: true
+              }, {
+                name: "Description",
+                value: description.text === '' ? description.extra.map(e => e.text).join("") : description.text,
+                inline: true
+              }],
+            }
+          });
         }
       }, 3000);
       return true;
@@ -53,9 +75,9 @@ module.exports = class minecraft {
         return true;
       }
       msg.channel.createMessage({
-        file: {
-          file: "https://mcapi.ca/avatar/2d/" + command.args[0] + "/100/" + ((command.flags.includes("b")) ? "false" : "true"),
-          name: command.args[0] + ".png"
+        embed: {
+          title: `Avatar of ${utils.clean(command.args[0])}`,
+          thumbnail: {url: `https://mcapi.ca/avatar/2d/${command.args[0]}/100/${((command.flags.includes("b")) ? "false" : "true")}`},
         }
       });
       return true;
@@ -67,9 +89,9 @@ module.exports = class minecraft {
         return true;
       }
       msg.channel.createMessage({
-        file: {
-          file: "https://visage.surgeplay.com/full/404/" + command.args[0] + ".png",
-          name: command.args[0] + ".png"
+        embed: {
+          title: `Skin of ${utils.clean(command.args[0])}`,
+          thumbnail: {url: `https://visage.surgeplay.com/full/404/${command.args[0]}.png`},
         }
       });
       return true;
