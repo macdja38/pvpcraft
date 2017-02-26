@@ -128,7 +128,7 @@ module.exports = class PvPCraft {
     setInterval(() => {
       if (Date.now() - lastMessage > this.waitBeforeRestart) {
         if (this.raven) {
-          this.raven.captureException(new Error("Did not recieve messages in " + this.waitBeforeRestart));
+          this.raven.captureMessage("Did not recieve messages in " + this.waitBeforeRestart);
         }
         setTimeout(() => process.exit(533), 3000); //allow time to report sentry exception before exiting
       }
