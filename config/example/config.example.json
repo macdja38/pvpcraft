@@ -17,6 +17,7 @@
   "shards": 1,
   "localShards": 1,
   "shardStart": 0,
+  "shardTable": "shards",
   "logShardStatus": false,
   "waitBeforeRestart": 480,
   "website": {
