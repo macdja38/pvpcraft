@@ -847,7 +847,7 @@ module.exports = class moderationV2 {
 
   memberBanned(server, user) {
     this.sendHookedMessage("member.banned", {user}, {
-      title: "User Unbanned", fields: [{
+      title: "User Banned", fields: [{
         title: "User",
         value: user.mention,
         short: true,
