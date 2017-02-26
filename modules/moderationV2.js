@@ -761,7 +761,8 @@ module.exports = class moderationV2 {
     if (fields.length < 2) return;
     this.client.guilds.forEach(guild => {
       if (guild.members.get(user.id)) {
-        this.sendHookedMessage("member.updated", {user}, {title: `Member Updated`, fields}, guild.id);
+        if (this.perms.checkUserChannel(user, guild.defaultChannel, "msglog.whitelist.user")) return;
+        this.sendHookedMessage("user", {user}, {title: `Member Updated`, fields}, guild.id);
       }
     });
   };
@@ -887,6 +888,7 @@ module.exports = class moderationV2 {
   };
 
   memberUpdated(guild, member, oldMember) {
+    if (this.perms.checkUserChannel(member, guild.defaultChannel, "msglog.whitelist.member.updated")) return;
     if (!oldMember) return;
     let fields = [{
       title: "User",
@@ -937,6 +939,7 @@ module.exports = class moderationV2 {
   };
 
   voiceJoin(member, newChannel) {
+    if (this.perms.checkUserChannel(member, newChannel, "msglog.whitelist.voice.join")) return;
     this.sendHookedMessage("voice.join", {user: member}, {
       title: "Voice Join", fields: [{
         title: "User",
@@ -951,6 +954,7 @@ module.exports = class moderationV2 {
   }
 
   voiceSwitch(member, newChannel, oldChannel) {
+    if (this.perms.checkUserChannel(member, newChannel, "msglog.whitelist.voice.switch")) return;
     this.sendHookedMessage("voice.switch", {user: member}, {
       title: "Voice Switch", fields: [{
         title: "User",
@@ -969,6 +973,7 @@ module.exports = class moderationV2 {
   }
 
   voiceLeave(member, oldChannel) {
+    if (this.perms.checkUserChannel(member, oldChannel, "msglog.whitelist.voice.leave")) return;
     this.sendHookedMessage("voice.leave", {user: member}, {
       title: "Voice Leave", fields: [{
         title: "User",
