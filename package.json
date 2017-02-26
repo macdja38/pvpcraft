@@ -27,7 +27,6 @@
     "superagent": "latest",
     "twit": "^2.2.4",
     "universal-analytics": "latest",
-    "uws": "^0.13.0",
     "youtube-dl": "^1.11.1",
     "ytdl-core": "^0.9.1"
   }
