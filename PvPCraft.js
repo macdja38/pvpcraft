@@ -59,7 +59,7 @@ const R = require("rethinkdbdash");
 
 let lastMessage = Date.now();
 
-let waitBeforeRestart = 30000;
+
 
 /**
  * log blocking events
@@ -89,8 +89,10 @@ let waitBeforeRestart = 30000;
 
 
 module.exports = class PvPCraft {
-  constructor(fileConfig) {
+  constructor(fileConfig, fileAuth) {
+    this.waitBeforeRestart = fileConfig.get("waitBeforeRestart", 30) * 1000;
     this.fileConfig = fileConfig;
+    this.fileAuth = fileAuth;
     this.prefix = [];
     this.hasBeenReady = false;
     this.moduleList = [];
@@ -102,7 +104,6 @@ module.exports = class PvPCraft {
       // this.rejectReadyPromise = reject;
     });
     Promise.resolve()
-      .then(this.loadFileConfigs.bind(this))
       .then(this.loadAnalytics.bind(this))
       .then(this.readyRaven.bind(this))
       .then(this.registerProcessListeners.bind(this))
@@ -125,9 +126,9 @@ module.exports = class PvPCraft {
 
   readyIdleRestart() {
     setInterval(() => {
-      if (Date.now() - lastMessage > waitBeforeRestart) {
+      if (Date.now() - lastMessage > this.waitBeforeRestart) {
         if (this.raven) {
-          this.raven.captureException(new Error("Did not recieve messages in " + waitBeforeRestart));
+          this.raven.captureException(new Error("Did not recieve messages in " + this.waitBeforeRestart));
         }
         setTimeout(() => process.exit(533), 3000); //allow time to report sentry exception before exiting
       }
@@ -306,10 +307,6 @@ module.exports = class PvPCraft {
     this.client.connect();
   }
 
-  loadFileConfigs() {
-    this.fileAuth = new Configs("auth");
-  }
-
   loadAnalytics() {
     let trackingId = this.fileAuth.get("googleAnalyticsId", "trackingId");
     if (trackingId === "trackingId") {
@@ -344,7 +341,7 @@ module.exports = class PvPCraft {
               tags: {
                 shardId: process.env.id,
               },
-              autoBreadcrumbs: true,
+              autoBreadcrumbs: false,
             };
             if (sentryEnv) {
               ravenConfig.environment = sentryEnv
@@ -563,7 +560,7 @@ module.exports = class PvPCraft {
           extra.guild_name = msg.channel.guild.name;
         }
         this.raven.captureException(error, {
-          user: PvPCraft.userObjectify(msg.author),
+          user: msg.author,
           extra,
         });
       }
@@ -666,20 +663,18 @@ module.exports = class PvPCraft {
         if (this.raven) {
           let extra = {
             mod: mod,
-            channel: msg.channel.id,
-            channel_name: msg.channel.name,
+            channel: msg.channel,
             command: command,
-            msg: msg.content
+            msg: msg
           };
-          if (msg.hasOwnProperty("server")) {
-            extra.guild = msg.guild.id;
-            extra.guild_name = msg.guild.name;
+          if (msg.channel.hasOwnProperty("guild")) {
+            extra.guild = msg.guild;
           }
           if (process.env.dev == "true") {
             console.error(error);
           }
           this.raven.captureException(error, {
-            user: PvPCraft.userObjectify(msg.author),
+            user: msg.author,
             extra,
           }, (id) => {
             if (error) console.error(error);

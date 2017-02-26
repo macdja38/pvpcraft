@@ -8,7 +8,7 @@
     "cleverbot.io": "^1.0.4",
     "cli-table2": "^0.2.0",
     "colors": "^1.1.2",
-    "deepmerge": "macdja38/deepmerge#patch-1",
+    "deepmerge": "latest",
     "ebml": "^2.2.0",
     "eris": "abalabahaha/eris#dev",
     "erlpack": "github:hammerandchisel/erlpack",

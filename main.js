@@ -10,11 +10,12 @@ const cluster = require('cluster');
 
 let Configs = require("./lib/config.js");
 let fileConfig = new Configs("config");
+let fileAuth = new Configs("auth");
 
 if (cluster.isMaster && fileConfig.get("shards", 2) > 1) {
   let ShardManager = require("./ShardManager");
-  new ShardManager(fileConfig);
+  new ShardManager(fileConfig, fileAuth);
 } else {
   let PvPCraft = require("./PvPCraft");
-  new PvPCraft(fileConfig);
+  new PvPCraft(fileConfig, fileAuth);
 }
