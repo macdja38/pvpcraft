@@ -152,7 +152,7 @@ module.exports = class Warframe {
                         if (things.hasOwnProperty(thing)) {
                           let role = guild.roles.get(things[thing]);
                           if (role) {
-                            this.client.updateRole(role.id, {
+                            guild.editRole(role.id, {
                               mentionable: false
                             }).catch(() => {
                             });
