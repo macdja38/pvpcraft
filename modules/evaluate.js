@@ -11,6 +11,7 @@ let now = require("performance-now");
 
 let SlowSender = require('../lib/slowSender');
 
+//noinspection JSUnusedLocalSymbols
 let Eris = require('eris');
 let utils = require('../lib/utils');
 let util = require('util');
@@ -39,6 +40,7 @@ module.exports = class evaluate {
     this.slowSender.onDisconnect();
   }
 
+  //noinspection JSUnusedLocalSymbols
   onCommand(msg, command, perms) {
     //id is hardcoded to prevent problems stemming from the misuse of eval.
     //no perms check because this extends paste the bounds of a server.
@@ -48,15 +50,22 @@ module.exports = class evaluate {
       let code = command.args.join(" ");
 
       //these are so that others code will run in the eval if they depend on things.
+      //noinspection JSUnusedLocalSymbols
       let client = this.client;
+      //noinspection JSUnusedLocalSymbols
       let bot = this.client;
       let message = msg;
+      //noinspection JSUnusedLocalSymbols
       let config = this.config;
+      //noinspection JSUnusedLocalSymbols
       let slowSend = this.slowSender;
-
+      //noinspection JSUnusedLocalSymbols
       let raven = this.raven;
+      //noinspection JSUnusedLocalSymbols
       let modules = this.modules;
+      //noinspection JSUnusedLocalSymbols
       let guild = message.channel.guild;
+      //noinspection JSUnusedLocalSymbols
       let channel = msg.channel;
       let t0, t1, t2;
       t0 = now();
@@ -161,3 +170,8 @@ module.exports = class evaluate {
     return util.inspect(object, {depth: 2}).replace(new RegExp(this.client.token, "g"), "[ Token ]");
   }
 };
+
+//noinspection JSUnusedLocalSymbols (used in eval
+function dec2bin(dec){
+  return (dec >>> 0).toString(2);
+}
