@@ -67,7 +67,7 @@ module.exports = class evaluate {
         let string = "```xl\n" +
           utils.clean(code) +
           "\n- - - - - - evaluates-to- - - - - - -\n" +
-          utils.clean(evaluated) +
+          utils.clean(this._shortenTo(this._convertToObject(evaluated), 1500)) +
           "\n- - - - - - - - - - - - - - - - - - -\n" +
           "In " + (t1 - t0) + " milliseconds!\n```";
         if (evaluated && evaluated.then) {
@@ -89,7 +89,7 @@ module.exports = class evaluate {
             }).then((result) => {
               string = string.substring(0, string.length - 4);
               string += "\n- - - - -Promise resolves to- - - - -\n";
-              string += utils.clean(result);
+              string += utils.clean(this._shortenTo(this._convertToObject(result), 1500));
               string += "\n- - - - - - - - - - - - - - - - - - -\n";
               string += "In " + (t2 - t0) + " milliseconds!\n```";
               this.client.editMessage(message.channel.id, message.id, string).catch(error => console.error(error));
@@ -133,5 +133,31 @@ module.exports = class evaluate {
     }
 
     return false;
+  }
+
+  /**
+   *
+   * @param {string} string
+   * @param {number} charCount
+   * @returns {string}
+   * @private
+   */
+  _shortenTo(string, charCount) {
+    return string.slice(0, charCount);
+  }
+
+  /**
+   * Converts to string
+   * @param {Object?} object
+   * @returns {string}
+   * @private
+   */
+  _convertToObject(object) {
+    if (object === null) return "null";
+    if (typeof object === "undefined") return "undefined";
+    if (object.toJSON && typeof object.toJSON ) {
+      object = object.toJSON();
+    }
+    return util.inspect(object, {depth: 2}).replace(new RegExp(this.client.token, "g"), "[ Token ]");
   }
 };
