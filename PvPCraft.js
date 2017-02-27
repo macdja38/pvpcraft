@@ -109,6 +109,7 @@ module.exports = class PvPCraft {
       .then(this.registerProcessListeners.bind(this))
       .then(this.readyRethinkDB.bind(this))
       .then(this.createClient.bind(this))
+      .then(this.registerPreReadyClientListeners.bind(this))
       .then(this.registerReadyListener.bind(this))
       .then(this.readyIdleRestart.bind(this))
       .then(this.login.bind(this))
@@ -119,7 +120,7 @@ module.exports = class PvPCraft {
       .then(this.readyFeeds.bind(this))
       .then(this.readyPvPClient.bind(this))
       .then(this.reload.bind(this))
-      .then(this.registerClientListeners.bind(this))
+      .then(this.registerPostReadyClientListeners.bind(this))
       .then(this.announceReady.bind(this))
       .catch(console.error)
   }
@@ -183,13 +184,39 @@ module.exports = class PvPCraft {
     });
   }
 
-  registerClientListeners() {
+  registerPreReadyClientListeners() {
+    this.client.on("shardDisconnect", this.logShardUpdate.bind(this, "Disconnect"));
+    this.client.on("shardPreReady", this.logShardUpdate.bind(this, "preReady"));
+    this.client.on("shardResume", this.logShardUpdate.bind(this, "Resume"));
+    this.client.on("shardReady", this.logShardUpdate.bind(this, "Ready"));
+  }
+
+  registerPostReadyClientListeners() {
     this.client.on("guildDelete", this.onGuildDelete.bind(this));
     this.client.on("unavailableGuildCreate", this.onGuildCreate.bind(this));
     this.client.on("guildCreate", this.onGuildCreate.bind(this));
     this.client.on("messageCreate", this.onMessage.bind(this));
     this.client.on("error", this.onError.bind(this));
     this.client.on("disconnect", this.onDisconnect.bind(this));
+  }
+
+  logShardUpdate(type, errorOrId, IDOrNull) {
+    let error;
+    let id;
+    if (typeof errorOrId === "number") {
+      id = errorOrId;
+    } else {
+      id = IDOrNull;
+      error = errorOrId;
+    }
+    if (this.raven) {
+      if (error) {
+        this.raven.captureException(error, {extra: {type: type, id}, level: "info"});
+      } else {
+        this.raven.captureMessage(type + " Triggered", {level: "info"})
+      }
+    }
+    console.log(type, errorOrId, IDOrNull);
   }
 
   onError(error) {
