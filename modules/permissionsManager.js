@@ -25,7 +25,7 @@ module.exports = class permissionsManager {
 
     if (command.commandnos === "setting") {
       let urlRoot = this.config.get("website", {"settingsRoot": "https://bot.pvpcraft.ca"}).settingsRoot;
-      msg.channel.createMessage(msg.author.mention + ", " + `${urlRoot}/bot/${this.client.user.id}/server/${msg.server.id}/ranks`);
+      msg.channel.createMessage(msg.author.mention + ", " + `${urlRoot}/bot/${this.client.user.id}/server/${msg.channel.guild.id}/ranks`);
       return true;
     }
 
