@@ -40,7 +40,16 @@ module.exports = class feedManager {
     if (command.commandnos === "feed" && perms.check(msg, "feeds.manage")) {
       let adding;
       switch(command.args[0]) {
-        case "start":
+        case "list": {
+          let data = this._feeds.list(msg.channel.guild.id);
+          if (data.hasOwnProperty("feeds")) {
+            console.log(data.feeds);
+            msg.channel.createMessage(`\`\`\`json\n${JSON.stringify(data.feeds, null, 2)}\n\`\`\``);
+          } else {
+            msg.channel.createMessage("No feeds are configured");
+          }
+          return true;
+        } case "start":
           adding = true;
           break;
         case "stop":
