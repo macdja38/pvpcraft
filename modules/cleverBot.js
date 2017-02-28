@@ -7,8 +7,23 @@ let utils = require('../lib/utils');
 
 let CleverBot = require('cleverbot.io');
 
-
-module.exports = class cleverBot {
+class cleverBot {
+  /**
+   * Instantiates the module
+   * @constructor
+   * @param {Object} e
+   * @param {Client} e.client Eris client
+   * @param {Config} e.config File based config
+   * @param {Raven?} e.raven Raven error logging system
+   * @param {Config} e.auth File based config for keys and tokens and authorisation data
+   * @param {ConfigDB} e.configDB database based config system, specifically for per guild settings
+   * @param {R} e.r Rethinkdb r
+   * @param {Permissions} e.perms Permissions Object
+   * @param {Feeds} e.feeds Feeds Object
+   * @param {MessageSender} e.messageSender Instantiated message sender
+   * @param {SlowSender} e.slowSender Instantiated slow sender
+   * @param {PvPClient} e.pvpClient PvPCraft client library instance
+   */
   constructor(e) {
     this.client = e.client;
     this.raven = e.raven;
@@ -23,10 +38,16 @@ module.exports = class cleverBot {
     }
   }
 
-  getCommands() {
+  static getCommands() {
     return [];
   }
 
+  /**
+   * Optional function that will be called with every message for the purpose of misc responses / other
+   * @param {Message} msg
+   * @param {Permissions} perms
+   * @returns {boolean | Promise}
+   */
   checkMisc(msg, perms) {
     if (msg.mentions.includes(this.client.user) && perms.check(msg, "cleverbot.misc")) {
       if (!this.cleverEnabled) {
@@ -68,7 +89,16 @@ module.exports = class cleverBot {
     return false;
   }
 
-  onCommand(msg, command, perms, l) {
+  /**
+   * Called with a command, returns true or a promise if it is handling the command, returns false if it should be passed on.
+   * @param {Message} msg
+   * @param {Command} command
+   * @param {Permissions} perms
+   * @returns {boolean | Promise}
+   */
+  onCommand(msg, command, perms) {
     return false;
   }
-};
+}
+
+module.exports = cleverBot;

@@ -3,16 +3,35 @@
  */
 "use strict";
 
-var Player = require('../lib/player.js');
+const Player = require('../lib/Player.js');
 
-var key = require('../config/auth.json').youtubeApiKey || null;
+let key = require('../config/auth.json').youtubeApiKey || null;
 if (key == "key") {
   key = null;
 }
 
-var text;
-
-module.exports = class music {
+/**
+ *
+ * @type {music}
+ * @param {Player} boundChannels
+ */
+class music {
+  /**
+   * Instantiates the module
+   * @constructor
+   * @param {Object} e
+   * @param {Client} e.client Eris client
+   * @param {Config} e.config File based config
+   * @param {Raven?} e.raven Raven error logging system
+   * @param {Config} e.auth File based config for keys and tokens and authorisation data
+   * @param {ConfigDB} e.configDB database based config system, specifically for per guild settings
+   * @param {R} e.r Rethinkdb r
+   * @param {Permissions} e.perms Permissions Object
+   * @param {Feeds} e.feeds Feeds Object
+   * @param {MessageSender} e.messageSender Instantiated message sender
+   * @param {SlowSender} e.slowSender Instantiated slow sender
+   * @param {PvPClient} e.pvpClient PvPCraft client library instance
+   */
   constructor(e) {
     this.client = e.client;
     this.fileConfig = e.config;
@@ -21,14 +40,10 @@ module.exports = class music {
     this.r = e.r;
     this.conn = e.conn;
     this.leaveChecker = false;
-    /**
-     * holds array of servers channels and their bound instances.
-     * @type {Array}
-     */
     this.boundChannels = [];
   }
 
-  getCommands() {
+  static getCommands() {
     return ["init", "play", "skip", "list", "time", "pause", "resume", "volume", "shuffle", "next", "destroy", "logchannel", "link"];
   }
 
@@ -58,8 +73,8 @@ module.exports = class music {
       });
       msg.channel.createMessage(msg.author.mention + ", Binding to **" + voiceChannel.name + "** and **" + msg.channel.name + "**");
       this.boundChannels[id].init(msg).then(() => {
-          msg.channel.createMessage(msg.author.mention + ", " + `Bound successfully use ${command.prefix}destroy to unbind it.`);
-          resolve(this.boundChannels[id]);
+        msg.channel.createMessage(msg.author.mention + ", " + `Bound successfully use ${command.prefix}destroy to unbind it.`);
+        resolve(this.boundChannels[id]);
       }).catch(error => {
         console.error(error);
         msg.channel.createMessage(msg.author.mention + ", " + error);
@@ -102,8 +117,15 @@ module.exports = class music {
     }
   }
 
+  /**
+   * Called with a command, returns true or a promise if it is handling the command, returns false if it should be passed on.
+   * @param {Message} msg
+   * @param {Command} command
+   * @param {Permissions} perms
+   * @returns {boolean | Promise}
+   */
   onCommand(msg, command, perms) {
-    if (!msg.channel.guild) return; //this is a pm... we can't do music stuff here.
+    if (!msg.channel.guild) return false; //this is a pm... we can't do music stuff here.
     let id = msg.channel.guild.id;
 
     if (command.command === "init" && perms.check(msg, "music.init")) {
@@ -178,9 +200,9 @@ module.exports = class music {
       console.log("Got Next");
       if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].ready) {
         if (this.boundChannels[id].currentVideo) {
-          var index = command.args[0] ? parseInt(command.args[0]) - 1 : -1;
-          var isForced = !!(perms.check(msg, "music.forceskip") && command.flags.indexOf('f') > -1);
-          var video;
+          let index = command.args[0] ? parseInt(command.args[0]) - 1 : -1;
+          let isForced = (perms.check(msg, "music.forceskip") && command.flags.indexOf('f') > -1);
+          let video;
           if (index === -1) {
             video = this.boundChannels[id].currentVideo;
           }
@@ -305,7 +327,7 @@ module.exports = class music {
       return true;
       if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
         if (command.args[0] && perms.check(msg, "music.volume.set")) {
-          var volume = parseInt(command.args[0]);
+          let volume = parseInt(command.args[0]);
           if (111 > volume && volume > 4) {
             this.boundChannels[id].setVolume(volume);
             msg.channel.createMessage(msg.author.mention + ", " + `Volume set to **${volume}**`).catch(perms.getAutoDeny(msg));
@@ -334,21 +356,18 @@ module.exports = class music {
 
 
     if (command.command === "shuffle" && perms.check(msg, "music.shuffle")) {
-      if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
-        if (this.boundChannels[id].queue.length > 1) {
-          msg.channel.createMessage(this.boundChannels[id].shuffle());
-        } else {
-          msg.channel.createMessage("Sorry, not enough song's in playlist.")
-        }
+      if (this.possiblySendNotConnected(msg, command)) return;
+      if (this.boundChannels[id].queue.length > 1) {
+        msg.channel.createMessage(this.boundChannels[id].shuffle());
       } else {
-        msg.channel.createMessage("Sorry, Bot is not currently in a voice channel use " + command.prefix + "init while in a voice channel to bind it.")
+        msg.channel.createMessage("Sorry, not enough song's in playlist.")
       }
       return true;
     }
 
 
     if (command.commandnos === "logchannel" && perms.check(msg, "music.logchannels")) {
-      text = "Playing Music in:\n";
+      let text = "Playing Music in:\n";
       for (let i in this.boundChannels) {
         if (this.boundChannels.hasOwnProperty(i)) {
           text += `Server: ${this.boundChannels[i].server.name} in voice channel ${this.boundChannels[i].text.name}\n`
@@ -365,5 +384,21 @@ module.exports = class music {
 
     return false;
   }
-};
 
+  /**
+   *
+   * @param {Message} msg
+   * @param {Command} command
+   * @returns {boolean}
+   */
+  possiblySendNotConnected(msg, command) {
+    let id = msg.channel.guild.id;
+    if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
+      msg.channel.createMessage("Sorry, Bot is not currently in a voice channel use " + command.prefix + "init while in a voice channel to bind it.");
+      return true;
+    }
+    return false;
+  }
+}
+
+module.exports = music;

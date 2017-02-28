@@ -2,9 +2,9 @@
  * Created by macdja38 on 2016-10-01.
  */
 
-var StandardDB = require('../lib/standardDB');
+let StandardDB = require('../lib/StandardDB');
 
-var chessClient = require('chess');
+let chessClient = require('chess');
 
 let table = "chess";
 
@@ -37,7 +37,23 @@ let emotes = {
   "rw": "<:rw:230774531671719937>"
 };
 
-module.exports = class chess {
+class chess {
+  /**
+   * Instantiates the module
+   * @constructor
+   * @param {Object} e
+   * @param {Client} e.client Eris client
+   * @param {Config} e.config File based config
+   * @param {Raven?} e.raven Raven error logging system
+   * @param {Config} e.auth File based config for keys and tokens and authorisation data
+   * @param {ConfigDB} e.configDB database based config system, specifically for per guild settings
+   * @param {R} e.r Rethinkdb r
+   * @param {Permissions} e.perms Permissions Object
+   * @param {Feeds} e.feeds Feeds Object
+   * @param {MessageSender} e.messageSender Instantiated message sender
+   * @param {SlowSender} e.slowSender Instantiated slow sender
+   * @param {PvPClient} e.pvpClient PvPCraft client library instance
+   */
   constructor(e) {
     this.client = e.client;
     this.raven = e.raven;
@@ -58,12 +74,19 @@ module.exports = class chess {
       }).run()
   }
 
-  getCommands() {
+  static getCommands() {
     //this needs to return a list of commands that should activate the onCommand function
     //of this class. array of strings with trailing s's removed.
     return ["move", "start", "hooktest"];
   }
 
+  /**
+   * Called with a command, returns true or a promise if it is handling the command, returns false if it should be passed on.
+   * @param {Message} msg
+   * @param {Command} command
+   * @param {Permissions} perms
+   * @returns {boolean | Promise}
+   */
   onCommand(msg, command, perms) {
     if (command.command === "start" && perms.check(msg, "games.chess.start")) {
       if (this.games.hasOwnProperty(msg.channel.id)) {
@@ -162,14 +185,6 @@ module.exports = class chess {
       });
     }
   }
-
-  drawBoard() {
-
-  }
-};
-
-// .map((c, i) => (((i+1) % 2  === 0) !== (((i+1)/8) % 2 === 0)) ? c.toUpperCase() : c)
-
-function XOR(a, b) {
-
 }
+
+module.exports = chess;

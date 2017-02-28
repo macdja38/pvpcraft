@@ -8,7 +8,7 @@
 "use strict";
 const cluster = require('cluster');
 
-let Configs = require("./lib/config.js");
+let Configs = require("./lib/Config.js");
 let fileConfig = new Configs("config");
 let fileAuth = new Configs("auth");
 

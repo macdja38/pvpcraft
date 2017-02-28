@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: Permissions.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: Permissions.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Created by macdja38 on 2016-04-17.
+ */
+"use strict";
+
+const util = require('util');
+const colors = require('colors');
+
+/**
+ * Permissions class
+ * @prop {ConfigDB} permsDB
+ * @type {Permissions}
+ */
+class Permissions {
+  /**
+   *
+   * @param {ConfigDB} permsDB
+   * @param analytics
+   */
+  constructor(permsDB, analytics) {
+    this.perms = permsDB;
+    this._analytics = analytics;
+  }
+
+  getCommands() {
+    return ["set", "remove", "list"];
+  };
+
+
+  /**
+   * Sets a permission node
+   * @param {string} node
+   * @param {string} mode
+   * @param {Object?} options
+   * @returns {*}
+   */
+  set(node, mode, options = {}) {
+    let value;
+    if (mode === "remov") value = null;
+    if (mode === "allow") value = true;
+    if (mode === "deny") value = false;
+    let nodeArray = node.split(".");
+    let key = nodeArray.shift();
+    let serverData = this.perms.get(key, {});
+    let pointt = recursiveAdd(serverData, nodeArray, value);
+    //console.log(util.inspect(recursiveAdd(serverData, node, value),{showHidden: false, depth: null}));
+    console.log("changing perms now".red);
+    return this.perms.set(null, pointt, {server: key, conflict: "replace", write: options.write});
+  };
+
+  checkAdminServer(msg) {
+    return msg.member.permission.has("administrator");
+  };
+
+  /**
+   *
+   * @param {Message} msg
+   * @returns {function(*)}
+   */
+  getAutoDeny(msg) {
+    return (error) => {
+      if (error.message === "Forbidden") {
+        this.set(`${msg.channel.guild.id}.${msg.channel.id}`, "remov", {write: false});
+        this.set(`${msg.channel.guild.id}.${msg.channel.id}.*`, "deny", {write: true});
+        let owner = msg.channel.guild.members.get(msg.channel.guild.ownerID);
+        if (owner) {
+          owner.createMessage(`Hello, I've removed and denied the permissions configuration for channel ` +
+            `${msg.channel.mention} on ${msg.channel.guild.name} as I didn't have permissions to send messages in ` +
+            `that channel. Please use /perms list on that server to see the new configuration.`);
+        }
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  /**
+   *
+   * @param {Message} msg
+   * @param {string} node
+   * @param {Object?} options
+   * @returns {boolean}
+   */
+  check(msg, node, options = {}) {
+    this._analytics.record(msg.author, node);
+    let nodeArray;
+    if (msg.channel.guild &amp;&amp; msg.member) {
+      nodeArray = [msg.channel.guild.id, msg.channel.id, getOrderedGroups(msg.channel.guild.roles, msg.member.roles, msg.author.id)].concat(node.split("."));
+    }
+    else {
+      nodeArray = ["global", "global", "u" + msg.author.id].concat(node.split("."));
+    }
+    if (this.perms.data) {
+      let i;
+      if (options.hasOwnProperty("type")) {
+        i = searchForNodeOfType(this.perms.data, nodeArray, options.type);
+        if (i !== false &amp;&amp; i !== null) {
+          return i;
+        }
+      } else {
+        i = searchForNode(this.perms.data, nodeArray);
+        if (i === true) {
+          return true;
+        }
+      }
+    }
+    return false;
+  };
+
+  /**
+   * Checks user permissions in a specific channel
+   * @param {User | Member} user
+   * @param {GuildChannel} channel
+   * @param {string} node
+   * @returns {boolean}
+   */
+  checkUserChannel(user, channel, node) {
+    let nodeArray;
+    if (channel.guild) {
+      let member = channel.guild.members.get(user.id);
+      if (!member) return false;
+      nodeArray = [channel.guild.id, channel.id, getOrderedGroups(channel.guild.roles, member.roles, user.id)].concat(node.split("."));
+    } else {
+      nodeArray = ["global", "global", "u" + user.id].concat(node.split("."));
+    }
+    if (this.perms.data) {
+      let i = searchForNode(this.perms.data, nodeArray);
+      if (i === true) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  checkInfo(msg, node) {
+    if (msg.channel.server) {
+      node = [msg.channel.server.id, msg.channel.id, getOrderedGroups(msg.channel.guild.roles, msg.member.roles, msg.author.id)].concat(node.split("."));
+    }
+    else {
+      node = ["global", "global", "u" + msg.author.id].concat(node.split("."));
+    }
+    //console.log(node);
+    if (this.perms.data) {
+      let i = searchForNodeInfo(this.perms.data, node, 0);
+      if (i.found === true) {
+        return i;
+      }
+    }
+    return {found: false}
+  };
+};
+
+function recursiveAdd(data, node, value) {
+  let key;
+  if (node.length > 0) {
+    key = node.shift();
+  }
+  else {
+    return value;
+  }
+  if (data &amp;&amp; data.hasOwnProperty(key)) {
+    let mergedNodes = recursiveAdd(data[key], node, value);
+    if (mergedNodes === null || (typeof(mergedNodes) === "object" &amp;&amp; Object.keys(mergedNodes).length === 0)) {
+      delete data[key];
+    } else {
+      data[key] = mergedNodes;
+    }
+    return data;
+  }
+  else {
+    if (value !== null &amp;&amp; data !== null) {
+      if (data === true || data === false || typeof(data) === "string") {
+        return {[key]: buildNode(node, value)};
+      }
+      data[key] = buildNode(node, value);
+    }
+    return data;
+  }
+}
+
+function buildNode(nodes, value) {
+  if (nodes.length === 0) return value;
+  let key = nodes.splice(0, 1)[0];
+  return {[key]: buildNode(nodes, value)};
+}
+
+/**
+ * Get ordered role ID list
+ * @param {Role[]} roles
+ * @param {string[]} roleIDs
+ * @param {string} userId
+ * @returns {string[]}
+ */
+function getOrderedGroups(roles, roleIDs, userId) {
+  roles = roles.filter(r => roleIDs.includes(r.id));
+  let array = roles.sort((r1, r2) => {
+    if (r1.position != r2.position) {
+      return r2.position - r1.position;
+    }
+    return r1.id - r2.id
+  }).map(r => `g${r.id}`);
+  if (userId) {
+    array.unshift(`u${userId}`);
+  }
+  return array;
+}
+
+function searchForNode(tree, node) {
+  try {
+    let i;
+    let nodeFirst = node[0];
+    if (typeof(nodeFirst) === "object") {
+      for (let role of nodeFirst) {
+        let treeRole = tree[role];
+        if (treeRole != null) {
+          if (treeRole === true || treeRole === false) {
+            return treeRole;
+          }
+          i = searchForNode(treeRole, node.slice(1));
+          if (i === true || i === false) {
+            return i;
+          }
+        }
+      }
+      i = tree["*"];
+      if (i == true || i == false) {
+        return i;
+      }
+    }
+    else if (tree.hasOwnProperty(nodeFirst)) {
+      i = tree[nodeFirst];
+      if (i === true || i === false) {
+        return i;
+      }
+      if (typeof i === "object") {
+        i = searchForNode(i, node.slice(1));
+        if (i === true || i === false) {
+          return i;
+        }
+      }
+    }
+    i = tree["*"];
+    if (i === true || i === false) {
+      return i;
+    }
+    else {
+      if (i) {
+        i = searchForNode(i, node.slice(1));
+        if (i === true || i === false) {
+          return i;
+        }
+      }
+    }
+  } catch (e) {
+    console.error(e);
+    console.error(e.stack);
+    return false;
+  }
+  return null;
+}
+
+function searchForNodeOfType(tree, node, type) {
+  try {
+    let i;
+    let nodeFirst = node[0];
+    if (typeof(nodeFirst) === "object") {
+      for (let role of nodeFirst) {
+        let treeRole = tree[role];
+        if (treeRole != null) {
+          if (typeof(treeRole) === type) {
+            return treeRole;
+          }
+          i = searchForNodeOfType(treeRole, node.slice(1), type);
+          if (typeof(i) === type) {
+            return i;
+          }
+        }
+      }
+      i = tree["*"];
+      if (i == true || i == false) {
+        return i;
+      }
+    }
+    else if (tree.hasOwnProperty(nodeFirst)) {
+      i = tree[nodeFirst];
+      if (typeof(i) === type) {
+        return i;
+      }
+      i = searchForNodeOfType(i, node.slice(1), type);
+      if (typeof(i) === type) {
+        return i;
+      }
+    }
+    i = tree["*"];
+    if (typeof(i) === type) {
+      return i;
+    }
+    else {
+      if (i) {
+        i = searchForNodeOfType(i, node.slice(1), type);
+        if (typeof(i) === type) {
+          return i;
+        }
+      }
+    }
+  } catch (e) {
+    console.error(e);
+    console.error(e.stack);
+    return false;
+  }
+  return null;
+}
+
+function searchForNodeInfo(tree, node, level) {
+  if (!level) level = 0;
+  try {
+    let i;
+    if (typeof(node[0]) === "object") {
+      for (let role of node[0]) {
+        if (tree[role] != null) {
+          if (tree[role] === true || tree[role] === false) {
+            return {found: tree[role], level: level};
+          }
+          i = searchForNodeInfo(tree[role], node.slice(1), level + 1);
+          if (i.found === true || i.found === false) {
+            return i;
+          }
+        }
+      }
+      i = tree["*"];
+      if (i === true || i === false) {
+        return {found: i, level: level};
+      }
+    }
+    else if (tree.hasOwnProperty(node[0])) {
+      if (tree[node[0]] === true || tree[node[0]] === false) {
+        return {found: tree[node[0]], level: level};
+      }
+      i = searchForNodeInfo(tree[node[0]], node.slice(1), level + 1);
+      if (i.found === true || i.found === false) {
+        return i;
+      }
+    }
+    i = tree["*"];
+    if (i === true || i === false) {
+      return {found: i, level: level};
+    }
+    else {
+      if (tree["*"]) {
+        i = searchForNodeInfo(tree["*"], node.slice(1), level);
+        if (i.found === true || i.found === false) {
+          return i;
+        }
+      }
+    }
+  } catch (e) {
+    console.error(e);
+    console.error(e.stack);
+    return false;
+  }
+  return {found: null};
+}
+
+module.exports = Permissions;</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Analytics.html">Analytics</a></li><li><a href="Command.html">Command</a></li><li><a href="Config.html">Config</a></li><li><a href="ConfigDB.html">ConfigDB</a></li><li><a href="Feeds.html">Feeds</a></li><li><a href="MessageSender.html">MessageSender</a></li><li><a href="ParseState.html">ParseState</a></li><li><a href="Permissions.html">Permissions</a></li><li><a href="Player.html">Player</a></li><li><a href="Queue.html">Queue</a></li><li><a href="SlowSender.html">SlowSender</a></li><li><a href="StandardDB.html">StandardDB</a></li><li><a href="Track.html">Track</a></li><li><a href="Utils.html">Utils</a></li><li><a href="WarframeData.html">WarframeData</a></li><li><a href="WorldState.html">WorldState</a></li><li><a href="worldState_prototype.html">prototype</a></li><li><a href="YoutubeTrack.html">YoutubeTrack</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addStar">addStar</a></li><li><a href="global.html#command">command</a></li><li><a href="global.html#DefaultOptions">DefaultOptions</a></li><li><a href="global.html#getOrderedGroups">getOrderedGroups</a></li><li><a href="global.html#s">s</a></li><li><a href="global.html#utils">utils</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Tue Feb 28 2017 02:14:12 GMT-0500 (Eastern Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

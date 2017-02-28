@@ -7,22 +7,45 @@ let Pokedex = require('pokedex-promise-v2');
 
 let utils = require('../lib/utils.js');
 
-let P = new Pokedex();
+let pokedex = new Pokedex();
 
-module.exports = class pokemon {
+class pokemon {
+  /**
+   * Instantiates the module
+   * @constructor
+   * @param {Object} e
+   * @param {Client} e.client Eris client
+   * @param {Config} e.config File based config
+   * @param {Raven?} e.raven Raven error logging system
+   * @param {Config} e.auth File based config for keys and tokens and authorisation data
+   * @param {ConfigDB} e.configDB database based config system, specifically for per guild settings
+   * @param {R} e.r Rethinkdb r
+   * @param {Permissions} e.perms Permissions Object
+   * @param {Feeds} e.feeds Feeds Object
+   * @param {MessageSender} e.messageSender Instantiated message sender
+   * @param {SlowSender} e.slowSender Instantiated slow sender
+   * @param {PvPClient} e.pvpClient PvPCraft client library instance
+   */
   constructor(e) {
     this.client = e.client;
   }
 
-  getCommands() {
+  static getCommands() {
     return ["pokemon", "shiny", "pokestat", "hiddenability"];
   }
 
+  /**
+   * Called with a command, returns true or a promise if it is handling the command, returns false if it should be passed on.
+   * @param {Message} msg
+   * @param {Command} command
+   * @param {Permissions} perms
+   * @returns {boolean | Promise}
+   */
   onCommand(msg, command, perms) {
     if (command.command === "pokemon" && perms.check(msg, "pokemon.pokemon")) {
       let pokemon_name = command.args[0];
       if (pokemon_name && /^[^<@#\\\/>]*$/g.test(pokemon_name)) {
-        Promise.resolve(P.getPokemonByName(pokemon_name.toLowerCase())).then((response) => {
+        Promise.resolve(pokedex.getPokemonByName(pokemon_name.toLowerCase())).then((response) => {
           let secondtype;
           try {
             secondtype = response.types[1].type.name;
@@ -61,7 +84,7 @@ module.exports = class pokemon {
     if (command.command === "shiny" && perms.check(msg, "pokemon.shiny")) {
       let pokemon_name = command.args[0];
       if (pokemon_name && /^[^<@#\\\/>]*$/g.test(pokemon_name)) {
-        Promise.resolve(P.getPokemonByName(pokemon_name.toLowerCase())).then((response) => {
+        Promise.resolve(pokedex.getPokemonByName(pokemon_name.toLowerCase())).then((response) => {
           this.client.createMessage(msg.channel.id,
             {
               embed: {
@@ -88,7 +111,7 @@ module.exports = class pokemon {
     if (command.commandnos === "pokestat" && perms.check(msg, "pokemon.pokestat")) {
       let pokemon_name = command.args[0];
       if (pokemon_name && /^[^<@#\\\/>]*$/g.test(pokemon_name)) {
-        Promise.resolve(P.getPokemonByName(pokemon_name.toLowerCase())).then((response) => {
+        Promise.resolve(pokedex.getPokemonByName(pokemon_name.toLowerCase())).then((response) => {
           this.client.createMessage(msg.channel.id,
             {
               embed: {
@@ -122,7 +145,7 @@ module.exports = class pokemon {
     if (command.command === "hiddenability" && perms.check(msg, "pokemon.hiddenability")) {
       let pokemon_name = command.args[0];
       if (pokemon_name && /^[^<@#\\\/>]*$/g.test(pokemon_name)) {
-        Promise.resolve(P.getPokemonByName(pokemon_name.toLowerCase()))
+        Promise.resolve(pokedex.getPokemonByName(pokemon_name.toLowerCase()))
           .then((response) => {
             this.client.createMessage(msg.channel.id,
               {
@@ -155,8 +178,10 @@ module.exports = class pokemon {
   }
 
 
-};
+}
 
 function cap(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
+
+module.exports = pokemon;

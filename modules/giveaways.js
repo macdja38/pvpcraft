@@ -5,15 +5,30 @@
 
 let utils = require('../lib/utils');
 
-var SlowSender = require('../lib/slowSender');
+const SlowSender = require('../lib/SlowSender');
 
-var ConfigDB = require('../lib/configDB');
+const ConfigDB = require('../lib/ConfigDB');
 
-module.exports = class giveaways {
+class giveaways {
+  /**
+   * Instantiates the module
+   * @constructor
+   * @param {Object} e
+   * @param {Client} e.client Eris client
+   * @param {Config} e.config File based config
+   * @param {Raven?} e.raven Raven error logging system
+   * @param {Config} e.auth File based config for keys and tokens and authorisation data
+   * @param {ConfigDB} e.configDB database based config system, specifically for per guild settings
+   * @param {R} e.r Rethinkdb r
+   * @param {Permissions} e.perms Permissions Object
+   * @param {Feeds} e.feeds Feeds Object
+   * @param {MessageSender} e.messageSender Instantiated message sender
+   * @param {SlowSender} e.slowSender Instantiated slow sender
+   * @param {PvPClient} e.pvpClient PvPCraft client library instance
+   */
   constructor(e) {
     this.client = e.client;
     this.raven = e.raven;
-    this.purgedMessages = {};
     this._slowSender = new SlowSender(e);
     this.entries = new ConfigDB(e.r, "entries", e.client);
     this.entries.reload().then(() => {
@@ -21,7 +36,7 @@ module.exports = class giveaways {
     });
   }
 
-  getCommands() {
+  static getCommands() {
     //this needs to return a list of commands that should activate the onCommand function
     //of this class. array of strings with trailing s's removed.
     return ["enter", "count", "draw", "clear", "giveaway"];
@@ -35,12 +50,13 @@ module.exports = class giveaways {
     this._slowSender.onReady();
   }
 
-  //if this exists it will be called on every message unless it contains a command that is
-  //consumed by another module.
-  checkMisc(msg, perms) {
-    return false;
-  }
-
+  /**
+   * Called with a command, returns true or a promise if it is handling the command, returns false if it should be passed on.
+   * @param {Message} msg
+   * @param {Command} command
+   * @param {Permissions} perms
+   * @returns {boolean | Promise}
+   */
   onCommand(msg, command, perms) {
     if (!this.ready) {
       console.log("Giveaway module called but config was not ready");
@@ -139,4 +155,6 @@ module.exports = class giveaways {
     //or start passing it to misc responses.
     return false;
   }
-};
+}
+
+module.exports = giveaways;

@@ -56,7 +56,23 @@ let colorMap = {
   "action.unban": "#BEBE3F"
 };
 
-module.exports = class moderationV2 {
+class moderationV2 {
+  /**
+   * Instantiates the module
+   * @constructor
+   * @param {Object} e
+   * @param {Client} e.client Eris client
+   * @param {Config} e.config File based config
+   * @param {Raven?} e.raven Raven error logging system
+   * @param {Config} e.auth File based config for keys and tokens and authorisation data
+   * @param {ConfigDB} e.configDB database based config system, specifically for per guild settings
+   * @param {R} e.r Rethinkdb r
+   * @param {Permissions} e.perms Permissions Object
+   * @param {Feeds} e.feeds Feeds Object
+   * @param {MessageSender} e.messageSender Instantiated message sender
+   * @param {SlowSender} e.slowSender Instantiated slow sender
+   * @param {PvPClient} e.pvpClient PvPCraft client library instance
+   */
   constructor(e) {
     this.client = e.client;
     //this.logging = {};
@@ -149,12 +165,8 @@ module.exports = class moderationV2 {
     }
   }
 
-  getCommands() {
+  static getCommands() {
     return ["purge", "ban", "kick", "unban"];
-  }
-
-  onServerCreated() {
-    //this.refreshMap();
   }
 
   moderationAction(msg, command, perms, action) {
@@ -230,11 +242,11 @@ module.exports = class moderationV2 {
   }
 
   /**
-   * Handles moderation commands
-   * @param msg
-   * @param command
-   * @param perms
-   * @returns {boolean}
+   * Called with a command, returns true or a promise if it is handling the command, returns false if it should be passed on.
+   * @param {Message} msg
+   * @param {Command} command
+   * @param {Permissions} perms
+   * @returns {boolean | Promise}
    */
   onCommand(msg, command, perms) {
     if (command.command === "ban" && perms.check(msg, "moderation.ban")) {
@@ -423,7 +435,14 @@ module.exports = class moderationV2 {
    * @param {string} eventName
    * @param {Object?} options
    * @param {Object?} options.user
+   * @param {string?} options.username username that will override the bot's username when posting webhook
+   * @param {string?} options.icon_url icon that will override the bot's icon when posting webhook
    * @param {Object} attachment
+   * @param {string} attachment.title title for webhook
+   * @param {Array<Object>} attachment.fields field objects for webhook attachment
+   * @param {string} attachment.fields.title title for field
+   * @param {string} attachment.fields.value value for field
+   * @param {boolean} attachment.fields.short inline value for field
    * @param {string} serverId
    */
   sendHookedMessage(eventName, options, attachment, serverId) {
@@ -986,7 +1005,7 @@ module.exports = class moderationV2 {
       }]
     }, oldChannel.guild.id);
   }
-};
+}
 
 /**
  * Finds the differences
@@ -1016,17 +1035,18 @@ function findOverrideChanges(thing1, thing2) {
 }
 
 /**
- *
+ * Returns string containing all the permissions from a permissions id.
  * @param {number} permissions
+ * @returns {string} array of trues
  */
 function permissionsListFromNumber(permissions) {
-  return arrayOfTrues(new Eris.Permission(permissions).json).toString()
+  return arrayOfTrues(new Eris.Permission(permissions).json).toString();
 }
 
 /**
  * Return an array of the objects keys that have the value true
- * @param object
- * @returns {Array}
+ * @param {Object} object
+ * @returns {boolean[]}
  */
 function arrayOfTrues(object) {
   let arr = [];
@@ -1039,9 +1059,10 @@ function arrayOfTrues(object) {
 }
 
 /**
- * return {Object} roles present in oldR that are not in newR
- * @param more {Object} group of role's that has more roles
- * @param less {Object} group of role's that has less role's than more.
+ * returns role present in more that are not contained in less
+ * @param more {Role[]} group of role's that has more roles
+ * @param less {Role[]} group of role's that has less role's than more.
+ * @return {Role|boolean} role not present in old array
  */
 function findNewRoles(more, less) {
   for (let i of more) {
@@ -1053,6 +1074,12 @@ function findNewRoles(more, less) {
   return false;
 }
 
+/**
+ * Returns true if the role is found in the newRoles array
+ * @param {Role} role
+ * @param {Role[]} newRoles
+ * @returns {boolean}
+ */
 function roleIn(role, newRoles) {
   for (let j of newRoles) {
     if (!j) console.error(new Error("Found a null role"));
@@ -1069,15 +1096,17 @@ function roleIn(role, newRoles) {
   return false;
 }
 
+/**
+ * Renders a bar from numbers
+ * @param {number} current value
+ * @param {number} total value when complete
+ * @param {number} length of bar
+ * @param {string} char to fill bar with
+ * @returns {string}
+ */
 function getBar(current, total, length, char = "=") {
   let progress = Math.ceil(current / total * length);
   return `[${char.repeat(progress)}${" ".repeat(length - progress)}] ${current}/${total}`;
 }
 
-function userObjectify(user) {
-  return {
-    id: user.id,
-    status: user.status,
-    username: user.username,
-  };
-}
+module.exports = moderationV2;

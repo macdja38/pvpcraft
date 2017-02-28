@@ -5,25 +5,44 @@
 
 let utils = require('../lib/utils');
 
-var now = require('performance-now');
+let now = require('performance-now');
 
 const os = require('os');
 const numCPUs = os.cpus().length;
 
-var utilities = class utilities {
+class utilities {
+  /**
+   * Instantiates the module
+   * @constructor
+   * @param {Object} e
+   * @param {Client} e.client Eris client
+   * @param {Config} e.config File based config
+   * @param {Raven?} e.raven Raven error logging system
+   * @param {Config} e.auth File based config for keys and tokens and authorisation data
+   * @param {ConfigDB} e.configDB database based config system, specifically for per guild settings
+   * @param {R} e.r Rethinkdb r
+   * @param {Permissions} e.perms Permissions Object
+   * @param {Feeds} e.feeds Feeds Object
+   * @param {MessageSender} e.messageSender Instantiated message sender
+   * @param {SlowSender} e.slowSender Instantiated slow sender
+   * @param {PvPClient} e.pvpClient PvPCraft client library instance
+   */
   constructor(e) {
     this.client = e.client;
     this.config = e.config;
   }
 
-  getCommands() {
+  static getCommands() {
     return ["serverinfo", "server", "userinfo", "user", "ping", "lmgtfy", "statu"];
   }
 
-  checkMisc() {
-    return false;
-  }
-
+  /**
+   * Called with a command, returns true or a promise if it is handling the command, returns false if it should be passed on.
+   * @param {Message} msg
+   * @param {Command} command
+   * @param {Permissions} perms
+   * @returns {boolean | Promise}
+   */
   onCommand(msg, command, perms) {
     if ((command.command === "serverinfo" || command.command === "server") && perms.check(msg, "utils.serverinfo")) {
       let guild = msg.channel.guild;
@@ -116,6 +135,6 @@ var utilities = class utilities {
     }
     return false;
   }
-};
+}
 
 module.exports = utilities;

@@ -29,7 +29,23 @@ const request = require('request');
 
 // const DBEventState = require('../lib/dbEventState');
 
-module.exports = class Warframe {
+class Warframe {
+  /**
+   * Instantiates the module
+   * @constructor
+   * @param {Object} e
+   * @param {Client} e.client Eris client
+   * @param {Config} e.config File based config
+   * @param {Raven?} e.raven Raven error logging system
+   * @param {Config} e.auth File based config for keys and tokens and authorisation data
+   * @param {ConfigDB} e.configDB database based config system, specifically for per guild settings
+   * @param {R} e.r Rethinkdb r
+   * @param {Permissions} e.perms Permissions Object
+   * @param {Feeds} e.feeds Feeds Object
+   * @param {MessageSender} e.messageSender Instantiated message sender
+   * @param {SlowSender} e.slowSender Instantiated slow sender
+   * @param {PvPClient} e.pvpClient PvPCraft client library instance
+   */
   constructor(e) {
     // this.dbEvents = new DBEventState(e);
     //noinspection JSUnresolvedVariable
@@ -211,22 +227,35 @@ module.exports = class Warframe {
     }
   }
 
-  getCommands() {
+  static getCommands() {
     return ["setupalerts", "alert", "fissure", "rift", "deal", "darvo", "trader", "voidtrader", "baro", "trial", "raid", "trialstat", "wiki", "sortie", "farm", "damage", "primeacces", "acces", "update", "update", "armorstat", "armourstat", "armor", "armour"];
   }
 
-  onServerCreated() {
+  onGuildCreate() {
     this.rebuildAlerts();
   }
 
+  /**
+   * Optional function that will be called with every message for the purpose of misc responses / other
+   * @param {Message} msg
+   * @param {Permissions} perms
+   * @returns {boolean | Promise}
+   */
   checkMisc(msg, perms) {
     if (msg.content.toLowerCase().indexOf("soon") == 0 && msg.content.indexOf(":tm:") < 0 && perms.check(msg, "warframe.misc.soon")) {
-      this.client.createMessage(msg.channel.id, "Soon:tm:");
+      msg.channel.createMessage("Soon:tm:");
       return true;
     }
     return false;
   }
 
+  /**
+   * Called with a command, returns true or a promise if it is handling the command, returns false if it should be passed on.
+   * @param {Message} msg
+   * @param {Command} command
+   * @param {Permissions} perms
+   * @returns {boolean | Promise}
+   */
   onCommand(msg, command, perms) {
     if ((command.commandnos === 'deal' || command.command === 'darvo') && perms.check(msg, "warframe.deal")) {
       return worldState.get().then().then((state) => {
@@ -695,4 +724,6 @@ module.exports = class Warframe {
         );
       }).run()
   }
-};
+}
+
+module.exports = Warframe;

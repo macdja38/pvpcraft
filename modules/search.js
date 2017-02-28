@@ -5,20 +5,43 @@
 
 let utils = require('../lib/utils');
 
-var google = require('google');
+let google = require('google');
 
-module.exports = class template {
+class search {
+  /**
+   * Instantiates the module
+   * @constructor
+   * @param {Object} e
+   * @param {Client} e.client Eris client
+   * @param {Config} e.config File based config
+   * @param {Raven?} e.raven Raven error logging system
+   * @param {Config} e.auth File based config for keys and tokens and authorisation data
+   * @param {ConfigDB} e.configDB database based config system, specifically for per guild settings
+   * @param {R} e.r Rethinkdb r
+   * @param {Permissions} e.perms Permissions Object
+   * @param {Feeds} e.feeds Feeds Object
+   * @param {MessageSender} e.messageSender Instantiated message sender
+   * @param {SlowSender} e.slowSender Instantiated slow sender
+   * @param {PvPClient} e.pvpClient PvPCraft client library instance
+   */
   constructor(e) {
     this.client = e.client;
     this.raven = e.raven;
   }
 
-  getCommands() {
+  static getCommands() {
     //this needs to return a list of commands that should activate the onCommand function
     //of this class. array of strings with trailing s's removed.
     return ["google"];
   }
 
+  /**
+   * Called with a command, returns true or a promise if it is handling the command, returns false if it should be passed on.
+   * @param {Message} msg
+   * @param {Command} command
+   * @param {Permissions} perms
+   * @returns {boolean | Promise}
+   */
   onCommand(msg, command, perms) {
 
     //check if this is a command we should handle and if the user has permissions to execute it.
@@ -48,4 +71,6 @@ module.exports = class template {
     }
     return false;
   }
-};
+}
+
+module.exports = search;

@@ -6,7 +6,13 @@ const cluster = require("cluster");
 const Raven = require("raven");
 const git = require("git-rev");
 
+//noinspection JSUnusedLocalSymbols
 module.exports = class ShardManager {
+  /**
+   * Instantiates a new shard manager
+   * @param {Config} config
+   * @param {Config} auth
+   */
   constructor(config, auth) {
     this.fileConfig = config;
     this.fileAuth = auth;

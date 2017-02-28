@@ -9,15 +9,38 @@ let now = require("performance-now");
 
 let mcping = require('mc-ping-updated');
 
-module.exports = class minecraft {
+class minecraft {
+  /**
+   * Instantiates the module
+   * @constructor
+   * @param {Object} e
+   * @param {Client} e.client Eris client
+   * @param {Config} e.config File based config
+   * @param {Raven?} e.raven Raven error logging system
+   * @param {Config} e.auth File based config for keys and tokens and authorisation data
+   * @param {ConfigDB} e.configDB database based config system, specifically for per guild settings
+   * @param {R} e.r Rethinkdb r
+   * @param {Permissions} e.perms Permissions Object
+   * @param {Feeds} e.feeds Feeds Object
+   * @param {MessageSender} e.messageSender Instantiated message sender
+   * @param {SlowSender} e.slowSender Instantiated slow sender
+   * @param {PvPClient} e.pvpClient PvPCraft client library instance
+   */
   constructor(e) {
     this.client = e.client;
   }
 
-  getCommands() {
+  static getCommands() {
     return ["mcping", "mcskin", "mcavatar"];
   }
 
+  /**
+   * Called with a command, returns true or a promise if it is handling the command, returns false if it should be passed on.
+   * @param {Message} msg
+   * @param {Command} command
+   * @param {Permissions} perms
+   * @returns {boolean | Promise}
+   */
   onCommand(msg, command, perms) {
     let t1 = now();
     if (command.command === "mcping" && perms.check(msg, "minecraft.mcping")) {
@@ -98,4 +121,6 @@ module.exports = class minecraft {
     }
     return false;
   }
-};
+}
+
+module.exports = minecraft;

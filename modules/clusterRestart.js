@@ -5,7 +5,23 @@
 
 let utils = require('../lib/utils');
 
-module.exports = class template {
+class clusterRestart {
+  /**
+   * Instantiates the module
+   * @constructor
+   * @param {Object} e
+   * @param {Client} e.client Eris client
+   * @param {Config} e.config File based config
+   * @param {Raven?} e.raven Raven error logging system
+   * @param {Config} e.auth File based config for keys and tokens and authorisation data
+   * @param {ConfigDB} e.configDB database based config system, specifically for per guild settings
+   * @param {R} e.r Rethinkdb r
+   * @param {Permissions} e.perms Permissions Object
+   * @param {Feeds} e.feeds Feeds Object
+   * @param {MessageSender} e.messageSender Instantiated message sender
+   * @param {SlowSender} e.slowSender Instantiated slow sender
+   * @param {PvPClient} e.pvpClient PvPCraft client library instance
+   */
   constructor(e) {
     //save the client as this.client for later use.
     this.client = e.client;
@@ -14,16 +30,17 @@ module.exports = class template {
     this.raven = e.raven;
   }
 
-  getCommands() {
+  static getCommands() {
     return ["restart"];
   }
 
-  //if this exists it will be called on every message unless it contains a command that is
-  //consumed by another module.
-  checkMisc(msg, perms) {
-    return false;
-  }
-
+  /**
+   * Called with a command, returns true or a promise if it is handling the command, returns false if it should be passed on.
+   * @param {Message} msg
+   * @param {Command} command
+   * @param {Permissions} perms
+   * @returns {boolean | Promise}
+   */
   onCommand(msg, command, perms) {
     if (command.command === "restart" && this.fileConfig.get("permissions", {"permissions": {admins: []}}).admins.includes(msg.author.id)) {
       console.log(command);
@@ -37,4 +54,6 @@ module.exports = class template {
     }
     return false;
   }
-};
+}
+
+module.exports = clusterRestart;

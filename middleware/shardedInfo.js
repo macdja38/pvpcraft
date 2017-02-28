@@ -3,13 +3,27 @@
  */
 "use strict";
 
-let utils = require('../lib/utils');
+let request = require('request');
 
-var request = require('request');
+let StandardDB = require('../lib/StandardDB');
 
-var StandardDB = require('../lib/standardDB');
-
-module.exports = class shardedInfo {
+class shardedInfo {
+  /**
+   * Instantiates the module
+   * @constructor
+   * @param {Object} e
+   * @param {Client} e.client Eris client
+   * @param {Config} e.config File based config
+   * @param {Raven?} e.raven Raven error logging system
+   * @param {Config} e.auth File based config for keys and tokens and authorisation data
+   * @param {ConfigDB} e.configDB database based config system, specifically for per guild settings
+   * @param {R} e.r Rethinkdb r
+   * @param {Permissions} e.perms Permissions Object
+   * @param {Feeds} e.feeds Feeds Object
+   * @param {MessageSender} e.messageSender Instantiated message sender
+   * @param {SlowSender} e.slowSender Instantiated slow sender
+   * @param {PvPClient} e.pvpClient PvPCraft client library instance
+   */
   constructor(e) {
     this._auth = e.auth;
     this._configDB = e.configDB;
@@ -92,7 +106,7 @@ module.exports = class shardedInfo {
     if (this._statusInterval) clearInterval(this._statusInterval);
   }
 
-  onServerCreated(server) {
+  onGuildCreate(server) {
     if (!this._standardDB.data) return;
     let serverData = [];
     for (let key in this._standardDB.data) {
@@ -111,7 +125,7 @@ module.exports = class shardedInfo {
     this.logServerChange(server, "Added to");
   }
 
-  onServerDeleted(server) {
+  onGuildDelete(server) {
     this.logServerChange(server, "Removed from");
   }
 
@@ -223,15 +237,13 @@ module.exports = class shardedInfo {
    * get's called every Command, (unless a previous middleware on the list override it.) can modify message.
    * @param msg
    * @param command
-   * @param perms
-   * @param l
    * @returns command || Boolean object (may be modified.)
    */
-  changeCommand(msg, command, perms, l) {
+  changeCommand(msg, command) {
     try {
       if (command.command === "getshardedinfo") {
         if (!this._standardDB.data) {
-          msg.reply("Sorry db connection not ready yet");
+          msg.channel.createMessage("Sorry db connection not ready yet");
           return true;
         }
         let serverData = [];
@@ -263,4 +275,6 @@ module.exports = class shardedInfo {
       return command;
     }
   }
-};
+}
+
+module.exports = shardedInfo;

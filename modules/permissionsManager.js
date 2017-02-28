@@ -7,7 +7,23 @@ let utils = require('../lib/utils');
 
 let defaultURL = "https://bot.pvpcraft.ca/login/";
 
-module.exports = class permissionsManager {
+class permissionsManager {
+  /**
+   * Instantiates the module
+   * @constructor
+   * @param {Object} e
+   * @param {Client} e.client Eris client
+   * @param {Config} e.config File based config
+   * @param {Raven?} e.raven Raven error logging system
+   * @param {Config} e.auth File based config for keys and tokens and authorisation data
+   * @param {ConfigDB} e.configDB database based config system, specifically for per guild settings
+   * @param {R} e.r Rethinkdb r
+   * @param {Permissions} e.perms Permissions Object
+   * @param {Feeds} e.feeds Feeds Object
+   * @param {MessageSender} e.messageSender Instantiated message sender
+   * @param {SlowSender} e.slowSender Instantiated slow sender
+   * @param {PvPClient} e.pvpClient PvPCraft client library instance
+   */
   constructor(e) {
     this.client = e.client;
     this.config = e.config;
@@ -16,10 +32,21 @@ module.exports = class permissionsManager {
     this.url = this.config.get("permissions", {url: defaultURL}).url
   }
 
-  getCommands() {
+  /**
+   * returns a list of commands in the module
+   * @returns {string[]}
+   */
+  static getCommands() {
     return ["pex", "perm", "setting"];
   }
 
+  /**
+   * Called with a command, returns true or a promise if it is handling the command, returns false if it should be passed on.
+   * @param {Message} msg
+   * @param {Command} command
+   * @param {Permissions} perms
+   * @returns {boolean | Promise}
+   */
   onCommand(msg, command, perms) {
     //commands that deal with permissions
 
@@ -51,8 +78,8 @@ module.exports = class permissionsManager {
           msg.channel.createMessage(msg.author.mention + ", " + "perms set <allow|deny|remove> <node>");
           return true;
         }
-        var channel;
-        var server;
+        let channel;
+        let server;
         if (command.options.channel) {
           //user has specified a channel level permission
           if (/<#\d+>/.test(command.options.channel)) {
@@ -80,7 +107,7 @@ module.exports = class permissionsManager {
           server = msg.channel.guild.id;
         }
         //here we find the group's or users effected.
-        var target;
+        let target;
         if (command.options.group && !command.options.role) {
           command.options.role = command.options.group
         }
@@ -117,9 +144,9 @@ module.exports = class permissionsManager {
         else {
           target = "*"
         }
-        var action = command.args.shift();
+        let action = command.args.shift();
         if (action === "remove") action = "remov";
-        var node = server + "." + channel + "." + target + "." + command.args[0];
+        const node = server + "." + channel + "." + target + "." + command.args[0];
         msg.channel.createMessage(msg.author.mention + ", " + `${utils.clean(action)}ing node \`\`\`xl\n${node}\n\`\`\`\
 ${utils.clean(action)}ing permission node ${utils.clean(command.args[0])} in ${channel === "*" ? "all channels" : channel } for \
 ${target === "*" ? "everyone" : utils.clean(target)}`);
@@ -149,4 +176,6 @@ ${target === "*" ? "everyone" : utils.clean(target)}`);
     }
     return false;
   }
-};
+}
+
+module.exports = permissionsManager;

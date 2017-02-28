@@ -10,12 +10,11 @@
  */
 "use strict";
 const cluster = require("cluster");
-const Configs = require("./lib/config.js");
 const blocked = require("blocked");
 const git = require("git-rev");
 const ravenClient = require("raven");
 const PvPClient = require("pvpclient");
-const ConfigsDB = require("./lib/configDB.js");
+const ConfigsDB = require("./lib/ConfigDB.js");
 const Eris = require("eris");
 for (let thing in Eris) {
   if (Eris.hasOwnProperty(thing) && typeof Eris[thing] === "function") {
@@ -46,14 +45,14 @@ for (let thing in Eris) {
     }
   }
 }
-const MessageSender = require("./lib/messageSender");
-const Permissions = require("./lib/permissions.js");
-const Analytics = require("./lib/analytics");
+const MessageSender = require("./lib/MessageSender");
+const Permissions = require("./lib/Permissions.js");
+const Analytics = require("./lib/Analytics");
 const now = require("performance-now");
 const Parse = require("./lib/newParser.js");
 const colors = require("colors");
 const request = require("request");
-const SlowSender = require("./lib/slowSender");
+const SlowSender = require("./lib/SlowSender");
 const Feeds = require("./lib/feeds");
 const R = require("rethinkdbdash");
 
@@ -88,13 +87,17 @@ let lastMessage = Date.now();
  */
 
 
-module.exports = class PvPCraft {
+class PvPCraft {
+  /**
+   * Instantiates a new instance of PvPCraft
+   * @param {Config} fileConfig
+   * @param {Config} fileAuth
+   */
   constructor(fileConfig, fileAuth) {
     this.waitBeforeRestart = fileConfig.get("waitBeforeRestart", 30) * 1000;
     this.fileConfig = fileConfig;
     this.fileAuth = fileAuth;
     this.prefix = [];
-    this.hasBeenReady = false;
     this.moduleList = [];
     this.middlewareList = [];
     this.shardId = parseInt(process.env.id || "0");
@@ -394,14 +397,6 @@ module.exports = class PvPCraft {
     })
   }
 
-  static userObjectify(user) {
-    return {
-      id: user.id,
-      status: user.status,
-      username: user.username,
-    };
-  }
-
   shutDown() {
     setTimeout(() => {
       process.exit(1)
@@ -489,11 +484,9 @@ module.exports = class PvPCraft {
           let Module = require(modules[module]);
           let mod = new Module(moduleVariables);
           if (mod.onReady) mod.onReady();
-          this.moduleList.push({"commands": mod.getCommands(), "module": mod});
-
+          this.moduleList.push({"commands": Module.getCommands(), "module": mod});
         }
-        catch
-          (error) {
+        catch (error) {
           console.error(error);
         }
       }
@@ -537,7 +530,7 @@ module.exports = class PvPCraft {
         });
         if (mod.onReady) mod.onReady();
         this.moduleList[module].module = mod;
-        this.moduleList[module].commands = mod.getCommands();
+        this.moduleList[module].commands = minecraft.getCommands();
         console.log("Reloded ".yellow + command.args[0].yellow);
         channel.createMessage("Reloded " + command.args[0]);
       }
@@ -732,4 +725,6 @@ module.exports = class PvPCraft {
       console.error(error);
     }
   }
-};
+}
+
+module.exports = PvPCraft;
