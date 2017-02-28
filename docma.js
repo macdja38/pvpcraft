@@ -32,7 +32,7 @@ let config = {
         },
         {
           label: 'Demos',
-          href: 'demos.html',
+          href: 'https://github.com/macdja38/pvpcraft/tree/master/modules',
           iconClass: 'ico-mouse-pointer'
         },
         {

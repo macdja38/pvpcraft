@@ -6,8 +6,7 @@
 const StateGrabber = require("../lib/worldState.js");
 const worldState = new StateGrabber();
 
-const ParseState = require('../lib/parseState');
-const parseState = new ParseState();
+const parseState = require('../lib/parseState');
 
 const utils = require('../lib/utils');
 
