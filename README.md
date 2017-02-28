@@ -17,4 +17,5 @@ index.php which is included but must be edited. be sure to configure it's url in
  - Edit the config's to your liking (located in the config folder) make sure to add your bot account's token in auth.json
 
 # Usage
-For instruction's on how to use the instance of PvPCraft I host publicaly please see https://pvpcraft.ca/pvpbot
+For instruction's on how to use the instance of PvPCraft I host publicaly please see [user docs](https://bot.pvpcraft.ca/docs)  
+For documentation to help with getting started writing your own modules please see [developers docs](https://macdja38.github.io/pvpcraft/)
