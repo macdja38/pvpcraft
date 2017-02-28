@@ -3,25 +3,47 @@
  */
 "use strict";
 
-var Utils = require('../lib/utils');
-var utils = new Utils();
+let request = require('request');
 
-var request = require('request');
+let StandardDB = require('../lib/StandardDB');
 
-var StandardDB = require('../lib/standardDB');
-
-module.exports = class shardedInfo {
+class shardedInfo {
+  /**
+   * Instantiates the module
+   * @constructor
+   * @param {Object} e
+   * @param {Client} e.client Eris client
+   * @param {Config} e.config File based config
+   * @param {Raven?} e.raven Raven error logging system
+   * @param {Config} e.auth File based config for keys and tokens and authorisation data
+   * @param {ConfigDB} e.configDB database based config system, specifically for per guild settings
+   * @param {R} e.r Rethinkdb r
+   * @param {Permissions} e.perms Permissions Object
+   * @param {Feeds} e.feeds Feeds Object
+   * @param {MessageSender} e.messageSender Instantiated message sender
+   * @param {SlowSender} e.slowSender Instantiated slow sender
+   * @param {PvPClient} e.pvpClient PvPCraft client library instance
+   */
   constructor(e) {
     this._auth = e.auth;
+    this._configDB = e.configDB;
     this._client = e.client;
     this._timer = false;
+    this._raven = e.raven;
     this._ready = false;
+    this._modules = e.modules;
     this._lastMessage = Date.now();
-    this._standardDB = false;
-    this._standardDB = new StandardDB("shards", this._getArray(parseInt(process.env.shards || 1)));
+    this._standardDB = new StandardDB(e.r, e.config.get("shardTable", "shards"), this._getArray(parseInt(process.env.shards || 1)));
     this._ready = this._standardDB.reload();
     this.waitBeforeRestart = e.config.get("waitBeforeRestart", 120) * 1000;
     this.logShardStatus = e.config.get("logShardStatus", false);
+    this._joinLeaveHooks = e.config.get("joinLeaveHooks", false);
+    this._pmHooks = e.config.get("pmHooks", false);
+    this.currentStatus = null;
+    this._admins = e.config.get("permissions", {"admins": []}).admins;
+    this.botReady = new Promise((resolve) => {
+      this.botReadyResolve = resolve;
+    })
   }
 
   /**
@@ -30,6 +52,14 @@ module.exports = class shardedInfo {
   onReady() {
     if (this._timer) clearInterval(this._timer);
     this._timer = setInterval(this._updateDB.bind(this), 10000);
+    this.botReadyResolve(true);
+    this._statusInterval = setInterval(() => {
+      let newStatus = this._configDB.get("status", null, {server: "*"});
+      if (this.currentStatus != newStatus) {
+        this.currentStatus = newStatus;
+        this._client.editStatus("online", newStatus);
+      }
+    }, 30000);
   }
 
   _getArray(n) {
@@ -41,18 +71,31 @@ module.exports = class shardedInfo {
       process.exit(532);
     }
     if (!this._ready || !this._ready.then || !this.logShardStatus) return;
-    this._ready.then(()=> {
-      this._standardDB.set(null,
-        {
-          servers: this._client.servers.length,
-          connections: this._client.voiceConnections.length,
-          playing: this._client.voiceConnections.filter(c => c.playing).length,
-          users: this._client.users.length,
-          shards: parseInt(process.env.shards) || 1,
-          lastUpdate: Date.now(),
-          lastMessage: this._lastMessage,
-        }, {server: process.env.id ? process.env.id : "0"})
-    }).catch(error => console.error(error))
+    this._ready
+      .then(() => {
+        return this.botReady;
+      })
+      .then(() => {
+        let musicModule = this._modules.find(m => m && (m.commands.indexOf("play") > -1));
+        let connectionDiscordsIds = 0;
+        let connectionBoundChannels = 0;
+        let playing = 0;
+        if (musicModule && musicModule.module.hasOwnProperty("boundChannels")) {
+          connectionDiscordsIds = Object.keys(musicModule.module.boundChannels);
+          connectionBoundChannels = connectionDiscordsIds.map(id => musicModule.module.boundChannels[id]);
+          playing = connectionBoundChannels.filter(c => c.connection && c.connection.playing).length
+        }
+        this._standardDB.set(null,
+          {
+            servers: this._client.guilds.size,
+            connections: connectionDiscordsIds.length,
+            playing,
+            users: this._client.users.size,
+            shards: parseInt(process.env.shards) || 1,
+            lastUpdate: Date.now(),
+            lastMessage: this._lastMessage,
+          }, {server: process.env.id ? process.env.id : "0"})
+      }).catch(error => console.error(error))
   }
 
   /**
@@ -60,9 +103,10 @@ module.exports = class shardedInfo {
    */
   onDisconnect() {
     if (this._timer) clearInterval(this._timer);
+    if (this._statusInterval) clearInterval(this._statusInterval);
   }
 
-  onServerCreated() {
+  onGuildCreate(server) {
     if (!this._standardDB.data) return;
     let serverData = [];
     for (let key in this._standardDB.data) {
@@ -78,19 +122,75 @@ module.exports = class shardedInfo {
     }
     this.updateCarbonitex(serverCount);
     this.updateAbal(serverCount);
+    this.logServerChange(server, "Added to");
   }
 
-  onMessage() {
+  onGuildDelete(server) {
+    this.logServerChange(server, "Removed from");
+  }
+
+  logServerChange(server, type) { // "Added to" or "Removed from"
+    try {
+      let attachment = {
+        footer: process.env.shardId || "Sharding not active",
+        footerIcon: this._client.user.avatarURL,
+        ts: Date.now() / 1000
+      };
+      if (server.hasOwnProperty("name")) {
+        attachment.author_name = server.name;
+      }
+      attachment.author_link = `https://bot.pvpcraft.ca/server/${server.id}/`;
+      if (server.hasOwnProperty("iconURL")) {
+        attachment.author_icon = server.iconURL;
+      }
+      attachment.title = `${type} ${server.name}`;
+      attachment.color = type === "Added to" ? "#00ff00" : "#ff0000";
+      let hookOptions = {
+        username: this._client.user.username,
+        text: "",
+        icon_url: this._client.user.avatarURL,
+        slack: true,
+      };
+      hookOptions.attachments = [attachment];
+      this._joinLeaveHooks.forEach(hook => this._client.executeSlackWebhook(hook.id, hook.token, hookOptions).catch(this._raven.captureException))
+    } catch (error) {
+      this._raven.captureException(error);
+    }
+  }
+
+  onMessage(message) {
     this._lastMessage = Date.now();
+    try {
+      if (!message.channel.guild && this._admins.indexOf(message.author.id) < 0) {
+        let attachment = {text: message.content, ts: Date.now() / 1000};
+        if (message.hasOwnProperty("author")) {
+          attachment.author_name = message.author.username;
+          attachment.author_link = `https://bot.pvpcraft.ca/user/${message.author.id}`;
+          attachment.author_icon = message.author.avatarURL;
+        }
+        attachment.title = message.hasOwnProperty("author") ? `<@${message.author.id}> | Private Message` : "Private Message";
+        attachment.color = "#00ff00";
+        let hookOptions = {
+          username: this._client.user.username,
+          text: "",
+          icon_url: this._client.user.avatarURL,
+          slack: true,
+        };
+        hookOptions.attachments = [attachment];
+        this._pmHooks.forEach(hook => this._client.executeSlackWebhook(hook.id, hook.token, hookOptions).catch(this._raven.captureException))
+      }
+    } catch (error) {
+      this._raven.captureException(error);
+    }
   }
 
   updateAbal(servers) {
     let token = this._auth.get("abalKey", false);
-    if(token && token.length > 1 && token !== "key") {
+    if (token && token.length > 1 && token !== "key") {
       request.post({
         url: `https://bots.discord.pw/api/bots/${this._client.user.id}/stats`,
-        headers: { Authorization: token },
-        json: { server_count: servers }
+        headers: {Authorization: token},
+        json: {server_count: servers}
       }, (error, response, body) => {
         if (!error && response.statusCode == 200) {
           console.log(body)
@@ -114,7 +214,7 @@ module.exports = class shardedInfo {
       request(
         {
           url: 'https://www.carbonitex.net/discord/data/botdata.php',
-          body: { key: token, servercount: servers },
+          body: {key: token, servercount: servers},
           json: true
         },
         function (error, response, body) {
@@ -137,15 +237,13 @@ module.exports = class shardedInfo {
    * get's called every Command, (unless a previous middleware on the list override it.) can modify message.
    * @param msg
    * @param command
-   * @param perms
-   * @param l
    * @returns command || Boolean object (may be modified.)
    */
-  changeCommand(msg, command, perms, l) {
+  changeCommand(msg, command) {
     try {
       if (command.command === "getshardedinfo") {
         if (!this._standardDB.data) {
-          msg.reply("Sorry db connection not ready yet");
+          msg.channel.createMessage("Sorry db connection not ready yet");
           return true;
         }
         let serverData = [];
@@ -160,13 +258,23 @@ module.exports = class shardedInfo {
         let connections = serverData.map(s => s.connections).reduce((total, num) => total + num, 0);
         let playing = serverData.map(s => s.playing).reduce((total, num) => total + num, 0);
         let users = serverData.map(s => s.users).reduce((total, num) => total + num, 0);
-        msg.reply(`\`\`\`xl\nshards online: ${shardsOnline}/${process.env.shards || 1}\nshards connected: ${shardsReceivingMessages}/${process.env.shards || 1}\nservers: ${serverCount}\nconnections: ${connections}\nplaying: ${playing}\nusers: ${users}\n\`\`\``);
+        msg.channel.createMessage({
+          embed: {
+            title: `Status info`,
+            description: `\`\`\`xl\nshards online: ${shardsOnline}/${process.env.shards || 1}\n` +
+            `shards connected: ${shardsReceivingMessages}/${process.env.shards || 1}\n` +
+            `servers: ${serverCount}\nconnections: ${connections}\nplaying: ${playing}\nusers: ${users}\n\`\`\``,
+            thumbnail: {url: this._client.user.avatarURL},
+          }
+        });
         return false;
       }
       return command;
-    } catch(error) {
+    } catch (error) {
       console.error(error);
       return command;
     }
   }
-};
+}
+
+module.exports = shardedInfo;

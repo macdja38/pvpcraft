@@ -1,24 +1,40 @@
 {
   "private": true,
+  "scripts": {
+    "doc": "jsdoc lib -c ./conf.json -d docs"
+  },
   "dependencies": {
+    "blocked": "^1.2.1",
+    "bluebird": "^3.4.7",
+    "bufferutil": "^2.0.1",
     "chess": "^0.2.7",
-    "cleverbot-node": "^0.2.2",
+    "cleverbot.io": "^1.0.4",
     "cli-table2": "^0.2.0",
     "colors": "^1.1.2",
-    "deepmerge": "macdja38/deepmerge#patch-1",
-    "discord.js": "macdja38/discord.js#v8-es6",
+    "deepmerge": "latest",
+    "ebml": "^2.2.0",
+    "eris": "abalabahaha/eris#dev",
+    "erlpack": "github:hammerandchisel/erlpack",
+    "eventemitter3": "^2.0.2",
     "git-rev": "^0.2.1",
     "google": "^2.0.0",
     "google-images": "^2.0.0",
+    "jsdoc": "^3.4.3",
     "mc-ping-updated": "^0.1.0",
-    "performance-now": "^0.2.0",
-    "pokedex-promise-v2": "^2.0.0",
+    "performance-now": "^2.1.0",
+    "pokedex-promise-v2": "^3.0.0",
+    "pvpclient": "github:macdja38/pvpclient",
     "raven": "^1.1.1",
     "request": "^2.7.0",
-    "rethinkdb": "^2.3.1",
     "rethinkdbdash": "^2.3.23",
+    "sodium-native": "^1.5.1",
+    "superagent": "latest",
     "twit": "^2.2.4",
+    "universal-analytics": "latest",
     "youtube-dl": "^1.11.1",
-    "ytdl-core": "^0.8.1"
+    "ytdl-core": "^0.9.1"
+  },
+  "devDependencies": {
+    "jsdoc-strip-async-await": "^0.1.0"
   }
 }

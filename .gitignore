@@ -12,8 +12,6 @@ pids
 lib-cov
 
 # Coverage directory used by tools like istanbul
-coverage
-
 # Grunt intermediate storage (http://gruntjs.com/creating-plugins#storing-task-files)
 .grunt
 
@@ -37,8 +35,6 @@ config/*.json
 
 # Optional REPL history
 .node_repl_history
-index.d.ts
-index.html
-public/images/
-public/javascripts/
-test.js
+
+#warframeData
+warframeData/*.json

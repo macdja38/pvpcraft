@@ -2,9 +2,9 @@
  * Created by macdja38 on 2016-10-01.
  */
 
-var StandardDB = require('../lib/standardDB');
+let StandardDB = require('../lib/StandardDB');
 
-var chessClient = require('chess');
+let chessClient = require('chess');
 
 let table = "chess";
 
@@ -37,7 +37,23 @@ let emotes = {
   "rw": "<:rw:230774531671719937>"
 };
 
-module.exports = class chess {
+class chess {
+  /**
+   * Instantiates the module
+   * @constructor
+   * @param {Object} e
+   * @param {Client} e.client Eris client
+   * @param {Config} e.config File based config
+   * @param {Raven?} e.raven Raven error logging system
+   * @param {Config} e.auth File based config for keys and tokens and authorisation data
+   * @param {ConfigDB} e.configDB database based config system, specifically for per guild settings
+   * @param {R} e.r Rethinkdb r
+   * @param {Permissions} e.perms Permissions Object
+   * @param {Feeds} e.feeds Feeds Object
+   * @param {MessageSender} e.messageSender Instantiated message sender
+   * @param {SlowSender} e.slowSender Instantiated slow sender
+   * @param {PvPClient} e.pvpClient PvPCraft client library instance
+   */
   constructor(e) {
     this.client = e.client;
     this.raven = e.raven;
@@ -45,34 +61,41 @@ module.exports = class chess {
     this.games = {};
     this.turns = {};
     this.messageSender = e.messageSender;
-    global.r.tableList().contains(table)
+    this.r.tableList().contains(table)
       .do((databaseExists) => {
-        return global.r.branch(
+        return this.r.branch(
           databaseExists,
           {dbs_created: 0},
-          global.r
+          this.r
             .tableCreate(table, {})
-            .do(()=>this.r.table(table).indexCreate("channel1"))
-            .do(()=>this.r.table(table).indexCreate("channel2"))
+            .do(() => this.r.table(table).indexCreate("channel1"))
+            .do(() => this.r.table(table).indexCreate("channel2"))
         );
       }).run()
   }
 
-  getCommands() {
+  static getCommands() {
     //this needs to return a list of commands that should activate the onCommand function
     //of this class. array of strings with trailing s's removed.
     return ["move", "start", "hooktest"];
   }
 
+  /**
+   * Called with a command, returns true or a promise if it is handling the command, returns false if it should be passed on.
+   * @param {Message} msg
+   * @param {Command} command
+   * @param {Permissions} perms
+   * @returns {boolean | Promise}
+   */
   onCommand(msg, command, perms) {
     if (command.command === "start" && perms.check(msg, "games.chess.start")) {
       if (this.games.hasOwnProperty(msg.channel.id)) {
-        msg.reply("Sorry, game already in progress");
+        msg.channel.createMessage(msg.author.mention + ", " + "Sorry, game already in progress");
         return true;
       }
       this.games[msg.channel.id] = chessClient.create();
       this.turns[msg.channel.id] = "white";
-      msg.reply("Game started");
+      msg.channel.createMessage(msg.author.mention + ", " + "Game started");
       //r.table(table).insert({})
     }
 
@@ -90,7 +113,7 @@ module.exports = class chess {
 
     if (command.command === "move" && perms.check(msg, "games.chess.move")) {
       if (!this.games.hasOwnProperty(msg.channel.id)) {
-        msg.reply("Sorry, no game in progress");
+        msg.channel.createMessage(msg.author.mention + ", " + "Sorry, no game in progress");
         return true;
       }
       if (command.args.length > 0) {
@@ -98,7 +121,7 @@ module.exports = class chess {
         try {
           m1 = this.games[msg.channel.id].move(command.args[0]);
         } catch (error) {
-          msg.reply(error);
+          msg.channel.createMessage(msg.author.mention + ", " + error);
           console.log(error);
         }
         if (m1) {
@@ -113,7 +136,7 @@ module.exports = class chess {
       let status = this.games[msg.channel.id].getStatus();
       let squares = status.board.squares;
       let emoteArray = squares.map(p => {
-        if(p.hasOwnProperty("piece") && p.piece !== null) {
+        if (p.hasOwnProperty("piece") && p.piece !== null) {
           if (p.piece.type === "pawn") {
             return `p${p.piece.side.name[0]}`
           }
@@ -124,8 +147,8 @@ module.exports = class chess {
       });
       let attachments = [{
         "pretext": emoteArray
-          .map((e, i) => (Math.ceil((i+1)/8) % 2 !== (i % 2)) ? e.toUpperCase() : e)
-          .map(e => emotes[e]).map((c, i) => ((i+1) % 8 === 0) ? `${c} ${Math.ceil(i/8)}\n` : c)
+          .map((e, i) => (Math.ceil((i + 1) / 8) % 2 !== (i % 2)) ? e.toUpperCase() : e)
+          .map(e => emotes[e]).map((c, i) => ((i + 1) % 8 === 0) ? `${c} ${Math.ceil(i / 8)}\n` : c)
           .join("") + "   a     b     c     d     e     f     g     h"
       }];
       attachments.push({
@@ -162,14 +185,6 @@ module.exports = class chess {
       });
     }
   }
-
-  drawBoard() {
-
-  }
-};
-
-// .map((c, i) => (((i+1) % 2  === 0) !== (((i+1)/8) % 2 === 0)) ? c.toUpperCase() : c)
-
-function XOR(a, b) {
-
 }
+
+module.exports = chess;

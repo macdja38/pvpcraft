@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: parseState.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: parseState.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Created by macdja38 on 2016-04-09.
+ */
+"use strict";
+
+let WarframeData = require("./WarframeData");
+let languages = new WarframeData({fileName: "Languages"});
+let missionDecks = new WarframeData({fileName: "MissionDecks"});
+let starChart = new WarframeData({fileName: "StarChart"});
+let paths = require('../../Paths.json');
+const utils = require('./utils');
+
+let ActiveMissionMap = {
+  VoidT1: {
+    name: "Lith"
+  },
+  VoidT2: {
+    name: "Meso"
+  },
+  VoidT3: {
+    name: "Neo"
+  },
+  VoidT4: {
+    name: "Axi"
+  }
+};
+
+class ParseState {
+  /**
+   * Worldstate parser
+   * @constructor
+   */
+  constructor() {}
+
+  /**
+   * Get's the locations a thing can drop from
+   * @param {string} part
+   */
+  getLocations(part) {
+    let data = missionDecks.getData();
+    let partsList = [];
+    let lvl2Keys = ["Rotation A", "Rotation B", "Rotation C"];
+    Object.keys(data).forEach(a => {
+
+    });
+  }
+
+  /**
+   * Get's the name of a item from it's filepath as provided in the worldstate
+   * @param path
+   * @returns {*}
+   */
+  getName(path) {
+    try {
+      if (!paths.hasOwnProperty(path)) return path;
+      let item = paths[path];
+      if (!item.hasOwnProperty("LocalizeTag")) return path;
+      let languageString = item.LocalizeTag;
+      let localisedString = languages.get(languageString);
+      if (!localisedString) return languageString;
+      return localisedString;
+    } catch (error) {
+      console.error(path);
+      console.error(error);
+      return path;
+    }
+  }
+
+  /**
+   * Get's a mission discription from it's language path
+   * @param path
+   * @returns {*}
+   */
+  getLevel(path) {
+    try {
+      console.log(path);
+      let names_path = languages.get(path);
+      if (names_path) {
+        return names_path.replace("'", "");
+      }
+      console.error(path);
+    } catch (error) {
+      console.error(error);
+      console.error(path);
+      return path;
+    }
+  }
+
+  /**
+   * Converts item time and worldstate to time difference in human readable format.
+   * @param state Current worldstate
+   * @param itemTime items time object
+   * @returns {string}
+   */
+  toTimeDifference(state, itemTime) {
+    return utils.secondsToTime(itemTime.$date.$numberLong / 1000 - state.Time);
+  }
+
+  /**
+   * Converts item time and worldstate to time difference in human readable format.
+   * @param state Current worldstate
+   * @param itemTime items time object
+   * @returns {string}
+   */
+  toTimeDifferenceInPast(state, itemTime) {
+    return utils.secondsToTime(state.Time - itemTime.$date.$numberLong / 1000);
+  }
+
+  /**
+   * Converts item time into ISO date
+   * @param itemTime items time object
+   * @returns {string}
+   */
+  toISOTime(itemTime) {
+    return new Date(parseInt(itemTime.$date.$numberLong)).toISOString()
+  }
+
+  /**
+   * Get's a node from it's sort Name eg SolNode10
+   */
+  getNode(name) {
+    try {
+      return starChart.get(name);
+    } catch (error) {
+      console.error(error);
+      console.error(name);
+      return name;
+    }
+  }
+
+  /**
+   * Get's a node name from it's sort Name eg SolNode10
+   */
+  getNodeName(name) {
+    try {
+      let node = starChart.get(name);
+      if (!node) return name;
+      return node.name;
+    } catch (error) {
+      console.error(error);
+      console.error(name);
+      return name;
+    }
+  }
+
+  /**
+   * Returns the faction name in pretty case from the string given in the worldstate api
+   * @param string
+   * @returns {string}
+   */
+  getFaction(string) {
+    let FactionName = string.match(/_(\w+)/)[1];
+    return FactionName[0] + FactionName.substring(1).toLowerCase();
+  }
+
+  /**
+   * Returns the Mission type in pretty case from the string given in the worldstate api
+   * @param string
+   * @returns {string}
+   */
+  getMissionType(string) {
+    let FactionName = string.match(/_(\w+)/)[1];
+    return toTitleCase(FactionName.replace(/_/g, " "));
+  }
+
+  /**
+   * Returns the substring of a sortie mission modifier in popper case without the sortie_modifier part
+   * @param string
+   * @returns {*}
+   */
+  getSortieModifier(string) {
+    if (string.startsWith("SORTIE_MODIFIER_")) {
+      let strippedString = string.substring(16).replace(/_/g, " ");
+      return strippedString[0] + strippedString.substring(1).toLowerCase();
+    }
+    return string;
+  }
+
+  getTierName(i) {
+    return ActiveMissionMap[i];
+  }
+}
+
+function toTitleCase(str) {
+  return str.replace(/\w\S*/g, function (txt) {
+    return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+  });
+}
+
+module.exports = ParseState;</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Analytics.html">Analytics</a></li><li><a href="Command.html">Command</a></li><li><a href="Config.html">Config</a></li><li><a href="ConfigDB.html">ConfigDB</a></li><li><a href="Feeds.html">Feeds</a></li><li><a href="MessageSender.html">MessageSender</a></li><li><a href="ParseState.html">ParseState</a></li><li><a href="Permissions.html">Permissions</a></li><li><a href="Player.html">Player</a></li><li><a href="Queue.html">Queue</a></li><li><a href="SlowSender.html">SlowSender</a></li><li><a href="StandardDB.html">StandardDB</a></li><li><a href="Track.html">Track</a></li><li><a href="Utils.html">Utils</a></li><li><a href="WarframeData.html">WarframeData</a></li><li><a href="WorldState.html">WorldState</a></li><li><a href="worldState_prototype.html">prototype</a></li><li><a href="YoutubeTrack.html">YoutubeTrack</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addStar">addStar</a></li><li><a href="global.html#command">command</a></li><li><a href="global.html#DefaultOptions">DefaultOptions</a></li><li><a href="global.html#getOrderedGroups">getOrderedGroups</a></li><li><a href="global.html#s">s</a></li><li><a href="global.html#utils">utils</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Tue Feb 28 2017 02:14:12 GMT-0500 (Eastern Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

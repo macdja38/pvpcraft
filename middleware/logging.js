@@ -3,78 +3,42 @@
  */
 "use strict";
 
-var Utils = require('../lib/utils.js');
-var utils = new Utils();
+let Utils = require('../lib/utils.js');
+let utils = new Utils();
 
-var DB = require('../lib/database.js');
-var db = new DB();
+let DB = require('../lib/database.js');
+let db = new DB();
 
-module.exports = class logging {
-    constructor(e) {
-        this.client = e.client;
-    }
+class logging {
+  /**
+   * Instantiates the module
+   * @constructor
+   * @param {Object} e
+   * @param {Client} e.client Eris client
+   * @param {Config} e.config File based config
+   * @param {Raven?} e.raven Raven error logging system
+   * @param {Config} e.auth File based config for keys and tokens and authorisation data
+   * @param {ConfigDB} e.configDB database based config system, specifically for per guild settings
+   * @param {R} e.r Rethinkdb r
+   * @param {Permissions} e.perms Permissions Object
+   * @param {Feeds} e.feeds Feeds Object
+   * @param {MessageSender} e.messageSender Instantiated message sender
+   * @param {SlowSender} e.slowSender Instantiated slow sender
+   * @param {PvPClient} e.pvpClient PvPCraft client library instance
+   */
+  constructor(e) {
+    this.client = e.client;
+  }
 
-    /**
-     * Get's called every time the bot connects, not just the first time.
-     */
-    onReady() {
+  /**
+   * Get's called every message.
+   * @param msg
+   * @param perms
+   */
+  onMessage(msg, perms) {
+    //do something with the message like log it.
+    // db.logMessage(msg);
+  }
+}
 
-    }
-
-    /**
-     * Get's called every time the bot disconnects.
-     */
-    onDisconnect() {
-
-    }
-
-    /**
-     * Get's called every message.
-     * @param msg
-     * @param perms
-     */
-    onMessage(msg, perms) {
-        //do something with the message like log it.
-        db.logMessage(msg);
-    }
-
-    /**
-     * Get's called every command.
-     * @param msg
-     * @param command
-     * @param perms
-     * @param l
-     */
-    onCommand(msg, command, perms, l) {
-        //do something with the command like logging it to a mod log
-        //maybe you want to do something here? idk. one possible use for middleware would be a rate limiting module
-    }
-
-    /**
-     * get's called every Message, (unless a previous middleware on the list override it.) can modify message.
-     * @param msg
-     * @param perms
-     * @returns msg that will be passed to modules and other middleware
-     */
-    changeMessage(msg, perms) {
-        //return a modified version of the message.
-        return msg;
-    }
-
-    /**
-     * get's called every Command, (unless a previous middleware on the list override it.) can modify message.
-     * @param msg
-     * @param command
-     * @param perms
-     * @param l
-     * @returns command object (may be modified.)
-     */
-    changeCommand(msg, command, perms, l) {
-        //modify the command like rate limiting it.
-        if (command.command === "ahh") {
-            msg.reply("ahh");
-            return false;
-        }
-        return command;
-    }
-};
+module.exports = logging;

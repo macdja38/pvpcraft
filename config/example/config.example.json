@@ -6,10 +6,18 @@
   },
   "middleware": {
   },
-  "minDiscords": 2,
-  "shards": 2,
-  "localShards": 2,
+  "blockHooks" :[
+    {
+      "id": "IdHere",
+      "token": "tokenHere"
+    }
+  ],
+  "sentryEnv": "development",
+  "minDiscords": 1,
+  "shards": 1,
+  "localShards": 1,
   "shardStart": 0,
+  "shardTable": "shards",
   "logShardStatus": false,
   "waitBeforeRestart": 480,
   "website": {
@@ -30,12 +38,9 @@
     "rank": "./modules/rank.js",
     "cleverBot": "./modules/cleverBot.js"
   },
-  "default": {
-    "prefix": [
-      "//"
-    ],
-    "changeThresh": 1
-  },
   "purgeLength": 25,
-  "maxPurgeLength": 100
+  "maxPurgeLength": 100,
+  "channelRateLimitWhiteList": [
+    "enter"
+  ]
 }

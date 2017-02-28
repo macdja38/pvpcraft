@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: newParser.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: newParser.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Created by macdja38 on 2016-04-21.
+ */
+"use strict";
+
+const regargs = /^((?:.|\n)*?)(?= -|$)/;
+const regAll = /(?:(?:\s--)(\w+).(\n|.*?)(?= -|\n|$)|(?:\s-)([^-]*?)(?= -|\n|$))/g;
+const Command = require("./Command");
+
+/**
+ * Apply default options
+ * @param {Object} defaults
+ * @param {Object} options
+ * @returns {Object}
+ */
+function DefaultOptions(defaults, options) {
+  if (!options) {
+    options = {};
+  }
+
+  for (let key in defaults) {
+    //noinspection JSUnfilteredForInLoop
+    if (!options.hasOwnProperty(key)) {
+      //noinspection JSUnfilteredForInLoop
+      options[key] = defaults[key];
+    }
+  }
+
+  return options;
+}
+
+let defaults = {
+  allowMention: false,
+  botName: false
+};
+
+/**
+ *
+ * @param prefix
+ * @param {Message} message
+ * @param {Object} options
+ * @returns {*}
+ */
+exports.command = function (prefix, message, options) {
+
+  options = DefaultOptions(defaults, options);
+
+  /*
+   >>help command subcommand --arg1 bop --arg2 bop bop -fl --verbose
+
+   should ideally output:
+   {
+   command : "help",
+   args : ["command", "subcommand"],
+   options : {
+   arg1 : "bop",
+   arg2 : "bop bop"
+   verbose : true
+   },
+   flags : ["f", "l"]
+   }
+   */
+  function isValidCommandType() {
+    let insen = message.content.trim().toLowerCase();
+    let m = message.content;
+    for (let i in prefix) {
+      if (prefix.hasOwnProperty(i) &amp;&amp; insen.indexOf(prefix[i].toLowerCase()) === 0) {
+        m = m.substr(prefix[i].length);
+        return {prefix: clean(prefix[i]), content: m};
+      }
+    }
+    if (options.allowMention) {
+      // see if the user is mentioned
+      let mentionRegex = new RegExp(`^&lt;@!?${options.allowMention}>`);
+      if (mentionRegex.test(insen)) {
+        m = m.replace(mentionRegex, "");
+        return {prefix: "@" + options.botName + " ", content: m};
+      }
+    }
+    return false;
+  }
+
+  let prefixUsed = isValidCommandType();
+  if (!prefixUsed) {
+    return false;
+  }
+  let content = prefixUsed.content;
+  prefixUsed = prefixUsed.prefix;
+
+  let args, flags = [];
+  options = {};
+
+  args = regargs.exec(content)[1].trim().split(" ");
+  for (let i in args) {
+    if (args.hasOwnProperty(i) &amp;&amp; args[i] === "") {
+      args.splice(parseInt(i), 1);
+    }
+  }
+  let reg = regAll;
+  let myArray;
+  while ((myArray = reg.exec(content)) !== null) {
+    if (myArray[1] &amp;&amp; myArray[2]) {
+      options[myArray[1]] = myArray[2];
+    }
+    if (myArray[3]) {
+      flags = flags.concat(myArray[3].split(""));
+    }
+  }
+
+  if (args[0]) {
+    args[0] = args[0].toLowerCase();
+  }
+
+
+  let command = new Command(args[0],
+    args[0] ? (args[0][args[0].length - 1] === "s" ? args[0].slice(0, -1) : args[0]) : args[0],
+    prefixUsed,
+    args.slice(1),
+    options,
+    flags);
+
+  if (options.role &amp;&amp; message.channel.guild) {
+    let role;
+    if (/&lt;@&amp;\d+>/.test(options.role)) {
+      let roleId = options.role.match(/&lt;@&amp;(\d+)>/)[1];
+      role = message.channel.guild.roles.get(roleId);
+    }
+    else {
+      role = message.channel.guild.roles.find(r => r.name === options.role);
+    }
+    if (role) {
+      command.role = role;
+    }
+  }
+
+  if (options.channel &amp;&amp; message.channel.guild) {
+    let channel;
+    if (options.channel) {
+      if (/&lt;#\d+>/.test(options.channel)) {
+        let channelId = options.channel.match(/&lt;#(\d+)>/)[1];
+        channel = message.channel.guild.channels.get(channelId);
+      }
+      else {
+        channel = message.channel.guild.channels.find(c => c.name === options.channel);
+      }
+      if (channel) {
+        //if we found the channel check their permissions then define the channel.
+        command.channel = channel;
+      }
+    }
+  }
+
+  if (options.user &amp;&amp; message.channel.guild) {
+    let user;
+    if (/&lt;(?:@!|!)\d+>/.test(options.user)) {
+      let userId = options.user.match(/&lt;(?:@!|@)(\d+)>/)[1];
+      user = message.channel.guild.members.get(userId);
+    }
+    else {
+      let userName = options.user.toUpperCase();
+      user = message.channel.guild.members.find(a => a.username.toUpperCase() == userName);
+    }
+    if (user) {
+      //if we found the user check their permissions then define the user.
+      command.user = user;
+    }
+  }
+
+  return command;
+};
+
+function clean(text) {
+  if (typeof(text) === "string") {
+    return text.replace("``", "`" + String.fromCharCode(8203) + "`").replace("//", "/" + String.fromCharCode(8203) + "/");
+  }
+  else {
+    return text;
+  }
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Analytics.html">Analytics</a></li><li><a href="Command.html">Command</a></li><li><a href="Config.html">Config</a></li><li><a href="ConfigDB.html">ConfigDB</a></li><li><a href="Feeds.html">Feeds</a></li><li><a href="MessageSender.html">MessageSender</a></li><li><a href="ParseState.html">ParseState</a></li><li><a href="Permissions.html">Permissions</a></li><li><a href="Player.html">Player</a></li><li><a href="Queue.html">Queue</a></li><li><a href="SlowSender.html">SlowSender</a></li><li><a href="StandardDB.html">StandardDB</a></li><li><a href="Track.html">Track</a></li><li><a href="Utils.html">Utils</a></li><li><a href="WarframeData.html">WarframeData</a></li><li><a href="WorldState.html">WorldState</a></li><li><a href="worldState_prototype.html">prototype</a></li><li><a href="YoutubeTrack.html">YoutubeTrack</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addStar">addStar</a></li><li><a href="global.html#command">command</a></li><li><a href="global.html#DefaultOptions">DefaultOptions</a></li><li><a href="global.html#getOrderedGroups">getOrderedGroups</a></li><li><a href="global.html#s">s</a></li><li><a href="global.html#utils">utils</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Tue Feb 28 2017 02:14:12 GMT-0500 (Eastern Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
