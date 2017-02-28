@@ -1,34 +1,37 @@
 {
   "permissions": {
     "filename": "permissions",
-    "url": "https://pvpcraft.ca/pvpbotperms/?server=",
+    "url": "https://bot.pvpcraft.ca/server/$id/permissions",
     "admins": ["85257659694993408"]
   },
   "middleware": {
+    "rateLimits": "./middleware/rateLimits.js",
+    "shardedInfo": "./middleware/shardedInfo.js"
   },
-  "blockHooks" :[
-    {
-      "id": "IdHere",
-      "token": "tokenHere"
-    }
-  ],
+  "blockHooks" :[],
+  "pmHooks": [],
+  "joinLeaveHooks": [],
   "sentryEnv": "development",
-  "minDiscords": 1,
+  "minDiscords": 0,
   "shards": 1,
   "localShards": 1,
   "shardStart": 0,
   "shardTable": "shards",
   "logShardStatus": false,
-  "waitBeforeRestart": 480,
+  "waitBeforeRestart": 30000000000000,
   "website": {
-    "port": 8000,
-    "musicUrl": "https://pvpcraft.ca/pvpbotmusic/?server="
+    "musicUrl": "https://bot.pvpcraft.ca/music/$id/music",
+    "settingsRoot": "https://bot.pvpcraft.ca"
   },
   "modules": {
-    "warframe": "./modules/warframe.js",
     "permissionsManager": "./modules/permissionsManager.js",
-    "moderation": "./modules/moderation.js",
+    "warframe": "./modules/warframe.js",
+    "moderationV2": "./modules/moderationV2.js",
     "utilities": "./modules/utilities.js",
+    "giveaways": "./modules/giveaways.js",
+    "search": "./modules/search.js",
+    "feedManager": "./modules/feedManager.js",
+    "chess": "./modules/chess.js",
     "minecraft": "./modules/minecraft.js",
     "help": "./modules/help.js",
     "evaluate": "./modules/evaluate.js",
@@ -36,11 +39,15 @@
     "music": "./modules/music.js",
     "welcome": "./modules/welcome.js",
     "rank": "./modules/rank.js",
+    "clusterRestart": "./modules/clusterRestart",
     "cleverBot": "./modules/cleverBot.js"
   },
   "purgeLength": 25,
-  "maxPurgeLength": 100,
+  "maxPurgeLength": 10000,
   "channelRateLimitWhiteList": [
+    "enter"
+  ],
+  "rateLimitWhitelist": [
     "enter"
   ]
 }
