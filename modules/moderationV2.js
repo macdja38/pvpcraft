@@ -229,14 +229,14 @@ class moderationV2 {
     if (action === "ban") {
       args.push(command.options.hasOwnProperty("time") ? command.options.time : 1);
     }
-    msg.guild[`${action}Member`](...args)
+    msg.channel.guild[`${action}Member`](...args)
       .then(() => {
-        return this.sendHookedMessage(`action.${action}`, options, text, msg.guild.id);
+        return this.sendHookedMessage(`action.${action}`, options, text, msg.channel.guild.id);
       })
       .catch((error) => {
         options.title += " **FAILED bot may not have sufficient permissions**";
         text += `\n**Error:** ${error}`;
-        this.sendHookedMessage(`action.${action}`, options, text, msg.guild.id);
+        this.sendHookedMessage(`action.${action}`, options, text, msg.channel.guild.id);
       });
     command.reply(`${user || possibleId} has been ${action}ned!`);
   }

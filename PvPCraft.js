@@ -688,7 +688,7 @@ class PvPCraft {
             command: command.toJSON(),
           };
           if (msg.channel.hasOwnProperty("guild")) {
-            extra.guild = msg.guild;
+            extra.guild = msg.channel.guild;
           }
           if (process.env.dev == "true") {
             console.error(error);
