@@ -515,7 +515,8 @@ class PvPCraft {
         delete require.cache[require.resolve(modules[command.args[0]])];
         channel.createMessage("Reloading " + command.args[0]);
         console.log("Reloading ".yellow + command.args[0].yellow);
-        let mod = new (require(modules[command.args[0]]))({
+        let Mod = require(modules[command.args[0]]);
+        let mod = new Mod({
           client: this.client,
           config: this.fileConfig,
           raven: this.raven,
@@ -530,7 +531,7 @@ class PvPCraft {
         });
         if (mod.onReady) mod.onReady();
         this.moduleList[module].module = mod;
-        this.moduleList[module].commands = minecraft.getCommands();
+        this.moduleList[module].commands = Mod.getCommands();
         console.log("Reloded ".yellow + command.args[0].yellow);
         channel.createMessage("Reloded " + command.args[0]);
       }
