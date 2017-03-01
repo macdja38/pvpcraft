@@ -356,7 +356,7 @@ class music {
 
 
     if (command.command === "shuffle" && perms.check(msg, "music.shuffle")) {
-      if (this.possiblySendNotConnected(msg, command)) return;
+      if (this.possiblySendNotConnected(msg, command)) return true;
       if (this.boundChannels[id].queue.length > 1) {
         msg.channel.createMessage(this.boundChannels[id].shuffle());
       } else {
@@ -394,10 +394,10 @@ class music {
   possiblySendNotConnected(msg, command) {
     let id = msg.channel.guild.id;
     if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
-      msg.channel.createMessage("Sorry, Bot is not currently in a voice channel use " + command.prefix + "init while in a voice channel to bind it.");
-      return true;
+      return false;
     }
-    return false;
+    msg.channel.createMessage("Sorry, Bot is not currently in a voice channel use " + command.prefix + "init while in a voice channel to bind it.");
+    return true;
   }
 }
 
