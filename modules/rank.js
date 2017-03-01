@@ -50,6 +50,7 @@ class rank {
 
   possiblyDelete(triggerMessage) {
     return (msg) => {
+      if (msg == null) return;
       let serverId = msg.channel.guild.id;
       let deleteAfter = this.pvpClient.get(`${serverId}.ranks.deleteAfter.value`, {fallBack: false});
       console.log("deleteAfter", deleteAfter);
@@ -100,7 +101,7 @@ class rank {
           let oldRoles = this.config.get("roles", {}, {server: msg.channel.guild.id});
           oldRoles[roleName] = roleId;
           this.config.set("roles", oldRoles, {server: msg.channel.guild.id});
-          msg.channel.createMessage(`${msg.author.mention}, Role added to list of join-able roles`);
+          command.replyAutoDeny(`Role added to list of join-able roles`);
           return true;
         }
         return true;
@@ -109,7 +110,7 @@ class rank {
 
       if (command.args[0] === "remove" && perms.check(msg, "admin.rank.remove")) {
         if (!command.args[1]) {
-          msg.channel.createMessage(`${msg.author.mention}, Please supply a rank to remove using \`${command.prefix}rank remove \<rank\>\`, for a list of ranks use \`${command.prefix}rank list\``);
+          command.replyAutoDeny(`Please supply a rank to remove using \`${command.prefix}rank remove \<rank\>\`, for a list of ranks use \`${command.prefix}rank list\``);
           return true;
         }
         let rankToJoin = command.args[1].toLowerCase();
@@ -117,9 +118,9 @@ class rank {
         if (oldRoles.hasOwnProperty(rankToJoin)) {
           delete oldRoles[rankToJoin];
           this.config.set("roles", oldRoles, {server: msg.channel.guild.id, conflict: "replace"});
-          msg.channel.createMessage(msg.author.mention + ", " + ":thumbsup::skin-tone-2:");
+          command.replyAutoDeny(":thumbsup::skin-tone-2:");
         } else {
-          msg.channel.createMessage(msg.author.mention + ", " + `Role could not be found, use \`${command.prefix}rank list\` to see the current ranks.`);
+          command.replyAutoDeny(`Role could not be found, use \`${command.prefix}rank list\` to see the current ranks.`);
         }
         return true;
       }
@@ -141,7 +142,7 @@ class rank {
           msg.channel.createMessage(`Roles you can join are highlighted in green\`\`\`diff\n${coloredRolesList}\`\`\``)
             .then(this.possiblyDelete(msg));
         } else {
-          msg.channel.createMessage(msg.author.mention + ", " + `No ranks are setup to be join-able.`)
+          command.replyAutoDeny(`No ranks are setup to be join-able.`)
             .then(this.possiblyDelete(msg));
         }
         return true;
@@ -150,7 +151,7 @@ class rank {
 
       if (command.args[0] === "join" && perms.check(msg, "rank.join.use")) {
         if (!command.args[1]) {
-          msg.channel.createMessage(`${msg.author.mention}, Please supply a rank to join using \`${command.prefix}rank join \<rank\>\`, for a list of ranks use \`${command.prefix}rank list\``)
+          command.replyAutoDeny(`Please supply a rank to join using \`${command.prefix}rank join \<rank\>\`, for a list of ranks use \`${command.prefix}rank list\``)
             .then(this.possiblyDelete(msg));
           return true;
         }
@@ -160,12 +161,12 @@ class rank {
         }
         let roles = this.config.get("roles", rankToJoin, {server: msg.channel.guild.id});
         if (!roles[rankToJoin]) {
-          msg.channel.createMessage(msg.author.mention + ", " + `Invalid rank, for a list of ranks use \`${command.prefix}rank list\``)
+          command.replyAutoDeny(`Invalid rank, for a list of ranks use \`${command.prefix}rank list\``)
             .then(this.possiblyDelete(msg));
           return true;
         }
         if (!perms.check(msg, `rank.join.${rankToJoin}`)) {
-          msg.channel.createMessage(msg.author.mention + ", " + `You do not have perms to join this rank for a list of ranks use \`${command.prefix}rank list\``)
+          command.replyAutoDeny(`You do not have perms to join this rank for a list of ranks use \`${command.prefix}rank list\``)
             .then(this.possiblyDelete(msg));
           return true;
         }
@@ -176,11 +177,11 @@ class rank {
               .then(this.possiblyDelete(msg));
           }).catch((error) => {
             if (error) {
-              msg.channel.createMessage(`${msg.author.mention}, Error ${error} promoting ${utils.removeBlocks(msg.author.username)} try redefining your rank and making sure the bot has enough permissions.`)
+              command.replyAutoDeny(`Error ${error} promoting ${utils.removeBlocks(msg.author.username)} try redefining your rank and making sure the bot has enough permissions.`)
             }
           });
         } else {
-          msg.channel.createMessage(`${msg.author.mention}, Role could not be found, have an administrator use \`${command.prefix}rank add\` to update it.`);
+          command.replyAutoDeny(`Role could not be found, have an administrator use \`${command.prefix}rank add\` to update it.`);
         }
         return true;
       }
@@ -188,7 +189,7 @@ class rank {
 
       if (command.args[0] === "leave" && perms.check(msg, "rank.leave.use")) {
         if (!command.args[1]) {
-          msg.channel.createMessage(`${msg.author.mention}, Please supply a rank to leave using \`${command.prefix}rank leave \<rank\>\`, for a list of ranks use \`${command.prefix}rank list\``)
+          command.replyAutoDeny(`Please supply a rank to leave using \`${command.prefix}rank leave \<rank\>\`, for a list of ranks use \`${command.prefix}rank list\``)
             .then(this.possiblyDelete(msg));
           return true;
         }
@@ -198,25 +199,25 @@ class rank {
         }
         let roles = this.config.get("roles", rankToLeave, {server: msg.channel.guild.id});
         if (!roles[rankToLeave]) {
-          msg.channel.createMessage(msg.author.mention + ", " + `Invalid rank, for a list of ranks use \`${command.prefix}rank list\``)
+          command.replyAutoDeny(`Invalid rank, for a list of ranks use \`${command.prefix}rank list\``)
             .then(this.possiblyDelete(msg));
           return true;
         }
         if (!perms.check(msg, `rank.leave.${rankToLeave}`)) {
-          msg.channel.createMessage(msg.author.mention + ", " + `You do not have perms to leave this rank for a list of ranks use \`${command.prefix}rank list\``)
+          command.replyAutoDeny(`You do not have perms to leave this rank for a list of ranks use \`${command.prefix}rank list\``)
             .then(this.possiblyDelete(msg));
           return true;
         }
         let role = msg.channel.guild.roles.get(roles[rankToLeave]);
         if (role) {
           msg.channel.guild.removeMemberRole(msg.author.id, role.id).then(() => {
-            msg.channel.createMessage(msg.author.mention + ", " + ":thumbsup::skin-tone-2:")
+            command.replyAutoDeny(":thumbsup::skin-tone-2:")
               .then(this.possiblyDelete(msg));
           }).catch((error) => {
-            this.client.createMessage(msg.channel.id, `${error} demoting ${utils.removeBlocks(msg.author.username)} try redefining your rank and making sure the bot has enough permissions.`).catch(console.error)
+            command.createMessageAutoDeny(`${error} demoting ${utils.removeBlocks(msg.author.username)} try redefining your rank and making sure the bot has enough permissions.`).catch(console.error)
           })
         } else {
-          msg.channel.createMessage(msg.author.mention + ", " + `Role could not be found, have an administrator use \`${command.prefix}rank add\` to update it.`);
+          command.replyAutoDeny(`Role could not be found, have an administrator use \`${command.prefix}rank add\` to update it.`);
           return true;
         }
         return true;

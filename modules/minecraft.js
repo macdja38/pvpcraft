@@ -57,7 +57,7 @@ class minecraft {
       mcping(address, port, (err, res) => {
         if (err) {
           console.error(err);
-          this.client.createMessage(msg.channel.id, "```xl\n" + err + "```")
+          command.createMessageAutoDeny("```xl\n" + err + "```")
         }
         else {
           let description = res.description;
@@ -94,7 +94,7 @@ class minecraft {
 
     if (command.command === "mcavatar" && perms.check(msg, "minecraft.mcavatar")) {
       if (command.args.length < 1) {
-        msg.channel.createMessage(msg.author.mention + ", " + "usage `" + command.prefix + "mcavatar <minecraft username>`");
+        command.reply("usage `" + command.prefix + "mcavatar <minecraft username>`");
         return true;
       }
       msg.channel.createMessage({
@@ -108,7 +108,7 @@ class minecraft {
 
     if (command.command === "mcskin" && perms.check(msg, "minecraft.mcskin")) {
       if (command.args.length < 1) {
-        msg.channel.createMessage(msg.author.mention + ", " + "usage `" + command.prefix + "mcskin <minecraft username>`");
+        command.reply("usage `" + command.prefix + "mcskin <minecraft username>`");
         return true;
       }
       msg.channel.createMessage({

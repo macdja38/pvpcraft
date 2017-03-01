@@ -49,7 +49,7 @@ const MessageSender = require("./lib/MessageSender");
 const Permissions = require("./lib/Permissions.js");
 const Analytics = require("./lib/Analytics");
 const now = require("performance-now");
-const Parse = require("./lib/newParser.js");
+const Command = require("./lib/Command");
 const colors = require("colors");
 const request = require("request");
 const SlowSender = require("./lib/SlowSender");
@@ -564,7 +564,7 @@ class PvPCraft {
     }
     let command;
     try {
-      command = Parse.command(l, msg, {"allowMention": this.id, "botName": this.name});
+      command = Command.parse(l, msg, this.perms, {allowMention: this.id, botName: this.name, raven: this.raven});
     } catch (error) {
       if (this.raven) {
         let extra = {

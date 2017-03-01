@@ -90,12 +90,12 @@ class chess {
   onCommand(msg, command, perms) {
     if (command.command === "start" && perms.check(msg, "games.chess.start")) {
       if (this.games.hasOwnProperty(msg.channel.id)) {
-        msg.channel.createMessage(msg.author.mention + ", " + "Sorry, game already in progress");
+        command.replyAutoDeny("Sorry, game already in progress");
         return true;
       }
       this.games[msg.channel.id] = chessClient.create();
       this.turns[msg.channel.id] = "white";
-      msg.channel.createMessage(msg.author.mention + ", " + "Game started");
+      command.replyAutoDeny("Game started");
       //r.table(table).insert({})
     }
 
@@ -113,7 +113,7 @@ class chess {
 
     if (command.command === "move" && perms.check(msg, "games.chess.move")) {
       if (!this.games.hasOwnProperty(msg.channel.id)) {
-        msg.channel.createMessage(msg.author.mention + ", " + "Sorry, no game in progress");
+        command.replyAutoDeny("Sorry, no game in progress");
         return true;
       }
       if (command.args.length > 0) {
@@ -121,7 +121,7 @@ class chess {
         try {
           m1 = this.games[msg.channel.id].move(command.args[0]);
         } catch (error) {
-          msg.channel.createMessage(msg.author.mention + ", " + error);
+          command.replyAutoDeny(error);
           console.log(error);
         }
         if (m1) {

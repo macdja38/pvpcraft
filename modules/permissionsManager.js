@@ -52,7 +52,7 @@ class permissionsManager {
 
     if (command.commandnos === "setting") {
       let urlRoot = this.config.get("website", {"settingsRoot": "https://bot.pvpcraft.ca"}).settingsRoot;
-      msg.channel.createMessage(msg.author.mention + ", " + `${urlRoot}/bot/${this.client.user.id}/server/${msg.channel.guild.id}/ranks`);
+      command.reply(`${urlRoot}/bot/${this.client.user.id}/server/${msg.channel.guild.id}/ranks`);
       return true;
     }
 
@@ -60,11 +60,11 @@ class permissionsManager {
 
       //if no command is supplied supply help url
       if (command.args.length === 0) {
-        msg.channel.createMessage(msg.author.mention + ", " + "You need help! visit \<https://bot.pvpcraft.ca/docs\> for more info");
+        command.reply("You need help! visit \<https://bot.pvpcraft.ca/docs\> for more info");
         return true;
       }
       if (!msg.channel.guild) {
-        msg.channel.createMessage(msg.author.mention + ", " + "Must be used from within a server");
+        command.reply("Must be used from within a server");
         return true;
       }
       //command to set permissions.
@@ -75,7 +75,7 @@ class permissionsManager {
 
         //check if they gave us enough args, if not tell them what to give us.
         if (command.args.length < 2) {
-          msg.channel.createMessage(msg.author.mention + ", " + "perms set <allow|deny|remove> <node>");
+          command.reply("perms set <allow|deny|remove> <node>");
           return true;
         }
         let channel;
@@ -93,7 +93,7 @@ class permissionsManager {
             channel = channel.id;
           }
           else {
-            msg.channel.createMessage(msg.author.mention + ", " + "Could not find channel specified please either mention the channel or use it's full name");
+            command.reply("Could not find channel specified please either mention the channel or use it's full name");
             return true;
           }
         }
@@ -122,7 +122,7 @@ class permissionsManager {
             target = "u" + target.id
           }
           else {
-            msg.channel.createMessage(msg.author.mention + ", " + "Could not find user with that name, please try a mention or name, names are case sensitive");
+            command.reply("Could not find user with that name, please try a mention or name, names are case sensitive");
             return true;
           }
         }
@@ -137,7 +137,7 @@ class permissionsManager {
             target = "g" + target.id
           }
           else {
-            msg.channel.createMessage(msg.author.mention + ", " + "Could not find role with that name, please try a mention or name, names are case sensitive");
+            command.reply("Could not find role with that name, please try a mention or name, names are case sensitive");
             return true;
           }
         }
@@ -147,7 +147,7 @@ class permissionsManager {
         let action = command.args.shift();
         if (action === "remove") action = "remov";
         const node = server + "." + channel + "." + target + "." + command.args[0];
-        msg.channel.createMessage(msg.author.mention + ", " + `${utils.clean(action)}ing node \`\`\`xl\n${node}\n\`\`\`\
+        command.reply(`${utils.clean(action)}ing node \`\`\`xl\n${node}\n\`\`\`\
 ${utils.clean(action)}ing permission node ${utils.clean(command.args[0])} in ${channel === "*" ? "all channels" : channel } for \
 ${target === "*" ? "everyone" : utils.clean(target)}`);
         let numValue = parseInt(action);
@@ -156,20 +156,20 @@ ${target === "*" ? "everyone" : utils.clean(target)}`);
         }
         perms.set(utils.stripNull(node), action).then((result) => {
           if (!result || result === undefined) {
-            msg.channel.createMessage(msg.author.mention + ", " + "Error: while saving: Database write could not be confirmed the permissions configuration," +
+            command.reply("Error: while saving: Database write could not be confirmed the permissions configuration," +
               " will be cached locally but may reset in the future.")
           }
         }).catch(console.error);
       }
       if (command.args[0] === "list") {
-        msg.channel.createMessage(msg.author.mention + ", " + this.url.replace(/\$id/, msg.channel.guild.id));
+        command.reply(this.url.replace(/\$id/, msg.channel.guild.id));
       }
       if (command.args[0].toLowerCase() === "hardreset") {
         if (msg.author.id == msg.channel.guild.ownerID) {
           perms.set(msg.channel.guild.id, "remov");
-          msg.channel.createMessage(msg.author.mention + ", " + `All permissions have been reset!`)
+          command.reply(`All permissions have been reset!`)
         } else {
-          msg.channel.createMessage(msg.author.mention + ", " + `Only the server owner can use this command.`);
+          command.reply(`Only the server owner can use this command.`);
         }
       }
       return true;

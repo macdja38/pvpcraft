@@ -57,7 +57,7 @@ class music {
     return new Promise((resolve, reject) => {
       let voiceChannel = msg.channel.guild.channels.get(msg.member.voiceState.channelID);
       if (!perms.checkUserChannel(msg.author, voiceChannel, "music.initinto")) {
-        msg.channel.createMessage(msg.author.mention + ", " + "Sorry but you need the permission `music.initinto` in this voice channel to summon the bot here." +
+        command.reply("Sorry but you need the permission `music.initinto` in this voice channel to summon the bot here." +
           " Please try another voice channel or contact a mod/admin if you believe this is in error.");
         return true;
       }
@@ -73,11 +73,11 @@ class music {
       });
       msg.channel.createMessage(msg.author.mention + ", Binding to **" + voiceChannel.name + "** and **" + msg.channel.name + "**");
       this.boundChannels[id].init(msg).then(() => {
-        msg.channel.createMessage(msg.author.mention + ", " + `Bound successfully use ${command.prefix}destroy to unbind it.`);
+        command.reply(`Bound successfully use ${command.prefix}destroy to unbind it.`);
         resolve(this.boundChannels[id]);
       }).catch(error => {
         console.error(error);
-        msg.channel.createMessage(msg.author.mention + ", " + error);
+        command.reply(error);
         reject(error);
         delete this.boundChannels[id];
       });
@@ -130,7 +130,7 @@ class music {
 
     if (command.command === "init" && perms.check(msg, "music.init")) {
       if (this.boundChannels.hasOwnProperty(id)) {
-        msg.channel.createMessage(msg.author.mention + ", " + `Sorry already in use in this server. Use ${command.prefix}destroy to erase that connection.`);
+        command.reply(`Sorry already in use in this server. Use ${command.prefix}destroy to erase that connection.`);
         return true;
       }
       if (msg.member.voiceState.channelID) {
@@ -148,10 +148,10 @@ class music {
     if (command.command === "destroy" && perms.check(msg, "music.destroy")) {
       if (this.boundChannels.hasOwnProperty(id)) {
         this.boundChannels[id].destroy();
-        msg.channel.createMessage(msg.author.mention + ", " + "Disconnecting from voice chat and unbinding from text chat.");
+        command.reply("Disconnecting from voice chat and unbinding from text chat.");
         delete this.boundChannels[id];
       } else {
-        msg.channel.createMessage(msg.author.mention + ", " + "Not bound.");
+        command.reply("Not bound.");
       }
       return true;
     }
@@ -177,11 +177,11 @@ class music {
             }
           });
         } else {
-          msg.channel.createMessage(msg.author.mention + ", " + `Please have someone with the permission node \`music.init\` run ${command.prefix}init`)
+          command.reply(`Please have someone with the permission node \`music.init\` run ${command.prefix}init`)
         }
       } else {
         if (!this.boundChannels[id].ready) {
-          msg.channel.createMessage(msg.author.mention + ", " + "Connection is not ready");
+          command.reply("Connection is not ready");
           return true;
         }
         let queueCount = perms.check(msg, "music.songcount", {type: "number"});
@@ -210,14 +210,14 @@ class music {
             video = this.boundChannels[id].queue[index];
           }
           else {
-            msg.channel.createMessage(msg.author.mention + ", " + "Could not find the song");
+            command.reply("Could not find the song");
             return true;
           }
           console.log("Next Stage 1");
           if (video.votes.indexOf(msg.author.id) < 0 || isForced) {
             video.votes.push(msg.author.id);
             if (video.votes.length > (this.boundChannels[id].voice.voiceMembers.size / 3) || isForced) {
-              msg.channel.createMessage(msg.author.mention + ", " + "Removing " + video.prettyPrint() + " From the queue");
+              command.reply("Removing " + video.prettyPrint() + " From the queue");
               if (index === -1) {
                 this.boundChannels[id].skipSong();
               }
@@ -226,21 +226,21 @@ class music {
               }
             }
             else {
-              msg.channel.createMessage(msg.author.mention + ", " + video.votes.length + " / " + (Math.floor(this.boundChannels[id].voice.voiceMembers.size / 3) + 1) + " votes needed to skip " +
+              command.reply(video.votes.length + " / " + (Math.floor(this.boundChannels[id].voice.voiceMembers.size / 3) + 1) + " votes needed to skip " +
                 video.prettyPrint());
             }
           }
           else {
-            msg.channel.createMessage(msg.author.mention + ", " + "Sorry, you may only vote to skip once per song.");
+            command.reply("Sorry, you may only vote to skip once per song.");
             return true;
           }
         }
         else {
-          msg.channel.createMessage(msg.author.mention + ", " + "No songs to skip, queue a song using //play <youtube url of video or playlist>");
+          command.reply("No songs to skip, queue a song using //play <youtube url of video or playlist>");
           return true;
         }
       } else {
-        msg.channel.createMessage(msg.author.mention + ", " + "Please bind a channel first using " + command.prefix + "init");
+        command.reply("Please bind a channel first using " + command.prefix + "init");
         return true;
       }
       return true;
@@ -251,9 +251,9 @@ class music {
       if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
         if (this.boundChannels[id].connection.playing && !this.boundChannels[id].connection.paused) {
           this.boundChannels[id].pause();
-          msg.channel.createMessage(msg.author.mention + ", " + `Paused Playback use ${command.prefix}resume to resume it.`)
+          command.reply(`Paused Playback use ${command.prefix}resume to resume it.`)
         } else {
-          msg.channel.createMessage(msg.author.mention + ", " + `Cannot pause unless something is being played`)
+          command.reply(`Cannot pause unless something is being played`)
         }
       } else {
         msg.channel.createMessage("Sorry, Bot is not currently in a voice channel use " + command.prefix + "init while in a voice channel to bind it.")
@@ -266,9 +266,9 @@ class music {
       if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
         if (this.boundChannels[id].connection.paused) {
           this.boundChannels[id].resume(msg);
-          msg.channel.createMessage(msg.author.mention + ", " + "Playback resumed.")
+          command.reply("Playback resumed.")
         } else {
-          msg.channel.createMessage(msg.author.mention + ", " + `Cannot resume unless something is paused.`)
+          command.reply(`Cannot resume unless something is paused.`)
         }
       } else {
         msg.channel.createMessage("Sorry, Bot is not currently in a voice channel use " + command.prefix + "init while in a voice channel to bind it.")
@@ -323,22 +323,22 @@ class music {
     }
 
     if (command.commandnos === "volume" && (perms.check(msg, "music.volume.set") || perms.check(msg, "music.volume.list"))) {
-      msg.channel.createMessage(msg.author.mention + ", " + "In order to vastly increase performance volume is currently disabled, This feature may be re-enabled in the future");
+      command.reply("In order to vastly increase performance volume is currently disabled, This feature may be re-enabled in the future");
       return true;
       if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
         if (command.args[0] && perms.check(msg, "music.volume.set")) {
           let volume = parseInt(command.args[0]);
           if (111 > volume && volume > 4) {
             this.boundChannels[id].setVolume(volume);
-            msg.channel.createMessage(msg.author.mention + ", " + `Volume set to **${volume}**`).catch(perms.getAutoDeny(msg));
+            command.reply(`Volume set to **${volume}**`).catch(perms.getAutoDeny(msg));
 
           } else {
-            msg.channel.createMessage(msg.author.mention + ", " + "Sorry, invalid volume, please enter a number between 5 and 110").catch(perms.getAutoDeny(msg));
+            command.reply("Sorry, invalid volume, please enter a number between 5 and 110").catch(perms.getAutoDeny(msg));
           }
           return true;
         } else {
           if (perms.check(msg, "music.volume.list")) {
-            msg.channel.createMessage(msg.author.mention + ", " + "Current volume is **" + this.boundChannels[id].getVolume() + "**").catch(perms.getAutoDeny(msg));
+            command.reply("Current volume is **" + this.boundChannels[id].getVolume() + "**").catch(perms.getAutoDeny(msg));
             return true;
           }
           return false;

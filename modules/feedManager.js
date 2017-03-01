@@ -52,9 +52,9 @@ class feedManager {
           let data = this._feeds.list(msg.channel.guild.id);
           if (data.hasOwnProperty("feeds")) {
             console.log(data.feeds);
-            msg.channel.createMessage(`\`\`\`json\n${JSON.stringify(data.feeds, null, 2)}\n\`\`\``);
+            command.createMessageAutoDeny(`\`\`\`json\n${JSON.stringify(data.feeds, null, 2)}\n\`\`\``);
           } else {
-            msg.channel.createMessage("No feeds are configured");
+            command.createMessageAutoDeny("No feeds are configured");
           }
           return true;
         }
@@ -65,11 +65,11 @@ class feedManager {
           adding = false;
           break;
         default:
-          msg.channel.createMessage(msg.author.mention + ", " + `Usage ${command.prefix}${command.command} <start|stop> <node>[ --channel <channel>]`);
+          command.reply(`Usage ${command.prefix}${command.command} <start|stop> <node>[ --channel <channel>]`);
           return true;
       }
       if (!command.args[1]) {
-        msg.channel.createMessage(msg.author.mention + ", " + `Usage ${command.prefix}${command.command} <start|stop> <node>[ --channel <channel>]`);
+        command.reply(`Usage ${command.prefix}${command.command} <start|stop> <node>[ --channel <channel>]`);
         return true;
       }
       let channel = command.channel;
@@ -89,7 +89,7 @@ class feedManager {
         channel = msg.channel;
       }
       this._feeds.set(adding, utils.stripNull(command.args[1].toLowerCase()), channel.id, channel.guild.id);
-      msg.channel.createMessage(msg.author.mention + ", " + `${adding ? "Starting" : "Stopping"} ${command.args[1].toLowerCase()} in channel ${channel.mention}`);
+      command.reply(`${adding ? "Starting" : "Stopping"} ${command.args[1].toLowerCase()} in channel ${channel.mention}`);
 
       //return true, which tells the command dispatcher that we processed the command.
       return true;
@@ -97,9 +97,9 @@ class feedManager {
 
     if (command.command === "find" && perms.check(msg, "feeds.find")) {
       if (!command.args[0]) {
-        msg.channel.createMessage(`${msg.author.mention}, Usage ${command.prefix}${command.command} <node>`)
+        command.replyAutoDeny(`Usage ${command.prefix}${command.command} <node>`)
       }
-      msg.channel.createMessage(`${msg.author.mention} ${
+      command.replyAutoDeny(`${
         this._feeds.find(command.args[0].toLowerCase())
           .map(channelId => msg.channel.guild.channels.get(channelId) || channelId)
         }`);

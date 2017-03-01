@@ -4,10 +4,8 @@
 "use strict";
 
 let Pokedex = require('pokedex-promise-v2');
-
-let utils = require('../lib/utils.js');
-
 let pokedex = new Pokedex();
+let utils = require('../lib/utils.js');
 
 class pokemon {
   /**
@@ -53,7 +51,7 @@ class pokemon {
           catch (err) {
             secondtype = "";
           }
-          this.client.createMessage(msg.channel.id,
+          command.createMessageAutoDeny(
             {
               embed: {
                 title: cap(response.name),
@@ -65,46 +63,46 @@ class pokemon {
                 thumbnail: {url: response.sprites.front_default},
               }
             }
-          ).catch(perms.getAutoDeny(msg));
+          );
         })
           .catch(function (error) {
               if (error.statusCode == "404") {
-                msg.channel.createMessage(msg.author.mention + ", " + "Could not find **" + utils.clean(command.args[0]) + "**").catch(perms.getAutoDeny(msg));
+                command.replyAutoDeny("Could not find **" + utils.clean(command.args[0]) + "**");
               } else {
                 console.log('There was an ERROR with getting the data: ', error);
-                msg.channel.createMessage(msg.author.mention + ", " + "Error getting data " + error).catch(perms.getAutoDeny(msg));
+                command.replyAutoDeny("Error getting data " + error);
               }
             }
           );
       }
       else {
-        msg.channel.createMessage(msg.author.mention + ", " + "Sorry invalid input");
+        command.replyAutoDeny("Sorry invalid input");
       }
     }
     if (command.command === "shiny" && perms.check(msg, "pokemon.shiny")) {
       let pokemon_name = command.args[0];
       if (pokemon_name && /^[^<@#\\\/>]*$/g.test(pokemon_name)) {
         Promise.resolve(pokedex.getPokemonByName(pokemon_name.toLowerCase())).then((response) => {
-          this.client.createMessage(msg.channel.id,
+          command.createMessageAutoDeny(
             {
               embed: {
                 title: cap(response.name),
                 thumbnail: {url: response.sprites.front_shiny},
               }
             }
-          ).catch(perms.getAutoDeny(msg));
+          );
         })
           .catch(function (error) {
             if (error.statusCode == "404") {
-              msg.channel.createMessage(msg.author.mention + ", " + "Could not find " + command.args[0]);
+              command.replyAutoDeny("Could not find " + command.args[0]);
             } else {
               console.log('There was an ERROR with getting the data: ', error);
-              msg.channel.createMessage(msg.author.mention + ", " + "Error getting data " + error);
+              command.replyAutoDeny("Error getting data " + error);
             }
           })
       }
       else {
-        msg.channel.createMessage(msg.author.mention + ", " + "Sorry invalid input");
+        command.replyAutoDeny("Sorry invalid input");
       }
       return true;
     }
@@ -112,7 +110,7 @@ class pokemon {
       let pokemon_name = command.args[0];
       if (pokemon_name && /^[^<@#\\\/>]*$/g.test(pokemon_name)) {
         Promise.resolve(pokedex.getPokemonByName(pokemon_name.toLowerCase())).then((response) => {
-          this.client.createMessage(msg.channel.id,
+          command.createMessageAutoDeny(
             {
               embed: {
                 title: cap(response.name),
@@ -125,19 +123,19 @@ class pokemon {
                 thumbnail: {url: response.sprites.front_default},
               }
             }
-          ).catch(perms.getAutoDeny(msg));
+          );
         })
           .catch(function (error) {
             if (error.statusCode == "404") {
-              msg.channel.createMessage(msg.author.mention + ", " + "Could not find " + command.args[0]).catch(perms.getAutoDeny(msg));
+              command.replyAutoDeny("Could not find " + command.args[0]);
             } else {
               console.log('There was an ERROR with getting the data: ', error);
-              msg.channel.createMessage(msg.author.mention + ", " + "Error getting data " + error).catch(perms.getAutoDeny(msg));
+              command.replyAutoDeny("Error getting data " + error);
             }
           });
       }
       else {
-        msg.channel.createMessage(msg.author.mention + ", " + "Sorry invalid input").catch(perms.getAutoDeny(msg));
+        command.replyAutoDeny("Sorry invalid input");
       }
       return true;
 
@@ -147,7 +145,7 @@ class pokemon {
       if (pokemon_name && /^[^<@#\\\/>]*$/g.test(pokemon_name)) {
         Promise.resolve(pokedex.getPokemonByName(pokemon_name.toLowerCase()))
           .then((response) => {
-            this.client.createMessage(msg.channel.id,
+            command.createMessageAutoDeny(
               {
                 embed: {
                   title: cap(response.name),
@@ -158,19 +156,19 @@ class pokemon {
                   thumbnail: {url: response.sprites.front_default},
                 }
               }
-            ).catch(perms.getAutoDeny(msg));
+            );
           })
           .catch(function (error) {
             if (error.statusCode == "404") {
-              msg.channel.createMessage(msg.author.mention + ", " + "Could not find " + command.args[0]).catch(perms.getAutoDeny(msg));
+              command.replyAutoDeny("Could not find " + command.args[0]);
             } else {
               console.log('There was an ERROR with getting the data: ', error);
-              msg.channel.createMessage(msg.author.mention + ", " + "Error getting data " + error).catch(perms.getAutoDeny(msg));
+              command.replyAutoDeny("Error getting data " + error);
             }
           });
       }
       else {
-        msg.channel.createMessage(msg.author.mention + ", " + "Sorry invalid input").catch(perms.getAutoDeny(msg));
+        command.replyAutoDeny("Sorry invalid input");
       }
       return true;
     }

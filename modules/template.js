@@ -63,7 +63,7 @@ class template {
     //check if this is a command we should handle and if the user has permissions to execute it.
     if (command.command === "ao" && perms.check(msg, "template.ao")) {
       //provide user feedback.
-      msg.channel.createMessage(msg.author.mention + ", " + "eo");
+      command.replyAutoDeny("eo");
       //return true, which tells the command dispatcher that we processed the command.
       return true;
     }

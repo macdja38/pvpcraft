@@ -234,6 +234,7 @@ class Warframe {
     this.rebuildAlerts();
   }
 
+  //noinspection JSUnusedGlobalSymbols,JSMethodCanBeStatic
   /**
    * Optional function that will be called with every message for the purpose of misc responses / other
    * @param {Message} msg
@@ -242,7 +243,7 @@ class Warframe {
    */
   checkMisc(msg, perms) {
     if (msg.content.toLowerCase().indexOf("soon") == 0 && msg.content.indexOf(":tm:") < 0 && perms.check(msg, "warframe.misc.soon")) {
-      msg.channel.createMessage("Soon:tm:");
+      msg.channel.createMessage("Soon:tm:").catch(perms.getAutoDeny(msg));
       return true;
     }
     return false;
@@ -258,7 +259,7 @@ class Warframe {
   onCommand(msg, command, perms) {
     if ((command.commandnos === 'deal' || command.command === 'darvo') && perms.check(msg, "warframe.deal")) {
       return worldState.get().then().then((state) => {
-        this.client.createMessage(msg.channel.id, "```haskell\n" + "Darvo is selling " +
+        command.createMessageAutoDeny("```haskell\n" + "Darvo is selling " +
           parseState.getName(state.DailyDeals[0].StoreItem) +
           " for " + state.DailyDeals[0].SalePrice +
           "p (" +
@@ -279,76 +280,50 @@ class Warframe {
           }
         }
         if (coloredRolesList != "") {
-          msg.channel.createMessage(`Available alerts include \`\`\`xl\n${coloredRolesList}\`\`\``)
+          command.createMessageAutoDeny(`Available alerts include \`\`\`xl\n${coloredRolesList}\`\`\``)
         } else {
-          msg.channel.createMessage(msg.author.mention + ", " + `No alerts are being tracked.`)
+          command.replyAutoDeny(`No alerts are being tracked.`)
         }
         return true;
       }
       if (command.args[0] === "join" && perms.check(msg, "warframe.alerts.join")) {
         let roles = this.config.get("warframeAlerts", {items: {}}, {server: msg.channel.guild.id}).items;
         if (!command.args[1] || !roles[command.args[1]]) {
-          msg.channel.createMessage(msg.author.mention + ", " + `Please supply an item to join using \`${command.prefix}alert join \<rank\>\`, for a list of items use \`${command.prefix}alert list\``);
+          command.replyAutoDeny(`Please supply an item to join using \`${command.prefix}alert join \<rank\>\`, for a list of items use \`${command.prefix}alert list\``);
           return true;
         }
         let rankToJoin = command.args[1].toLowerCase();
         let role = msg.channel.guild.roles.get(roles[rankToJoin]);
         if (role) {
           msg.channel.guild.addMemberRole(msg.author.id, role.id, (error) => {
-            let logChannel = this.config.get("msgLog", false, {server: msg.channel.guild.id});
             if (error) {
-              if (logChannel) {
-                logChannel = msg.guild.channels.get(logChannel);
-                if (logChannel) {
-                  this.client.createMessage(logChannel, `Error ${error} promoting ${utils.removeBlocks(msg.author.username)} try redefining your rank and making sure the bot has enough permissions.`).catch(console.error)
-                } else {
-                  msg.channel.createMessage(msg.author.mention + ", " + `Error ${error} promoting ${utils.removeBlocks(msg.author.username)} try redefining your rank and making sure the bot has enough permissions.`)
-                }
-              }
+              command.replyAutoDeny(`Error ${error} promoting ${utils.removeBlocks(msg.author.username)} try redefining your rank and making sure the bot has enough permissions.`)
             } else {
-              if (logChannel) {
-                logChannel = msg.guild.channels.get(logChannel);
-                if (logChannel) {
-                  this.client.createMessage(logChannel, `${utils.removeBlocks(msg.author.username)} added themselves to ${utils.removeBlocks(role.name)}!`)
-                }
-              }
-              msg.channel.createMessage(msg.author.mention + ", " + ":thumbsup::skin-tone-2:");
+              command.replyAutoDeny(":thumbsup::skin-tone-2:");
             }
           })
         } else {
-          msg.channel.createMessage(msg.author.mention + ", " + `Role could not be found, have an administrator use \`${command.prefix}tracking --add <item>\` to add it.`);
+          command.replyAutoDeny(`Role could not be found, have an administrator use \`${command.prefix}tracking --add <item>\` to add it.`);
         }
         return true;
       }
       if (command.args[0] === "leave" && perms.check(msg, "warframe.alerts.leave")) {
         let roles = this.config.get("warframeAlerts", {items: {}}, {server: msg.channel.guild.id}).items;
         if (!command.args[1] || !roles[command.args[1]]) {
-          msg.channel.createMessage(msg.author.mention + ", " + `Please supply a rank to leave using \`${command.prefix}alerts leave \<rank\>\`, for a list of items use \`${command.prefix}alerts list\``);
+          command.reply(`Please supply a rank to leave using \`${command.prefix}alerts leave \<rank\>\`, for a list of items use \`${command.prefix}alerts list\``);
           return true;
         }
         let role = msg.channel.guild.roles.get(roles[command.args[1]]);
         if (role) {
           msg.channel.guild.removeMemberRole(msg.author.id, role.id, (error) => {
-            let logChannel = this.config.get("msgLog", false, {server: msg.channel.guild.id});
             if (error) {
-              if (logChannel) {
-                logChannel = msg.channel.guild.channels.get(logChannel);
-                if (logChannel) {
-                  this.client.createMessage(logChannel, `Error ${error} demoting ${utils.removeBlocks(msg.author.username)} try redefining your rank and making sure the bot has enough permissions.`).catch(console.error)
-                }
-              }
+                command.replyAutoDeny(`Error ${error} demoting ${utils.removeBlocks(msg.author.username)} try redefining your rank and making sure the bot has enough permissions.`)
             } else {
-              if (logChannel) {
-                logChannel = msg.channel.guild.channels.get(logChannel);
-                if (logChannel) {
-                  this.client.createMessage(logChannel, `${utils.removeBlocks(msg.author.username)} removed themselves from ${utils.removeBlocks(role.name)}!`)
-                }
-              }
-              msg.channel.createMessage(msg.author.mention + ", " + ":thumbsup::skin-tone-2:");
+              command.reply(":thumbsup::skin-tone-2:");
             }
           })
         } else {
-          msg.channel.createMessage(msg.author.mention + ", " + `Role could not be found, have an administrator use \`${command.prefix}alerts add <item>\` to add it.`);
+          command.reply(`Role could not be found, have an administrator use \`${command.prefix}alerts add <item>\` to add it.`);
           return true;
         }
         return true;
@@ -375,7 +350,7 @@ class Warframe {
         }
         this.config.set("warframeAlerts", config, {server: msg.channel.guild.id});
         this.rebuildAlerts();
-        msg.channel.createMessage(msg.author.mention + ", " + ":thumbsup::skin-tone-2:");
+        command.replyAutoDeny(":thumbsup::skin-tone-2:");
         return true;
       }
 
@@ -396,7 +371,7 @@ class Warframe {
             config.items = {};
           }
           if (config.items.hasOwnProperty(command.args[1].toLowerCase())) {
-            msg.channel.createMessage(`${msg.author.mention}, Resource is already being tracked, use \`${command.prefix}alert join ${utils.clean(command.args[1])}\` to join it.`);
+            command.createMessageAutoDeny(`${msg.author.mention}, Resource is already being tracked, use \`${command.prefix}alert join ${utils.clean(command.args[1])}\` to join it.`);
             return;
           }
           let options = {
@@ -407,19 +382,19 @@ class Warframe {
           msg.channel.guild.createRole(options).then((role) => {
             config.items[role.name] = role.id;
             this.config.set("warframeAlerts", config, {server: msg.channel.guild.id});
-            msg.channel.createMessage(`${msg.author.mention}", Created role ${utils.clean(role.name)} with id ${role.id}`);
+            command.replyAutoDeny(`Created role ${utils.clean(role.name)} with id ${role.id}`);
           }).catch((error) => {
             if (error.code == 50013) {
-              msg.channel.createMessage(msg.author.mention + ", Error, insufficient permissions, please give me manage roles.");
+              command.replyAutoDeny("Error, insufficient permissions, please give me manage roles.");
             }
             else {
-              msg.channel.createMessage(`${msg.author.mention} Unexpected error \`${error}\` please report the issue https://invite.pvpcraft.ca/`);
+              command.replyAutoDeny(`Unexpected error \`${error}\` please report the issue https://invite.pvpcraft.ca/`);
               console.dir(error, {depth: 2, color: true});
             }
           });
           return true;
         }
-        msg.channel.createMessage(msg.author.mention + ", " + "invalid option's please specify the name of a resource to track to change tracking options");
+        command.replyAutoDeny("invalid option's please specify the name of a resource to track to change tracking options");
         return true;
       }
 
@@ -439,8 +414,8 @@ class Warframe {
             config.items = {};
           }
           if (!config.items.hasOwnProperty(command.args[1])) {
-            msg.channel.createMessage(msg.author.mention + ", " + `Resource is not being tracked, use \`${command.prefix}alert add ${utils.clean(command.args[1])}\` to add it.`);
-            return;
+            command.reply(`Resource is not being tracked, use \`${command.prefix}alert add ${utils.clean(command.args[1])}\` to add it.`);
+            return true;
           }
           let roleName = command.args[1].toLowerCase();
           let role = msg.channel.guild.roles.find(r  => r.name.toLowerCase() === roleName);
@@ -448,14 +423,14 @@ class Warframe {
             msg.channel.guild.deleteRole(role.id).then(() => {
               delete config.items[command.args[1]];
               this.config.set("warframeAlerts", config, {server: msg.channel.guild.id, conflict: "replace"});
-              msg.channel.createMessage(msg.author.mention + ", " + "Deleted role " + utils.clean(command.args[1]) + " with id `" + role.id + "`");
+              command.replyAutoDeny("Deleted role " + utils.clean(command.args[1]) + " with id `" + role.id + "`");
             }).catch((error) => {
               if (error) {
                 if (error.status == 403) {
-                  msg.channel.createMessage(msg.author.mention + ", " + "Error, insufficient permissions, please give me manage roles.");
+                  command.replyAutoDeny("Error, insufficient permissions, please give me manage roles.");
                 }
                 else {
-                  msg.channel.createMessage(msg.author.mention + ", " + "Unexpected error please report the issue https://pvpcraft.ca/pvpbot");
+                  command.replyAutoDeny("Unexpected error please report the issue https://pvpcraft.ca/pvpbot");
                   console.log(error);
                   console.log(error.stack);
                 }
@@ -465,11 +440,11 @@ class Warframe {
           } else {
             delete config.items[command.args[1]];
             this.config.set("warframeAlerts", config, {server: msg.channel.guild.id, conflict: "replace"});
-            msg.channel.createMessage(msg.author.mention + ", " + "Role not found, removed " + utils.clean(command.args[1]) + " from list.");
+            command.replyAutoDeny("Role not found, removed " + utils.clean(command.args[1]) + " from list.");
             return true;
           }
         }
-        msg.channel.createMessage(msg.author.mention + ", " + "Invalid option's please specify the name of a resource to track to change tracking options");
+        command.replyAutoDeny("Invalid option's please specify the name of a resource to track to change tracking options");
         return true;
       }
     }
@@ -478,7 +453,7 @@ class Warframe {
       return worldState.get().then((state) => {
         console.log(state.VoidTraders[0]);
         if (!state.VoidTraders || !state.VoidTraders[0]) {
-          this.client.createMessage(msg.channel.id, "Baro has disappeared from the universe.");
+          command.createMessageAutoDeny("Baro has disappeared from the universe.");
           return true;
         }
         if (state.VoidTraders[0].Manifest) {
@@ -488,10 +463,10 @@ class Warframe {
             rep += "item: " + parseState.getName(item.ItemType) + " - price:" + item.PrimePrice + " ducats " + item.RegularPrice + "cr\n";
           }
           rep += "```";
-          this.client.createMessage(msg.channel.id, rep);
+          command.createMessageAutoDeny(rep);
         }
         else {
-          this.client.createMessage(msg.channel.id, "```haskell\nBaro appearing at " + state.VoidTraders[0].Node + " in " +
+          command.createMessageAutoDeny("```haskell\nBaro appearing at " + state.VoidTraders[0].Node + " in " +
             parseState.toTimeDifference(state, state.VoidTraders[0].Activation) + "\n```");
         }
       });
@@ -499,16 +474,16 @@ class Warframe {
 
     else if ((command.commandnos === 'trial' || command.commandnos === 'raid' || command.commandnos === 'trialstat') && perms.check(msg, "warframe.trial")) {
       if (command.args.length < 1) {
-        this.client.createMessage(msg.channel.id,
+        command.createMessageAutoDeny(
           "Hek: \<http://tinyurl.com/qb752oj\> Nightmare: \<http://tinyurl.com/p8og6xf\> Jordas: \<http://tinyurl.com/prpebzh\>");
         return true;
       }
       if (command.args[0].toLowerCase() === "help") {
-        msg.channel.createMessage(msg.author.mention + ", " + `\`${command.prefix}${command.command} <jv | lor> <username>\``);
+        command.reply(`\`${command.prefix}${command.command} <jv | lor> <username>\``);
         return true;
       }
       if (command.args.length < 2) {
-        this.client.createMessage(msg.channel.id,
+        command.createMessageAutoDeny(
           `​http://wf.christx.tw/search.php?id=${utils.clean(command.args[0])}`);
         return true;
       }
@@ -519,7 +494,7 @@ class Warframe {
       } else {
         link = `https://wf.christx.tw/search.php?id=${command.args[1]}`;
       }
-      this.client.createMessage(msg.channel.id, link);
+      command.createMessageAutoDeny(link);
       return true;
     }
 
@@ -553,7 +528,7 @@ class Warframe {
               "\n```"
             );
           }
-          this.client.createMessage(msg.channel.id,
+          command.createMessageAutoDeny(
             alertStringArray.join("\n")
           );
         }
@@ -574,7 +549,7 @@ class Warframe {
               string += `\`\`\`xl\n${parseState.getTierName(mission.Modifier).name} (${mission.Modifier.slice(4)}) rift active for ${utils.secondsToTime(mission.Expiry.sec - state.Time)}\n\`\`\``;
             }
           }
-          this.client.createMessage(msg.channel.id, string);
+          command.createMessageAutoDeny(string);
         }
       });
     }
@@ -582,7 +557,7 @@ class Warframe {
     else if (command.command === 'wiki' && perms.check(msg, "warframe.wiki")) {
       //use wikia's api to search for the item.
       if (command.args.length === 0) {
-        this.client.createMessage(msg.channel.id, "Please provide something to search for!");
+        command.createMessageAutoDeny("Please provide something to search for!");
         return true;
       }
       request.post("http://warframe.wikia.com/api/v1/Search/List", {
@@ -592,12 +567,12 @@ class Warframe {
         }
       }, (err, response, body) => {
         if (err || response.statusCode === 404) {
-          this.client.createMessage(msg.channel.id, "Could not find **" + utils.clean(command.args.join(' ')) + "**");
+          command.createMessageAutoDeny("Could not find **" + utils.clean(command.args.join(' ')) + "**");
         } else if (response.statusCode !== 200) {
           console.error(' returned HTTP status ' + response.statusCode);
         } else {
           try {
-            this.client.createMessage(msg.channel.id, JSON.parse(body).items[0].url);
+            command.createMessageAutoDeny(JSON.parse(body).items[0].url);
           } catch (e) {
             console.error('Invalid JSON from http://warframe.wikia.com/api/v1/Search/List while searching the wiki');
           }
@@ -625,19 +600,19 @@ class Warframe {
             },
             fields,
           };
-          this.client.createMessage(msg.channel.id, {embed});
+          command.createMessageAutoDeny({embed});
           return true;
         }
       });
     }
 
     else if (command.command === 'farm' && perms.check(msg, "warframe.farm")) {
-      this.client.createMessage(msg.channel.id, "You can probably find that resource here: \<https://steamcommunity.com/sharedfiles/filedetails/?id=181630751\>");
+      command.createMessageAutoDeny("You can probably find that resource here: \<https://steamcommunity.com/sharedfiles/filedetails/?id=181630751\>");
       return true;
     }
 
     else if ((command.commandnos === 'damage' || command.command === 'element') && perms.check(msg, "warframe.damage")) {
-      this.client.createMessage(msg.channel.id, "```haskell\nDamage 2.0: https://pvpcraft.ca/wfd2.png Thanks for image Telkhines\n```");
+      command.createMessageAutoDeny("```haskell\nDamage 2.0: https://pvpcraft.ca/wfd2.png Thanks for image Telkhines\n```");
       return true;
     }
 
@@ -651,7 +626,7 @@ class Warframe {
           }
         }
         if (text != "```haskell\n") {
-          this.client.createMessage(msg.channel.id, text + "```")
+          command.createMessageAutoDeny(text + "```")
         } else {
           this.client.createMessage("No prime access could be found");
         }
@@ -680,7 +655,7 @@ class Warframe {
           }
         }
         console.log(embed);
-        this.client.createMessage(msg.channel.id, {embed});
+        command.createMessageAutoDeny({embed});
         return true;
       });
     }
@@ -688,7 +663,7 @@ class Warframe {
     else if ((command.commandnos === 'armorstat' || command.commandnos === 'armor' ||
       command.commandnos === 'armourstat' || command.commandnos === 'armour') && perms.check(msg, "warframe.armor")) {
       if (command.args.length < 1 || command.args.length == 2 || command.args.length > 3) {
-        this.client.createMessage(msg.channel.id, "```haskell\npossible uses include:\n" +
+        command.createMessageAutoDeny("```haskell\npossible uses include:\n" +
           command.prefix + "armor (Base Armor) (Base Level) (Current Level) calculate armor and stats.\n" +
           command.prefix + "armor (Current Armor)\n```");
         return true;
@@ -697,7 +672,7 @@ class Warframe {
       let armor;
       if (command.args.length == 3) {
         if ((parseInt(command.args[2]) - parseInt(command.args[1])) < 0) {
-          this.client.createMessage(msg.channel.id, "```haskell\nPlease check your input values\n```");
+          command.createMessageAutoDeny("```haskell\nPlease check your input values\n```");
           return true;
         }
         armor = parseInt(command.args[0]) * (1 + (Math.pow((parseInt(command.args[2]) - parseInt(command.args[1])), 1.75) / 200));
@@ -707,7 +682,7 @@ class Warframe {
         armor = parseInt(command.args[0]);
       }
       text += armor / (armor + 300) * 100 + "% damage reduction\n";
-      this.client.createMessage(msg.channel.id, text + "```");
+      command.createMessageAutoDeny(text + "```");
       return true;
     }
     return false;

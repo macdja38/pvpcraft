@@ -184,29 +184,29 @@ class moderationV2 {
         }
       }
     } else {
-      msg.channel.createMessage(msg.author.mention + ", " + `Who do you want to ${action}? ${command.prefix}${action} <user>`);
+      command.reply(`Who do you want to ${action}? ${command.prefix}${action} <user>`);
       return true;
     }
     if (!user && !possibleId) {
-      msg.channel.createMessage(msg.author.mention + ", " + `Sorry, user could not be located or their id was not a number. Please try a valid mention or id`);
+      command.reply(`Sorry, user could not be located or their id was not a number. Please try a valid mention or id`);
       return true;
     }
 
     // check to see if user has ban immunity
     if (user && perms.checkUserChannel(user, msg.channel, `moderation.immunity.${action}`)) {
-      msg.channel.createMessage(msg.author.mention + ", " + `Sorry you do not have permission to ${action} this user`);
+      command.reply(`Sorry you do not have permission to ${action} this user`);
       return true;
     }
 
     if (possibleId && perms.checkUserChannel({id: possibleId}, msg.channel, `moderation.immunity.${action}`)) {
-      msg.channel.createMessage(msg.author.mention + ", " + "Sorry but you don't have permission to ban the user this id belongs to.");
+      command.reply("Sorry but you don't have permission to ban the user this id belongs to.");
       return true;
     }
 
     let reason = command.options.reason;
     if (!perms.check(msg, "moderation.reasonless")) {
       if (!reason) {
-        msg.channel.createMessage(msg.author.mention + ", " + `Sorry but you do not have permission to ban without providing a reason eg \`${command.prefix}${action} --user @devCodex --reason Annoying\``);
+        command.reply(`Sorry but you do not have permission to ban without providing a reason eg \`${command.prefix}${action} --user @devCodex --reason Annoying\``);
         return true;
       }
     }
@@ -225,7 +225,7 @@ class moderationV2 {
     if (reason) {
       text += `\n**Reason:** ${utils.clean(reason)}`;
     }
-    let args = [user ? user.id :possibleId];
+    let args = [user ? user.id : possibleId];
     if (action === "ban") {
       args.push(command.options.hasOwnProperty("time") ? command.options.time : 1);
     }
@@ -238,7 +238,7 @@ class moderationV2 {
         text += `\n**Error:** ${error}`;
         this.sendHookedMessage(`action.${action}`, options, text, msg.guild.id);
       });
-    msg.channel.createMessage(msg.author.mention + ", " + `${user || possibleId} has been ${action}ned!`);
+    command.reply(`${user || possibleId} has been ${action}ned!`);
   }
 
   /**
@@ -281,7 +281,7 @@ class moderationV2 {
         if (user) {
           options.user = user;
         } else {
-          msg.channel.createMessage(msg.author.mention + ", " + "Cannot find that user.")
+          command.reply("Cannot find that user.")
         }
       }
       if (!isNaN(command.options.before)) {
@@ -431,6 +431,14 @@ class moderationV2 {
   }
 
   /**
+   * A field used for discord embeds
+   * @typedef {Object[]} Field
+   * @param {string} title Title of the webhook field
+   * @param {string} value Value of the webhook field
+   * @param {boolean} short Inline the field?
+   */
+
+  /**
    * Send a message using webhooks or fallback to the events channel
    * @param {string} eventName
    * @param {Object?} options
@@ -439,10 +447,7 @@ class moderationV2 {
    * @param {string?} options.icon_url icon that will override the bot's icon when posting webhook
    * @param {Object} attachment
    * @param {string} attachment.title title for webhook
-   * @param {Array<Object>} attachment.fields field objects for webhook attachment
-   * @param {string} attachment.fields.title title for field
-   * @param {string} attachment.fields.value value for field
-   * @param {boolean} attachment.fields.short inline value for field
+   * @param {Field[]} attachment.fields Fields used for webhook attachment
    * @param {string} serverId
    */
   sendHookedMessage(eventName, options, attachment, serverId) {

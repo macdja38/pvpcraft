@@ -51,7 +51,7 @@ class cleverBot {
   checkMisc(msg, perms) {
     if (msg.mentions.includes(this.client.user) && perms.check(msg, "cleverbot.misc")) {
       if (!this.cleverEnabled) {
-        msg.channel.createMessage(msg.author.mention + ", " + "Bot was not configured with an api key and is therefore disabled.").catch(perms.getAutoDeny(msg));
+        msg.channel.createMessage(msg.author.mention + ", Bot was not configured with an api key and is therefore disabled.").catch(perms.getAutoDeny(msg));
         return true;
       }
       msg.channel.sendTyping();
@@ -78,7 +78,7 @@ class cleverBot {
         botInstance.ask(query, (err, response) => {
           console.log(err, response);
           if (err) {
-            msg.channel.createMessage(msg.author.mention + ", " + `Encountered error "${response}" when trying to query cleverbot`).catch(perms.getAutoDeny(msg));
+            msg.channel.createMessage(`${msg.author.mention}, Encountered error "${response}" when trying to query cleverbot`).catch(perms.getAutoDeny(msg));
             this.raven.captureException(err);
             return true;
           }

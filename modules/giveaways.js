@@ -76,33 +76,33 @@ class giveaways {
           data.entries = [];
         }
         this.entries.set(null, data, {server: msg.channel.guild.id});
-        msg.channel.createMessage(msg.author.mention + ", " + `Giveaways ${data.enable ? "enabled" : "disabled"} in channel <#${data.channel}>`);
+        command.reply(`Giveaways ${data.enable ? "enabled" : "disabled"} in channel <#${data.channel}>`);
       }
       return true;
     }
 
     if (command.command === "clear" && perms.check(msg, "admin.giveaway.clear")) {
       if (!this.entries.get("channel", false, {server: msg.channel.guild.id})) {
-        msg.channel.createMessage(msg.author.mention + ", " + "Sorry but there is no record of a giveaway ever existing.");
+        command.reply("Sorry but there is no record of a giveaway ever existing.");
         return true;
       }
       this.entries.set("entries", [], {server: msg.channel.guild.id});
-      msg.channel.createMessage(msg.author.mention + ", " + `Entries cleared`);
+      command.reply(`Entries cleared`);
     }
 
     if (command.command === "count" && perms.check(msg, "admin.giveaway.count")) {
       if (!this.entries.get("channel", false, {server: msg.channel.guild.id})) {
-        msg.channel.createMessage(msg.author.mention + ", " + "Sorry but there is no record of a giveaway ever existing.");
+        command.reply("Sorry but there is no record of a giveaway ever existing.");
         return true;
       }
       this.entries.count("entries", {server: msg.channel.guild.id}).then((entries) => {
-        msg.channel.createMessage(msg.author.mention + ", " + `${entries} entries so far.`);
+        command.reply(`${entries} entries so far.`);
       });
     }
 
     if (command.command === "draw" && perms.check(msg, "admin.giveaway.draw")) {
       if (!this.entries.get("channel", false, {server: msg.channel.guild.id})) {
-        msg.channel.createMessage(msg.author.mention + ", " + "Sorry but there is no record of a giveaway ever existing.");
+        command.reply("Sorry but there is no record of a giveaway ever existing.");
         return true;
       }
       let winnersCount = 1;
@@ -123,9 +123,9 @@ class giveaways {
               string += ` \`User <@${winnerId}>\`, `;
             }
           });
-          msg.channel.createMessage(msg.author.mention + ", " + string + "for winning!");
+          command.reply(string + "for winning!");
         } else {
-          msg.channel.createMessage(msg.author.mention + ", " + `No winner could be decided, make sure at least 1 person has entered.`);
+          command.reply(`No winner could be decided, make sure at least 1 person has entered.`);
         }
       });
     }
