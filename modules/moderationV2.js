@@ -118,8 +118,8 @@ class moderationV2 {
     this.client.on("guildMemberUpdate", this.memberUpdated);
     this.client.on("guildMemberAdd", this.memberAdded);
     this.client.on("guildMemberRemove", this.memberRemoved);
-    this.client.on("guildBanAdd", this.memberUnbanned);
-    this.client.on("guildBanRemove", this.memberBanned);
+    this.client.on("guildBanRemove", this.memberUnbanned);
+    this.client.on("guildBanAdd", this.memberBanned);
     this.client.on("userUpdate", this.userUpdate);
     this.client.on("voiceChannelJoin", this.voiceJoin);
     this.client.on("voiceChannelSwitch", this.voiceSwitch);
