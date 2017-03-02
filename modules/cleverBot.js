@@ -79,7 +79,7 @@ class cleverBot {
           console.log(err, response);
           if (err) {
             msg.channel.createMessage(`${msg.author.mention}, Encountered error "${response}" when trying to query cleverbot`).catch(perms.getAutoDeny(msg));
-            this.raven.captureException(err);
+            this.raven.captureException(response);
             return true;
           }
           msg.channel.createMessage(msg.author.mention + ", " + utils.clean(response)).catch(perms.getAutoDeny(msg));
