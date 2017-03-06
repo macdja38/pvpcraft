@@ -15,6 +15,9 @@ let config = {
     './README.md',
   ],
   dest: './docs',
+  jsdoc: {
+    plugins: ["node_modules/jsdoc-strip-async-await"]
+  },
   template: {
     // Template-specific options
     options: {
