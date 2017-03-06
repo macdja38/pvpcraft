@@ -393,6 +393,8 @@ class PvPCraft {
             resolve(true);
           })
         });
+      } else {
+        resolve(true);
       }
     })
   }
