@@ -687,7 +687,7 @@ class PvPCraft {
           let extra = {
             mod: mod,
             channel: msg.channel,
-            command: command,
+            command: command && command.toJSON ? command.toJSON() : command,
           };
           if (msg.channel.hasOwnProperty("guild")) {
             extra.guild = msg.channel.guild;
