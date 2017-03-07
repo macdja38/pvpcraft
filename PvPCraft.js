@@ -687,7 +687,7 @@ class PvPCraft {
           let extra = {
             mod: mod,
             channel: msg.channel,
-            command: command.toJSON(),
+            command: command,
           };
           if (msg.channel.hasOwnProperty("guild")) {
             extra.guild = msg.channel.guild;
@@ -696,7 +696,7 @@ class PvPCraft {
             console.error(error);
           }
           this.raven.captureException(error, {
-            user: msg.author,
+            user: (msg.hasOwnProperty("author") && msg.author.toJSON) ? msg.author.toJSON() : msg.author,
             extra,
           }, (id) => {
             if (error) console.error(error);

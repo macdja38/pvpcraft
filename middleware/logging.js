@@ -3,11 +3,12 @@
  */
 "use strict";
 
-let Utils = require('../lib/utils.js');
-let utils = new Utils();
+let utils = require('../lib/utils.js');
 
-let DB = require('../lib/database.js');
-let db = new DB();
+let StandardDB = require('../lib/StandardDB');
+
+// let DB = require('../lib/database.js');
+// let db = new DB();
 
 class logging {
   /**
@@ -28,16 +29,16 @@ class logging {
    */
   constructor(e) {
     this.client = e.client;
+    this.r = e.r;
   }
 
   /**
    * Get's called every message.
-   * @param msg
-   * @param perms
+   * @param {Message} msg
+   * @param {Permissions} perms
    */
   onMessage(msg, perms) {
-    //do something with the message like log it.
-    // db.logMessage(msg);
+    this.r.table("messages").insert({id: msg.id, channelID: msg.channel.id, content: msg.content}).run();
   }
 }
 
