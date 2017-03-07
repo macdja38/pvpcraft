@@ -266,16 +266,7 @@ class moderationV2 {
     }
 
     if (command.command === "purge" && perms.check(msg, "moderation.tools.purge")) {
-      let channel;
-      if (/<#\d+>/.test(command.options.channel)) {
-        channel = msg.channel.guild.channels.get(command.options.channel.match(/<#(\d+)>/)[1]);
-        if (!channel) {
-          msg.channel.createMessage(msg.author.mention + ", Cannot find that channel.")
-        }
-        return true;
-      } else {
-        channel = msg.channel;
-      }
+      let channel = command.options.channel ? command.options.channel : msg.channel;
       let options = {};
       if (/<@!?\d+>/.test(command.options.user)) {
         let user = msg.channel.guild.members.get(command.options.user.match(/<@!?(\d+)>/)[1]);
