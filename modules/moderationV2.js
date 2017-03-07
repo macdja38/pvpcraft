@@ -152,13 +152,14 @@ class moderationV2 {
       try {
         return callable.call(this, ...args);
       } catch (err) {
-        console.error(err);
         if (this.raven) {
           this.raven.captureException(err, {
             extra: {
               args: args,
             }
           });
+        } else {
+          console.error(err);
         }
         return null;
       }
@@ -337,16 +338,17 @@ class moderationV2 {
           channel.deleteMessages(messagesToPurge.map(m => m.id)).then(() => {
             totalPurged += messagesToPurge.length;
           }).catch((error) => {
-            if (error.response.body.code === 50013) {
-              errorMessage = error.response.body.message;
+            let responseCode = JSON.parse(error.response).code;
+            if (responseCode === 50013) {
+              errorMessage = error.response;
               done = true;
               purgeQueue = [];
               updateStatus("```xl\ndiscord permission Manage Messages required to purge messages.```");
-            } else if (error.response.status === 429) {
+            } else if (responseCode === 429) {
               purgeQueue = purgeQueue.concat(messagesToPurge);
             } else {
               console.error(error);
-              console.error(error.response.body);
+              console.error(error.response);
             }
           })
         } else if (done) {
@@ -481,19 +483,6 @@ class moderationV2 {
       }
       if (!channel) return;
       this.messageSender.sendQueuedMessage(channel, fallbackMessage, payload);
-    })
-  }
-
-  sendMessage(eventName, message, serverId) {
-    this.feeds.find(`moderation.${eventName}`, serverId).forEach((channel) => {
-      channel = this.client.channels.get("id", channel);
-      if (channel) {
-        this._slowSender.sendMessage(channel, message, (error) => {
-          if (error) {
-            console.error(error);
-          }
-        });
-      }
     })
   }
 
