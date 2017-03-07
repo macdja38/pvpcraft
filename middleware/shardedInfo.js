@@ -243,7 +243,7 @@ class shardedInfo {
     try {
       if (command.command === "getshardedinfo") {
         if (!this._standardDB.data) {
-          msg.channel.createMessage("Sorry db connection not ready yet");
+          command.createMessage("Sorry db connection not ready yet");
           return true;
         }
         let serverData = [];
@@ -258,7 +258,7 @@ class shardedInfo {
         let connections = serverData.map(s => s.connections).reduce((total, num) => total + num, 0);
         let playing = serverData.map(s => s.playing).reduce((total, num) => total + num, 0);
         let users = serverData.map(s => s.users).reduce((total, num) => total + num, 0);
-        msg.channel.createMessage({
+        command.createMessage({
           embed: {
             title: `Status info`,
             description: `\`\`\`xl\nshards online: ${shardsOnline}/${process.env.shards || 1}\n` +
