@@ -137,6 +137,7 @@ class Warframe {
                   try {
                     let guildID = this.client.channelGuildMap[server.channel];
                     let guild = this.client.guilds.get(guildID);
+                    if (!guild) return;
                     let channel = guild.channels.get(server.channel);
                     if (!channel || !server.tracking === true) return;
                     let things = [];
