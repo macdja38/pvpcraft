@@ -100,7 +100,7 @@ class permissionsManager {
         else {
           //user has not specified channel, assume server wide
           if (!perms.checkAdminServer(msg) && this.config.get("permissions", {admins: []}).admins.indexOf(msg.author.id) < 0) {
-            msg.channel.createMessage(`${msg.author.mention}, Discord permission \`Admin\` Required`);
+            command.reply("Discord permission \`Admin\` Required");
             return true;
           }
           channel = "*";

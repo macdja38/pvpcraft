@@ -61,7 +61,7 @@ class minecraft {
         }
         else {
           let description = res.description;
-          msg.channel.createMessage({
+          command.createMessage({
             embed: {
               title: `Server info of ${utils.clean(`${address}:${port}`)}`,
               fields: [{
@@ -97,7 +97,7 @@ class minecraft {
         command.reply("usage `" + command.prefix + "mcavatar <minecraft username>`");
         return true;
       }
-      msg.channel.createMessage({
+      command.createMessageAutoDeny({
         embed: {
           title: `Avatar of ${utils.clean(command.args[0])}`,
           thumbnail: {url: `https://mcapi.ca/avatar/2d/${command.args[0]}/100/${((command.flags.includes("b")) ? "false" : "true")}`},
@@ -111,7 +111,7 @@ class minecraft {
         command.reply("usage `" + command.prefix + "mcskin <minecraft username>`");
         return true;
       }
-      msg.channel.createMessage({
+      command.createMessageAutoDeny({
         embed: {
           title: `Skin of ${utils.clean(command.args[0])}`,
           thumbnail: {url: `https://visage.surgeplay.com/full/404/${command.args[0]}.png`},
