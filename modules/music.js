@@ -166,9 +166,9 @@ class music {
           this.init(id, msg, command, perms).then(() => {
             let queueCount = perms.check(msg, "music.songcount", {type: "number"});
             if (typeof(queueCount === "number")) {
-              this.boundChannels[id].enqueue(msg, command.args, queueCount);
+              this.boundChannels[id].enqueue(msg, command, command.args, queueCount);
             } else {
-              this.boundChannels[id].enqueue(msg, command.args);
+              this.boundChannels[id].enqueue(msg, command, command.args);
             }
           });
         } else {
@@ -181,9 +181,9 @@ class music {
         }
         let queueCount = perms.check(msg, "music.songcount", {type: "number"});
         if (typeof(queueCount === "number")) {
-          this.boundChannels[id].enqueue(msg, command.args, queueCount)
+          this.boundChannels[id].enqueue(msg, command, command.args, queueCount)
         } else {
-          this.boundChannels[id].enqueue(msg, command.args)
+          this.boundChannels[id].enqueue(msg, command, command.args)
         }
       }
       return true;

@@ -48,7 +48,7 @@ class utilities {
       let guild = msg.channel.guild;
       let botCount = guild.members.filter(m => m.bot).length;
       let owner = guild.members.get(guild.ownerID);
-      msg.channel.createMessage({
+      command.createMessageAutoDeny({
         embed: {
           title: `Server Info for ${utils.clean(msg.channel.guild.name)}`,
           description: `Id: ${guild.id}\n` +
@@ -80,7 +80,7 @@ class utilities {
         }
         if (member) {
           let comaUserNameCodes = [...member.username].map(char => char.charCodeAt(0)).join(", ");
-          msg.channel.createMessage({
+          command.createMessageAutoDeny({
             embed: {
               title: `User Info for ${utils.clean(member.username)}`,
               description:
@@ -99,13 +99,13 @@ class utilities {
           string += "Could not find **" + utils.clean(arg) + "**.\n";
         }
       }
-      if (string !== "") msg.channel.createMessage(string);
+      if (string !== "") command.createMessageAutoDeny(string);
       return true;
     }
 
     if ((command.command === 'ping') && perms.check(msg, 'utils.ping')) {
       let t1 = now();
-      msg.channel.createMessage("Testing Ping").then((message) => {
+      command.createMessageAutoDeny("Testing Ping").then((message) => {
         let t2 = now();
         this.client.editMessage(message.channel.id, message.id, "Ping is `" + (t2 - t1) + "`ms!");
       });
@@ -114,12 +114,12 @@ class utilities {
 
     //http://lmgtfy.com/?q=How+to+hug
     if ((command.command === 'lmgtfy') && perms.check(msg, 'utils.lmgtfy')) {
-      msg.channel.createMessage(`http://lmgtfy.com/?q=${command.args.join("+")}`);
+      command.createMessageAutoDeny(`http://lmgtfy.com/?q=${command.args.join("+")}`);
       return true;
     }
 
     if ((command.command === 'status') && perms.check(msg, 'utils.status')) {
-      msg.channel.createMessage({
+      command.createMessageAutoDeny({
         embed: {
           title: `Status info`,
           description:

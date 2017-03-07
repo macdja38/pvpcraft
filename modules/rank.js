@@ -76,8 +76,8 @@ class rank {
 
       if (command.args[0] === "add" && perms.check(msg, "admin.rank.add")) {
         if (command.args.length < 2 || (!command.options.group && !command.options.role)) {
-          msg.channel.createMessage(`Usage \`${utils.clean(command.prefix)}rank add <simpleName> --role <role>\``);
-          return;
+          command.createMessage(`Usage \`${utils.clean(command.prefix)}rank add <simpleName> --role <role>\``);
+          return true;
         }
         let roleId;
         if (command.options.group && !command.options.role) {
@@ -94,7 +94,7 @@ class rank {
             roleId = roleId.id
           }
           else {
-            msg.channel.createMessage(msg.author.mention + ", Could not find role with that name, please try a mention or name, names are case sensitive");
+            command.replyAutoDeny("Could not find role with that name, please try a mention or name, names are case sensitive");
             return true;
           }
           let roleName = command.args[1].toLowerCase();
@@ -139,7 +139,7 @@ class rank {
           }
         }
         if (coloredRolesList != "") {
-          msg.channel.createMessage(`Roles you can join are highlighted in green\`\`\`diff\n${coloredRolesList}\`\`\``)
+          command.createMessageAutoDeny(`Roles you can join are highlighted in green\`\`\`diff\n${coloredRolesList}\`\`\``)
             .then(this.possiblyDelete(msg));
         } else {
           command.replyAutoDeny(`No ranks are setup to be join-able.`)
@@ -173,7 +173,7 @@ class rank {
         let role = msg.channel.guild.roles.get(roles[rankToJoin]);
         if (role) {
           msg.channel.guild.addMemberRole(msg.author.id, role.id).then(() => {
-            msg.channel.createMessage(msg.author.mention + ", :thumbsup::skin-tone-2:")
+            command.replyAutoDeny(":thumbsup::skin-tone-2:")
               .then(this.possiblyDelete(msg));
           }).catch((error) => {
             if (error) {
