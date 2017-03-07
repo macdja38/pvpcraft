@@ -414,7 +414,7 @@ class moderationV2 {
       }
       cb(newMessages, false);
       if (count > 0 && newMessagesLength === 100) {
-        options.before = highestMessage;
+        options.before = highestMessage.id;
         process.nextTick(() => {
           this.fetchMessages(channel, count, options, cb)
         });
