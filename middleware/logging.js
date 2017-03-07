@@ -38,6 +38,7 @@ class logging {
    * @param {Permissions} perms
    */
   onMessage(msg, perms) {
+    if (!msg.author || msg.author.bot) return;
     this.r.table("messages").insert({id: msg.id, channelID: msg.channel.id, content: msg.content}).run();
   }
 }
