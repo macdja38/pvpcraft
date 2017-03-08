@@ -81,7 +81,8 @@ class music {
         delete this.boundChannels[id];
       });
     });
-    returnPromise.catch(() => {});
+    returnPromise.catch(() => {
+    });
     return returnPromise;
   }
 
@@ -95,7 +96,11 @@ class music {
               // does not matter if it fails to send the message, we leave anyway
             })
             .then(() => {
-              channel.destroy();
+              try {
+                channel.destroy();
+              } catch (error) {
+
+              }
               delete this.boundChannels[id];
             })
         }
@@ -111,7 +116,11 @@ class music {
     for (let i in this.boundChannels) {
       if (this.boundChannels.hasOwnProperty(i))
         this.boundChannels[i].text.createMessage("Sorry for the inconvenience bot the bot is restarting or disconnected from discord.");
-      this.boundChannels[i].destroy();
+      try {
+        this.boundChannels[i].destroy();
+      } catch (err) {
+
+      }
       delete this.boundChannels[i];
     }
   }
@@ -143,7 +152,11 @@ class music {
 
     if (command.command === "destroy" && perms.check(msg, "music.destroy")) {
       if (this.boundChannels.hasOwnProperty(id)) {
-        this.boundChannels[id].destroy();
+        try {
+          this.boundChannels[id].destroy();
+        } catch (error) {
+
+        }
         command.replyAutoDeny("Disconnecting from voice chat and unbinding from text chat.");
         delete this.boundChannels[id];
       } else {
