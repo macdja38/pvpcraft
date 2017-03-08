@@ -266,7 +266,7 @@ class moderationV2 {
     }
 
     if (command.command === "purge" && perms.check(msg, "moderation.tools.purge")) {
-      let channel = command.options.channel ? command.options.channel : msg.channel;
+      let channel = command.channel ? command.channel : msg.channel;
       let options = {};
       if (/<@!?\d+>/.test(command.options.user)) {
         let user = msg.channel.guild.members.get(command.options.user.match(/<@!?(\d+)>/)[1]);
