@@ -72,7 +72,7 @@ class music {
         config: this.config
       });
       command.replyAutoDeny("Binding to **" + voiceChannel.name + "** and **" + msg.channel.name + "**");
-      this.boundChannels[id].init(msg).then(() => {
+      return this.boundChannels[id].init(msg).then(() => {
         command.replyAutoDeny(`Bound successfully use ${command.prefix}destroy to unbind it.`);
         resolve(this.boundChannels[id]);
       }).catch(error => {
