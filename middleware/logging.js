@@ -39,7 +39,13 @@ class logging {
    */
   onMessage(msg, perms) {
     if (!msg.author || msg.author.bot) return;
-    this.r.table("messages").insert({id: msg.id, channel_id: msg.channel.id, author_id: msg.author.id, content: msg.content}).run();
+    this.r
+      .table("messages")
+      .insert(
+        {id: msg.id, channel_id: msg.channel.id, author_id: msg.author.id, content: msg.content},
+        {durability: "soft", returnChanges: false}
+      )
+      .run();
   }
 }
 
