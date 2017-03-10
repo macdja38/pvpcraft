@@ -140,6 +140,7 @@ class Warframe {
                     if (!guild) return;
                     let channel = guild.channels.get(server.channel);
                     if (!channel || !server.tracking === true) return;
+                    if (channel.type != 0) return; // return if it's a voice channel
                     let things = [];
                     let madeMentionable = [];
                     for (let thing in server.items) {
