@@ -21,6 +21,7 @@
     "google-images": "^2.0.0",
     "jsdoc": "^3.4.3",
     "jsdoc-strip-async-await": "^0.1.0",
+    "longjohn": "^0.2.12",
     "mc-ping-updated": "^0.1.0",
     "performance-now": "^2.1.0",
     "pokedex-promise-v2": "^3.0.0",
