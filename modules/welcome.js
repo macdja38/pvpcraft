@@ -27,41 +27,54 @@ class welcome {
     this.config = e.configDB;
     this.raven = e.raven;
 
-    this.onJoin = (server, user) => {
-      //TODO: once config loader v2 is done make this configurable.
-      if (server.id == "77176186148499456") {
-        this.client.createMessage("171382498020950016",
-          `Hop to it @here, ${utils.clean(user.username)} Just joined ${utils.clean(server.name)} ` +
-          `announce it in <#77176186148499456>\n\`\`\`\nWelcome **${utils.clean(user.username)}**!\n\`\`\``
-        );
-      }
-      if (server.id == "191052428228034560") {
-        this.client.createMessage("215030357727117313",
-          `Hop to it @here, <@${user.id}> baru saja bergabung di ${utils.clean(server.name)}, umumkan di  <#191052428228034560>
-\`\`\`Selamat datang <@${user.id}> di **Warframe Indonesia Community**!\`\`\``
-        );
-      }
-      let welcomeInfo = this.config.get("welcome", {}, {server: server.id});
-      let pm = welcomeInfo.private;
-      if (welcomeInfo.message) {
-        let welcomeChannel;
-        if (pm !== true) {
-          if (welcomeInfo.channel) {
-            welcomeChannel = server.channels.get(welcomeInfo.channel);
-          }
-          if (!welcomeChannel) {
-            welcomeChannel = server.defaultChannel;
-          }
-        } else {
-          welcomeChannel = user;
+    /**
+     *
+     * @param {Guild} server
+     * @param {Member} user
+     */
+    this.onJoin = async (server, user) => {
+      try {
+        //TODO: once config loader v2 is done make this configurable.
+        if (server.id == "77176186148499456") {
+          this.client.createMessage("171382498020950016",
+            `Hop to it @here, ${utils.clean(user.username)} Just joined ${utils.clean(server.name)} ` +
+            `announce it in <#77176186148499456>\n\`\`\`\nWelcome **${utils.clean(user.username)}**!\n\`\`\``
+          );
         }
-        let message = welcomeInfo.message.replace(/\$user/gi, utils.clean(user.username)).replace(/\$mention/gi, user.mention).replace(/\$server/gi, utils.clean(server.name));
-        if (welcomeInfo.delay && welcomeInfo.delay > 1000) {
-          setTimeout(() => {
-            this.client.createMessage(welcomeChannel.id, message);
-          }, welcomeInfo.delay);
+        if (server.id == "191052428228034560") {
+          this.client.createMessage("215030357727117313",
+            `Hop to it @here, <@${user.id}> baru saja bergabung di ${utils.clean(server.name)}, umumkan di  <#191052428228034560>
+\`\`\`Selamat datang <@${user.id}> di **Warframe Indonesia Community**!\`\`\``
+          );
+        }
+        let welcomeInfo = this.config.get("welcome", {}, {server: server.id});
+        let pm = welcomeInfo.private;
+        if (welcomeInfo.message) {
+          let welcomeChannel;
+          if (pm !== true) {
+            if (welcomeInfo.channel) {
+              welcomeChannel = server.channels.get(welcomeInfo.channel);
+            }
+            if (!welcomeChannel) {
+              welcomeChannel = server.defaultChannel;
+            }
+          } else {
+            welcomeChannel = await this.client.getDMChannel(user.id);
+          }
+          let message = welcomeInfo.message.replace(/\$user/gi, utils.clean(user.username)).replace(/\$mention/gi, user.mention).replace(/\$server/gi, utils.clean(server.name));
+          if (welcomeInfo.delay && welcomeInfo.delay > 1000) {
+            setTimeout(() => {
+              this.client.createMessage(welcomeChannel.id, message);
+            }, welcomeInfo.delay);
+          } else {
+            this.client.createMessage(welcomeChannel.id, message)
+          }
+        }
+      } catch (error) {
+        if (this.raven) {
+          this.raven.captureException(error);
         } else {
-          this.client.createMessage(welcomeChannel.id, message)
+          console.error(error);
         }
       }
 
