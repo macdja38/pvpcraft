@@ -34,6 +34,7 @@ class evaluate {
    * @param {PvPClient} e.pvpClient PvPCraft client library instance
    */
   constructor(e) {
+    this.e = e;
     this.client = e.client;
     this.modules = e.modules;
     this.config = e.config;

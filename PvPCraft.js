@@ -55,6 +55,7 @@ const request = require("request");
 const SlowSender = require("./lib/SlowSender");
 const Feeds = require("./lib/feeds");
 const R = require("rethinkdbdash");
+const longJohn = require("longjohn");
 
 let lastMessage = Date.now();
 
@@ -365,6 +366,7 @@ class PvPCraft {
         console.log("Sentry Started".yellow);
         git.long((commit) => {
           git.branch((branch) => {
+            this.git = {commit, branch};
             let ravenConfig = {
               release: commit + "-" + branch,
               transport: new ravenClient.transports.HTTPSTransport({rejectUnauthorized: false}),
@@ -469,6 +471,7 @@ class PvPCraft {
       client: this.client,
       config: this.fileConfig,
       raven: this.raven,
+      git: this.git,
       auth: this.fileAuth,
       configDB: this.configDB,
       r: this.r,
@@ -522,6 +525,7 @@ class PvPCraft {
           client: this.client,
           config: this.fileConfig,
           raven: this.raven,
+          git: this.git,
           auth: this.fileAuth,
           configDB: this.configDB,
           r: this.r,

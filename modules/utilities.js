@@ -28,6 +28,7 @@ class utilities {
    * @param {PvPClient} e.pvpClient PvPCraft client library instance
    */
   constructor(e) {
+    this.git = e.git;
     this.client = e.client;
     this.config = e.config;
   }
@@ -127,7 +128,8 @@ class utilities {
             `CPU: ${os.loadavg()[0] / numCPUs * 100}%\n` +
             `LoadAverage ${os.loadavg()}\n` +
             `Memory usage: ${process.memoryUsage().heapTotal / 1000000}MB\n` +
-            `RSS: ${process.memoryUsage().rss / 1000000}MB\n\`\`\``,
+            `RSS: ${process.memoryUsage().rss / 1000000}MB\n\`\`\`` +
+            `Version: [current](https://github.com/macdja38/pvpcraft/commit/${this.git.commit}), [outdated by](https://github.com/firehol/netdata/compare/${this.git.commit}...${this.git.branch})`,
           thumbnail: {url: this.client.user.avatarURL},
         }
       });
