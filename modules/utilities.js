@@ -129,7 +129,7 @@ class utilities {
             `LoadAverage ${os.loadavg()}\n` +
             `Memory usage: ${process.memoryUsage().heapTotal / 1000000}MB\n` +
             `RSS: ${process.memoryUsage().rss / 1000000}MB\n\`\`\`` +
-            `Version: [current](https://github.com/macdja38/pvpcraft/commit/${this.git.commit}), [outdated by](https://github.com/firehol/netdata/compare/${this.git.commit}...${this.git.branch})`,
+            `Version: [current](https://github.com/macdja38/pvpcraft/commit/${this.git.commit}), [outdated by](https://github.com/macdja38/pvpcraft/compare/${this.git.commit}...${this.git.branch})`,
           thumbnail: {url: this.client.user.avatarURL},
         }
       });
