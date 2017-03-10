@@ -183,7 +183,7 @@ class music {
             } else {
               this.boundChannels[id].enqueue(msg, command, command.args);
             }
-          });
+          }).catch(() => {});
         } else {
           command.replyAutoDeny(`Please have someone with the permission node \`music.init\` run ${command.prefix}init`)
         }
