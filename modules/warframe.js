@@ -537,16 +537,17 @@ class Warframe {
       });
     }
 
-    else if (command.commandnos === 'rift' || command.commandnos === 'fissure' && perms.check(msg, "warframe.rift")) {
+    else if ((command.commandnos === 'rift' || command.commandnos === 'fissure') && perms.check(msg, "warframe.rift")) {
       return worldState.get().then((state) => {
         if (state.ActiveMissions) {
           let string = "";
           for (let mission of state.ActiveMissions) {
             let node = parseState.getNode(mission.Node);
+            console.log(node);
             if (node) {
               let nodeFaction = parseState.getFaction(node.faction);
-              let nodeMission = parseState.getMissionType(node.missionType);
-              string += `\`\`\`xl\n${parseState.getTierName(mission.Modifier).name} (${mission.Modifier.slice(4)}) rift active on ${parseState.getNodeName(mission.Node)} (${nodeFaction} ${nodeMission}) for ${utils.secondsToTime(mission.Expiry.sec - state.Time)}\n\`\`\``;
+              let nodeMission = parseState.getMissionType(node.mission_type);
+              string += `\`\`\`xl\n${parseState.getTierName(mission.Modifier).name} (${mission.Modifier.slice(4)}) rift active on ${parseState.getNodeName(mission.Node)} (${nodeFaction} ${nodeMission}) for ${parseState.toTimeDifference(state, mission.Expiry)}\n\`\`\``;
             } else {
               string += `\`\`\`xl\n${parseState.getTierName(mission.Modifier).name} (${mission.Modifier.slice(4)}) rift active for ${utils.secondsToTime(mission.Expiry.sec - state.Time)}\n\`\`\``;
             }
