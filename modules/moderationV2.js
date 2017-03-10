@@ -329,7 +329,10 @@ class moderationV2 {
           channel.deleteMessages(messagesToPurge.map(m => m.id)).then(() => {
             totalPurged += messagesToPurge.length;
           }).catch((error) => {
-            let responseCode = JSON.parse(error.response).code;
+            let responseCode;
+            if (error.response) {
+              responseCode = JSON.parse(error.response).code;
+            }
             if (responseCode === 50013) {
               errorMessage = error.response;
               done = true;
@@ -338,6 +341,9 @@ class moderationV2 {
             } else if (responseCode === 429) {
               purgeQueue = purgeQueue.concat(messagesToPurge);
             } else {
+              if (this.raven) {
+                this.raven.captureException(error);
+              }
               console.error(error);
               console.error(error.response);
             }
