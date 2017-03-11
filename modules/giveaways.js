@@ -3,8 +3,6 @@
  */
 "use strict";
 
-let utils = require('../lib/utils');
-
 const SlowSender = require('../lib/SlowSender');
 
 const ConfigDB = require('../lib/ConfigDB');
