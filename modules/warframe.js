@@ -56,20 +56,7 @@ class Warframe {
     //noinspection JSUnresolvedVariable
     this.r = e.r;
     this.alerts = [];
-    this.rebuildAlerts = () => {
-      this.alerts = [];
-      for (let item in this.config.data) {
-        if (this.config.data.hasOwnProperty(item) && this.config.data[item].hasOwnProperty("warframeAlerts")) {
-          if (this.client.channelGuildMap.hasOwnProperty(this.config.data[item]["warframeAlerts"].channel)) {
-            //noinspection JSUnresolvedVariable
-            console.log("Thing", this.config.data[item].warframeAlerts);
-            this.alerts.push(this.config.data[item].warframeAlerts);
-          } else {
-            //TODO: notify the server owner their mod alerts channel has been removed and that //setalerts false will make that permanent.
-          }
-        }
-      }
-    };
+    this.rebuildAlerts = this.rebuildAlerts.bind(this);
     let twitter_auth;
     if (master) {
       twitter_auth = e.auth.get("twitter", false);
@@ -205,6 +192,21 @@ class Warframe {
     });
   }
 
+  rebuildAlerts() {
+    this.alerts = [];
+    for (let item in this.config.data) {
+      if (this.config.data.hasOwnProperty(item) && this.config.data[item].hasOwnProperty("warframeAlerts")) {
+        if (this.client.channelGuildMap.hasOwnProperty(this.config.data[item]["warframeAlerts"].channel)) {
+          //noinspection JSUnresolvedVariable
+          console.log("Thing", this.config.data[item].warframeAlerts);
+          this.alerts.push(this.config.data[item].warframeAlerts);
+        } else {
+          //TODO: notify the server owner their mod alerts channel has been removed and that //setalerts false will make that permanent.
+        }
+      }
+    }
+  }
+
   onReady() {
     this.rebuildAlerts();
     if (this.twitter && master) {
@@ -223,9 +225,9 @@ class Warframe {
         this.stream.stop();
       });
     }
-    if (this.cursor) {
+    /*if (this.cursor) {
       this.cursor.close();
-    }
+    }*/
   }
 
   static getCommands() {
