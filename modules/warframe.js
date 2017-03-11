@@ -299,12 +299,10 @@ class Warframe {
         let rankToJoin = command.args[1].toLowerCase();
         let role = msg.channel.guild.roles.get(roles[rankToJoin]);
         if (role) {
-          msg.channel.guild.addMemberRole(msg.author.id, role.id, (error) => {
-            if (error) {
-              command.replyAutoDeny(`Error ${error} promoting ${utils.removeBlocks(msg.author.username)} try redefining your rank and making sure the bot has enough permissions.`)
-            } else {
-              command.replyAutoDeny(":thumbsup::skin-tone-2:");
-            }
+          msg.channel.guild.addMemberRole(msg.author.id, role.id).catch((error) => {
+            command.replyAutoDeny(`Error ${error} promoting ${utils.removeBlocks(msg.author.username)} try redefining your rank and making sure the bot has enough permissions.`)
+          }).then(() => {
+            command.replyAutoDeny(":thumbsup::skin-tone-2:");
           })
         } else {
           command.replyAutoDeny(`Role could not be found, have an administrator use \`${command.prefix}tracking --add <item>\` to add it.`);
@@ -314,17 +312,15 @@ class Warframe {
       if (command.args[0] === "leave" && perms.check(msg, "warframe.alerts.leave")) {
         let roles = this.config.get("warframeAlerts", {items: {}}, {server: msg.channel.guild.id}).items;
         if (!command.args[1] || !roles[command.args[1]]) {
-          command.reply(`Please supply a rank to leave using \`${command.prefix}alerts leave \<rank\>\`, for a list of items use \`${command.prefix}alerts list\``);
+          command.replyAutoDeny(`Please supply a rank to leave using \`${command.prefix}alerts leave \<rank\>\`, for a list of items use \`${command.prefix}alerts list\``);
           return true;
         }
         let role = msg.channel.guild.roles.get(roles[command.args[1]]);
         if (role) {
-          msg.channel.guild.removeMemberRole(msg.author.id, role.id, (error) => {
-            if (error) {
-                command.replyAutoDeny(`Error ${error} demoting ${utils.removeBlocks(msg.author.username)} try redefining your rank and making sure the bot has enough permissions.`)
-            } else {
-              command.reply(":thumbsup::skin-tone-2:");
-            }
+          msg.channel.guild.removeMemberRole(msg.author.id, role.id).catch((error) => {
+            command.replyAutoDeny(`Error ${error} demoting ${utils.removeBlocks(msg.author.username)} try redefining your rank and making sure the bot has enough permissions.`)
+          }).then(() => {
+            command.replyAutoDeny(":thumbsup::skin-tone-2:");
           })
         } else {
           command.reply(`Role could not be found, have an administrator use \`${command.prefix}alerts add <item>\` to add it.`);
@@ -422,7 +418,7 @@ class Warframe {
             return true;
           }
           let roleName = command.args[1].toLowerCase();
-          let role = msg.channel.guild.roles.find(r  => r.name.toLowerCase() === roleName);
+          let role = msg.channel.guild.roles.find(r => r.name.toLowerCase() === roleName);
           if (role) {
             msg.channel.guild.deleteRole(role.id).then(() => {
               delete config.items[command.args[1]];
