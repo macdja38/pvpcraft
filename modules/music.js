@@ -183,7 +183,8 @@ class music {
             } else {
               this.boundChannels[id].enqueue(msg, command, command.args);
             }
-          }).catch(() => {});
+          }).catch(() => {
+          });
         } else {
           command.replyAutoDeny(`Please have someone with the permission node \`music.init\` run ${command.prefix}init`)
         }
@@ -204,48 +205,41 @@ class music {
 
 
     if ((command.command === "next" || command.command === "skip") && (perms.check(msg, "music.voteskip") || perms.check(msg, "music.forceskip"))) {
-      if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].ready) {
-        if (this.boundChannels[id].currentVideo) {
-          let index = command.args[0] ? parseInt(command.args[0]) - 1 : -1;
-          let isForced = (perms.check(msg, "music.forceskip") && command.flags.indexOf('f') > -1);
-          let video;
+      if (this.possiblySendNotConnected(msg, command)) return true;
+      if (this.possiblySendUserNotInVoice(msg, command)) return true;
+      if (!this.boundChannels[id].currentVideo) {
+        command.replyAutoDeny("No songs to skip, queue a song using //play <youtube url of video or playlist>");
+        return true;
+      }
+      let index = command.args[0] ? parseInt(command.args[0]) - 1 : -1;
+      let isForced = (perms.check(msg, "music.forceskip") && command.flags.indexOf('f') > -1);
+      let video;
+      if (index === -1) {
+        video = this.boundChannels[id].currentVideo;
+      } else if (this.boundChannels[id].queue.hasOwnProperty(index)) {
+        video = this.boundChannels[id].queue[index];
+      } else {
+        command.replyAutoDeny("Could not find the song");
+        return true;
+      }
+      if (video.votes.indexOf(msg.author.id) < 0 || isForced) {
+        video.votes.push(msg.author.id);
+        if (video.votes.length > (this.boundChannels[id].voice.voiceMembers.size / 3) || isForced) {
+          command.replyAutoDeny("Removing " + video.prettyPrint() + " From the queue");
           if (index === -1) {
-            video = this.boundChannels[id].currentVideo;
-          }
-          else if (this.boundChannels[id].queue.hasOwnProperty(index)) {
-            video = this.boundChannels[id].queue[index];
+            this.boundChannels[id].skipSong();
           }
           else {
-            command.replyAutoDeny("Could not find the song");
-            return true;
-          }
-          if (video.votes.indexOf(msg.author.id) < 0 || isForced) {
-            video.votes.push(msg.author.id);
-            if (video.votes.length > (this.boundChannels[id].voice.voiceMembers.size / 3) || isForced) {
-              command.replyAutoDeny("Removing " + video.prettyPrint() + " From the queue");
-              if (index === -1) {
-                this.boundChannels[id].skipSong();
-              }
-              else {
-                this.boundChannels[id].queue.splice(index, 1);
-              }
-            }
-            else {
-              command.replyAutoDeny(video.votes.length + " / " + (Math.floor(this.boundChannels[id].voice.voiceMembers.size / 3) + 1) + " votes needed to skip " +
-                video.prettyPrint());
-            }
-          }
-          else {
-            command.replyAutoDeny("Sorry, you may only vote to skip once per song.");
-            return true;
+            this.boundChannels[id].queue.splice(index, 1);
           }
         }
         else {
-          command.replyAutoDeny("No songs to skip, queue a song using //play <youtube url of video or playlist>");
-          return true;
+          command.replyAutoDeny(video.votes.length + " / " + (Math.floor(this.boundChannels[id].voice.voiceMembers.size / 3) + 1) + " votes needed to skip " +
+            video.prettyPrint());
         }
-      } else {
-        command.replyAutoDeny("Please bind a channel first using " + command.prefix + "init");
+      }
+      else {
+        command.replyAutoDeny("Sorry, you may only vote to skip once per song.");
         return true;
       }
       return true;
@@ -398,6 +392,26 @@ class music {
       return false;
     }
     command.createMessageAutoDeny("Sorry, Bot is not currently in a voice channel use " + command.prefix + "init while in a voice channel to bind it.");
+    return true;
+  }
+
+  /**
+   *
+   * @param {Message} msg
+   * @param {Command} command
+   * @returns {boolean}
+   */
+  possiblySendUserNotInVoice(msg, command) {
+    if (msg.member.voiceState.channelID) {
+      let player = this.boundChannels[msg.channel.guild.id];
+      if (!player || !player.connection || msg.member.voiceState.channelID === player.connection.channelID) {
+        return false;
+      } else {
+        command.createMessageAutoDeny("Sorry but you must be in the same voice channel as the bot to use this command.");
+        return true
+      }
+    }
+    command.createMessageAutoDeny("Sorry but you must be in a voice channel to use this command.");
     return true;
   }
 }
