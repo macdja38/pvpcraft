@@ -59,7 +59,6 @@ const R = require("rethinkdbdash");
 let lastMessage = Date.now();
 
 
-
 /**
  * log blocking events
  setTimeout(() => {
@@ -702,11 +701,15 @@ class PvPCraft {
           this.raven.captureException(error, {
             user: (msg.hasOwnProperty("author") && msg.author.toJSON) ? msg.author.toJSON() : msg.author,
             extra,
-          }, (id) => {
-            if (error) console.error(error);
-            else {
+          }, (ravenError, id) => {
+            if (ravenError) {
+              console.error("Error reporting error to sentry:\n", ravenError, "Error sentry was trying to report:\n", ravenError);
+            } else {
               msg.channel.createMessage("Sorry their was an error processing your command. The error is ```" + error +
                 "``` reference code `" + id + "`");
+            }
+            if (process.env.dev == "true") {
+              console.error(error);
             }
           });
         } else {
