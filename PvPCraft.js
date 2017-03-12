@@ -55,7 +55,6 @@ const request = require("request");
 const SlowSender = require("./lib/SlowSender");
 const Feeds = require("./lib/feeds");
 const R = require("rethinkdbdash");
-const longJohn = require("longjohn");
 
 let lastMessage = Date.now();
 
