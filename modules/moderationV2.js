@@ -239,7 +239,7 @@ class moderationV2 {
         text += `\n**Error:** ${error}`;
         this.sendHookedMessage(`action.${action}`, options, text, msg.channel.guild.id);
       });
-    command.reply(`${user || possibleId} has been ${action}ned!`);
+    command.reply(`${user ? user.mention : possibleId} has been ${action}ned!`);
   }
 
   /**
