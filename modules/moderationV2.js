@@ -1058,30 +1058,8 @@ function arrayOfTrues(object) {
 function findNewRoles(more, less) {
   for (let i of more) {
     if (!i) console.error(new Error("Found a null role 1?"));
-    else if (!roleIn(i, less)) {
+    else if (!less.includes(i)) {
       return i;
-    }
-  }
-  return false;
-}
-
-/**
- * Returns true if the role is found in the newRoles array
- * @param {Role} role
- * @param {Role[]} newRoles
- * @returns {boolean}
- */
-function roleIn(role, newRoles) {
-  for (let j of newRoles) {
-    if (!j) console.error(new Error("Found a null role"));
-    else if (j.hasOwnProperty("id")) {
-      if (role.id == j.id) {
-        return true;
-      }
-    } else {
-      if (role.id === j) {
-        return true;
-      }
     }
   }
   return false;
