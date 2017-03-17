@@ -389,7 +389,10 @@ class PvPCraft {
             });
 
             this.raven.on("error", function (e) {
-              console.error("Could not report event to sentry:", e);
+              if (process.env.dev == "true") {
+                console.error("Could not report an event to sentry:", e);
+              } else {
+                console.error("Could not report an event to sentry")
             });
             resolve(true);
           })
