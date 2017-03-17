@@ -392,7 +392,8 @@ class PvPCraft {
               if (process.env.dev == "true") {
                 console.error("Could not report an event to sentry:", e);
               } else {
-                console.error("Could not report an event to sentry")
+                console.error("Could not report an event to sentry");
+              }
             });
             resolve(true);
           })
