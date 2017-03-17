@@ -38,6 +38,7 @@ class evaluate {
     this.client = e.client;
     this.modules = e.modules;
     this.config = e.config;
+    this.r = e.r;
     this.configDB = e.configDB;
     this.pvpClient = e.pvpClient;
     this.messageSender = e.messageSender;

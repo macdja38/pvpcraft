@@ -55,6 +55,9 @@ const request = require("request");
 const SlowSender = require("./lib/SlowSender");
 const Feeds = require("./lib/feeds");
 const R = require("rethinkdbdash");
+if (process.env.dev == "true") {
+  require("longjohn");
+}
 
 let lastMessage = Date.now();
 
@@ -187,7 +190,7 @@ class PvPCraft {
   }
 
   registerPreReadyClientListeners() {
-    this.client.on("shardDisconnect", this.logShardUpdate.bind(this, "Disconnect"));
+    this.client.on("shardDisconnect", this.logShardUpdate.bind(this, "Shard Disconnect"));
     this.client.on("shardPreReady", this.logShardUpdate.bind(this, "preReady"));
     this.client.on("shardResume", this.logShardUpdate.bind(this, "Resume"));
     this.client.on("shardReady", this.logShardUpdate.bind(this, "Ready"));
@@ -231,7 +234,10 @@ class PvPCraft {
   }
 
   onDisconnect() {
-    console.log("Disconnect".red);
+    if (this.raven) {
+      this.raven.captureMessage("Disconnected", {level: "info"})
+    }
+    console.log("Disconnect event called".red);
     for (let i in this.moduleList) {
       if (this.moduleList.hasOwnProperty(i)) {
         if (this.moduleList[i].module.onDisconnect) {
@@ -381,7 +387,7 @@ class PvPCraft {
 
             this.raven.install(function () {
               console.log("This is thy sheath; there rust, and let me die.");
-              process.exit(1);
+              setTimeout(() => {process.exit(1)}, 1000);
             });
 
             this.raven.on("logged", function (e) {
@@ -423,11 +429,16 @@ class PvPCraft {
     }
     this.middlewareList = [];
     this.moduleList = [];
+    this.r.getPoolMaster().drain();
+    this.client.on("disconnect", () => {
+      console.log("Eris Logged out");
+      process.exit(0);
+    });
     this.client.disconnect({reconnect: false});
     setTimeout(() => {
       console.log("Bye");
       process.exit(0);
-    }, 4000);
+    }, 2000);
   }
 
   reload() {
