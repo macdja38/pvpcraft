@@ -219,7 +219,7 @@ class music {
     if ((command.command === "next" || command.command === "skip") && (perms.check(msg, "music.voteskip") || perms.check(msg, "music.forceskip"))) {
       if (this.possiblySendNotConnected(msg, command)) return true;
       if (this.possiblySendUserNotInVoice(msg, command)) return true;
-      return this.musicDB.queueLength(id).then(async (length) => {
+      return this.musicDB.queueLength(id).then(async(length) => {
         let index = command.args[0] ? parseInt(command.args[0]) - 1 : -1;
         if (index >= length) {
           command.replyAutoDeny("Not enough songs to skip, queue a song using //play <youtube url of video or playlist>");
@@ -229,7 +229,22 @@ class music {
         if (isForced) {
           command.replyAutoDeny(`Removing ${videoUtils.prettyPrint(await this.skipSongGetInfo(id, index))} From the queue`);
         } else {
-          return this.musicDB.addVote(id, index, msg.author.id).then(async (result) => {
+          let promise;
+          if (index < 0) {
+            if (!Array.isArray(this.currentSong.votes)) {
+              this.currentSong.votes = [];
+            }
+            if (this.currentSong.votes.includes(msg.author.id)) {
+              promise = Promise.resolve(false);
+            } else {
+              this.currentSong.votes.push(msg.author.id);
+              promise = Promise.resolve(this.currentsong.votes.length);
+            }
+            promise = Promise.resolve()
+          } else {
+            promise = this.musicDB.addVote(id, index, msg.author.id);
+          }
+          return promise.then(async(result) => {
             if (typeof result === "number") {
               let maxVotes = Math.floor((this.boundChannels[id].voice.voiceMembers.size / 3)) + 1;
               if (result >= maxVotes) {
@@ -390,13 +405,13 @@ class music {
    */
   skipSong(id, index) {
     if (index < 0) {
-      if(this.boundChannels.hasOwnProperty(id)) {
+      if (this.boundChannels.hasOwnProperty(id)) {
         let player = this.boundChannels[id];
         if (player.hasOwnProperty("currentVideo")) {
           player.skipSong();
           return Promise.resolve(player.currentVideo);
         } else {
-          return this.musicDB.spliceVideo(id, index+1);
+          return this.musicDB.spliceVideo(id, index + 1);
         }
       }
     }
