@@ -50,7 +50,7 @@ class music {
   }
 
   static getCommands() {
-    return ["init", "play", "skip", "list", "time", "pause", "resume", "volume", "shuffle", "next", "destroy", "logchannel", "link"];
+    return ["init", "play", "skip", "list", "time", "pause", "resume", "volume", "shuffle", "next", "destroy", "clear", "logchannel", "link"];
   }
 
   onReady() {
@@ -58,6 +58,42 @@ class music {
     if (!this.leaveChecker) {
       this.leaveChecker = setInterval(this.leaveUnused.bind(this), 60000);
     }
+    console.log(this.client.guilds.map(g => g.id));
+    return this.musicDB.getBoundChannels(this.client.guilds.map(g => g.id)).then((queues) => {
+      queues.forEach(queue => {
+        let guild = this.client.guilds.get(queue.id);
+        if (!guild) console.log(queue);
+        if (!guild) return;
+        let text = guild.channels.get(queue.text_id);
+        let voice = guild.channels.get(queue.voice_id);
+        if (text && voice && !this.boundChannels.hasOwnProperty(queue.id)) {
+          this.boundChannels[queue.id] = new Player({
+            client: this.client,
+            voiceChannel: voice,
+            textChannel: text,
+            apiKey: key,
+            raven: this.raven,
+            musicDB: this.musicDB,
+            slowSender: this._slowSender,
+            r: this.r,
+            conn: this.conn,
+            config: this.config
+          });
+          return this.boundChannels[queue.id].init(text).then(() => {
+            return this.boundChannels[queue.id];
+          }).catch(error => {
+            console.log(text);
+            text.createMessage(`${error.toString()} While rebinding to voice channel`).catch(console.error);
+            delete this.boundChannels[queue.id];
+            throw error;
+          }).then((player) => {
+            if (player.currentVideo == null) {
+              player.playNext();
+            }
+          });
+        }
+      })
+    })
   }
 
   init(id, msg, command, perms) {
@@ -80,6 +116,7 @@ class music {
         conn: this.conn,
         config: this.config
       });
+      this.musicDB.bind(id, msg.channel.guild.name, msg.channel.name, msg.channel.id, voiceChannel.name, voiceChannel.id);
       command.replyAutoDeny("Binding to **" + voiceChannel.name + "** and **" + msg.channel.name + "**");
       return this.boundChannels[id].init(msg).then(() => {
         command.replyAutoDeny(`Bound successfully use ${command.prefix}destroy to unbind it.`);
@@ -109,6 +146,7 @@ class music {
           })
           .then(() => {
             try {
+              this.musicDB.unbind(i);
               channel.destroy();
             } catch (error) {
 
@@ -127,7 +165,7 @@ class music {
     }
     for (let i in this.boundChannels) {
       if (this.boundChannels.hasOwnProperty(i))
-        this.boundChannels[i].text.createMessage("Sorry for the inconvenience bot the bot is restarting or disconnected from discord.");
+        this.boundChannels[i].text.createMessage("Sorry for the inconvenience the bot is restarting or was disconnected from discord.");
       try {
         this.boundChannels[i].destroy();
       } catch (err) {
@@ -165,6 +203,7 @@ class music {
     if (command.command === "destroy" && perms.check(msg, "music.destroy")) {
       if (this.boundChannels.hasOwnProperty(id)) {
         try {
+          this.musicDB.unbind(id);
           this.boundChannels[id].destroy();
         } catch (error) {
 
@@ -183,7 +222,7 @@ class music {
         return true;
       }
       if (command.args.length < 1) {
-        command.replyAutoDeny("Please specify a youtube video search term or playlist!");
+        command.replyAutoDeny("Please specify a youtube video, search term, or playlist!");
         return true;
       }
       if (!this.boundChannels.hasOwnProperty(id)) {
@@ -231,16 +270,15 @@ class music {
         } else {
           let promise;
           if (index < 0) {
-            if (!Array.isArray(this.currentSong.votes)) {
-              this.currentSong.votes = [];
+            if (!Array.isArray(this.boundChannels[id].currentVideo.votes)) {
+              this.boundChannels[id].votes = [];
             }
-            if (this.currentSong.votes.includes(msg.author.id)) {
+            if (this.boundChannels[id].votes.includes(msg.author.id)) {
               promise = Promise.resolve(false);
             } else {
-              this.currentSong.votes.push(msg.author.id);
-              promise = Promise.resolve(this.currentsong.votes.length);
+              this.boundChannels[id].votes.push(msg.author.id);
+              promise = Promise.resolve(this.boundChannels[id].currentVideo.votes.length);
             }
-            promise = Promise.resolve()
           } else {
             promise = this.musicDB.addVote(id, index, msg.author.id);
           }
@@ -305,11 +343,22 @@ class music {
     }
 
 
+    if (command.command === "clear" && perms.check(msg, "music.clear")) {
+      let options;
+      if (command.user) {
+        options = {user_id: command.user.id};
+      }
+      return this.musicDB.clearQueue(id, options).then((result) => {
+        command.replyAutoDeny("Queue cleared");
+      });
+    }
+
+
     if (command.commandnos === "time" && perms.check(msg, "music.time")) {
       if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
         if (this.boundChannels[id].currentVideoInfo) {
           command.createMessageAutoDeny("Currently " +
-            videoUtils.prettyTime(this.boundChannels[id].currentVideoInfo) +
+            this.boundChannels[id].prettyTime() +
             " into " +
             videoUtils.prettyPrint(this.boundChannels[id].currentVideoInfo));
         } else {
