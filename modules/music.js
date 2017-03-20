@@ -24,7 +24,7 @@ class music {
    * Instantiates the module
    * @constructor
    * @param {Object} e
-   * @param {Client} e.client Eris client
+   * @param {Eris} e.client Eris client
    * @param {Config} e.config File based config
    * @param {Raven?} e.raven Raven error logging system
    * @param {Config} e.auth File based config for keys and tokens and authorisation data
@@ -146,7 +146,7 @@ class music {
           })
           .then(() => {
             try {
-              this.musicDB.unbind(i);
+              this.musicDB.unbind(id);
               channel.destroy();
             } catch (error) {
 
@@ -259,8 +259,12 @@ class music {
       if (this.possiblySendNotConnected(msg, command)) return true;
       if (this.possiblySendUserNotInVoice(msg, command)) return true;
       return this.musicDB.queueLength(id).then(async(length) => {
+        if (this.boundChannels[id].currentVideo) {
+          length += 1;
+        }
         let index = command.args[0] ? parseInt(command.args[0]) - 1 : -1;
-        if (index >= length) {
+        console.log(index, length);
+        if (index+1 >= length) {
           command.replyAutoDeny("Not enough songs to skip, queue a song using //play <youtube url of video or playlist>");
           return true;
         }
@@ -270,13 +274,17 @@ class music {
         } else {
           let promise;
           if (index < 0) {
-            if (!Array.isArray(this.boundChannels[id].currentVideo.votes)) {
-              this.boundChannels[id].votes = [];
+            if (!this.boundChannels[id].currentVideo) {
+              command.replyAutoDeny("Not currently playing a song.");
+              return true;
             }
-            if (this.boundChannels[id].votes.includes(msg.author.id)) {
+            if (!Array.isArray(this.boundChannels[id].currentVideo.votes)) {
+              this.boundChannels[id].currentVideo.votes = [];
+            }
+            if (this.boundChannels[id].currentVideo.votes.includes(msg.author.id)) {
               promise = Promise.resolve(false);
             } else {
-              this.boundChannels[id].votes.push(msg.author.id);
+              this.boundChannels[id].currentVideo.votes.push(msg.author.id);
               promise = Promise.resolve(this.boundChannels[id].currentVideo.votes.length);
             }
           } else {
@@ -288,8 +296,13 @@ class music {
               if (result >= maxVotes) {
                 command.replyAutoDeny(`Removing ${videoUtils.prettyPrint(await this.skipSongGetInfo(id, index))} From the queue`);
               } else {
-                let info = await this.musicDB.getNextVideosCachedInfoAndVideo(id, 1, index);
-                command.replyAutoDeny(`${result}/${maxVotes} votes needed to skip ${videoUtils.prettyPrint(info[0].info)}`)
+                let info;
+                if (index < 0) {
+                  info = this.boundChannels[id].currentVideoInfo
+                } else {
+                  info = (await this.musicDB.getNextVideosCachedInfoAndVideo(id, 1, index))[0].info;
+                }
+                command.replyAutoDeny(`${result}/${maxVotes} votes needed to skip ${videoUtils.prettyPrint(info)}`)
               }
             } else {
               command.replyAutoDeny("Sorry, you may only vote to skip once per song.");

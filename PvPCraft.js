@@ -55,7 +55,7 @@ const request = require("request");
 const SlowSender = require("./lib/SlowSender");
 const Feeds = require("./lib/feeds");
 const R = require("rethinkdbdash");
-if (process.env.dev == "true") {
+if (process.env.dev === "true") {
   require("longjohn");
 }
 
@@ -88,7 +88,10 @@ let lastMessage = Date.now();
 }, 30000);
  */
 
-
+/**
+ * @prop {Config} fileConfig
+ * @prop {Eris} client
+ */
 class PvPCraft {
   /**
    * Instantiates a new instance of PvPCraft
@@ -367,7 +370,7 @@ class PvPCraft {
     return new Promise((resolve) => {
       let sentryEnv = this.fileConfig.get("sentryEnv", "");
 
-      if (this.fileAuth.get("sentryURL", "") != "") {
+      if (this.fileAuth.get("sentryURL", "") !== "") {
         console.log("Sentry Started".yellow);
         git.long((commit) => {
           git.branch((branch) => {
@@ -387,7 +390,9 @@ class PvPCraft {
 
             this.raven.install(function () {
               console.log("This is thy sheath; there rust, and let me die.");
-              setTimeout(() => {process.exit(1)}, 1000);
+              setTimeout(() => {
+                process.exit(1)
+              }, 1000);
             });
 
             this.raven.on("logged", function (e) {
@@ -564,6 +569,7 @@ class PvPCraft {
     // handle per server prefixes.
     if (msg.channel.guild) {
       l = this.configDB.get("prefix", this.prefix, {server: msg.channel.guild.id});
+      //noinspection EqualityComparisonWithCoercionJS
       if (l == null) {
         l = this.prefix;
       } else {
@@ -669,7 +675,7 @@ class PvPCraft {
 
   registerProcessListeners() {
     process.on("unhandledRejection", this.captureError.bind(this));
-    if (process.env.dev == "true") {
+    if (process.env.dev === "true") {
       process.on("uncaughtException", (error) => {
         console.error(error);
       });
@@ -706,7 +712,7 @@ class PvPCraft {
           if (msg.channel.hasOwnProperty("guild")) {
             extra.guild = msg.channel.guild;
           }
-          if (process.env.dev == "true") {
+          if (process.env.dev === "true") {
             console.error(error);
           }
           this.raven.captureException(error, {
@@ -719,7 +725,7 @@ class PvPCraft {
               msg.channel.createMessage("Sorry their was an error processing your command. The error is ```" + error +
                 "``` reference code `" + id + "`");
             }
-            if (process.env.dev == "true") {
+            if (process.env.dev === "true") {
               console.error(error);
             }
           });
@@ -738,7 +744,7 @@ class PvPCraft {
         } else {
           console.log(`Logged error ID:${resultId} to sentry`);
         }
-        if (process.env.dev == "true") {
+        if (process.env.dev === "true") {
           console.error(error);
         }
       });
