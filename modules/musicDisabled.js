@@ -8,7 +8,7 @@ class music {
    * Instantiates the module
    * @constructor
    * @param {Object} e
-   * @param {Client} e.client Eris client
+   * @param {Eris} e.client Eris client
    * @param {Config} e.config File based config
    * @param {Raven?} e.raven Raven error logging system
    * @param {Config} e.auth File based config for keys and tokens and authorisation data
@@ -38,8 +38,7 @@ class music {
   onCommand(msg, command, perms) {
     if (!msg.channel.server) return false; //this is a pm... we can't do music stuff here.
     if (!perms.check(msg, `music.${command.command}`)) return false;
-    command.reply("Sorry music is currently disabled at the moment, please join https://join.pvpcraft.ca and check the #announcements chat for info on why and status updates");
-    return true;
+    return command.replyAutoDeny("Sorry music is currently disabled at the moment, please join https://join.pvpcraft.ca and check the #announcements chat for info on why and status updates");
   }
 }
 

@@ -12,7 +12,7 @@ class giveaways {
    * Instantiates the module
    * @constructor
    * @param {Object} e
-   * @param {Client} e.client Eris client
+   * @param {Eris} e.client Eris client
    * @param {Config} e.config File based config
    * @param {Raven?} e.raven Raven error logging system
    * @param {Config} e.auth File based config for keys and tokens and authorisation data
@@ -37,7 +37,7 @@ class giveaways {
   static getCommands() {
     //this needs to return a list of commands that should activate the onCommand function
     //of this class. array of strings with trailing s's removed.
-    return ["enter", "count", "draw", "clear", "giveaway"];
+    return ["enter", "gcount", "gdraw", "gclear", "giveaway"];
   }
 
   onDisconnect() {
@@ -79,7 +79,7 @@ class giveaways {
       return true;
     }
 
-    if (command.command === "clear" && perms.check(msg, "admin.giveaway.clear")) {
+    if (command.command === "gclear" && perms.check(msg, "admin.giveaway.clear")) {
       if (!this.entries.get("channel", false, {server: msg.channel.guild.id})) {
         command.reply("Sorry but there is no record of a giveaway ever existing.");
         return true;
@@ -88,7 +88,7 @@ class giveaways {
       command.reply(`Entries cleared`);
     }
 
-    if (command.command === "count" && perms.check(msg, "admin.giveaway.count")) {
+    if (command.command === "gcount" && perms.check(msg, "admin.giveaway.count")) {
       if (!this.entries.get("channel", false, {server: msg.channel.guild.id})) {
         command.reply("Sorry but there is no record of a giveaway ever existing.");
         return true;
@@ -98,7 +98,7 @@ class giveaways {
       });
     }
 
-    if (command.command === "draw" && perms.check(msg, "admin.giveaway.draw")) {
+    if (command.command === "gdraw" && perms.check(msg, "admin.giveaway.draw")) {
       if (!this.entries.get("channel", false, {server: msg.channel.guild.id})) {
         command.reply("Sorry but there is no record of a giveaway ever existing.");
         return true;

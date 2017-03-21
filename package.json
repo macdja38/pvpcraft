@@ -1,12 +1,13 @@
 {
   "private": true,
   "scripts": {
+    "test": "jest",
     "doc": "node docma.js"
   },
   "dependencies": {
     "blocked": "^1.2.1",
     "bluebird": "^3.4.7",
-    "bufferutil": "^2.0.1",
+    "bufferutil": "^3.0.0",
     "chess": "^0.2.7",
     "cleverbot.io": "^1.0.4",
     "cli-table2": "^0.2.0",
@@ -30,6 +31,7 @@
     "request": "^2.7.0",
     "rethinkdbdash": "^2.3.23",
     "sodium-native": "^1.5.1",
+    "stream-resume": "^0.0.2",
     "superagent": "latest",
     "twit": "^2.2.4",
     "universal-analytics": "latest",
@@ -37,6 +39,10 @@
     "ytdl-core": "^0.9.1"
   },
   "devDependencies": {
-    "docma": "^1.4.0"
+    "docma": "^1.4.0",
+    "jest-cli": "^19.0.2"
+  },
+  "jest": {
+    "testEnvironment": "node"
   }
 }

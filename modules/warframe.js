@@ -33,7 +33,7 @@ class Warframe {
    * Instantiates the module
    * @constructor
    * @param {Object} e
-   * @param {Client} e.client Eris client
+   * @param {Eris} e.client Eris client
    * @param {Config} e.config File based config
    * @param {Raven?} e.raven Raven error logging system
    * @param {Config} e.auth File based config for keys and tokens and authorisation data
@@ -246,7 +246,7 @@ class Warframe {
    * @returns {boolean | Promise}
    */
   checkMisc(msg, perms) {
-    if (msg.content.toLowerCase().indexOf("soon") == 0 && msg.content.indexOf(":tm:") < 0 && perms.check(msg, "warframe.misc.soon")) {
+    if (msg.content.toLowerCase().indexOf("soon") === 0 && msg.content.indexOf(":tm:") < 0 && perms.check(msg, "warframe.misc.soon")) {
       msg.channel.createMessage("Soon:tm:").catch(perms.getAutoDeny(msg));
       return true;
     }
@@ -279,11 +279,11 @@ class Warframe {
         let roles = this.config.get("warframeAlerts", {items: {}}, {server: msg.channel.guild.id}).items;
         let coloredRolesList = "";
         for (let role in roles) {
-          if (roles.hasOwnProperty(role) && role != "joinrole") {
+          if (roles.hasOwnProperty(role) && role !== "joinrole") {
             coloredRolesList += `${role}\n`;
           }
         }
-        if (coloredRolesList != "") {
+        if (coloredRolesList !== "") {
           command.createMessageAutoDeny(`Available alerts include \`\`\`xl\n${coloredRolesList}\`\`\``)
         } else {
           command.replyAutoDeny(`No alerts are being tracked.`)

@@ -10,7 +10,7 @@ class welcome {
    * Instantiates the module
    * @constructor
    * @param {Object} e
-   * @param {Client} e.client Eris client
+   * @param {Eris} e.client Eris client
    * @param {Config} e.config File based config
    * @param {Raven?} e.raven Raven error logging system
    * @param {Config} e.auth File based config for keys and tokens and authorisation data
@@ -35,13 +35,13 @@ class welcome {
     this.onJoin = async (server, user) => {
       try {
         //TODO: once config loader v2 is done make this configurable.
-        if (server.id == "77176186148499456") {
+        if (server.id === "77176186148499456") {
           this.client.createMessage("171382498020950016",
             `Hop to it @here, ${utils.clean(user.username)} Just joined ${utils.clean(server.name)} ` +
             `announce it in <#77176186148499456>\n\`\`\`\nWelcome **${utils.clean(user.username)}**!\n\`\`\``
           );
         }
-        if (server.id == "191052428228034560") {
+        if (server.id === "191052428228034560") {
           this.client.createMessage("215030357727117313",
             `Hop to it @here, <@${user.id}> baru saja bergabung di ${utils.clean(server.name)}, umumkan di  <#191052428228034560>
 \`\`\`Selamat datang <@${user.id}> di **Warframe Indonesia Community**!\`\`\``

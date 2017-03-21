@@ -4,11 +4,15 @@
 "use strict";
 
 const Player = require('../lib/Player.js');
+const MusicDB = require("../lib/MusicDB");
+const SlowSender = require("../lib/SlowSender");
 
 let key = require('../config/auth.json').youtubeApiKey || null;
 if (key == "key") {
   key = null;
 }
+
+let videoUtils = require("../lib/videoUtils");
 
 /**
  *
@@ -20,7 +24,7 @@ class music {
    * Instantiates the module
    * @constructor
    * @param {Object} e
-   * @param {Client} e.client Eris client
+   * @param {Eris} e.client Eris client
    * @param {Config} e.config File based config
    * @param {Raven?} e.raven Raven error logging system
    * @param {Config} e.auth File based config for keys and tokens and authorisation data
@@ -37,20 +41,59 @@ class music {
     this.fileConfig = e.config;
     this.config = e.configDB;
     this.raven = e.raven;
+    this._slowSender = new SlowSender(e);
     this.r = e.r;
+    this.musicDB = new MusicDB(this.r, {key});
     this.conn = e.conn;
     this.leaveChecker = false;
     this.boundChannels = [];
   }
 
   static getCommands() {
-    return ["init", "play", "skip", "list", "time", "pause", "resume", "volume", "shuffle", "next", "destroy", "logchannel", "link"];
+    return ["init", "play", "skip", "list", "time", "pause", "resume", "volume", "shuffle", "next", "destroy", "clear", "logchannel", "link"];
   }
 
   onReady() {
+    this._slowSender.onReady();
     if (!this.leaveChecker) {
       this.leaveChecker = setInterval(this.leaveUnused.bind(this), 60000);
     }
+    console.log(this.client.guilds.map(g => g.id));
+    return this.musicDB.getBoundChannels(this.client.guilds.map(g => g.id)).then((queues) => {
+      queues.forEach(queue => {
+        let guild = this.client.guilds.get(queue.id);
+        if (!guild) console.log(queue);
+        if (!guild) return;
+        let text = guild.channels.get(queue.text_id);
+        let voice = guild.channels.get(queue.voice_id);
+        if (text && voice && !this.boundChannels.hasOwnProperty(queue.id)) {
+          this.boundChannels[queue.id] = new Player({
+            client: this.client,
+            voiceChannel: voice,
+            textChannel: text,
+            apiKey: key,
+            raven: this.raven,
+            musicDB: this.musicDB,
+            slowSender: this._slowSender,
+            r: this.r,
+            conn: this.conn,
+            config: this.config
+          });
+          return this.boundChannels[queue.id].init(text).then(() => {
+            return this.boundChannels[queue.id];
+          }).catch(error => {
+            console.log(text);
+            text.createMessage(`${error.toString()} While rebinding to voice channel`).catch(console.error);
+            delete this.boundChannels[queue.id];
+            throw error;
+          }).then((player) => {
+            if (player.currentVideo == null) {
+              player.playNext();
+            }
+          });
+        }
+      })
+    })
   }
 
   init(id, msg, command, perms) {
@@ -67,10 +110,13 @@ class music {
         textChannel: msg.channel,
         apiKey: key,
         raven: this.raven,
+        musicDB: this.musicDB,
+        slowSender: this._slowSender,
         r: this.r,
         conn: this.conn,
         config: this.config
       });
+      this.musicDB.bind(id, msg.channel.guild.name, msg.channel.name, msg.channel.id, voiceChannel.name, voiceChannel.id);
       command.replyAutoDeny("Binding to **" + voiceChannel.name + "** and **" + msg.channel.name + "**");
       return this.boundChannels[id].init(msg).then(() => {
         command.replyAutoDeny(`Bound successfully use ${command.prefix}destroy to unbind it.`);
@@ -89,33 +135,37 @@ class music {
   leaveUnused() {
     Object.keys(this.boundChannels).forEach((id) => {
       let channel = this.boundChannels[id];
-      if (channel.connection && channel.ready && channel.connection.playing !== true) {
-        if (Date.now() - channel.lastPlay > 600000) {
-          channel.text.createMessage("Leaving voice channel due to inactivity.")
-            .catch((error) => {
-              // does not matter if it fails to send the message, we leave anyway
-            })
-            .then(() => {
-              try {
-                channel.destroy();
-              } catch (error) {
+      if (channel.connection
+        && channel.ready
+        && channel.connection.playing !== true
+        && (Date.now() - channel.lastPlay > 600000)
+        && channel.voice.voiceMembers.size < 2) {
+        channel.text.createMessage("Leaving voice channel due to inactivity.")
+          .catch((error) => {
+            // does not matter if it fails to send the message, we leave anyway
+          })
+          .then(() => {
+            try {
+              this.musicDB.unbind(id);
+              channel.destroy();
+            } catch (error) {
 
-              }
-              delete this.boundChannels[id];
-            })
-        }
+            }
+            delete this.boundChannels[id];
+          })
       }
     });
   }
 
 
   onDisconnect() {
+    this._slowSender.onDisconnect();
     if (this.leaveChecker) {
       clearInterval(this.leaveChecker);
     }
     for (let i in this.boundChannels) {
       if (this.boundChannels.hasOwnProperty(i))
-        this.boundChannels[i].text.createMessage("Sorry for the inconvenience bot the bot is restarting or disconnected from discord.");
+        this.boundChannels[i].text.createMessage("Sorry for the inconvenience the bot is restarting or was disconnected from discord.");
       try {
         this.boundChannels[i].destroy();
       } catch (err) {
@@ -153,6 +203,7 @@ class music {
     if (command.command === "destroy" && perms.check(msg, "music.destroy")) {
       if (this.boundChannels.hasOwnProperty(id)) {
         try {
+          this.musicDB.unbind(id);
           this.boundChannels[id].destroy();
         } catch (error) {
 
@@ -171,7 +222,7 @@ class music {
         return true;
       }
       if (command.args.length < 1) {
-        command.replyAutoDeny("Please specify a youtube video search term or playlist!");
+        command.replyAutoDeny("Please specify a youtube video, search term, or playlist!");
         return true;
       }
       if (!this.boundChannels.hasOwnProperty(id)) {
@@ -179,9 +230,9 @@ class music {
           this.init(id, msg, command, perms).then(() => {
             let queueCount = perms.check(msg, "music.songcount", {type: "number"});
             if (typeof(queueCount === "number")) {
-              this.boundChannels[id].enqueue(msg, command, command.args, queueCount);
+              this.boundChannels[id].enqueue(command.args.join(" "), msg.member, command, queueCount);
             } else {
-              this.boundChannels[id].enqueue(msg, command, command.args);
+              this.boundChannels[id].enqueue(command.args.join(" "), msg.member, command);
             }
           }).catch(() => {
           });
@@ -195,9 +246,9 @@ class music {
         }
         let queueCount = perms.check(msg, "music.songcount", {type: "number"});
         if (typeof(queueCount === "number")) {
-          this.boundChannels[id].enqueue(msg, command, command.args, queueCount)
+          this.boundChannels[id].enqueue(command.args.join(" "), msg.member, command, queueCount)
         } else {
-          this.boundChannels[id].enqueue(msg, command, command.args)
+          this.boundChannels[id].enqueue(command.args.join(" "), msg.member, command)
         }
       }
       return true;
@@ -207,42 +258,58 @@ class music {
     if ((command.command === "next" || command.command === "skip") && (perms.check(msg, "music.voteskip") || perms.check(msg, "music.forceskip"))) {
       if (this.possiblySendNotConnected(msg, command)) return true;
       if (this.possiblySendUserNotInVoice(msg, command)) return true;
-      if (!this.boundChannels[id].currentVideo) {
-        command.replyAutoDeny("No songs to skip, queue a song using //play <youtube url of video or playlist>");
-        return true;
-      }
-      let index = command.args[0] ? parseInt(command.args[0]) - 1 : -1;
-      let isForced = (perms.check(msg, "music.forceskip") && command.flags.indexOf('f') > -1);
-      let video;
-      if (index === -1) {
-        video = this.boundChannels[id].currentVideo;
-      } else if (this.boundChannels[id].queue.hasOwnProperty(index)) {
-        video = this.boundChannels[id].queue[index];
-      } else {
-        command.replyAutoDeny("Could not find the song");
-        return true;
-      }
-      if (video.votes.indexOf(msg.author.id) < 0 || isForced) {
-        video.votes.push(msg.author.id);
-        if (video.votes.length > (this.boundChannels[id].voice.voiceMembers.size / 3) || isForced) {
-          command.replyAutoDeny("Removing " + video.prettyPrint() + " From the queue");
-          if (index === -1) {
-            this.boundChannels[id].skipSong();
-          }
-          else {
-            this.boundChannels[id].queue.splice(index, 1);
-          }
+      return this.musicDB.queueLength(id).then(async(length) => {
+        if (this.boundChannels[id].currentVideo) {
+          length += 1;
         }
-        else {
-          command.replyAutoDeny(video.votes.length + " / " + (Math.floor(this.boundChannels[id].voice.voiceMembers.size / 3) + 1) + " votes needed to skip " +
-            video.prettyPrint());
+        let index = command.args[0] ? parseInt(command.args[0]) - 1 : -1;
+        console.log(index, length);
+        if (index+1 >= length) {
+          command.replyAutoDeny("Not enough songs to skip, queue a song using //play <youtube url of video or playlist>");
+          return true;
         }
-      }
-      else {
-        command.replyAutoDeny("Sorry, you may only vote to skip once per song.");
-        return true;
-      }
-      return true;
+        let isForced = (command.flags.includes('f') && perms.check(msg, "music.forceskip"));
+        if (isForced) {
+          command.replyAutoDeny(`Removing ${videoUtils.prettyPrint(await this.skipSongGetInfo(id, index))} From the queue`);
+        } else {
+          let promise;
+          if (index < 0) {
+            if (!this.boundChannels[id].currentVideo) {
+              command.replyAutoDeny("Not currently playing a song.");
+              return true;
+            }
+            if (!Array.isArray(this.boundChannels[id].currentVideo.votes)) {
+              this.boundChannels[id].currentVideo.votes = [];
+            }
+            if (this.boundChannels[id].currentVideo.votes.includes(msg.author.id)) {
+              promise = Promise.resolve(false);
+            } else {
+              this.boundChannels[id].currentVideo.votes.push(msg.author.id);
+              promise = Promise.resolve(this.boundChannels[id].currentVideo.votes.length);
+            }
+          } else {
+            promise = this.musicDB.addVote(id, index, msg.author.id);
+          }
+          return promise.then(async(result) => {
+            if (typeof result === "number") {
+              let maxVotes = Math.floor((this.boundChannels[id].voice.voiceMembers.size / 3)) + 1;
+              if (result >= maxVotes) {
+                command.replyAutoDeny(`Removing ${videoUtils.prettyPrint(await this.skipSongGetInfo(id, index))} From the queue`);
+              } else {
+                let info;
+                if (index < 0) {
+                  info = this.boundChannels[id].currentVideoInfo
+                } else {
+                  info = (await this.musicDB.getNextVideosCachedInfoAndVideo(id, 1, index))[0].info;
+                }
+                command.replyAutoDeny(`${result}/${maxVotes} votes needed to skip ${videoUtils.prettyPrint(info)}`)
+              }
+            } else {
+              command.replyAutoDeny("Sorry, you may only vote to skip once per song.");
+            }
+          });
+        }
+      });
     }
 
 
@@ -277,13 +344,11 @@ class music {
 
 
     if (command.commandnos === "list" && perms.check(msg, "music.list")) {
-      if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
-        if (this.boundChannels[id].currentVideo) {
-          command.createMessageAutoDeny("```xl\n" + this.boundChannels[id].prettyList()
+      if (this.boundChannels.hasOwnProperty(id)) {
+        return this.boundChannels[id].prettyList().then((list) => {
+          command.createMessageAutoDeny("```xl\n" + list
             + "```\n" + this.fileConfig.get("website", {musicUrl: "https://bot.pvpcraft.ca/login/"}).musicUrl.replace(/\$id/, msg.channel.guild.id));
-        } else {
-          command.createMessageAutoDeny("Sorry, no song's found in playlist. use " + command.prefix + "play <youtube vid or playlist> to add one.")
-        }
+        })
       } else {
         command.createMessageAutoDeny("Sorry, Bot is not currently in a voice channel use " + command.prefix + "init while in a voice channel to bind it.")
       }
@@ -291,10 +356,24 @@ class music {
     }
 
 
+    if (command.command === "clear" && perms.check(msg, "music.clear")) {
+      let options;
+      if (command.user) {
+        options = {user_id: command.user.id};
+      }
+      return this.musicDB.clearQueue(id, options).then((result) => {
+        command.replyAutoDeny("Queue cleared");
+      });
+    }
+
+
     if (command.commandnos === "time" && perms.check(msg, "music.time")) {
       if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
-        if (this.boundChannels[id].currentVideo) {
-          command.createMessageAutoDeny("Currently " + this.boundChannels[id].prettyTime() + " into " + this.boundChannels[id].currentVideo.prettyPrint());
+        if (this.boundChannels[id].currentVideoInfo) {
+          command.createMessageAutoDeny("Currently " +
+            this.boundChannels[id].prettyTime() +
+            " into " +
+            videoUtils.prettyPrint(this.boundChannels[id].currentVideoInfo));
         } else {
           command.createMessageAutoDeny("Sorry, no song's found in playlist. use " + command.prefix + "play <youtube vid or playlist> to add one.")
         }
@@ -306,8 +385,8 @@ class music {
 
     if (command.commandnos === "link" && perms.check(msg, "music.link")) {
       if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
-        if (this.boundChannels[id].currentVideo) {
-          command.createMessageAutoDeny(`The link to ${this.boundChannels[id].currentVideo.prettyPrint()} is ${this.boundChannels[id].currentVideo.link}`);
+        if (this.boundChannels[id].currentVideoInfo) {
+          command.createMessageAutoDeny(`The link to ${videoUtils.prettyPrint(this.boundChannels[id].currentVideoInfo)} is ${this.boundChannels[id].currentVideo.link}`);
         } else {
           command.createMessageAutoDeny("Sorry, no song's found in playlist. use " + command.prefix + "play <youtube vid or playlist> to add one.")
         }
@@ -352,7 +431,7 @@ class music {
 
     if (command.command === "shuffle" && perms.check(msg, "music.shuffle")) {
       if (this.possiblySendNotConnected(msg, command)) return true;
-      if (this.boundChannels[id].queue.length > 1) {
+      if (this.boundChannels[id]) {
         command.createMessageAutoDeny(this.boundChannels[id].shuffle());
       } else {
         command.createMessageAutoDeny("Sorry, not enough song's in playlist.")
@@ -378,6 +457,38 @@ class music {
     }
 
     return false;
+  }
+
+  /**
+   * Skips a song based on guild id and song index
+   * @param {string} id
+   * @param {number} index
+   * @returns {Promise<Object>} video
+   */
+  skipSong(id, index) {
+    if (index < 0) {
+      if (this.boundChannels.hasOwnProperty(id)) {
+        let player = this.boundChannels[id];
+        if (player.hasOwnProperty("currentVideo")) {
+          player.skipSong();
+          return Promise.resolve(player.currentVideo);
+        } else {
+          return this.musicDB.spliceVideo(id, index + 1);
+        }
+      }
+    }
+    return this.musicDB.spliceVideo(id, index);
+  }
+
+  /**
+   * Skips a song and returns its info
+   * @param {string} id
+   * @param {number} index
+   */
+  skipSongGetInfo(id, index) {
+    return this.skipSong(id, index).then(song => {
+      return this.musicDB.getCachingInfoLink(song.link, {allowOutdated: true})
+    });
   }
 
   /**

@@ -55,6 +55,9 @@ const request = require("request");
 const SlowSender = require("./lib/SlowSender");
 const Feeds = require("./lib/feeds");
 const R = require("rethinkdbdash");
+if (process.env.dev === "true") {
+  require("longjohn");
+}
 
 let lastMessage = Date.now();
 
@@ -85,7 +88,10 @@ let lastMessage = Date.now();
 }, 30000);
  */
 
-
+/**
+ * @prop {Config} fileConfig
+ * @prop {Eris} client
+ */
 class PvPCraft {
   /**
    * Instantiates a new instance of PvPCraft
@@ -187,7 +193,7 @@ class PvPCraft {
   }
 
   registerPreReadyClientListeners() {
-    this.client.on("shardDisconnect", this.logShardUpdate.bind(this, "Disconnect"));
+    this.client.on("shardDisconnect", this.logShardUpdate.bind(this, "ShardDisconnect"));
     this.client.on("shardPreReady", this.logShardUpdate.bind(this, "preReady"));
     this.client.on("shardResume", this.logShardUpdate.bind(this, "Resume"));
     this.client.on("shardReady", this.logShardUpdate.bind(this, "Ready"));
@@ -199,8 +205,8 @@ class PvPCraft {
     this.client.on("guildCreate", this.onGuildCreate.bind(this));
     this.client.on("messageCreate", this.onMessage.bind(this));
     this.client.on("error", this.onError.bind(this));
-    this.client.on("disconnect", this.onDisconnect.bind(this));
-    this.client.on("ready", this.reload.bind(this));
+    this.client.on("shardDisconnect", this.onDisconnect.bind(this));
+    this.client.on("shardReady", this.reload.bind(this));
   }
 
   logShardUpdate(type, errorOrId, IDOrNull) {
@@ -231,7 +237,10 @@ class PvPCraft {
   }
 
   onDisconnect() {
-    console.log("Disconnect".red);
+    if (this.raven) {
+      this.raven.captureMessage("Disconnected", {level: "info"})
+    }
+    console.log("Disconnect event called".red);
     for (let i in this.moduleList) {
       if (this.moduleList.hasOwnProperty(i)) {
         if (this.moduleList[i].module.onDisconnect) {
@@ -361,7 +370,7 @@ class PvPCraft {
     return new Promise((resolve) => {
       let sentryEnv = this.fileConfig.get("sentryEnv", "");
 
-      if (this.fileAuth.get("sentryURL", "") != "") {
+      if (this.fileAuth.get("sentryURL", "") !== "") {
         console.log("Sentry Started".yellow);
         git.long((commit) => {
           git.branch((branch) => {
@@ -381,7 +390,9 @@ class PvPCraft {
 
             this.raven.install(function () {
               console.log("This is thy sheath; there rust, and let me die.");
-              process.exit(1);
+              setTimeout(() => {
+                process.exit(1)
+              }, 1000);
             });
 
             this.raven.on("logged", function (e) {
@@ -427,11 +438,16 @@ class PvPCraft {
     }
     this.middlewareList = [];
     this.moduleList = [];
+    this.r.getPoolMaster().drain();
+    this.client.on("disconnect", () => {
+      console.log("Eris Logged out");
+      process.exit(0);
+    });
     this.client.disconnect({reconnect: false});
     setTimeout(() => {
       console.log("Bye");
       process.exit(0);
-    }, 4000);
+    }, 2000);
   }
 
   reload() {
@@ -557,6 +573,7 @@ class PvPCraft {
     // handle per server prefixes.
     if (msg.channel.guild) {
       l = this.configDB.get("prefix", this.prefix, {server: msg.channel.guild.id});
+      //noinspection EqualityComparisonWithCoercionJS
       if (l == null) {
         l = this.prefix;
       } else {
@@ -662,7 +679,7 @@ class PvPCraft {
 
   registerProcessListeners() {
     process.on("unhandledRejection", this.captureError.bind(this));
-    if (process.env.dev == "true") {
+    if (process.env.dev === "true") {
       process.on("uncaughtException", (error) => {
         console.error(error);
       });
@@ -699,7 +716,7 @@ class PvPCraft {
           if (msg.channel.hasOwnProperty("guild")) {
             extra.guild = msg.channel.guild;
           }
-          if (process.env.dev == "true") {
+          if (process.env.dev === "true") {
             console.error(error);
           }
           this.raven.captureException(error, {
@@ -712,7 +729,7 @@ class PvPCraft {
               msg.channel.createMessage("Sorry their was an error processing your command. The error is ```" + error +
                 "``` reference code `" + id + "`");
             }
-            if (process.env.dev == "true") {
+            if (process.env.dev === "true") {
               console.error(error);
             }
           });
@@ -731,7 +748,7 @@ class PvPCraft {
         } else {
           console.log(`Logged error ID:${resultId} to sentry`);
         }
-        if (process.env.dev == "true") {
+        if (process.env.dev === "true") {
           console.error(error);
         }
       });
