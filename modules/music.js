@@ -263,6 +263,9 @@ class music {
           length += 1;
         }
         let index = command.args[0] ? parseInt(command.args[0]) - 1 : -1;
+        if (Number.isNaN(index)) {
+          return command.replyAutoDeny("Not a valid song index, please supply a number.");
+        }
         console.log(index, length);
         if (index+1 >= length) {
           command.replyAutoDeny("Not enough songs to skip, queue a song using //play <youtube url of video or playlist>");
