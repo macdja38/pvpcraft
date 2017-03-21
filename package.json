@@ -31,7 +31,7 @@
     "request": "^2.7.0",
     "rethinkdbdash": "^2.3.23",
     "sodium-native": "^1.5.1",
-    "stream-resume": "^0.0.2",
+    "stream-resume": "^0.0.4",
     "superagent": "latest",
     "twit": "^2.2.4",
     "universal-analytics": "latest",
