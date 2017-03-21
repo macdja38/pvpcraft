@@ -193,7 +193,7 @@ class PvPCraft {
   }
 
   registerPreReadyClientListeners() {
-    this.client.on("shardDisconnect", this.logShardUpdate.bind(this, "Shard Disconnect"));
+    this.client.on("shardDisconnect", this.logShardUpdate.bind(this, "ShardDisconnect"));
     this.client.on("shardPreReady", this.logShardUpdate.bind(this, "preReady"));
     this.client.on("shardResume", this.logShardUpdate.bind(this, "Resume"));
     this.client.on("shardReady", this.logShardUpdate.bind(this, "Ready"));
@@ -205,8 +205,8 @@ class PvPCraft {
     this.client.on("guildCreate", this.onGuildCreate.bind(this));
     this.client.on("messageCreate", this.onMessage.bind(this));
     this.client.on("error", this.onError.bind(this));
-    this.client.on("disconnect", this.onDisconnect.bind(this));
-    this.client.on("ready", this.reload.bind(this));
+    this.client.on("shardDisconnect", this.onDisconnect.bind(this));
+    this.client.on("shardReady", this.reload.bind(this));
   }
 
   logShardUpdate(type, errorOrId, IDOrNull) {
