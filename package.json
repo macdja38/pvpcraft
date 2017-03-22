@@ -42,6 +42,9 @@
     "docma": "^1.4.0",
     "jest-cli": "^19.0.2"
   },
+  "engines": {
+    "node": ">=7.6"
+  },
   "jest": {
     "testEnvironment": "node"
   }
