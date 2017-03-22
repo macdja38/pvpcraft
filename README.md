@@ -7,7 +7,7 @@ Bot requires 2 files not yet here.
 index.php which is included but must be edited. be sure to configure it's url in config.json
 
 # installation instructions
- Requires **node.js** v5 or greater, must be able to build native module's using node-gyp. RethinkDB is required for the master branch. **pm2** is optional but highly recomended.
+ Requires **node.js** v7.6 or greater, must be able to build native module's using node-gyp. RethinkDB is required for the master branch. **pm2** is optional but highly recomended.
 
  - `git clone https://github.com/macdja38/pvpcraft.git` to download the project
  - `cd pvpcraft` to open new directory.
