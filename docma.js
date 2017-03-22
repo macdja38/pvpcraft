@@ -66,7 +66,7 @@ let config = {
 Docma.create()
   .build(config)
   .then(function () {
-    console.log('Documentation is built successfully.');
+    console.log('Documentation built successfully.');
   })
   .catch(function (error) {
     console.log(error);
