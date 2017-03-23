@@ -112,8 +112,8 @@ class rateLimits {
   /**
    * get's called every Command, (unless a previous middleware on the list override it.) can modify message.
    * @param msg
-   * @param command
-   * @returns {command || boolean} object (may be modified.)
+   * @param {Command} command
+   * @returns {Command || boolean} object (may be modified.)
    */
   changeCommand(msg, command) {
     if (!this.userCommandCount.hasOwnProperty(msg.author.id)) {

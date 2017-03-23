@@ -76,6 +76,7 @@ class music {
             musicDB: this.musicDB,
             slowSender: this._slowSender,
             r: this.r,
+            debug: queue.debug || false,
             conn: this.conn,
             config: this.config
           });
@@ -96,7 +97,7 @@ class music {
     })
   }
 
-  init(id, msg, command, perms) {
+  init(id, msg, command, perms, debug = false) {
     let returnPromise = new Promise((resolve, reject) => {
       let voiceChannel = msg.channel.guild.channels.get(msg.member.voiceState.channelID);
       if (!perms.checkUserChannel(msg.author, voiceChannel, "music.initinto")) {
@@ -113,6 +114,7 @@ class music {
         musicDB: this.musicDB,
         slowSender: this._slowSender,
         r: this.r,
+        debug,
         conn: this.conn,
         config: this.config
       });
@@ -192,7 +194,7 @@ class music {
         return true;
       }
       if (msg.member.voiceState.channelID) {
-        this.init(id, msg, command, perms);
+        this.init(id, msg, command, perms, command.flags.includes("d"));
       }
       else {
         command.createMessageAutoDeny(msg.member.mention + ", You must be in a voice channel this command. If you are currently in a voice channel please rejoin it.")
@@ -227,7 +229,7 @@ class music {
       }
       if (!this.boundChannels.hasOwnProperty(id)) {
         if (perms.check(msg, "music.init")) {
-          this.init(id, msg, command, perms).then(() => {
+          this.init(id, msg, command, perms, command.flags.includes("d")).then(() => {
             let queueCount = perms.check(msg, "music.songcount", {type: "number"});
             if (typeof(queueCount === "number")) {
               this.boundChannels[id].enqueue(command.args.join(" "), msg.member, command, queueCount);

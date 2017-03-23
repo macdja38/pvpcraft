@@ -1,7 +1,6 @@
 {
   "private": true,
   "scripts": {
-    "test": "jest",
     "doc": "node docma.js"
   },
   "dependencies": {
@@ -31,10 +30,10 @@
     "request": "^2.7.0",
     "rethinkdbdash": "^2.3.23",
     "sodium-native": "^1.5.1",
-    "stream-resume": "^0.0.4",
-    "superagent": "latest",
+    "stream-resume": "^0.0.5",
+    "superagent": "^3.5.2",
     "twit": "^2.2.4",
-    "universal-analytics": "latest",
+    "universal-analytics": "^0.4.12",
     "youtube-dl": "^1.11.1",
     "ytdl-core": "^0.9.1"
   },
