@@ -36,7 +36,7 @@ class music {
    * @returns {boolean | Promise}
    */
   onCommand(msg, command, perms) {
-    if (!msg.channel.server) return false; //this is a pm... we can't do music stuff here.
+    if (!msg.channel.guild) return false; //this is a pm... we can't do music stuff here.
     if (!perms.check(msg, `music.${command.command}`)) return false;
     return command.replyAutoDeny("Sorry music is currently disabled at the moment, please join https://join.pvpcraft.ca and check the #announcements chat for info on why and status updates");
   }
