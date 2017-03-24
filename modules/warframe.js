@@ -75,18 +75,13 @@ class Warframe {
         dbReady = Promise.resolve();
       }
       return dbReady.then(() => {
-        /*this.r.table(this.table).insert([{id: "*", prefix: "//", "changeThresh": 1}]).run(this.con).then((res)=>{
-         console.log(res);
-         });*/
         if (master) {
           console.log(`Shard ${process.env.id} is the Master Shard!`);
           if (twitter_auth) {
             //build the map of server id's and logging channels.
-            console.log("twitter auth found, declaring onAlert");
             resolve(
               (tweet) => {
                 if (tweet.user.id_str === '1344755923' && !tweet.retweeted_status) {
-                  console.log("Tweet Found");
                   let alert = tweet.text.match(/(.*?): (.*?) - (.*?) - (.*)/);
                   if (alert) {
                     alert = alert.slice(1, 5);
@@ -99,11 +94,10 @@ class Warframe {
                     }
                   }
                   if (alert) {
-                    console.log("Logging tweet");
                     this.r.table('alerts').insert(alert.reduce((o, v, i) => {
                       o[i] = v;
                       return o;
-                    }, {})).run().then(console.log);
+                    }, {})).run();
                   }
                 }
               })
@@ -197,8 +191,6 @@ class Warframe {
     for (let item in this.config.data) {
       if (this.config.data.hasOwnProperty(item) && this.config.data[item].hasOwnProperty("warframeAlerts")) {
         if (this.client.channelGuildMap.hasOwnProperty(this.config.data[item]["warframeAlerts"].channel)) {
-          //noinspection JSUnresolvedVariable
-          console.log("Thing", this.config.data[item].warframeAlerts);
           this.alerts.push(this.config.data[item].warframeAlerts);
         } else {
           //TODO: notify the server owner their mod alerts channel has been removed and that //setalerts false will make that permanent.
@@ -451,7 +443,6 @@ class Warframe {
 
     if ((command.commandnos === 'trader' || command.commandnos === 'voidtrader' || command.commandnos === 'baro') && perms.check(msg, "warframe.trader")) {
       return worldState.get().then((state) => {
-        console.log(state.VoidTraders[0]);
         if (!state.VoidTraders || !state.VoidTraders[0]) {
           command.createMessageAutoDeny("Baro has disappeared from the universe.");
           return true;
@@ -541,7 +532,6 @@ class Warframe {
           let string = "";
           for (let mission of state.ActiveMissions) {
             let node = parseState.getNode(mission.Node);
-            console.log(node);
             if (node) {
               let nodeFaction = parseState.getFaction(node.faction);
               let nodeMission = parseState.getMissionType(node.mission_type);
@@ -655,7 +645,6 @@ class Warframe {
             }
           }
         }
-        console.log(embed);
         command.createMessageAutoDeny({embed});
         return true;
       });
