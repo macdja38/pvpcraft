@@ -76,6 +76,7 @@ module.exports = class ShardManager {
     for (let i = this.startShard; i < (this.startShard + this.localShards); i++) {
       console.log(`Scheduling shard ${i}`);
       setTimeout(() => {
+        cluster.setupMaster({args: this.args, execArgv: [`--inspect=`, `${930 + i}`]});
         console.log(`Starting worker ${i} with settings`.green, cluster.settings);
         this.workers.push(cluster.fork({id: i, shards: this.shards}));
         this.lastRestart = Date.now();
@@ -88,6 +89,7 @@ module.exports = class ShardManager {
         let id;
         let target = this.restartQueue.shift();
         id = this.workers.indexOf(target);
+        cluster.setupMaster({args: this.args, execArgv: [`--inspect=${930 + id}`]});
         this.workers[id] = cluster.fork({id: id + this.startShard, shards: this.shards});
         console.log(`worker ${this.workers[id].process.pid} born with settings`, cluster.settings);
       }
