@@ -70,13 +70,13 @@ module.exports = class ShardManager {
     this.restartQueue = [];
     this.restartWorker = false;
     this.workers = [];
-    this.args = ["--prof"];
+    this.args = [];
     this.args.push(...process.argv.slice(2));
     console.log(`This is the master, starting ${this.shards} shards`.green);
     for (let i = this.startShard; i < (this.startShard + this.localShards); i++) {
       console.log(`Scheduling shard ${i}`);
       setTimeout(() => {
-        cluster.setupMaster({args: this.args, execArgv: ["--inspect"]});
+        cluster.setupMaster({args: this.args, execArgv: [`--inspect=0.0.0.0:${9200+i}`]});
         console.log(`Starting worker ${i} with settings`.green, cluster.settings);
         this.workers.push(cluster.fork({id: i, shards: this.shards}));
         this.lastRestart = Date.now();
@@ -89,7 +89,7 @@ module.exports = class ShardManager {
         let id;
         let target = this.restartQueue.shift();
         id = this.workers.indexOf(target);
-        cluster.setupMaster({args: this.args, execArgv: ["--inspect"]});
+        cluster.setupMaster({args: this.args, execArgv: [`--inspect=0.0.0.0:${9200+id}`]});
         this.workers[id] = cluster.fork({id: id + this.startShard, shards: this.shards});
         console.log(`worker ${this.workers[id].process.pid} born with settings`, cluster.settings);
       }
@@ -112,31 +112,15 @@ module.exports = class ShardManager {
           switch (message.command) {
             case "restart":
               if (message.global) {
-                if (message.profile) {
-                  cluster.setupMaster({args: this.args, execArgv: ["--prof"]});
-                }
                 this.workers.forEach((w, i) => {
                   setTimeout(() => {
                     console.log(`Killing worker ${w.id}`.red);
                     w.kill();
                   }, i * 10000);
                 });
-                if (message.profile) {
-                  setTimeout(() => {
-                    cluster.setupMaster({args: process.argv.slice(2), execArgv: []});
-                  }, 240000);
-                }
               } else {
                 console.log(`Killing worker ${worker.id}`.red);
-                if (message.profile) {
-                  cluster.setupMaster({args: this.args, execArgv: ["--prof"]});
-                }
                 worker.kill();
-                if (message.profile) {
-                  setTimeout(() => {
-                    cluster.setupMaster({args: process.argv.slice(2), execArgv: []});
-                  }, 240000);
-                }
               }
               break;
             case "logrestarts": {
