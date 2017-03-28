@@ -96,16 +96,15 @@ class permissionsManager {
             command.reply("Could not find channel specified please either mention the channel or use it's full name");
             return true;
           }
-          if (!perms.checkAdminServer(msg)) return true;
         }
         else {
           //user has not specified channel, assume server wide
-          if (!perms.checkAdminServer(msg) && this.config.get("permissions", {admins: []}).admins.indexOf(msg.author.id) < 0) {
-            command.reply("Discord permission \`Admin\` Required");
-            return true;
-          }
           channel = "*";
           server = msg.channel.guild.id;
+        }
+        if (!perms.checkAdminServer(msg) && this.config.get("permissions", {admins: []}).admins.indexOf(msg.author.id) < 0) {
+          command.reply("Discord permission \`Admin\` Required");
+          return true;
         }
         //here we find the group's or users effected.
         let target;
@@ -166,7 +165,7 @@ ${target === "*" ? "everyone" : utils.clean(target)}`);
         command.reply(this.url.replace(/\$id/, msg.channel.guild.id));
       }
       if (command.args[0].toLowerCase() === "hardreset") {
-        if (msg.author.id == msg.channel.guild.ownerID) {
+        if (msg.author.id === msg.channel.guild.ownerID) {
           perms.set(msg.channel.guild.id, "remov");
           command.reply(`All permissions have been reset!`)
         } else {
