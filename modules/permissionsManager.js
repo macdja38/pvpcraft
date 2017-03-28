@@ -96,6 +96,7 @@ class permissionsManager {
             command.reply("Could not find channel specified please either mention the channel or use it's full name");
             return true;
           }
+          if (!perms.checkAdminServer(msg)) return true;
         }
         else {
           //user has not specified channel, assume server wide
