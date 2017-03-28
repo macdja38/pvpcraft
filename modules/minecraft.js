@@ -73,7 +73,7 @@ class minecraft {
                 value: `${res.version.name}`,
                 inline: true
               }, {
-                name: "Protocal",
+                name: "Protocol",
                 value: `${res.version.protocol}`,
                 inline: true
               },{
