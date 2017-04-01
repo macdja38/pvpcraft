@@ -747,32 +747,37 @@ class moderationV2 {
       value: user.mention,
       short: true,
     }];
-    if (oldUser.username != user.username) {
+    let embed = {title: `Member Updated`, fields};
+    if (oldUser.username !== user.username) {
       fields.push({
         title: "Username",
         value: `${utils.clean(oldUser.username)} to ${utils.clean(user.username)}`,
         short: true,
       });
     }
-    if (oldUser.discriminator != user.discriminator) {
+    if (oldUser.discriminator !== user.discriminator) {
       fields.push({
         title: "Discriminator",
         value: `${oldUser.discriminator} to ${user.discriminator}`,
         short: true,
       });
     }
-    if (oldUser.avatar != user.avatar) {
+    if (oldUser.avatar !== user.avatar) {
+      let oldURL = `https://cdn.discordapp.com/avatars/${user.id}/${oldUser.avatar}.${oldUser.avatar.startsWith("_a") ? "gif" : "png"}?size=128`;
       fields.push({
         title: "Avatar",
-        value: `${oldUser.avatarURL} to ${user.avatarURL}`,
+        value: `${oldURL} to ${user.avatarURL}`,
         short: true,
       });
+      embed.image_url = user.avatarURL;
+      embed.thumb_url = oldURL;
+      console.log(embed);
     }
     if (fields.length < 2) return;
     this.client.guilds.forEach(guild => {
       if (guild.members.get(user.id)) {
         if (this.perms.checkUserChannel(user, guild.defaultChannel, "msglog.whitelist.user")) return;
-        this.sendHookedMessage("user", {user}, {title: `Member Updated`, fields}, guild.id);
+        this.sendHookedMessage("user", {user}, embed, guild.id);
       }
     });
   };
