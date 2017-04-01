@@ -335,7 +335,8 @@ class PvPCraft {
       disableEveryone: false,
       firstShardID: this.shardId,
       lastShardID: this.shardId,
-      maxShards: this.shardCount
+      maxShards: this.shardCount,
+      defaultImageFormat: "png",
     });
   }
 
