@@ -5,7 +5,7 @@
 
 let colors = require('colors');
 
-let request = require('request');
+let request = require('request-promise-native');
 
 let now = require("performance-now");
 
@@ -146,24 +146,21 @@ class evaluate {
     }
 
     if (command.command === "setavatar" && this.fileConfig.get("permissions", {"permissions": {admins: []}}).admins.includes(msg.author.id)) {
-      request({
+      return request({
         method: 'GET',
         url: command.args[0],
         encoding: null
-      }, (err, res, image) => {
-        if (err) {
-          this.client.createMessage(msg.channel.id, "Failed to get a valid image.");
-          return true;
-        }
-        this.client.setAvatar(image, (err) => {
-          if (err) {
-            this.client.createMessage(msg.channel.id, "Failed setting avatar.");
-            return true;
-          }
+      }).then((image) => {
+        this.client.editSelf({avatar: `data:image/png;base64,${image.toString("base64")}`}).then(() => {
           this.client.createMessage(msg.channel.id, "Changed avatar.");
+        }).catch((err) => {
+            this.client.createMessage(msg.channel.id, "Failed setting avatar." + err);
+            return true;
         });
+      }).catch((err) => {
+          this.client.createMessage(msg.channel.id, "Failed to get a valid image." + err);
+          return true;
       });
-      return true;
     }
 
     return false;
@@ -189,7 +186,7 @@ class evaluate {
   _convertToObject(object) {
     if (object === null) return "null";
     if (typeof object === "undefined") return "undefined";
-    if (object.toJSON && typeof object.toJSON ) {
+    if (object.toJSON && typeof object.toJSON) {
       object = object.toJSON();
     }
     return util.inspect(object, {depth: 2}).replace(new RegExp(this.client.token, "g"), "[ Token ]");
@@ -197,7 +194,7 @@ class evaluate {
 }
 
 //noinspection JSUnusedLocalSymbols (used in eval
-function dec2bin(dec){
+function dec2bin(dec) {
   return (dec >>> 0).toString(2);
 }
 
