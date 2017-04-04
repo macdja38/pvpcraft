@@ -9,8 +9,8 @@ const request = require("request");
 //const qs = require("querystring");
 
 const pledges = {
-  iron:5066827,
-  bronze:10244641,
+  iron: 5066827,
+  bronze: 10244641,
   silver: 11908541,
   gold: 13421619,
   sapphire: 2718657,
@@ -20,7 +20,7 @@ const pledges = {
   kyrium: 138325,
 };
 
-class template {
+class dualUniverse {
   /**
    * Instantiates the module
    * @constructor
@@ -60,7 +60,7 @@ class template {
     const options = {
       method: 'GET',
       url: 'http://api.du-tools.com/docs/du/duexplorer/users',
-      qs: {fields: 'user,pledgeStatus,orgs,createdDate', query: JSON.stringify({user: name.toLowerCase()})},
+      qs: {fields: 'user,pledgeStatus,organizations,createdDate', query: JSON.stringify({user: name.toLowerCase()})},
       headers: {'cache-control': 'no-cache'}
     };
     return this.duFetch(options)
@@ -108,7 +108,8 @@ class template {
             color: user.hasOwnProperty("pledgeStatus") && pledges.hasOwnProperty(user.pledgeStatus) ? pledges[user.pledgeStatus] : 0,
             fields: [
               {name: "username", value: user.user},
-              {name: "created", value: user.createdDate}
+              {name: "created", value: user.createdDate},
+              {name: "org count", value: user.organizations.length}
             ],
           }
         });
@@ -140,4 +141,4 @@ class template {
   }
 }
 
-module.exports = template;
+module.exports = dualUniverse;
