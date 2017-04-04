@@ -771,7 +771,6 @@ class moderationV2 {
       });
       embed.image_url = user.avatarURL;
       embed.thumb_url = oldURL;
-      console.log(embed);
     }
     if (fields.length < 2) return;
     this.client.guilds.forEach(guild => {
