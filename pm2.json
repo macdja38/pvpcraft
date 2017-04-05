@@ -3,7 +3,9 @@
     {
       "name": "pvpcraft",
       "script": "main.js",
-      "args": "--color"
+      "args": "--color",
+      "out_file": "/dev/null",
+      "error_file": "/dev/null"
     }
   ]
 }
