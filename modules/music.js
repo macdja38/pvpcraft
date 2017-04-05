@@ -409,8 +409,8 @@ class music {
           return true;
         }
         if (command.args[0] && perms.check(msg, "music.volume.set")) {
-          let volume = parseInt(command.args[0]);
-          if (200 > volume && volume > 4) {
+          let volume = parseInt(command.args[0], 10);
+          if (201 > volume && volume > 4) {
             this.boundChannels[id].setVolume(volume);
             command.replyAutoDeny(`Volume set to **${volume}**`);
 
