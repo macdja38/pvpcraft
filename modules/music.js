@@ -260,7 +260,7 @@ class music {
     if ((command.command === "next" || command.command === "skip") && (perms.check(msg, "music.voteskip") || perms.check(msg, "music.forceskip"))) {
       if (this.possiblySendNotConnected(msg, command)) return true;
       if (this.possiblySendUserNotInVoice(msg, command)) return true;
-      return this.musicDB.queueLength(id).then(async(length) => {
+      return this.musicDB.queueLength(id).then(async (length) => {
         if (this.boundChannels[id].currentVideo) {
           length += 1;
         }
@@ -269,7 +269,7 @@ class music {
           return command.replyAutoDeny("Not a valid song index, please supply a number.");
         }
         console.log(index, length);
-        if (index+1 >= length) {
+        if (index + 1 >= length) {
           command.replyAutoDeny("Not enough songs to skip, queue a song using //play <youtube url of video or playlist>");
           return true;
         }
@@ -295,7 +295,7 @@ class music {
           } else {
             promise = this.musicDB.addVote(id, index, msg.author.id);
           }
-          return promise.then(async(result) => {
+          return promise.then(async (result) => {
             if (typeof result === "number") {
               let maxVotes = Math.floor((this.boundChannels[id].voice.voiceMembers.size / 3)) + 1;
               if (result >= maxVotes) {
@@ -402,22 +402,25 @@ class music {
     }
 
     if (command.commandnos === "volume" && (perms.check(msg, "music.volume.set") || perms.check(msg, "music.volume.list"))) {
-      command.replyAutoDeny("In order to vastly increase performance volume is currently disabled, This feature may be re-enabled in the future");
-      return true;
       if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
+        let boundChannel = this.boundChannels[id];
+        if (!boundChannel.premium) {
+          command.replyAutoDeny("In order to vastly increase performance volume is currently disabled, This feature may be re-enabled in the future");
+          return true;
+        }
         if (command.args[0] && perms.check(msg, "music.volume.set")) {
           let volume = parseInt(command.args[0]);
-          if (111 > volume && volume > 4) {
+          if (200 > volume && volume > 4) {
             this.boundChannels[id].setVolume(volume);
-            command.replyAutoDeny(`Volume set to **${volume}**`).catch(perms.getAutoDeny(msg));
+            command.replyAutoDeny(`Volume set to **${volume}**`);
 
           } else {
-            command.replyAutoDeny("Sorry, invalid volume, please enter a number between 5 and 110").catch(perms.getAutoDeny(msg));
+            command.replyAutoDeny("Sorry, invalid volume, please enter a number between 5 and 200");
           }
           return true;
         } else {
           if (perms.check(msg, "music.volume.list")) {
-            command.replyAutoDeny("Current volume is **" + this.boundChannels[id].getVolume() + "**").catch(perms.getAutoDeny(msg));
+            command.replyAutoDeny("Current volume is **" + this.boundChannels[id].getVolume() + "**");
             return true;
           }
           return false;
@@ -426,8 +429,7 @@ class music {
         if (perms.check(msg, "music.volume.list") || perms.check(msg, "music.volume.set")) {
           command.createMessageAutoDeny(`Sorry, Bot is not currently in a voice channel use ${command.prefix} init while in a voice channel to bind it.`);
           return true;
-        }
-        else {
+        } else {
           return false;
         }
       }
