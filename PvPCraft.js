@@ -207,6 +207,7 @@ class PvPCraft {
     this.client.on("error", this.onError.bind(this));
     this.client.on("shardDisconnect", this.onDisconnect.bind(this));
     this.client.on("shardReady", this.reload.bind(this));
+    this.client.on("shardResume", this.reload.bind(this));
   }
 
   logShardUpdate(type, errorOrId, IDOrNull) {
