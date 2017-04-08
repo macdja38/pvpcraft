@@ -755,14 +755,19 @@ class moderationV2 {
       });
     }
     if (oldUser.avatar !== user.avatar) {
-      let oldURL = `https://cdn.discordapp.com/avatars/${user.id}/${oldUser.avatar}.${oldUser.avatar.startsWith("_a") ? "gif" : "png"}?size=128`;
+      let oldURL;
+      if(oldUser.avatar != null) {
+        oldURL = `https://cdn.discordapp.com/avatars/${user.id}/${oldUser.avatar}.${oldUser.avatar.startsWith("_a") ? "gif" : "png"}?size=128`;
+      }
       fields.push({
         title: "Avatar",
-        value: `${oldURL} to ${user.avatarURL}`,
+        value: `${oldURL || "Default"} to ${user.avatarURL}`,
         short: true,
       });
       embed.image_url = user.avatarURL;
-      embed.thumb_url = oldURL;
+      if (oldURL) {
+        embed.thumb_url = oldURL;
+      }
     }
     if (fields.length < 2) return;
     this.client.guilds.forEach(guild => {
