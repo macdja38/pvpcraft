@@ -7,6 +7,12 @@ let util = require('util');
 let colors = require('colors');
 let Eris = require("eris");
 
+const moderationMethodNameMap = {
+  ban: "memberBanned",
+  unban: "memberUnbanned",
+  kick: "memberRemoved",
+};
+
 /* let colorMap = {
  "message.deleted": "#FFB600",
  "message.updated": "#FFFF00",
@@ -32,7 +38,7 @@ let Eris = require("eris");
 
 // 00 3F 7F BE FF
 
-let colorMap = {
+const colorMap = {
   "voice.join": "#003FE2",
   "voice.switch": "#007FE2",
   "voice.leave": "#00BEE2",
@@ -212,32 +218,16 @@ class moderationV2 {
       }
     }
 
-    let options = {
-      user: msg.author,
-    };
-    let text = `**Moderator:** <@${msg.author.id}>`;
-    if (user) {
-      options.title = `Moderator ${action}ned User <@${user.id}>`;
-      text += `\n**User:** ${utils.fullNameB(user)} | <@${user.id}>`;
-    } else {
-      options.title = `Moderator ${action}ned Id <@${possibleId}>`;
-      text += `\n**User:** <@${possibleId}>`;
-    }
-    if (reason) {
-      text += `\n**Reason:** ${utils.clean(reason)}`;
-    }
     let args = [user ? user.id : possibleId];
     if (action === "ban") {
       args.push(command.options.hasOwnProperty("time") ? command.options.time : 1);
     }
     msg.channel.guild[`${action}Member`](...args)
       .then(() => {
-        return this.sendHookedMessage(`action.${action}`, options, text, msg.channel.guild.id);
+        return this[moderationMethodNameMap[action]](msg.channel.guild, user, msg.author, reason, false);
       })
       .catch((error) => {
-        options.title += " **FAILED bot may not have sufficient permissions**";
-        text += `\n**Error:** ${error}`;
-        this.sendHookedMessage(`action.${action}`, options, text, msg.channel.guild.id);
+        return this[moderationMethodNameMap[action]](msg.channel.guild, user, msg.author, reason, error)
       });
     command.reply(`${user ? user.mention : possibleId} has been ${action}ned!`);
   }
@@ -471,6 +461,8 @@ class moderationV2 {
         fallbackMessage += `   **${utils.clean(field.title)}**: ${utils.clean(field.value)}`
       }))
     }
+    console.log(eventName);
+    console.log(this.feeds.find(`moderation.${eventName}`, serverId));
     this.feeds.find(`moderation.${eventName}`, serverId).forEach((channel) => {
       if (channel.indexOf("http") < 0) {
         let guild = this.client.guilds.get(serverId);
@@ -711,7 +703,7 @@ class moderationV2 {
         newField.title = "Role Overwrite";
         newField.value = `<@&${change.overwrite.id}>`;
       }
-      if (change.change == "remove" || change.change == "add") {
+      if (change.change === "remove" || change.change === "add") {
         newField.value += ` ${change.change}ed ${permissionsListFromNumber(change.overwrite)}`;
       }
       else {
@@ -828,28 +820,28 @@ class moderationV2 {
         short: true,
       });
     }
-    if (oldRole.name != role.name) {
+    if (oldRole.name !== role.name) {
       fields.push({
         title: "Name Changed",
         value: `${utils.clean(oldRole.name)} to ${utils.clean(role.name)}`,
         short: true,
       });
     }
-    if (oldRole.position != role.position) {
+    if (oldRole.position !== role.position) {
       fields.push({
         title: "Position Changed",
         value: `${oldRole.position} to ${role.position}`,
         short: true,
       });
     }
-    if (oldRole.hoist != role.hoist) {
+    if (oldRole.hoist !== role.hoist) {
       fields.push({
         title: "Display separately",
         value: `${oldRole.hoist} to ${role.hoist}`,
         short: true,
       });
     }
-    if (oldRole.color != role.color) {
+    if (oldRole.color !== role.color) {
       fields.push({
         title: "Color",
         value: `${oldRole.color} to ${role.color}`,
@@ -860,23 +852,93 @@ class moderationV2 {
     this.sendHookedMessage("role.updated", {}, {title: `Role Updated`, fields}, guild.id)
   };
 
-  memberBanned(server, user) {
-    this.sendHookedMessage("member.banned", {user}, {
-      title: "User Banned", fields: [{
-        title: "User",
-        value: user.mention,
+  /**
+   *
+   * @param {Guild} server
+   * @param {User | string} user
+   * @param {User | null} instigator
+   * @param {string | null} reason
+   * @param {Error | null} error
+   */
+  memberBanned(server, user, instigator, reason, error) {
+    let fields = [{
+      title: "User",
+      value: typeof user === "string" ? `<@${user}>` : user.mention,
+      short: true,
+    }];
+
+    if (instigator) {
+      fields.push({
+        title: "Responsible Moderator",
+        value: instigator.mention,
         short: true,
-      }]
+      })
+    }
+
+    if (reason) {
+      fields.push({
+        title: "Reason",
+        value: utils.clean(reason),
+        short: true,
+      })
+    }
+
+    if (error) {
+      fields.push({
+        title: "Failed due to",
+        value: utils.clean(error.toString()).slice(0, 250),
+        short: true,
+      })
+    }
+
+    this.sendHookedMessage(instigator ? "moderation.action.ban" : "member.banned", {user}, {
+      title: "User Banned",
+      fields,
     }, server.id);
   };
 
-  memberUnbanned(server, user) {
-    this.sendHookedMessage("member.unbanned", {user}, {
-      title: "User Unbanned", fields: [{
-        title: "User",
-        value: user.mention,
+  /**
+   *
+   * @param {Guild} server
+   * @param {User | string} user
+   * @param {User | null} instigator
+   * @param {string | null} reason
+   * @param {Error | null} error
+   */
+  memberUnbanned(server, user, instigator, reason, error) {
+    let fields = [{
+      title: "User",
+      value: typeof user === "string" ? `<@${user}>` : user.mention,
+      short: true,
+    }];
+
+    if (instigator) {
+      fields.push({
+        title: "Responsible Moderator",
+        value: instigator.mention,
         short: true,
-      }]
+      })
+    }
+
+    if (reason) {
+      fields.push({
+        title: "Reason",
+        value: utils.clean(reason),
+        short: true,
+      })
+    }
+
+    if (error) {
+      fields.push({
+        title: "Failed due to",
+        value: utils.clean(error.toString()).slice(0, 250),
+        short: true,
+      })
+    }
+
+    this.sendHookedMessage(instigator ? "moderation.action.unban" : "member.unbanned", {user}, {
+      title: "User Unbanned",
+      fields,
     }, server.id);
   };
 
@@ -890,16 +952,50 @@ class moderationV2 {
     }, server.id);
   };
 
-  memberRemoved(server, user) {
-    if (!user || !user.id) return;
-    this.sendHookedMessage("member.removed", {user}, {
-      title: "User Left or was Kicked", fields: [{
-        title: "User",
-        value: `<@${user.id}>`,
+  /**
+   *
+   * @param {Guild} server
+   * @param {User | string} user
+   * @param {User | null} instigator
+   * @param {string | null} reason
+   * @param {Error | null} error
+   */
+  memberRemoved(server, user, instigator, reason, error) {
+    let fields = [{
+      title: "User",
+      value: typeof user === "string" ? `<@${user}>` : user.mention,
+      short: true,
+    }];
+
+    if (instigator) {
+      fields.push({
+        title: "Responsible Moderator",
+        value: instigator.mention,
         short: true,
-      }]
+      })
+    }
+
+    if (reason) {
+      fields.push({
+        title: "Reason",
+        value: utils.clean(reason),
+        short: true,
+      })
+    }
+
+    if (error) {
+      fields.push({
+        title: "Failed due to",
+        value: utils.clean(error.toString()).slice(0, 250),
+        short: true,
+      })
+    }
+
+    this.sendHookedMessage(instigator ? "moderation.action.kick" : "member.removed", {user}, {
+      title: "User Left or was Kicked",
+      fields,
     }, server.id);
-  };
+  }
 
   memberUpdated(guild, member, oldMember) {
     if (this.perms.checkUserChannel(member, guild.defaultChannel, "msglog.whitelist.member.updated")) return;
