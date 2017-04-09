@@ -461,8 +461,6 @@ class moderationV2 {
         fallbackMessage += `   **${utils.clean(field.title)}**: ${utils.clean(field.value)}`
       }))
     }
-    console.log(eventName);
-    console.log(this.feeds.find(`moderation.${eventName}`, serverId));
     this.feeds.find(`moderation.${eventName}`, serverId).forEach((channel) => {
       if (channel.indexOf("http") < 0) {
         let guild = this.client.guilds.get(serverId);
