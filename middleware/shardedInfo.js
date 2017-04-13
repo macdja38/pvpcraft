@@ -40,6 +40,7 @@ class shardedInfo {
     this._joinLeaveHooks = e.config.get("joinLeaveHooks", false);
     this._pmHooks = e.config.get("pmHooks", false);
     this.currentStatus = null;
+    this._statusOverride = e.config.get("statusOverride", false);
     this._admins = e.config.get("permissions", {"admins": []}).admins;
     this.botReady = new Promise((resolve) => {
       this.botReadyResolve = resolve;
@@ -53,13 +54,17 @@ class shardedInfo {
     if (this._timer) clearInterval(this._timer);
     this._timer = setInterval(this._updateDB.bind(this), 10000);
     this.botReadyResolve(true);
-    this._statusInterval = setInterval(() => {
-      let newStatus = this._configDB.get("status", null, {server: "*"});
-      if (this.currentStatus != newStatus) {
-        this.currentStatus = newStatus;
-        this._client.editStatus("online", newStatus);
-      }
-    }, 30000);
+    if (this._statusOverride) {
+      this._client.editStatus("online", this._statusOverride);
+    } else {
+      this._statusInterval = setInterval(() => {
+        let newStatus = this._configDB.get("status", null, {server: "*"});
+        if (this.currentStatus != newStatus) {
+          this.currentStatus = newStatus;
+          this._client.editStatus("online", newStatus);
+        }
+      }, 30000);
+    }
   }
 
   _getArray(n) {

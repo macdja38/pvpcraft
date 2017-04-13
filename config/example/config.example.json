@@ -18,6 +18,7 @@
   "shardStart": 0,
   "shardTable": "shards",
   "logShardStatus": false,
+  "statusOverride": {"name":"test"},
   "waitBeforeRestart": 30000000000000,
   "website": {
     "musicUrl": "https://bot.pvpcraft.ca/music/$id/music",
