@@ -54,7 +54,7 @@ class shardedInfo {
     if (this._timer) clearInterval(this._timer);
     this._timer = setInterval(this._updateDB.bind(this), 10000);
     this.botReadyResolve(true);
-    if (this._statusOverride) {
+    if (this._statusOverride !== false) {
       this._client.editStatus("online", this._statusOverride);
     } else {
       this._statusInterval = setInterval(() => {
