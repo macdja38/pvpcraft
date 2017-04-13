@@ -214,6 +214,7 @@ class music {
         delete this.boundChannels[id];
       } else {
         command.replyAutoDeny("Not bound.");
+        this.client.leaveVoiceChannel(msg.channel.id);
       }
       return true;
     }
