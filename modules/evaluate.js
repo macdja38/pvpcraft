@@ -47,7 +47,7 @@ class evaluate {
   }
 
   static getCommands() {
-    return ["eval", "setavatar"];
+    return ["eval", "eval2", "setavatar"];
   }
 
   onReady() {
@@ -71,7 +71,95 @@ class evaluate {
     //no perms check because this extends paste the bounds of a server.
     //if you know what you are doing and would like to use the id in the config file you may replace msg.author.id == id, with
     //this.config.get("permissions", {"permissions": {admins: []}}).admins.includes(msg.author.id)
+
+
     if (command.command === "eval" && msg.author.id === "85257659694993408") {
+      let code = command.args.join(" ");
+
+      //these are so that others code will run in the eval if they depend on things.
+      //noinspection JSUnusedLocalSymbols
+      let client = this.client;
+      //noinspection JSUnusedLocalSymbols
+      let bot = this.client;
+      let message = msg;
+      //noinspection JSUnusedLocalSymbols
+      let config = this.config;
+      //noinspection JSUnusedLocalSymbols
+      let slowSend = this.slowSender;
+      //noinspection JSUnusedLocalSymbols
+      let raven = this.raven;
+      //noinspection JSUnusedLocalSymbols
+      let modules = this.modules;
+      //noinspection JSUnusedLocalSymbols
+      let guild = message.channel.guild;
+      //noinspection JSUnusedLocalSymbols
+      let channel = msg.channel;
+      let t0, t1, t2;
+      t0 = now();
+      try {
+        let evaluated;
+        t0 = now();
+        evaluated = eval(code);
+        t1 = now();
+        let embedText = "```xl\n" +
+          "\n- - - - - - evaluates-to- - - - - - -\n" +
+          utils.clean(this._shortenTo(this._convertToObject(evaluated), 1800)) +
+          "\n- - - - - - - - - - - - - - - - - - -\n" +
+          "In " + (t1 - t0) + " milliseconds!\n```";
+        if (evaluated && evaluated.catch) evaluated.catch(() => {
+        });
+        command.createMessage({content: msg.content, embed: {description: embedText, color: 0x00FF00}}).then((initialMessage) => {
+          if (evaluated && evaluated.then) {
+            return evaluated.then((result) => {
+              embedText = embedText.substring(0, embedText.length - 4);
+              embedText += "\n- - - - -Promise resolves to- - - - -\n";
+              embedText += utils.clean(this._shortenTo(this._convertToObject(result), 1800));
+              embedText += "\n- - - - - - - - - - - - - - - - - - -\n";
+              embedText += "In " + (now() - t0) + " milliseconds!\n```";
+              this.client.editMessage(msg.channel.id, initialMessage.id, {
+                content: msg.content,
+                embed: {
+                  description: embedText,
+                  color: 0x00FF00
+                }
+              })
+            }).catch((error) => {
+              embedText = embedText.substring(0, embedText.length - 4);
+              embedText += "\n- - - - - Promise throws- - - - - - -\n";
+              embedText += utils.clean(error);
+              embedText += "\n- - - - - - - - - - - - - - - - - - -\n";
+              embedText += "In " + (now() - t0) + " milliseconds!\n```";
+              this.client.editMessage(msg.channel.id, initialMessage.id, {
+                content: msg.content,
+                embed: {
+                  description: embedText,
+                  color: 0xFF0000
+                }
+              })
+            }).catch(error => console.error(error));
+          }
+        });
+        console.log(evaluated);
+      }
+      catch (error) {
+        t1 = now();
+        msg.edit(msg.content, {
+          embed: {
+            description: "```xl\n" +
+            "\n- - - - - - - errors-in- - - - - - - \n" +
+            clean(error) +
+            "\n- - - - - - - - - - - - - - - - - - -\n" +
+            "In " + (t1 - t0) + " milliseconds!\n```",
+            color: 0xFF0000
+          }
+        });
+        console.error(error);
+      }
+      return true;
+    }
+
+
+    if (command.command === "eval2" && msg.author.id === "85257659694993408") {
       let code = command.args.join(" ");
 
       //these are so that others code will run in the eval if they depend on things.
@@ -145,6 +233,7 @@ class evaluate {
       return true;
     }
 
+
     if (command.command === "setavatar" && this.fileConfig.get("permissions", {"permissions": {admins: []}}).admins.includes(msg.author.id)) {
       return request({
         method: 'GET',
@@ -154,12 +243,12 @@ class evaluate {
         this.client.editSelf({avatar: `data:image/png;base64,${image.toString("base64")}`}).then(() => {
           this.client.createMessage(msg.channel.id, "Changed avatar.");
         }).catch((err) => {
-            this.client.createMessage(msg.channel.id, "Failed setting avatar." + err);
-            return true;
+          this.client.createMessage(msg.channel.id, "Failed setting avatar." + err);
+          return true;
         });
       }).catch((err) => {
-          this.client.createMessage(msg.channel.id, "Failed to get a valid image." + err);
-          return true;
+        this.client.createMessage(msg.channel.id, "Failed to get a valid image." + err);
+        return true;
       });
     }
 
