@@ -127,6 +127,7 @@ class shardedInfo {
     }
     this.updateCarbonitex(serverCount);
     this.updateAbal(serverCount);
+    this.updateDiscordBotsOrg();
     this.logServerChange(server, "Added to");
   }
 
@@ -197,7 +198,29 @@ class shardedInfo {
         headers: {Authorization: token},
         json: {server_count: servers}
       }, (error, response, body) => {
-        if (!error && response.statusCode == 200) {
+        if (!error && response.statusCode === 200) {
+          console.log(body)
+        }
+        else if (error) {
+          console.error(error);
+        }
+        else {
+          console.error("Bad request or other");
+          console.error(response.body);
+        }
+      })
+    }
+  }
+
+  updateDiscordBotsOrg(servers) {
+    let token = this._auth.get("discordBotsOrgKey");
+    if (token && token.length > 1 && token !== "key") {
+      request.post({
+        url: `https://discordbots.org/api/bots/${this._client.user.id}/stats`,
+        headers: {Authorization: token},
+        json: {server_count: servers}
+      }, (error, response, body) => {
+        if (!error && response.statusCode === 200) {
           console.log(body)
         }
         else if (error) {
@@ -223,7 +246,7 @@ class shardedInfo {
           json: true
         },
         function (error, response, body) {
-          if (!error && response.statusCode == 200) {
+          if (!error && response.statusCode === 200) {
             console.log(body)
           }
           else if (error) {
