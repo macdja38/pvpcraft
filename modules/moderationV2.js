@@ -278,7 +278,9 @@ class moderationV2 {
       } else {
         length = this.config.get("purgeLength", 100)
       }
-      this.updateServerIgnores(1, channel.guild.id);
+      if (command.flags.includes("d")) {
+        this.updateServerIgnores(1, channel.guild.id);
+      }
       let purger;
       let status;
       let purgeQueue = [];
@@ -350,7 +352,9 @@ class moderationV2 {
           }
           setTimeout(() => {
             channel.deleteMessage(statusMessage.id);
-            this.updateServerIgnores(-1, channel.guild.id);
+            if (command.flags.includes("d")) {
+              this.updateServerIgnores(-1, channel.guild.id);
+            }
           }, 5000);
           clearInterval(status);
         }
@@ -383,6 +387,10 @@ class moderationV2 {
       return;
     }
     this.tempServerIgnores = count;
+  }
+
+  isServerIgnored(serverId) {
+    return this.tempServerIgnores.hasOwnProperty(serverId);
   }
 
   fetchMessages(channel, count, options = {}, cb) {
@@ -476,6 +484,13 @@ class moderationV2 {
   messageDeletedBulk(messages) {
     if (!messages[0].channel.guild) return;
     let message = messages[0];
+    let cached = messages.filter(m => m.hasOwnProperty("content"));
+
+    let channelIgnored = this.isServerIgnored(message.channel.guild.id);
+    if (!channelIgnored) {
+      cached.forEach(this.messageDeleted);
+    }
+
     //grab url's to the message's attachments
     let fields = [];
     let attachment = {
@@ -489,10 +504,38 @@ class moderationV2 {
         short: true,
       })
     }
+    fields.push({
+      title: "Cached",
+      value: `${cached.length}`,
+      short: true,
+    });
+    fields.push({
+      title: "Not Cached",
+      value: `${messages.length - cached.length}`,
+      short: true,
+    });
+    fields.push({
+      title: "Total Messages",
+      value: `${messages.length}`,
+      short: true,
+    });
+    if (channelIgnored) {
+      fields.push({
+        title: "Purge with don't log",
+        value: `The purge command was used with the don't log flag, and therefore cached messages are not being logged.`,
+        short: true,
+      });
+    }
     //send everything off.
     this.sendHookedMessage("message.deleted", {}, attachment, message.channel.guild.id)
+
   }
 
+  /**
+   *
+   * @param {Message} message
+   * @private
+   */
   messageDeleted(message) {
     if (!message || !message.channel.guild) return;
     if (message.author && this.perms.checkUserChannel(message.author, message.channel, "msglog.whitelist.message.deleted")) return;
