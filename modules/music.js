@@ -8,7 +8,7 @@ const MusicDB = require("../lib/MusicDB");
 const SlowSender = require("../lib/SlowSender");
 
 let key = require('../config/auth.json').youtubeApiKey || null;
-if (key == "key") {
+if (key === "key") {
   key = null;
 }
 
@@ -44,7 +44,6 @@ class music {
     this._slowSender = new SlowSender(e);
     this.r = e.r;
     this.musicDB = new MusicDB(this.r, {key});
-    this.conn = e.conn;
     this.leaveChecker = false;
     this.boundChannels = [];
   }
@@ -77,10 +76,9 @@ class music {
             slowSender: this._slowSender,
             r: this.r,
             debug: queue.debug || false,
-            conn: this.conn,
             config: this.config
           });
-          return this.boundChannels[queue.id].init(text).then(() => {
+          return this.boundChannels[queue.id].init(voice).then(() => {
             return this.boundChannels[queue.id];
           }).catch(error => {
             console.log(text);
@@ -115,12 +113,11 @@ class music {
         slowSender: this._slowSender,
         r: this.r,
         debug,
-        conn: this.conn,
         config: this.config
       });
       this.musicDB.bind(id, msg.channel.guild.name, msg.channel.name, msg.channel.id, voiceChannel.name, voiceChannel.id);
       command.replyAutoDeny("Binding to **" + voiceChannel.name + "** and **" + msg.channel.name + "**");
-      return this.boundChannels[id].init(msg).then(() => {
+      return this.boundChannels[id].init(voiceChannel).then(() => {
         command.replyAutoDeny(`Bound successfully use ${command.prefix}destroy to unbind it.`);
         resolve(this.boundChannels[id]);
       }).catch(error => {
@@ -149,7 +146,7 @@ class music {
           .then(() => {
             try {
               this.musicDB.unbind(id);
-              channel.destroy();
+              channel.destroy(true);
             } catch (error) {
 
             }
@@ -169,7 +166,7 @@ class music {
       if (this.boundChannels.hasOwnProperty(i))
         this.boundChannels[i].text.createMessage("Sorry for the inconvenience the bot is restarting or was disconnected from discord.");
       try {
-        this.boundChannels[i].destroy();
+        this.boundChannels[i].destroy(false);
       } catch (err) {
 
       }
@@ -206,7 +203,7 @@ class music {
       if (this.boundChannels.hasOwnProperty(id)) {
         try {
           this.musicDB.unbind(id);
-          this.boundChannels[id].destroy();
+          this.boundChannels[id].destroy(true);
         } catch (error) {
 
         }
@@ -228,32 +225,32 @@ class music {
         command.replyAutoDeny("Please specify a youtube video, search term, or playlist!");
         return true;
       }
+      let initPromise;
       if (!this.boundChannels.hasOwnProperty(id)) {
         if (perms.check(msg, "music.init")) {
-          this.init(id, msg, command, perms, command.flags.includes("d")).then(() => {
-            let queueCount = perms.check(msg, "music.songcount", {type: "number"});
-            if (typeof(queueCount === "number")) {
-              this.boundChannels[id].enqueue(command.args.join(" "), msg.member, command, queueCount);
-            } else {
-              this.boundChannels[id].enqueue(command.args.join(" "), msg.member, command);
-            }
-          }).catch(() => {
-          });
+          initPromise = this.init(id, msg, command, perms, command.flags.includes("d"))
         } else {
-          command.replyAutoDeny(`Please have someone with the permission node \`music.init\` run ${command.prefix}init`)
+          command.replyAutoDeny(`Please have someone with the permission node \`music.init\` run ${command.prefix}init`);
+          return true;
         }
       } else {
+        initPromise = Promise.resolve();
+      }
+      initPromise.then(() => {
         if (!this.boundChannels[id].ready) {
           command.replyAutoDeny("Connection is not ready");
           return true;
         }
         let queueCount = perms.check(msg, "music.songcount", {type: "number"});
-        if (typeof(queueCount === "number")) {
-          this.boundChannels[id].enqueue(command.args.join(" "), msg.member, command, queueCount)
-        } else {
-          this.boundChannels[id].enqueue(command.args.join(" "), msg.member, command)
+        console.log("queueCount", queueCount);
+        let options = {};
+        if (typeof queueCount === "number") {
+          options.limit = queueCount;
         }
-      }
+        this.boundChannels[id].enqueue(command.args.join(" "), msg.member, command, options);
+      }).catch(() => {
+      });
+
       return true;
     }
 
@@ -455,7 +452,7 @@ class music {
           text += `Server: ${this.boundChannels[i].server.name} in voice channel ${this.boundChannels[i].text.name}\n`
         }
       }
-      if (text != "Playing Music in:\n") {
+      if (text !== "Playing Music in:\n") {
         command.createMessageAutoDeny(text);
       }
       else {
