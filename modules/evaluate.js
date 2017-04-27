@@ -11,6 +11,13 @@ let now = require("performance-now");
 
 let SlowSender = require('../lib/SlowSender');
 
+let packer;
+try {
+  packer = require("erlpack").unpack;
+} catch(e) {
+  packer = JSON.stringify;
+}
+
 //noinspection JSUnusedLocalSymbols
 let Eris = require('eris');
 let utils = require('../lib/utils');
@@ -47,7 +54,7 @@ class evaluate {
   }
 
   static getCommands() {
-    return ["eval", "eval2", "setavatar"];
+    return ["testdc", "eval", "eval2", "setavatar"];
   }
 
   onReady() {
@@ -68,10 +75,9 @@ class evaluate {
    */
   onCommand(msg, command, perms) {
     //id is hardcoded to prevent problems stemming from the misuse of eval.
-    //no perms check because this extends paste the bounds of a server.
+    //no perms check because this extends past the bounds of a server.
     //if you know what you are doing and would like to use the id in the config file you may replace msg.author.id == id, with
     //this.config.get("permissions", {"permissions": {admins: []}}).admins.includes(msg.author.id)
-
 
     if (command.command === "eval" && msg.author.id === "85257659694993408") {
       let code = command.args.join(" ");
@@ -108,7 +114,10 @@ class evaluate {
           "In " + (t1 - t0) + " milliseconds!\n```";
         if (evaluated && evaluated.catch) evaluated.catch(() => {
         });
-        command.createMessage({content: msg.content, embed: {description: embedText, color: 0x00FF00}}).then((initialMessage) => {
+        command.createMessage({
+          content: msg.content,
+          embed: {description: embedText, color: 0x00FF00}
+        }).then((initialMessage) => {
           if (evaluated && evaluated.then) {
             return evaluated.then((result) => {
               embedText = embedText.substring(0, embedText.length - 4);
@@ -126,7 +135,7 @@ class evaluate {
             }).catch((error) => {
               embedText = embedText.substring(0, embedText.length - 4);
               embedText += "\n- - - - - Promise throws- - - - - - -\n";
-              embedText += utils.clean(error);
+              embedText += utils.clean(this._shortenTo(error, 1800));
               embedText += "\n- - - - - - - - - - - - - - - - - - -\n";
               embedText += "In " + (now() - t0) + " milliseconds!\n```";
               this.client.editMessage(msg.channel.id, initialMessage.id, {
@@ -147,7 +156,7 @@ class evaluate {
           embed: {
             description: "```xl\n" +
             "\n- - - - - - - errors-in- - - - - - - \n" +
-            clean(error) +
+            utils.clean(this._shortenTo(error, 1800)) +
             "\n- - - - - - - - - - - - - - - - - - -\n" +
             "In " + (t1 - t0) + " milliseconds!\n```",
             color: 0xFF0000
@@ -233,6 +242,25 @@ class evaluate {
       return true;
     }
 
+    if (command.command === "testdc" && msg.author.id === "85257659694993408") {
+      if (command.args.length < 1) {
+        command.reply(`${command.prefix}testdc <reconnect|resume>`);
+        return true;
+      }
+      switch (command.args[0].toLowerCase()) {
+        case "reconnect": {
+          command.reply("Initiating reconnect.");
+          let packed = packer({op: 7});
+          this.client.shards.random().ws.onmessage({data: packed});
+          break;
+        }
+        case "resume": {
+          command.reply("Initiating resume sequence");
+          this.client.shards.random().ws.onclose({code: 1006, reason: "testing", wasClean: true});
+          break;
+        }
+      }
+    }
 
     if (command.command === "setavatar" && this.fileConfig.get("permissions", {"permissions": {admins: []}}).admins.includes(msg.author.id)) {
       return request({
