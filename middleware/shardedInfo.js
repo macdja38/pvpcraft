@@ -127,7 +127,7 @@ class shardedInfo {
     }
     this.updateCarbonitex(serverCount);
     this.updateAbal(serverCount);
-    this.updateDiscordBotsOrg();
+    this.updateDiscordBotsOrg(serverCount);
     this.logServerChange(server, "Added to");
   }
 
