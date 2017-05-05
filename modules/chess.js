@@ -100,15 +100,14 @@ class chess {
     }
 
     if (command.command === "hooktest" && perms.check(msg, "hooktest")) {
-      this.messageSender.sendMessage(msg.channel, "Hello", {
-        "username": "ChessBot 3000",
-        "icon_url": "http://www.clipartkid.com/images/844/27-chess-piece-pictures-free-cliparts-that-you-can-download-to-you-fAbN54-clipart.jpeg",
-        "text": "",
-        "slack": true,
-        "attachments": [{
-          "pretext": "<:rb:230774531864657920><:NB:230771178065625088><:bb:230774531743023104><:KB:230771177885401088><:qb:230774532451860481><:BB:230771178065756170><:nb:230774531826909188><:RB:230771178065756160> 1\n<:PB:230771178124345344><:pb:230774531797549057><:PB:230771178124345344><:pb:230774531797549057><:PB:230771178124345344><:pb:230774531797549057><:PB:230771178124345344><:pb:230774531797549057> 2\n<:b3:230174772896595968><:b6:230175796507967488><:b3:230174772896595968><:b6:230175796507967488><:b3:230174772896595968><:b6:230175796507967488><:b3:230174772896595968><:b6:230175796507967488> 3\n<:b6:230175796507967488><:b3:230174772896595968><:b6:230175796507967488><:b3:230174772896595968><:b6:230175796507967488><:b3:230174772896595968><:b6:230175796507967488><:b3:230174772896595968> 4\n<:b3:230174772896595968><:b6:230175796507967488><:b3:230174772896595968><:b6:230175796507967488><:b3:230174772896595968><:b6:230175796507967488><:b3:230174772896595968><:b6:230175796507967488> 5\n<:b6:230175796507967488><:b3:230174772896595968><:b6:230175796507967488><:b3:230174772896595968><:b6:230175796507967488><:b3:230174772896595968><:b6:230175796507967488><:b3:230174772896595968> 6\n<:pw:230774531923378176><:PW:230771178036396037><:pw:230774531923378176><:PW:230771178036396037><:pw:230774531923378176><:PW:230771178036396037><:pw:230774531923378176><:PW:230771178036396037> 7\n<:RW:230771177616965633><:nw:230774531839492096><:BW:230771178057236480><:kw:230774531751542784><:QW:230771177738600448><:pw:230774531923378176><:NW:230771177818161152><:rw:230774531671719937> 8\n   a     b     c     d     e     f     g     h  "
-        }]
-      });
+      command.createMessageAutoDeny({embed: {
+        author: {
+          name: "ChessBot 3000",
+          icon_url: "http://www.clipartkid.com/images/844/27-chess-piece-pictures-free-cliparts-that-you-can-download-to-you-fAbN54-clipart.jpeg",
+        },
+        text: "",
+        description: "<:rb:230774531864657920><:NB:230771178065625088><:bb:230774531743023104><:KB:230771177885401088><:qb:230774532451860481><:BB:230771178065756170><:nb:230774531826909188><:RB:230771178065756160> 1\n<:PB:230771178124345344><:pb:230774531797549057><:PB:230771178124345344><:pb:230774531797549057><:PB:230771178124345344><:pb:230774531797549057><:PB:230771178124345344><:pb:230774531797549057> 2\n<:b3:230174772896595968><:b6:230175796507967488><:b3:230174772896595968><:b6:230175796507967488><:b3:230174772896595968><:b6:230175796507967488><:b3:230174772896595968><:b6:230175796507967488> 3\n<:b6:230175796507967488><:b3:230174772896595968><:b6:230175796507967488><:b3:230174772896595968><:b6:230175796507967488><:b3:230174772896595968><:b6:230175796507967488><:b3:230174772896595968> 4\n<:b3:230174772896595968><:b6:230175796507967488><:b3:230174772896595968><:b6:230175796507967488><:b3:230174772896595968><:b6:230175796507967488><:b3:230174772896595968><:b6:230175796507967488> 5\n<:b6:230175796507967488><:b3:230174772896595968><:b6:230175796507967488><:b3:230174772896595968><:b6:230175796507967488><:b3:230174772896595968><:b6:230175796507967488><:b3:230174772896595968> 6\n<:pw:230774531923378176><:PW:230771178036396037><:pw:230774531923378176><:PW:230771178036396037><:pw:230774531923378176><:PW:230771178036396037><:pw:230774531923378176><:PW:230771178036396037> 7\n<:RW:230771177616965633><:nw:230774531839492096><:BW:230771178057236480><:kw:230774531751542784><:QW:230771177738600448><:pw:230774531923378176><:NW:230771177818161152><:rw:230774531671719937> 8\n   a     b     c     d     e     f     g     h  ",
+      }});
     }
 
     if (command.command === "move" && perms.check(msg, "games.chess.move")) {
@@ -145,44 +144,30 @@ class chess {
           return "b3"
         }
       });
-      let attachments = [{
-        "pretext": emoteArray
+      let attachment = {
+        description: emoteArray
           .map((e, i) => (Math.ceil((i + 1) / 8) % 2 !== (i % 2)) ? e.toUpperCase() : e)
           .map(e => emotes[e]).map((c, i) => ((i + 1) % 8 === 0) ? `${c} ${Math.ceil(i / 8)}\n` : c)
-          .join("") + "   a     b     c     d     e     f     g     h"
-      }];
-      attachments.push({
-        "pretext": `Currently up ${this.turns[msg.channel.id]}`,
-        "color": this.turns[msg.channel.id] === "white" ? "#FFFFFF" : "#111111"
-      });
+          .join("") + "   a     b     c     d     e     f     g     h",
+        author: {
+          "username": "Chess Bot 3000",
+          "icon_url": "http://www.clipartkid.com/images/844/27-chess-piece-pictures-free-cliparts-that-you-can-download-to-you-fAbN54-clipart.jpeg",
+        },
+      };
+      attachment.footer = {text: `Currently up ${this.turns[msg.channel.id]}`};
       if (status.isCheckmate) {
-        attachments.push({
-          "pretext": "Checkmate"
-        })
-      }
-      else if (status.isCheck) {
-        attachments.push({
-          "pretext": "Check"
-        })
+        attachment.footer.text += " | Checkmate";
+      } else if (status.isCheck) {
+        attachment.footer.text += " | Check";
       }
       if (status.isRepetition) {
-        attachments.push({
-          "pretext": "Repetition"
-        })
+        attachment.footer.text += " | Repetition";
       }
       if (status.isStalemate) {
-        attachments.push({
-          "pretext": "Stalemate"
-        })
+        attachment.footer.text += " | Stalemate";
       }
       console.log(emoteArray);
-      this.messageSender.sendMessage(msg.channel, "Sorry webhook permissions required", {
-        "username": "Chess Bot 3000",
-        "icon_url": "http://www.clipartkid.com/images/844/27-chess-piece-pictures-free-cliparts-that-you-can-download-to-you-fAbN54-clipart.jpeg",
-        "text": "",
-        "slack": true,
-        "attachments": attachments
-      });
+      command.createMessageAutoDeny({embed: attachment});
     }
   }
 }
