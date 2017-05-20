@@ -3,9 +3,8 @@
  */
 "use strict";
 
-let utils = require('../lib/utils');
-
-let now = require('performance-now');
+const utils = require('../lib/utils');
+const now = require('performance-now');
 
 const os = require('os');
 const numCPUs = os.cpus().length;
@@ -34,7 +33,7 @@ class utilities {
   }
 
   static getCommands() {
-    return ["serverinfo", "server", "userinfo", "user", "ping", "lmgtfy", "statu"];
+    return ["serverinfo", "color", "server", "userinfo", "user", "ping", "lmgtfy", "statu"];
   }
 
   /**
@@ -84,8 +83,7 @@ class utilities {
           command.createMessageAutoDeny({
             embed: {
               title: `User Info for ${utils.clean(member.username)}`,
-              description:
-              `Char Codes: ${comaUserNameCodes}\n` +
+              description: `Char Codes: ${comaUserNameCodes}\n` +
               ((member.nick) ? `Nick: ${utils.clean(member.nick)}\n` : "") +
               `Id: ${member.id}\n` +
               `Descrim: ${member.discriminator}\n` +
@@ -123,13 +121,12 @@ class utilities {
       command.createMessageAutoDeny({
         embed: {
           title: `Status info`,
-          description:
-            `\`\`\`xl\nShard: ${process.env.id}/${process.env.shards}\n` +
-            `CPU: ${os.loadavg()[0] / numCPUs * 100}%\n` +
-            `LoadAverage ${os.loadavg()}\n` +
-            `Memory usage: ${process.memoryUsage().heapTotal / 1000000}MB\n` +
-            `RSS: ${process.memoryUsage().rss / 1000000}MB\n\`\`\`` +
-            `Version: [current](https://github.com/macdja38/pvpcraft/commit/${this.git.commit}), [outdated by](https://github.com/macdja38/pvpcraft/compare/${this.git.commit}...${this.git.branch})`,
+          description: `\`\`\`xl\nShard: ${process.env.id}/${process.env.shards}\n` +
+          `CPU: ${os.loadavg()[0] / numCPUs * 100}%\n` +
+          `LoadAverage ${os.loadavg()}\n` +
+          `Memory usage: ${process.memoryUsage().heapTotal / 1000000}MB\n` +
+          `RSS: ${process.memoryUsage().rss / 1000000}MB\n\`\`\`` +
+          `Version: [current](https://github.com/macdja38/pvpcraft/commit/${this.git.commit}), [outdated by](https://github.com/macdja38/pvpcraft/compare/${this.git.commit}...${this.git.branch})`,
           thumbnail: {url: this.client.user.avatarURL},
         }
       });
