@@ -501,6 +501,7 @@ class PvPCraft {
       messageSender: this.messageSender,
       slowSender: this.slowSender,
       pvpClient: this.pvpClient,
+      pvpcraft: this,
       modules: this.moduleList,
       middleWares: this.middlewareList
     };
@@ -552,6 +553,7 @@ class PvPCraft {
           r: this.r,
           perms: this.perms,
           feeds: this.feeds,
+          pvpcraft: this,
           messageSender: this.messageSender,
           slowSender: this.slowSender,
           pvpClient: this.pvpClient
@@ -656,7 +658,9 @@ class PvPCraft {
     }
     if (command) {
       for (mod in this.moduleList) {
-        if (this.moduleList.hasOwnProperty(mod) && this.moduleList[mod].commands.indexOf(command.commandnos) > -1) {
+        if (this.moduleList.hasOwnProperty(mod) &&
+          (this.moduleList[mod].commands.includes(command.commandnos) ||
+          this.moduleList[mod].commands.includes("*"))) {
           let shouldReturn;
           this._commandWrapper(mod, command, msg, () => {
             shouldReturn = this.moduleList[mod].module.onCommand(msg, command, this.perms, this.moduleList, mod);

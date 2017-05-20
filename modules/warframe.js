@@ -10,19 +10,16 @@ const parseState = require('../lib/parseState');
 
 const utils = require('../lib/utils');
 
-const Twitter = require('twit');
-
 const newStateGrabber = require("../lib/newWorldState");
-const newWorldState = new newStateGrabber("http://content.warframe.com/dynamic/worldState.php", "pc");
 
 let cluster = require("cluster");
+
+const BaseDB = require("../lib/BaseDB");
 
 let master;
 if (process.env.id == 0) {
   master = true;
 }
-
-let twitter;
 
 const request = require('request');
 
@@ -54,136 +51,116 @@ class Warframe {
     //noinspection JSUnresolvedVariable
     this.raven = e.raven;
     //noinspection JSUnresolvedVariable
+    this.worldState = new newStateGrabber(e.r, master ? 30000 : false);
     this.r = e.r;
     this.alerts = [];
     this.rebuildAlerts = this.rebuildAlerts.bind(this);
-    let twitter_auth;
-    if (master) {
-      twitter_auth = e.auth.get("twitter", false);
-      if (twitter_auth) {
-        console.log(`Found twitter auth, starting twitter stream`.blue);
-        //noinspection JSUnresolvedVariable
-        this.twitter = new Twitter(twitter_auth);
-        this.stream = this.twitter.stream('statuses/filter', {follow: "1344755923"});
+    this.alertsDB = new BaseDB(this.r);
+    this.dbReady = this.alertsDB.ensureTable("worldState");
+  }
+
+  stopWarframeTracking() {
+    if (this.cursor) {
+      this.cursor.close();
+      this.cursor = false;
+    }
+  }
+
+  startWarframeTracking() {
+    this.dbReady.then(() => {
+      this.r.table('worldState').changes().run((err, cursor) => {
+        if (err) {
+          console.error(err);
+          return;
+        }
+        this.cursor = cursor;
+        cursor.each((err, newState) => {
+          try {
+            this.onNewState(newState);
+          } catch (error) {
+            console.error(error);
+          }
+        });
+      })
+    });
+  }
+
+  /**
+   * Called when the world state changes
+   * @param {Object} state
+   * @param {Object} state.new_val
+   * @param {Array<Object>} state.new_val.Alerts
+   * @param {Object} state.old_val
+   * @param {Array<Object>} state.old_val.Alerts
+   */
+  onNewState(state) {
+    if (state.new_val && state.old_val && state.new_val.Alerts && state.old_val.Alerts) {
+      const oldAlertIds = state.old_val.Alerts.map(a => a._id.$oid);
+      const newAlerts = state.new_val.Alerts;
+
+      for (let alert of newAlerts) {
+        if (!oldAlertIds.includes(alert._id.$oid)) {
+          this.onAlert(alert, state.new_val.id, state.new_val);
+        }
       }
     }
-    this.onAlert = new Promise((resolve) => {
-      let dbReady;
-      if (!cluster.worker || cluster.worker.id == 1) {
-        dbReady = this.createDBIfNotExists("alerts");
-      } else {
-        dbReady = Promise.resolve();
-      }
-      return dbReady.then(() => {
-        if (master) {
-          console.log(`Shard ${process.env.id} is the Master Shard!`);
-          if (twitter_auth) {
-            //build the map of server id's and logging channels.
-            resolve(
-              (tweet) => {
-                if (tweet.user.id_str === '1344755923' && !tweet.retweeted_status) {
-                  let alert = tweet.text.match(/(.*?): (.*?) - (.*?) - (.*)/);
-                  if (alert) {
-                    alert = alert.slice(1, 5);
-                    alert.invasion = false;
-                  } else {
-                    alert = tweet.text.match(/(.*?): (.*?) (VS\.) (.*)/);
-                    if (alert) {
-                      alert = alert.slice(1, 5);
-                      alert.invasion = true;
-                    }
-                  }
-                  if (alert) {
-                    this.r.table('alerts').insert(alert.reduce((o, v, i) => {
-                      o[i] = v;
-                      return o;
-                    }, {})).run();
-                  }
-                }
-              })
+  }
+
+  onAlert(alert, platform, state) {
+
+    let {embed, itemString} = parseState.buildAlertEmbed(alert, platform, state);
+    this.alerts.forEach((server, i) => setTimeout(() => {
+      try {
+        let guildID = this.client.channelGuildMap[server.channel];
+        let guild = this.client.guilds.get(guildID);
+        if (!guild) return;
+        let channel = guild.channels.get(server.channel);
+        if (!channel || !server.tracking === true) return;
+        if (channel.type !== 0) return; // return if it's a voice channel
+        let things = [];
+        let madeMentionable = [];
+        for (let thing in server.items) {
+          if (server.items.hasOwnProperty(thing) && guild.roles.get(server.items[thing])) {
+            if (itemString && itemString.toLowerCase().indexOf(thing) > -1 && channel.guild.roles.get(server.items[thing])) {
+              things.push(server.items[thing]);
+              madeMentionable.push(guild.editRole(server.items[thing], {
+                mentionable: true
+              }));
+            }
           }
         }
-        this.r.table('alerts').changes().run((err, cursor) => {
-          if (err) {
-            console.error(err);
-            return;
-          }
-          this.cursor = cursor;
-          cursor.each((err, alert) => {
-            try {
-              alert = alert.new_val;
-              if (alert) {
-                console.dir(this.alerts, {depth: 2});
-                this.alerts.forEach((server, i) => setTimeout(() => {
-                  try {
-                    let guildID = this.client.channelGuildMap[server.channel];
-                    let guild = this.client.guilds.get(guildID);
-                    if (!guild) return;
-                    let channel = guild.channels.get(server.channel);
-                    if (!channel || !server.tracking === true) return;
-                    if (channel.type != 0) return; // return if it's a voice channel
-                    let things = [];
-                    let madeMentionable = [];
-                    for (let thing in server.items) {
-                      if (server.items.hasOwnProperty(thing) && guild.roles.get(server.items[thing])) {
-                        if (alert["3"].toLowerCase().indexOf(thing) > -1 && channel.guild.roles.get(server.items[thing])) {
-                          things.push(server.items[thing]);
-                          madeMentionable.push(guild.editRole(server.items[thing], {
-                            mentionable: true
-                          }));
-                        }
-                        if (alert.invasion && alert["1"].toLowerCase().indexOf(thing) > -1 && guild.roles.get(server.items[thing])) {
-                          things.push(server.items[thing]);
-                          madeMentionable.push(guild.editRole(server.items[thing], {
-                            mentionable: true
-                          }));
-                        }
-                      }
-                    }
-                    let sendAlert = () => {
-                      return this.client.createMessage(channel.id, `\`\`\`xl\n${alert["0"]}\n${alert["1"]}\n${alert["2"]}\n${alert["3"]}\n\`\`\`${things.map((thing) => {
-                        return `<@&${thing}>`;
-                      })}`);
-                    };
-                    let makeUnmentionable = () => {
-                      for (let thing in things) {
-                        if (things.hasOwnProperty(thing)) {
-                          let role = guild.roles.get(things[thing]);
-                          if (role) {
-                            guild.editRole(role.id, {
-                              mentionable: false
-                            }).catch(() => {
-                            });
-                          }
-                        }
-                      }
-                    };
-                    Promise.all(madeMentionable).then(() => {
-                      sendAlert().then(makeUnmentionable).catch(console.error);
-                    }).catch(() => {
-                      this.client.createMessage(channel.id, "Unable to make role mentionable, please contact @```Macdja38#7770 for help after making sure the bot has sufficient permissions");
-                      sendAlert().then(makeUnmentionable).catch(console.error);
-                    });
-                  } catch (error) {
-                    console.error(error);
-                    if (this.raven) {
-                      this.raven.captureException(error);
-                    }
-                  }
-                }, i * 5000));
-              }
-            } catch (error) {
-              console.error(error);
-            }
+        let sendAlert = () => {
+          return this.client.createMessage(channel.id, {
+            content: `${things.map((thing) => `<@&${thing}>`)}`,
+            embed,
           });
-        })
-      }).catch(error => {
+        };
+        let makeUnmentionable = () => {
+          for (let thing in things) {
+            if (things.hasOwnProperty(thing)) {
+              let role = guild.roles.get(things[thing]);
+              if (role) {
+                guild.editRole(role.id, {
+                  mentionable: false
+                }).catch(() => {
+                });
+              }
+            }
+          }
+        };
+        Promise.all(madeMentionable).then(() => {
+          sendAlert().then(makeUnmentionable).catch(console.error);
+        }).catch((error) => {
+          this.client.createMessage(channel.id, "Unable to make role mentionable, please contact @```Macdja38#7770 for help after making sure the bot has sufficient permissions" + error);
+          sendAlert().then(makeUnmentionable).catch(console.error);
+        });
+      } catch (error) {
         console.error(error);
         if (this.raven) {
           this.raven.captureException(error);
         }
-      });
-    });
+      }
+    }, i * 5000));
   }
 
   rebuildAlerts() {
@@ -201,25 +178,14 @@ class Warframe {
 
   onReady() {
     this.rebuildAlerts();
-    if (this.twitter && master) {
-      this.onAlert.then((alerts) => {
-        this.stream.removeListener('tweet', alerts);
-        this.stream.on('tweet', alerts);
-        this.stream.start();
-      })
+    if (this.cursor) {
+      this.stopWarframeTracking()
     }
+    this.startWarframeTracking();
   }
 
   onDisconnect() {
-    if (this.twitter && master) {
-      this.onAlert.then((alerts) => {
-        this.stream.removeListener('tweet', alerts);
-        this.stream.stop();
-      });
-    }
-    /*if (this.cursor) {
-      this.cursor.close();
-    }*/
+    this.stopWarframeTracking()
   }
 
   static getCommands() {
@@ -376,7 +342,7 @@ class Warframe {
             this.config.set("warframeAlerts", config, {server: msg.channel.guild.id});
             command.replyAutoDeny(`Created role ${utils.clean(role.name)} with id ${role.id}`);
           }).catch((error) => {
-            if (error.code == 50013) {
+            if (error.code === 50013) {
               command.replyAutoDeny("Error, insufficient permissions, please give me manage roles.");
             }
             else {
@@ -418,7 +384,7 @@ class Warframe {
               command.replyAutoDeny("Deleted role " + utils.clean(command.args[1]) + " with id `" + role.id + "`");
             }).catch((error) => {
               if (error) {
-                if (error.status == 403) {
+                if (error.status === 403) {
                   command.replyAutoDeny("Error, insufficient permissions, please give me manage roles.");
                 }
                 else {
@@ -492,36 +458,10 @@ class Warframe {
     else if (command.commandnos === 'alert' && perms.check(msg, "warframe.alert")) {
       return worldState.get().then((state) => {
         if (state.Alerts) {
-          let alertStringArray = [];
           for (let alert of state.Alerts) {
-            let rewards = "";
-            if (alert.MissionInfo.missionReward) {
-              if (alert.MissionInfo.missionReward.items) {
-                for (let reward of alert.MissionInfo.missionReward.items) {
-                  if (rewards != "") rewards += " + ";
-                  rewards += parseState.getName(reward);
-                }
-              }
-              if (alert.MissionInfo.missionReward.countedItems) {
-                for (let reward of alert.MissionInfo.missionReward.countedItems) {
-                  if (rewards != "") rewards += " + ";
-                  rewards += reward.ItemCount + " " + parseState.getName(reward.ItemType);
-                }
-              }
-              if (rewards != "") rewards += " + ";
-              if (alert.MissionInfo.missionReward.credits) rewards += alert.MissionInfo.missionReward.credits + " credits";
-            }
-            alertStringArray.push("```haskell\n" +
-              parseState.getNodeName(alert.MissionInfo.location) + " levels " + alert.MissionInfo.minEnemyLevel + "-" + alert.MissionInfo.maxEnemyLevel + "\n" +
-              parseState.getFaction(alert.MissionInfo.faction) + " " + parseState.getMissionType(alert.MissionInfo.missionType) + "\n" +
-              rewards +
-              "\nExpires in " + parseState.toTimeDifference(state, alert.Expiry) +
-              "\n```"
-            );
+            let {embed} = parseState.buildAlertEmbed(alert, "pc", state);
+            command.createMessageAutoDeny({embed});
           }
-          command.createMessageAutoDeny(
-            alertStringArray.join("\n")
-          );
         }
       });
     }
@@ -616,7 +556,7 @@ class Warframe {
               + " since " + utils.secondsToTime(state.Time - event.Date.sec) + " ago\n";
           }
         }
-        if (text != "```haskell\n") {
+        if (text !== "```haskell\n") {
           command.createMessageAutoDeny(text + "```")
         } else {
           this.client.createMessage("No prime access could be found");
@@ -652,7 +592,7 @@ class Warframe {
 
     else if ((command.commandnos === 'armorstat' || command.commandnos === 'armor' ||
       command.commandnos === 'armourstat' || command.commandnos === 'armour') && perms.check(msg, "warframe.armor")) {
-      if (command.args.length < 1 || command.args.length == 2 || command.args.length > 3) {
+      if (command.args.length < 1 || command.args.length === 2 || command.args.length > 3) {
         command.createMessageAutoDeny("```haskell\npossible uses include:\n" +
           command.prefix + "armor (Base Armor) (Base Level) (Current Level) calculate armor and stats.\n" +
           command.prefix + "armor (Current Armor)\n```");
@@ -660,7 +600,7 @@ class Warframe {
       }
       let text = "```haskell\n";
       let armor;
-      if (command.args.length == 3) {
+      if (command.args.length === 3) {
         if ((parseInt(command.args[2]) - parseInt(command.args[1])) < 0) {
           command.createMessageAutoDeny("```haskell\nPlease check your input values\n```");
           return true;
@@ -676,17 +616,6 @@ class Warframe {
       return true;
     }
     return false;
-  }
-
-  createDBIfNotExists(name) {
-    return this.r.tableList().contains(name)
-      .do((databaseExists) => {
-        return this.r.branch(
-          databaseExists,
-          {dbs_created: 0},
-          this.r.tableCreate(name)
-        );
-      }).run()
   }
 }
 
