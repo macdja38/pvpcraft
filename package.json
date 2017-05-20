@@ -36,7 +36,7 @@
     "twit": "^2.2.4",
     "universal-analytics": "^0.4.12",
     "youtube-dl": "^1.11.1",
-    "ytdl-core": "^0.9.1"
+    "ytdl-core": "^0.14.1"
   },
   "devDependencies": {
     "docma": "^1.4.0",
