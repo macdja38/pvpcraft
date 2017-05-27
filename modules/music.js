@@ -46,6 +46,8 @@ class music {
     this.musicDB = new MusicDB(this.r, {key});
     this.leaveChecker = false;
     this.boundChannels = [];
+    this.voiceEnd = this.endListener.bind(this, "playNextEnd");
+    this.voiceError = this.endListener.bind(this, "playNextError")
   }
 
   static getCommands() {
@@ -53,6 +55,7 @@ class music {
   }
 
   onReady() {
+    this.attachListeners();
     this._slowSender.onReady();
     if (!this.leaveChecker) {
       this.leaveChecker = setInterval(this.leaveUnused.bind(this), 60000);
@@ -87,12 +90,31 @@ class music {
             throw error;
           }).then((player) => {
             if (player.currentVideo == null) {
+              console.log("play Next");
               player.playNext();
             }
           });
         }
       })
     })
+  }
+
+  attachListeners() {
+    this.client.on("voice_end", this.voiceEnd);
+    this.client.on("voice_error", this.voiceError);
+  }
+
+  removeListeners() {
+    this.client.removeListener("voice_end", this.voiceEnd);
+    this.client.removeListener("voice_error", this.voiceError);
+  }
+
+  endListener(functionNameToCall, event) {
+    if (event.guildID) {
+      if (this.boundChannels.hasOwnProperty(event.guildID)) {
+        this.boundChannels[functionNameToCall](event);
+      }
+    }
   }
 
   init(id, msg, command, perms, debug = false) {
@@ -136,7 +158,7 @@ class music {
       let channel = this.boundChannels[id];
       if (channel.connection
         && channel.ready
-        && channel.connection.playing !== true
+        && channel.playing !== true
         && (Date.now() - channel.lastPlay > 600000)
         && channel.voice.voiceMembers.size < 2) {
         channel.text.createMessage("Leaving voice channel due to inactivity.")
@@ -172,6 +194,7 @@ class music {
       }
       delete this.boundChannels[i];
     }
+    this.removeListeners();
   }
 
   /**
@@ -318,7 +341,7 @@ class music {
 
     if (command.command === "pause" && perms.check(msg, "music.pause")) {
       if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
-        if (this.boundChannels[id].connection.playing && !this.boundChannels[id].connection.paused) {
+        if (this.boundChannels[id].playing && !this.boundChannels[id].paused) {
           this.boundChannels[id].pause();
           command.replyAutoDeny(`Paused Playback use ${command.prefix}resume to resume it.`)
         } else {
@@ -333,7 +356,7 @@ class music {
 
     if (command.command === "resume" && perms.check(msg, "music.resume")) {
       if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
-        if (this.boundChannels[id].connection.paused) {
+        if (this.boundChannels[id].paused) {
           this.boundChannels[id].resume(msg);
           command.replyAutoDeny("Playback resumed.")
         } else {
@@ -520,7 +543,7 @@ class music {
   possiblySendUserNotInVoice(msg, command) {
     if (msg.member.voiceState.channelID) {
       let player = this.boundChannels[msg.channel.guild.id];
-      if (!player || !player.connection || msg.member.voiceState.channelID === player.connection.channelID) {
+      if (!player || !player.connection || msg.member.voiceState.channelID === player.channelID) {
         return false;
       } else {
         command.createMessageAutoDeny("Sorry but you must be in the same voice channel as the bot to use this command.");

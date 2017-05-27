@@ -13,7 +13,7 @@
     "colors": "^1.1.2",
     "deepmerge": "latest",
     "ebml": "^2.2.0",
-    "eris": "github:macdja38/eris#voice-error",
+    "eris": "github:macdja38/eris#external-voice",
     "erlpack": "github:hammerandchisel/erlpack",
     "eventemitter3": "^2.0.2",
     "git-rev": "^0.2.1",

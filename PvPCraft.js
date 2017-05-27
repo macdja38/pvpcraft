@@ -15,7 +15,7 @@ const git = require("git-rev");
 const ravenClient = require("raven");
 const PvPClient = require("pvpclient");
 const ConfigsDB = require("./lib/ConfigDB.js");
-const Eris = require("eris");
+const Eris = require("../eris");
 for (let thing in Eris) {
   if (Eris.hasOwnProperty(thing) && typeof Eris[thing] === "function") {
     Eris[thing].prototype.toJSON = function toJSON() {
@@ -337,6 +337,7 @@ class PvPCraft {
       firstShardID: this.shardId,
       lastShardID: this.shardId,
       maxShards: this.shardCount,
+      workerPort: 80,
       defaultImageFormat: "png",
     });
   }
