@@ -57,11 +57,9 @@ class music {
     if (!this.leaveChecker) {
       this.leaveChecker = setInterval(this.leaveUnused.bind(this), 60000);
     }
-    console.log(this.client.guilds.map(g => g.id));
     return this.musicDB.getBoundChannels(this.client.guilds.map(g => g.id)).then((queues) => {
       queues.forEach(queue => {
         let guild = this.client.guilds.get(queue.id);
-        if (!guild) console.log(queue);
         if (!guild) return;
         let text = guild.channels.get(queue.text_id);
         let voice = guild.channels.get(queue.voice_id);
@@ -81,7 +79,6 @@ class music {
           return this.boundChannels[queue.id].init(voice).then(() => {
             return this.boundChannels[queue.id];
           }).catch(error => {
-            console.log(text);
             text.createMessage(`${error.toString()} While rebinding to voice channel`).catch(console.error);
             delete this.boundChannels[queue.id];
             throw error;
@@ -243,7 +240,6 @@ class music {
           return true;
         }
         let queueCount = perms.check(msg, "music.songcount", {type: "number"});
-        console.log("queueCount", queueCount);
         let options = {};
         if (typeof queueCount === "number") {
           options.limit = queueCount;
@@ -267,7 +263,6 @@ class music {
         if (Number.isNaN(index)) {
           return command.replyAutoDeny("Not a valid song index, please supply a number.");
         }
-        console.log(index, length);
         if (index + 1 >= length) {
           command.replyAutoDeny("Not enough songs to skip, queue a song using //play <youtube url of video or playlist>");
           return true;
