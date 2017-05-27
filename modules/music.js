@@ -138,6 +138,7 @@ class music {
         && channel.ready
         && channel.connection.playing !== true
         && (Date.now() - channel.lastPlay > 600000)
+        && channel.voice
         && channel.voice.voiceMembers.size < 2) {
         channel.text.createMessage("Leaving voice channel due to inactivity.")
           .catch((error) => {
