@@ -2,9 +2,9 @@
 modular version of PvPBot with permissions, modules, access control and many many more features
 
 # setup
-Bot requires 2 files not yet here.
-3 warframe files paths.json, sortie.json and languages.json which can be found at pvpcraft.ca/paths.json ect
-index.php which is included but must be edited. be sure to configure it's url in config.json
+Bot requires 1 file not yet here.
+Paths.json which can be found at pvpcraft.ca/Paths.json (place one folder above project root)
+For web https://github.com/macdja38/pvpsite must be setup and urls configured in this project's config/config.json
 
 # installation instructions
  Requires **node.js** v7.6 or greater, must be able to build native module's using node-gyp. RethinkDB is required for the master branch. **pm2** is optional but highly recommended.
