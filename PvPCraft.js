@@ -457,7 +457,7 @@ class PvPCraft {
     this.id = this.client.user.id;
     console.log("defaults");
     console.log(this.prefix);
-    this.name = this.client.user.name;
+    this.name = this.client.user.username;
     for (let middleware in this.middlewareList) {
       if (this.middlewareList.hasOwnProperty(middleware)) {
         try {
