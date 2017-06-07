@@ -8,7 +8,7 @@
     "blocked": "^1.2.1",
     "bluebird": "^3.4.7",
     "bufferutil": "^3.0.0",
-    "chess": "^0.2.7",
+    "chess": "^0.2.8",
     "cli-table2": "^0.2.0",
     "colors": "^1.1.2",
     "deepmerge": "latest",
