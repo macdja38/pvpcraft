@@ -54,8 +54,9 @@ class cleverBot {
         msg.channel.createMessage(msg.author.mention + ", Bot was not configured with an api key and is therefore disabled.").catch(perms.getAutoDeny(msg));
         return true;
       }
+      let query = msg.content.replace(this.startRegex, "").replace(this.middleRegex, "CleverBot").trim();
+      if(query.length < 1) return false;
       msg.channel.sendTyping();
-      let query = msg.content.replace(this.startRegex, "").replace(this.middleRegex, "CleverBot");
       let bot;
       if (this.sessionMap.has(msg.channel)) {
         bot = this.sessionMap.get(msg.channel);
