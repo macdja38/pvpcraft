@@ -118,7 +118,7 @@ class giveaways {
             if (winnerUser) {
               string += ` ${winnerUser.mention}, `;
             } else {
-              string += ` \`User <@${winnerId}>\`, `;
+              string += ` <@${winnerId}>, `;
             }
           });
           command.reply(string + "for winning!");
