@@ -744,8 +744,10 @@ class moderationV2 {
         newField.title = "Role Overwrite";
         newField.value = `<@&${change.overwrite.id}>`;
       }
-      if (change.change === "remove" || change.change === "add") {
-        newField.value += ` ${change.change}ed ${permissionsListFromNumber(change.overwrite)}`;
+      if (change.change === "add") {
+        newField.value += ` added ${permissionsListFromNumber(change.overwrite)}`;
+      } else if (change.change === "remove") {
+        newField.value += ` removed ${permissionsListFromNumber(change.overwrite)}`;
       }
       else {
         let before = change.from;
@@ -1012,6 +1014,14 @@ class moderationV2 {
       value: typeof user === "string" ? `<@${user}>` : user.mention,
       short: true,
     }];
+
+    if (typeof user !== "string") {
+      fields.push({
+        title: "Username",
+        value: user.username,
+        short: true,
+      })
+    }
 
     if (instigator) {
       fields.push({
