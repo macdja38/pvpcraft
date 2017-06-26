@@ -133,6 +133,7 @@ class evaluate {
                 }
               })
             }).catch((error) => {
+              console.error("eval error", error);
               embedText = embedText.substring(0, embedText.length - 4);
               embedText += "\n- - - - - Promise throws- - - - - - -\n";
               embedText += utils.clean(this._shortenTo(error, 1800));
@@ -152,7 +153,7 @@ class evaluate {
       }
       catch (error) {
         t1 = now();
-        msg.edit(msg.content, {
+        command.createMessage({
           embed: {
             description: "```xl\n" +
             "\n- - - - - - - errors-in- - - - - - - \n" +
@@ -285,13 +286,17 @@ class evaluate {
 
   /**
    *
-   * @param {string} string
+   * @param {*} input
    * @param {number} charCount
    * @returns {string}
    * @private
    */
-  _shortenTo(string, charCount) {
-    return string.slice(0, charCount);
+  _shortenTo(input, charCount) {
+    if (input !== undefined) {
+      return input.slice(0, charCount);
+    } else {
+      return "undefined";
+    }
   }
 
   /**
