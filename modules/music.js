@@ -118,6 +118,7 @@ class music {
         command.replyAutoDeny(`Bound successfully use ${command.prefix}destroy to unbind it.`);
         resolve(this.boundChannels[id]);
       }).catch(error => {
+        console.log(error);
         command.replyAutoDeny(error.toString()).catch(console.error);
         reject(error);
         delete this.boundChannels[id];

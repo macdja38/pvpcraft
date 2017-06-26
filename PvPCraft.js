@@ -45,6 +45,7 @@ for (let thing in Eris) {
     }
   }
 }
+const {monkeyPatchEris} = require("appollo");
 const MessageSender = require("./lib/MessageSender");
 const Permissions = require("./lib/Permissions.js");
 const Analytics = require("./lib/Analytics");
@@ -343,6 +344,12 @@ class PvPCraft {
       maxShards: this.shardCount,
       defaultImageFormat: "png",
     });
+    monkeyPatchEris(this.client, {
+      port: 6379,
+      host: "127.0.0.1",
+      shardIDs: [this.shardId],
+      userID: "157914012892397568",
+    }, 0);
   }
 
   /**
