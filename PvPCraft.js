@@ -161,7 +161,7 @@ class PvPCraft {
   }
 
   readyPvPClient() {
-    this.pvpClient = new PvPClient(this.fileAuth.get("pvpApiEndpoint"), this.fileAuth.get("pvpApiToken"), this.client.user.id, this.client.guilds.map(g => g.id));
+    this.pvpClient = new PvPClient(this.fileAuth.get("pvpApiEndpoint"), this.fileAuth.get("pvpApiToken"), this.client.user.id, this.client.guilds.map(g => g.id), this.client);
     this.pvpClient.on("error", (error) => {
       console.log(error);
       this.raven.captureException(error);
