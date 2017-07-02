@@ -115,7 +115,7 @@ class Warframe {
         let guild = this.client.guilds.get(guildID);
         if (!guild) return;
         let channel = guild.channels.get(server.channel);
-        if (!channel || !server.tracking === true) return;
+        if (!channel || server.tracking !== true) return;
         if (channel.type !== 0) return; // return if it's a voice channel
         let things = [];
         let madeMentionable = [];
