@@ -289,6 +289,7 @@ class moderationV2 {
       let done = false;
       let statusMessage = false;
       let errorMessage = false;
+      let oldMessagesFound = false;
 
       let updateStatus = (text) => {
         if (statusMessage) {
@@ -317,8 +318,13 @@ class moderationV2 {
       });
       purger = setInterval(() => {
         if (purgeQueue.length > 0 && !errorMessage) {
-          let messagesToPurge = purgeQueue.splice(0, 100);
-          channel.deleteMessages(messagesToPurge.map(m => m.id)).then(() => {
+          const messagesToPurge = purgeQueue.splice(0, 100);
+          const twoWeeksAgo = Date.now() - 60*60*24*7*2*1000;
+          const youngMessagesToPurge = messagesToPurge.filter(msg => msg.timestamp > twoWeeksAgo);
+          if (youngMessagesToPurge.length < messagesToPurge.length) {
+            oldMessagesFound = true;
+          }
+          channel.deleteMessages(youngMessagesToPurge.map(m => m.id)).then(() => {
             totalPurged += messagesToPurge.length;
           }).catch((error) => {
             let responseCode;
@@ -348,7 +354,7 @@ class moderationV2 {
       let updateStatusFunction = () => {
         if (done && purgeQueue.length === 0) {
           if (!errorMessage) {
-            updateStatus(this.getStatus(totalPurged, totalFetched, length));
+            updateStatus(this.getStatus(totalPurged, totalFetched, length, oldMessagesFound));
           }
           setTimeout(() => {
             channel.deleteMessage(statusMessage.id);
@@ -360,7 +366,7 @@ class moderationV2 {
         }
         else {
           if (!errorMessage) {
-            updateStatus(this.getStatus(totalPurged, totalFetched, length));
+            updateStatus(this.getStatus(totalPurged, totalFetched, length, oldMessagesFound));
           }
         }
       };
@@ -370,8 +376,9 @@ class moderationV2 {
     }
   }
 
-  getStatus(totalPurged, totalFetched, total) {
-    return `\`\`\`xl\nStatus:\nPurged: ${getBar(totalPurged, totalFetched, 16)}\nFetched:${getBar(totalFetched, total, 16)}\n\`\`\``
+  getStatus(totalPurged, totalFetched, total, oldMessagesFound) {
+    return `\`\`\`xl\nStatus:\nPurged: ${getBar(totalPurged, totalFetched, 16)}\nFetched:${getBar(totalFetched, total, 16)}` +
+      (oldMessagesFound ? "\nMessages older than two weeks cannot be purged due to it breaking discord." : "") + "\n\`\`\`";
   }
 
   updateServerIgnores(count, serverId) {
