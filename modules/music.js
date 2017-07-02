@@ -76,23 +76,23 @@ class music {
             debug: queue.debug || false,
             config: this.config
           });
-          return this.boundChannels[queue.id].init(voice).then(() => {
-            return this.boundChannels[queue.id];
-          }).then((player) => {
-            if (player.currentVideo == null) {
-              player.playNext();
-            }
-          }).catch(error => {
-            if (error.toString() === "Insufficient permissions to join / speak in voice channel.") {
-              text.createMessage(`Insufficient permissions to resume into voice channel. Cannot resume music.`).catch(console.error);
+          return this.boundChannels[queue.id].init(voice)
+            .then((player) => {
+              if (player.currentVideo == null) {
+                player.playNext();
+              }
+            })
+            .catch(error => {
+              if (error.toString() === "Insufficient permissions to join / speak in voice channel.") {
+                text.createMessage(`Insufficient permissions to resume into voice channel. Cannot resume music.`).catch(console.error);
+                delete this.boundChannels[queue.id];
+                this.musicDB.unbind(queue.id);
+                return;
+              }
+              text.createMessage(`${error.toString()} While rebinding to voice channel`).catch(console.error);
               delete this.boundChannels[queue.id];
-              this.musicDB.unbind(queue.id);
-              return;
-            }
-            text.createMessage(`${error.toString()} While rebinding to voice channel`).catch(console.error);
-            delete this.boundChannels[queue.id];
-            throw error;
-          });
+              throw error;
+            });
         }
       })
     })
