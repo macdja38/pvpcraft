@@ -256,6 +256,9 @@ class music {
       if (this.possiblySendNotConnected(msg, command)) return true;
       if (this.possiblySendUserNotInVoice(msg, command)) return true;
       return this.musicDB.queueLength(id).then(async (length) => {
+        // do this again, because it could have changed during the db query
+        if (this.possiblySendNotConnected(msg, command)) return true;
+        if (this.possiblySendUserNotInVoice(msg, command)) return true;
         if (this.boundChannels[id].currentVideo) {
           length += 1;
         }
@@ -432,11 +435,7 @@ class music {
 
     if (command.command === "shuffle" && perms.check(msg, "music.shuffle")) {
       if (this.possiblySendNotConnected(msg, command)) return true;
-      if (this.boundChannels[id]) {
-        command.createMessageAutoDeny(this.boundChannels[id].shuffle());
-      } else {
-        command.createMessageAutoDeny("Sorry, not enough song's in playlist.")
-      }
+      command.createMessageAutoDeny(this.boundChannels[id].shuffle());
       return true;
     }
 
