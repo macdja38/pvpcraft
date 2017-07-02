@@ -26,7 +26,7 @@ module.exports = class ShardManager {
     return new Promise((resolve) => {
       let sentryEnv = this.fileConfig.get("sentryEnv", "");
 
-      if (this.fileAuth.get("sentryURL", "") != "") {
+      if (this.fileAuth.get("sentryURL", "") !== "") {
         console.log("Sentry Started".yellow);
         git.long((commit) => {
           git.branch((branch) => {
@@ -76,7 +76,7 @@ module.exports = class ShardManager {
     for (let i = this.startShard; i < (this.startShard + this.localShards); i++) {
       console.log(`Scheduling shard ${i}`);
       setTimeout(() => {
-        cluster.setupMaster({args: this.args, execArgv: [`--inspect=${9200+i}`]});
+        cluster.setupMaster({args: this.args});
         console.log(`Starting worker ${i} with settings`.green, cluster.settings);
         this.workers.push(cluster.fork({id: i, shards: this.shards}));
         this.lastRestart = Date.now();
@@ -89,7 +89,7 @@ module.exports = class ShardManager {
         let id;
         let target = this.restartQueue.shift();
         id = this.workers.indexOf(target);
-        cluster.setupMaster({args: this.args, execArgv: [`--inspect=${9200+id}`]});
+        cluster.setupMaster({args: this.args});
         this.workers[id] = cluster.fork({id: id + this.startShard, shards: this.shards});
         console.log(`worker ${this.workers[id].process.pid} born with settings`, cluster.settings);
       }

@@ -7,12 +7,29 @@
  */
 "use strict";
 const cluster = require('cluster');
+const inspector = require("inspector");
 
-let Configs = require("./lib/Config.js");
-let fileConfig = new Configs("config");
-let fileAuth = new Configs("auth");
+const Configs = require("./lib/Config.js");
+const fileConfig = new Configs("config");
+const fileAuth = new Configs("auth");
 
-if (cluster.isMaster && fileConfig.get("shards", 2) > 1) {
+const bindIP = fileConfig.get("inspector-bind-ip", false);
+
+const isMaster = cluster.isMaster && fileConfig.get("shards", 2) > 1;
+
+if (bindIP) {
+  let port;
+  if (isMaster) {
+    port = 9199;
+  } else {
+    port = 9200 + parseInt(process.env.id || "0", 10);
+  }
+  console.log(port);
+  inspector.close();
+  inspector.open(port, bindIP, false);
+}
+
+if (isMaster) {
   let ShardManager = require("./ShardManager");
   new ShardManager(fileConfig, fileAuth);
 } else {

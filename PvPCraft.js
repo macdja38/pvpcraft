@@ -61,7 +61,6 @@ if (process.env.dev === "true") {
 
 let lastMessage = Date.now();
 
-
 /**
  * log blocking events
  setTimeout(() => {
@@ -105,12 +104,13 @@ class PvPCraft {
     this.prefix = [];
     this.moduleList = [];
     this.middlewareList = [];
-    this.shardId = parseInt(process.env.id || "0");
-    this.shardCount = parseInt(process.env.shards || "1");
+    this.shardId = parseInt(process.env.id || "0", 10);
+    this.shardCount = parseInt(process.env.shards || "1", 10);
     this.readyPromise = new Promise((resolve /*, reject */) => {
       this.resolveReadyPromise = resolve;
       // this.rejectReadyPromise = reject;
     });
+
     Promise.resolve()
       .then(this.loadAnalytics.bind(this))
       .then(this.readyRaven.bind(this))
