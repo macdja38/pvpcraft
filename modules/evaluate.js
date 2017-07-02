@@ -136,7 +136,7 @@ class evaluate {
               console.error("eval error", error);
               embedText = embedText.substring(0, embedText.length - 4);
               embedText += "\n- - - - - Promise throws- - - - - - -\n";
-              embedText += utils.clean(this._shortenTo(error, 1800));
+              embedText += utils.clean(this._shortenTo(error.toString(), 1800));
               embedText += "\n- - - - - - - - - - - - - - - - - - -\n";
               embedText += "In " + (now() - t0) + " milliseconds!\n```";
               this.client.editMessage(msg.channel.id, initialMessage.id, {
@@ -157,7 +157,7 @@ class evaluate {
           embed: {
             description: "```xl\n" +
             "\n- - - - - - - errors-in- - - - - - - \n" +
-            utils.clean(this._shortenTo(error, 1800)) +
+            utils.clean(this._shortenTo(error.toString(), 1800)) +
             "\n- - - - - - - - - - - - - - - - - - -\n" +
             "In " + (t1 - t0) + " milliseconds!\n```",
             color: 0xFF0000
