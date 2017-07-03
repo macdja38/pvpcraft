@@ -96,7 +96,6 @@ class template {
 
 
     let customCommands = this.configDB.get("custom", {}, {server: msg.channel.guild ? msg.channel.guild.id : "*"});
-    console.log(customCommands);
     if (customCommands.hasOwnProperty(command.command) && perms.check(msg, `custom.command.${command.command}`)) {
       command.replyAutoDeny(customCommands[command.command].text);
       return true;
