@@ -394,11 +394,18 @@ class PvPCraft {
             }
             this.raven = new ravenClient.Client(this.fileAuth.data.sentryURL, ravenConfig);
 
-            this.raven.install(function () {
+            this.raven.install(function (err, sendErr, eventId) {
+              if (!sendErr) {
+                console.log('Successfully sent fatal error with eventId ' + eventId + ' to Sentry:');
+                console.error(err.stack);
+              } else {
+                console.error("Error sending fatal error to sentry: ", sendErr);
+                console.error("fatal error was ", err.stack);
+              }
               console.log("This is thy sheath; there rust, and let me die.");
               setTimeout(() => {
                 process.exit(1)
-              }, 1000);
+              }, 250);
             });
 
             this.raven.on("logged", function (e) {
