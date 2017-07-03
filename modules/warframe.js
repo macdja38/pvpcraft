@@ -151,7 +151,7 @@ class Warframe {
         Promise.all(madeMentionable).then(() => {
           sendAlert().then(makeUnmentionable).catch(console.error);
         }).catch((error) => {
-          this.client.createMessage(channel.id, "Unable to make role mentionable, please contact @```Macdja38#7770 for help after making sure the bot has sufficient permissions" + error);
+          this.client.createMessage(channel.id, "Unable to make role mentionable, please contact @```Macdja38#7770 for help after making sure the bot has sufficient permissions" + error).catch(console.error);
           sendAlert().then(makeUnmentionable).catch(console.error);
         });
       } catch (error) {
