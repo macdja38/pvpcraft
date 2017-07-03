@@ -31,7 +31,8 @@ if (bindIP) {
 
 if (isMaster) {
   let ShardManager = require("./ShardManager");
-  new ShardManager(fileConfig, fileAuth);
+  // make debugging easier
+  global.shardManager = new ShardManager(fileConfig, fileAuth);
 } else {
   let PvPCraft = require("./PvPCraft");
   new PvPCraft(fileConfig, fileAuth);
