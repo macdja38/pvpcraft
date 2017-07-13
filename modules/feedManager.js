@@ -100,7 +100,7 @@ class feedManager {
         command.replyAutoDeny(`Usage ${command.prefix}${command.command} <node>`)
       }
       command.replyAutoDeny(`${
-        this._feeds.find(command.args[0].toLowerCase())
+        this._feeds.find(command.args[0].toLowerCase(), command.channel.id)
           .map(channelId => msg.channel.guild.channels.get(channelId) || channelId)
         }`);
     }
