@@ -74,33 +74,33 @@ class giveaways {
           data.entries = [];
         }
         this.entries.set(null, data, {server: msg.channel.guild.id});
-        command.reply(`Giveaways ${data.enable ? "enabled" : "disabled"} in channel <#${data.channel}>`);
+        command.replyAutoDeny(`Giveaways ${data.enable ? "enabled" : "disabled"} in channel <#${data.channel}>`);
       }
       return true;
     }
 
     if (command.command === "gclear" && perms.check(msg, "admin.giveaway.clear")) {
       if (!this.entries.get("channel", false, {server: msg.channel.guild.id})) {
-        command.reply("Sorry but there is no record of a giveaway ever existing.");
+        command.replyAutoDeny("Sorry but there is no record of a giveaway ever existing.");
         return true;
       }
       this.entries.set("entries", [], {server: msg.channel.guild.id});
-      command.reply(`Entries cleared`);
+      command.replyAutoDeny(`Entries cleared`);
     }
 
     if (command.command === "gcount" && perms.check(msg, "admin.giveaway.count")) {
       if (!this.entries.get("channel", false, {server: msg.channel.guild.id})) {
-        command.reply("Sorry but there is no record of a giveaway ever existing.");
+        command.replyAutoDeny("Sorry but there is no record of a giveaway ever existing.");
         return true;
       }
       this.entries.count("entries", {server: msg.channel.guild.id}).then((entries) => {
-        command.reply(`${entries} entries so far.`);
+        command.replyAutoDeny(`${entries} entries so far.`);
       });
     }
 
     if (command.command === "gdraw" && perms.check(msg, "admin.giveaway.draw")) {
       if (!this.entries.get("channel", false, {server: msg.channel.guild.id})) {
-        command.reply("Sorry but there is no record of a giveaway ever existing.");
+        command.replyAutoDeny("Sorry but there is no record of a giveaway ever existing.");
         return true;
       }
       let winnersCount = 1;
@@ -121,9 +121,9 @@ class giveaways {
               string += ` <@${winnerId}>, `;
             }
           });
-          command.reply(string + "for winning!");
+          command.replyAutoDeny(string + "for winning!");
         } else {
-          command.reply(`No winner could be decided, make sure at least 1 person has entered.`);
+          command.replyAutoDeny(`No winner could be decided, make sure at least 1 person has entered.`);
         }
       });
     }

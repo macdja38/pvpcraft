@@ -106,7 +106,7 @@ class utilities {
       let t1 = now();
       command.createMessageAutoDeny("Testing Ping").then((message) => {
         let t2 = now();
-        this.client.editMessage(message.channel.id, message.id, "Ping is `" + (t2 - t1) + "`ms!");
+        utils.handleErisRejection(this.client.editMessage(message.channel.id, message.id, "Ping is `" + (t2 - t1) + "`ms!"));
       });
       return true;
     }

@@ -56,7 +56,7 @@ class cleverBot {
       }
       let query = msg.content.replace(this.startRegex, "").replace(this.middleRegex, "CleverBot").trim();
       if(query.length < 1) return false;
-      msg.channel.sendTyping();
+      utils.handleErisRejection(msg.channel.sendTyping());
       let bot;
       if (this.sessionMap.has(msg.channel)) {
         bot = this.sessionMap.get(msg.channel);

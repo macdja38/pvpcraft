@@ -30,7 +30,7 @@ class rank {
 
     this.onJoin = (server, user) => {
       let rank = this.config.get("roles", false, {server: server.id});
-      server.addMemberRole(user.id, rank);
+      utils.handleErisRejection(server.addMemberRole(user.id, rank));
     };
 
     this.possiblyDelete = this.possiblyDelete.bind(this);

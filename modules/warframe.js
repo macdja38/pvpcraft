@@ -573,14 +573,14 @@ class Warframe {
         };
         let checks = ["update", "hotfix"];
         for (let event of state.Events) {
-          for (let l of checks) {
-            if (event.Messages[0].Message.toLowerCase().indexOf(l) > -1) {
+          for (let check of checks) {
+            if (event.Messages[0].Message.toLowerCase().indexOf(check) > -1) {
               fields.push({
                 value: `[${event.Messages[0].Message.toLowerCase()}](${event.Prop}) Since ${parseState.toTimeDifferenceInPast(state, event.Date)} ago.`,
                 name: "\u00A0\u200A\u000B\u3000\uFEFF\u2004\u2000\u200E",
                 inline: false,
               });
-              checks.slice(l);
+              checks.slice(check);
               if (checks.length === 0) break;
             }
           }

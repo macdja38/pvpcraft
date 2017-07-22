@@ -293,11 +293,10 @@ class moderationV2 {
 
       let updateStatus = (text) => {
         if (statusMessage) {
-          statusMessage.channel.editMessage(statusMessage.id, text);
+          utils.handleErisRejection(statusMessage.channel.editMessage(statusMessage.id, text));
         } else {
-          channel.createMessage(text)
-            .then(message => statusMessage = message)
-            .catch(error => console.error(error));
+          utils.handleErisRejection(channel.createMessage(text)
+            .then(message => statusMessage = message));
         }
       };
 
@@ -319,7 +318,7 @@ class moderationV2 {
       purger = setInterval(() => {
         if (purgeQueue.length > 0 && !errorMessage) {
           const messagesToPurge = purgeQueue.splice(0, 100);
-          const twoWeeksAgo = Date.now() - 60*60*24*7*2*1000;
+          const twoWeeksAgo = Date.now() - 60 * 60 * 24 * 7 * 2 * 1000;
           const youngMessagesToPurge = messagesToPurge.filter(msg => msg.timestamp > twoWeeksAgo);
           if (youngMessagesToPurge.length < messagesToPurge.length) {
             oldMessagesFound = true;
@@ -357,7 +356,7 @@ class moderationV2 {
             updateStatus(this.getStatus(totalPurged, totalFetched, length, oldMessagesFound));
           }
           setTimeout(() => {
-            channel.deleteMessage(statusMessage.id);
+            utils.handleErisRejection(channel.deleteMessage(statusMessage.id));
             if (command.flags.includes("d")) {
               this.updateServerIgnores(-1, channel.guild.id);
             }
@@ -451,12 +450,18 @@ class moderationV2 {
    * @param {string?} options.icon_url icon that will override the bot's icon when posting webhook
    * @param {Object} attachment
    * @param {string} attachment.title title for webhook
+   * @param {number} [attachment.ts] time stamp in seconds
+   * @param {string} [attachment.color] color of embed
+   * @param {string} [attachment.author_name]
+   * @param {string} [attachment.author_icon]
    * @param {Field[]} attachment.fields Fields used for webhook attachment
    * @param {string} serverId
    */
   sendHookedMessage(eventName, options, attachment, serverId) {
-    attachment.ts = Date.now() / 1000;
-    if (colorMap.hasOwnProperty(eventName)) {
+    if (!attachment.ts) {
+      attachment.ts = Date.now() / 1000;
+    }
+    if (!attachment.color && colorMap.hasOwnProperty(eventName)) {
       attachment.color = colorMap[eventName];
     }
     let payload = {
@@ -467,8 +472,12 @@ class moderationV2 {
     };
     let fallbackMessage = "";
     if (options.hasOwnProperty("user") && options.user.hasOwnProperty("username")) {
-      attachment.author_name = options.user.username;
-      attachment.author_icon = options.user.avatarURL;
+      if (!attachment.author_name) {
+        attachment.author_name = options.user.username;
+      }
+      if (!attachment.author_icon) {
+        attachment.author_icon = options.user.avatarURL;
+      }
       fallbackMessage += `${attachment.title} | `;
     }
     if (attachment.hasOwnProperty("fields")) {
@@ -806,7 +815,7 @@ class moderationV2 {
     }
     if (oldUser.avatar !== user.avatar) {
       let oldURL;
-      if(oldUser.avatar != null) {
+      if (oldUser.avatar != null) {
         oldURL = `https://cdn.discordapp.com/avatars/${user.id}/${oldUser.avatar}.${oldUser.avatar.startsWith("_a") ? "gif" : "png"}?size=128`;
       }
       fields.push({

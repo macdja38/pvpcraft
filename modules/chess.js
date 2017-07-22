@@ -150,7 +150,7 @@ class chess {
         description: emoteArray
           .map((e, i) => (Math.ceil((i + 1) / 8) % 2 !== (i % 2)) ? e.toUpperCase() : e)
           .map(e => emotes[e]).map((c, i) => ((i + 1) % 8 === 0) ? `${c} ${Math.ceil(i / 8)}\n` : c)
-          .join("") + "   a     b     c     d     e     f     g     h",
+          .join("") + "  a     b     c     d     e     f     g     h",
         author: {
           "username": "Chess Bot 3000",
           "icon_url": "http://www.clipartkid.com/images/844/27-chess-piece-pictures-free-cliparts-that-you-can-download-to-you-fAbN54-clipart.jpeg",

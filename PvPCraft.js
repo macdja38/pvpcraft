@@ -50,6 +50,7 @@ const Permissions = require("./lib/Permissions.js");
 const Analytics = require("./lib/Analytics");
 const now = require("performance-now");
 const Command = require("./lib/Command");
+const utils = require("./lib/utils");
 const colors = require("colors");
 const request = require("request");
 const SlowSender = require("./lib/SlowSender");
@@ -551,7 +552,7 @@ class PvPCraft {
         }
         let modules = this.fileConfig.get("modules");
         delete require.cache[require.resolve(modules[command.args[0]])];
-        channel.createMessage("Reloading " + command.args[0]);
+        utils.handleErisRejection(channel.createMessage("Reloading " + command.args[0]));
         console.log("Reloading ".yellow + command.args[0].yellow);
         let Mod = require(modules[command.args[0]]);
         let mod = new Mod({
@@ -573,7 +574,7 @@ class PvPCraft {
         this.moduleList[module].module = mod;
         this.moduleList[module].commands = Mod.getCommands();
         console.log("Reloded ".yellow + command.args[0].yellow);
-        channel.createMessage("Reloded " + command.args[0]);
+        utils.handleErisRejection(channel.createMessage("Reloded " + command.args[0]));
       }
     }
   }
@@ -626,7 +627,7 @@ class PvPCraft {
           extra,
         });
       }
-      msg.channel.createMessage(`${msg.author.mention}, Sorry about that an unknown problem occurred processing your command, an error report has been logged and we are looking into the problem.`);
+      utils.handleErisRejection(msg.channel.createMessage(`${msg.author.mention}, Sorry about that an unknown problem occurred processing your command, an error report has been logged and we are looking into the problem.`));
     }
 
     if (command) {
@@ -743,8 +744,8 @@ class PvPCraft {
             if (ravenError) {
               console.error("Error reporting error to sentry:\n", ravenError, "Error sentry was trying to report:\n", ravenError);
             } else {
-              msg.channel.createMessage("Sorry their was an error processing your command. The error is ```" + error +
-                "``` reference code `" + id + "`");
+              utils.handleErisRejection(msg.channel.createMessage("Sorry their was an error processing your command. The error is ```" + error +
+                "``` reference code `" + id + "`"));
             }
             if (process.env.dev === "true") {
               console.error(error);

@@ -55,7 +55,7 @@ class template {
           `${msg.channel.mention} on ${msg.channel.guild.name} as Invite filtering is enabled and you do not have the ` +
           `whitelist permission, please contact the moderation team if you believe this is in error.`)
       );
-      msg.delete();
+      utils.handleErisRejection(msg.delete());
       return true;
     }
     return false;
