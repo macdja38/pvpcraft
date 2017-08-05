@@ -14,7 +14,7 @@ let SlowSender = require('../lib/SlowSender');
 let packer;
 try {
   packer = require("erlpack").unpack;
-} catch(e) {
+} catch (e) {
   packer = JSON.stringify;
 }
 
@@ -80,167 +80,7 @@ class evaluate {
     //this.config.get("permissions", {"permissions": {admins: []}}).admins.includes(msg.author.id)
 
     if (command.command === "eval" && msg.author.id === "85257659694993408") {
-      let code = command.args.join(" ");
-
-      //these are so that others code will run in the eval if they depend on things.
-      //noinspection JSUnusedLocalSymbols
-      let client = this.client;
-      //noinspection JSUnusedLocalSymbols
-      let bot = this.client;
-      let message = msg;
-      //noinspection JSUnusedLocalSymbols
-      let config = this.config;
-      //noinspection JSUnusedLocalSymbols
-      let slowSend = this.slowSender;
-      //noinspection JSUnusedLocalSymbols
-      let raven = this.raven;
-      //noinspection JSUnusedLocalSymbols
-      let modules = this.modules;
-      //noinspection JSUnusedLocalSymbols
-      let guild = message.channel.guild;
-      //noinspection JSUnusedLocalSymbols
-      let channel = msg.channel;
-      let t0, t1, t2;
-      t0 = now();
-      try {
-        let evaluated;
-        t0 = now();
-        evaluated = eval(code);
-        t1 = now();
-        let embedText = "```xl\n" +
-          "\n- - - - - - evaluates-to- - - - - - -\n" +
-          utils.clean(this._shortenTo(this._convertToObject(evaluated), 1800)) +
-          "\n- - - - - - - - - - - - - - - - - - -\n" +
-          "In " + (t1 - t0) + " milliseconds!\n```";
-        if (evaluated && evaluated.catch) evaluated.catch(() => {
-        });
-        command.createMessage({
-          content: msg.content,
-          embed: {description: embedText, color: 0x00FF00}
-        }).then((initialMessage) => {
-          if (evaluated && evaluated.then) {
-            return evaluated.then((result) => {
-              embedText = embedText.substring(0, embedText.length - 4);
-              embedText += "\n- - - - -Promise resolves to- - - - -\n";
-              embedText += utils.clean(this._shortenTo(this._convertToObject(result), 1800));
-              embedText += "\n- - - - - - - - - - - - - - - - - - -\n";
-              embedText += "In " + (now() - t0) + " milliseconds!\n```";
-              this.client.editMessage(msg.channel.id, initialMessage.id, {
-                content: msg.content,
-                embed: {
-                  description: embedText,
-                  color: 0x00FF00
-                }
-              })
-            }).catch((error) => {
-              console.error("eval error", error);
-              embedText = embedText.substring(0, embedText.length - 4);
-              embedText += "\n- - - - - Promise throws- - - - - - -\n";
-              embedText += utils.clean(this._shortenTo(error.toString(), 1800));
-              embedText += "\n- - - - - - - - - - - - - - - - - - -\n";
-              embedText += "In " + (now() - t0) + " milliseconds!\n```";
-              this.client.editMessage(msg.channel.id, initialMessage.id, {
-                content: msg.content,
-                embed: {
-                  description: embedText,
-                  color: 0xFF0000
-                }
-              })
-            }).catch(error => console.error(error));
-          }
-        });
-        console.log(evaluated);
-      }
-      catch (error) {
-        t1 = now();
-        command.createMessage({
-          embed: {
-            description: "```xl\n" +
-            "\n- - - - - - - errors-in- - - - - - - \n" +
-            utils.clean(this._shortenTo(error.toString(), 1800)) +
-            "\n- - - - - - - - - - - - - - - - - - -\n" +
-            "In " + (t1 - t0) + " milliseconds!\n```",
-            color: 0xFF0000
-          }
-        });
-        console.error(error);
-      }
-      return true;
-    }
-
-
-    if (command.command === "eval2" && msg.author.id === "85257659694993408") {
-      let code = command.args.join(" ");
-
-      //these are so that others code will run in the eval if they depend on things.
-      //noinspection JSUnusedLocalSymbols
-      let client = this.client;
-      //noinspection JSUnusedLocalSymbols
-      let bot = this.client;
-      let message = msg;
-      //noinspection JSUnusedLocalSymbols
-      let config = this.config;
-      //noinspection JSUnusedLocalSymbols
-      let slowSend = this.slowSender;
-      //noinspection JSUnusedLocalSymbols
-      let raven = this.raven;
-      //noinspection JSUnusedLocalSymbols
-      let modules = this.modules;
-      //noinspection JSUnusedLocalSymbols
-      let guild = message.channel.guild;
-      //noinspection JSUnusedLocalSymbols
-      let channel = msg.channel;
-      let t0, t1, t2;
-      t0 = now();
-      try {
-        t0 = now();
-        let evaluated = eval(code);
-        t1 = now();
-        let string = "```xl\n" +
-          utils.clean(code) +
-          "\n- - - - - - evaluates-to- - - - - - -\n" +
-          utils.clean(this._shortenTo(this._convertToObject(evaluated), 1500)) +
-          "\n- - - - - - - - - - - - - - - - - - -\n" +
-          "In " + (t1 - t0) + " milliseconds!\n```";
-        if (evaluated && evaluated.then) {
-          evaluated.catch(() => {
-          }).then(() => {
-            t2 = now();
-          })
-        }
-
-        this.client.createMessage(msg.channel.id, string).then(message => {
-          if (evaluated && evaluated.then) {
-            evaluated.catch((error) => {
-              string = string.substring(0, string.length - 4);
-              string += "\n- - - - - Promise throws- - - - - - -\n";
-              string += utils.clean(error);
-              string += "\n- - - - - - - - - - - - - - - - - - -\n";
-              string += "In " + (t2 - t0) + " milliseconds!\n```";
-              this.client.editMessage(message.channel.id, message.id, string).catch(error => console.error(error));
-            }).then((result) => {
-              string = string.substring(0, string.length - 4);
-              string += "\n- - - - -Promise resolves to- - - - -\n";
-              string += utils.clean(this._shortenTo(this._convertToObject(result), 1500));
-              string += "\n- - - - - - - - - - - - - - - - - - -\n";
-              string += "In " + (t2 - t0) + " milliseconds!\n```";
-              this.client.editMessage(message.channel.id, message.id, string).catch(error => console.error(error));
-            }).catch(error => console.error(error))
-          }
-        });
-        console.log(evaluated);
-      }
-      catch (error) {
-        t1 = now();
-        this.client.createMessage(msg.channel.id, "```xl\n" +
-          utils.clean(code) +
-          "\n- - - - - - - errors-in- - - - - - - \n" +
-          utils.clean(error) +
-          "\n- - - - - - - - - - - - - - - - - - -\n" +
-          "In " + (t1 - t0) + " milliseconds!\n```");
-        console.error(error);
-      }
-      return true;
+      return this.evalCommand(msg, command);
     }
 
     if (command.command === "testdc" && msg.author.id === "85257659694993408") {
@@ -267,7 +107,7 @@ class evaluate {
       return request({
         method: 'GET',
         url: command.args[0],
-        encoding: null
+        encoding: null,
       }).then((image) => {
         this.client.editSelf({avatar: `data:image/png;base64,${image.toString("base64")}`}).then(() => {
           this.client.createMessage(msg.channel.id, "Changed avatar.");
@@ -282,6 +122,111 @@ class evaluate {
     }
 
     return false;
+  }
+
+  async evalCommand(msg, command) {
+    let code = command.args.join(" ");
+
+    //these are so that others code will run in the eval if they depend on things.
+    //noinspection JSUnusedLocalSymbols
+    let client = this.client;
+    //noinspection JSUnusedLocalSymbols
+    let bot = this.client;
+    let message = msg;
+    //noinspection JSUnusedLocalSymbols
+    let config = this.config;
+    //noinspection JSUnusedLocalSymbols
+    let slowSend = this.slowSender;
+    //noinspection JSUnusedLocalSymbols
+    let raven = this.raven;
+    //noinspection JSUnusedLocalSymbols
+    let modules = this.modules;
+    //noinspection JSUnusedLocalSymbols
+    let guild = message.channel.guild;
+    //noinspection JSUnusedLocalSymbols
+    let channel = msg.channel;
+    let t0, t1;
+
+    let t2Resolve;
+    let t2 = new Promise(resolve => {
+      t2Resolve = resolve;
+    });
+
+    for (let i = 0; i < 100; i++) {
+      t0 = now()
+    } // make now a hot path, hopefully making it more accurate
+
+    try {
+      let evaluated;
+      t0 = now();
+      evaluated = eval(code);
+      t1 = now();
+      let embedText = "```xl\n" +
+        "\n- - - - - - evaluates-to- - - - - - -\n" +
+        utils.clean(this._shortenTo(this._convertToObject(evaluated), 1800)) +
+        "\n- - - - - - - - - - - - - - - - - - -\n" +
+        "In " + (t1 - t0) + " milliseconds!\n```";
+      if (evaluated && evaluated.catch) evaluated.catch(() => {
+      }).then(() => {
+        t2Resolve(now());
+      });
+      command.createMessage({
+        content: msg.content,
+        embed: {description: embedText, color: 0x00FF00},
+      }).then(async (initialMessage) => {
+        let resolvedTime2 = await t2;
+        try {
+          let result = await evaluated;
+          embedText = embedText.substring(0, embedText.length - 4);
+          embedText += "\n- - - - -Promise resolves to- - - - -\n";
+          embedText += utils.clean(this._shortenTo(this._convertToObject(result), 1800));
+          embedText += "\n- - - - - - - - - - - - - - - - - - -\n";
+          embedText += "In " + (resolvedTime2 - t0) + " milliseconds!\n```";
+          this.client.editMessage(msg.channel.id, initialMessage.id, {
+            content: msg.content,
+            embed: {
+              description: embedText,
+              color: 0x00FF00,
+            },
+          })
+        } catch (error) {
+          console.error("eval error", error);
+          if (error === undefined) {
+            error = "undefined"
+          } else if (error === null) {
+            error = "null"
+          }
+          embedText = embedText.substring(0, embedText.length - 4);
+          embedText += "\n- - - - - Promise throws- - - - - - -\n";
+          embedText += utils.clean(this._shortenTo(error.toString(), 1800));
+          embedText += "\n- - - - - - - - - - - - - - - - - - -\n";
+          embedText += "In " + (resolvedTime2 - t0) + " milliseconds!\n```";
+          this.client.editMessage(msg.channel.id, initialMessage.id, {
+            content: msg.content,
+            embed: {
+              description: embedText,
+              color: 0xFF0000,
+            },
+          })
+        }
+      });
+      console.log(evaluated);
+    }
+    catch (error) {
+      t1 = now();
+      command.createMessage({
+        embed: {
+          description: "```xl\n" +
+          "\n- - - - - - - errors-in- - - - - - - \n" +
+          utils.clean(this._shortenTo(error.toString(), 1800)) +
+          "\n- - - - - - - - - - - - - - - - - - -\n" +
+          "In " + (t1 - t0) + " milliseconds!\n```",
+          color: 0xFF0000,
+        },
+      });
+      console.error(error);
+    }
+    return true;
   }
 
   /**
