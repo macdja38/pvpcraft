@@ -1,18 +1,19 @@
 {
   "private": true,
   "scripts": {
-    "doc": "node docma.js"
+    "doc": "node docma.js",
+    "lint": "eslint PvPCraft.js main.js docma.js ShardManager.js modules middleware lib"
   },
   "dependencies": {
     "better-cleverbot-io": "^1.0.2",
     "blocked": "^1.2.1",
-    "bluebird": "^3.4.7",
-    "bufferutil": "^3.0.0",
+    "bufferutil": "^3.0.2",
+    "cheerio": "^1.0.0-rc.2",
     "chess": "^0.2.8",
     "cli-table2": "^0.2.0",
     "colors": "^1.1.2",
-    "deepmerge": "^1.4.4",
-    "ebml": "^2.2.0",
+    "deepmerge": "^1.5.0",
+    "ebml": "^2.2.1",
     "eris": "github:macdja38/eris#voice-error",
     "erlpack": "github:hammerandchisel/erlpack",
     "eventemitter3": "^2.0.2",
@@ -24,11 +25,11 @@
     "performance-now": "^2.1.0",
     "pokedex-promise-v2": "^3.0.0",
     "pvpclient": "github:macdja38/pvpclient",
-    "raven": "^2.1.0",
+    "raven": "^2.1.1",
     "request": "^2.7.0",
     "request-promise-native": "^1.0.3",
-    "rethinkdbdash": "^2.3.23",
-    "sodium-native": "^1.10.0",
+    "rethinkdbdash": "^2.3.31",
+    "sodium-native": "^1.10.3",
     "stream-resume": "^0.0.5",
     "superagent": "^3.5.2",
     "universal-analytics": "^0.4.12",
@@ -37,14 +38,26 @@
   },
   "devDependencies": {
     "docma": "^1.4.0",
+    "eslint": "^4.3.0",
     "jest-cli": "^20.0.4",
-    "jsdoc": "^3.4.3",
+    "jsdoc": "^3.5.4",
     "jsdoc-strip-async-await": "^0.1.0"
   },
   "engines": {
-    "node": ">=7.6"
+    "node": ">=8.1"
   },
   "jest": {
     "testEnvironment": "node"
+  },
+  "eslintConfig": {
+    "parserOptions": {
+      "ecmaVersion": 8
+    },
+    "rules": {
+      "complexity": [
+        "error",
+        20
+      ]
+    }
   }
 }
