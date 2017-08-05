@@ -31,7 +31,7 @@ class minecraft {
   }
 
   static getCommands() {
-    return ["mcping", "mcskin", "mcavatar"];
+    return ["mcping", "mcskin", "mcavatar", "mcwiki"];
   }
 
   /**
@@ -118,6 +118,16 @@ class minecraft {
         }
       });
       return true;
+    }
+
+    if (command.command === "mcwiki" && perms.check(msg, "minecraft.mcwiki")) {
+      return utils.mediaWikiSearch("http://minecraft.gamepedia.com/api.php", command.args.join(" ")).then(result => {
+        if (result.length < 4 || result[3].length < 1) {
+          return command.replyAutoDeny("Not enough results.")
+        } else {
+          return command.replyAutoDeny(`${result[3][0]}${result.length > 1 ? `\n\n**Also see**:\n${result[3].slice(1, Math.min(result.length, 3)).map(r => `<${r}>`).join("\n")}` : ""}`);
+        }
+      })
     }
     return false;
   }
