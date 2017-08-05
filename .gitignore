@@ -29,6 +29,7 @@ config/*.json
 
 # Webstorms files
 .idea
+coverage
 
 # Optional npm cache directory
 .npm
@@ -36,5 +37,5 @@ config/*.json
 # Optional REPL history
 .node_repl_history
 
-#warframeData
+# warframeData
 warframeData/*.json
