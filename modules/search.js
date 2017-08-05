@@ -3,9 +3,13 @@
  */
 "use strict";
 
-let utils = require('../lib/utils');
+let utils = require("../lib/utils");
 
-let google = require('google');
+let google = require("google");
+
+let request = require("request");
+
+let cheerio = require("cheerio");
 
 class search {
   /**
@@ -71,6 +75,20 @@ class search {
     }
     return false;
   }
+}
+
+function search_gus(query) {
+  return request.get(`https://www.google.com/search?ie=ISO-8859-1&hl=en&source=hp&q=${query}&btnG=Google+Search&gbv=1`)
+    .then(body => cheerio.load(body))
+    .then(($) => {
+      const element = $('body p a').first();
+      if (!element) return false;
+      let href = element.attr('href');
+      if (!href) return false;
+      href = href.replace(/^\/url\?q=/, '');
+      href = href.slice(0, href.indexOf('&sa='));
+      return href;
+    });
 }
 
 module.exports = search;
