@@ -515,7 +515,7 @@ class PvPCraft {
       pvpClient: this.pvpClient,
       pvpcraft: this,
       modules: this.moduleList,
-      middleWares: this.middlewareList
+      middleWares: this.middlewareList,
     };
     for (let module in modules) {
       if (modules.hasOwnProperty(module)) {
@@ -568,7 +568,7 @@ class PvPCraft {
           pvpcraft: this,
           messageSender: this.messageSender,
           slowSender: this.slowSender,
-          pvpClient: this.pvpClient
+          pvpClient: this.pvpClient,
         });
         if (mod.onReady) mod.onReady();
         this.moduleList[module].module = mod;
@@ -613,7 +613,7 @@ class PvPCraft {
         let extra = {
           channel: msg.channel.id,
           channel_name: msg.channel.name,
-          msg: msg.content
+          msg: msg.content,
         };
         if (command) {
           extra.command = command;
@@ -671,8 +671,7 @@ class PvPCraft {
     if (command) {
       for (mod in this.moduleList) {
         if (this.moduleList.hasOwnProperty(mod) &&
-          (this.moduleList[mod].commands.includes(command.commandnos) ||
-          this.moduleList[mod].commands.includes("*"))) {
+          (this.moduleList[mod].commands.includes(command.commandnos) || this.moduleList[mod].commands.includes("*"))) {
           let shouldReturn;
           this._commandWrapper(mod, command, msg, () => {
             shouldReturn = this.moduleList[mod].module.onCommand(msg, command, this.perms, this.moduleList, mod);
