@@ -26,6 +26,7 @@ class welcome {
     this.client = e.client;
     this.config = e.configDB;
     this.raven = e.raven;
+    this.perms = e.perms;
 
     /**
      *
@@ -89,43 +90,33 @@ class welcome {
     this.client.on("guildMemberAdd", this.onJoin);
   }
 
-  static getCommands() {
-    return ["setwelcome"];
-  }
-
-  /**
-   * Called with a command, returns true or a promise if it is handling the command, returns false if it should be passed on.
-   * @param {Message} msg
-   * @param {Command} command
-   * @param {Permissions} perms
-   * @returns {boolean | Promise}
-   */
-  onCommand(msg, command, perms) {
-    if (command.command === "setwelcome" && perms.check(msg, "admin.welcome.set")) {
-      if (!command.args && !command.channel) {
-        return true;
-      }
-      let settings = this.config.get("welcome", {}, {server: msg.channel.guild.id});
-      if (command.args.length > 0 && command.args[0].toLowerCase() === "false") {
-        this.config.set("welcome", {}, {server: msg.channel.guild.id, conflict: "replace"});
+  getCommands() {
+    return [{
+      triggers: ["setwelcome"],
+      permissionCheck: this.perms.genCheckCommand("admin.welcome.set"),
+      channels: ["guild"],
+      execute: (command) => {
+        let settings = this.config.get("welcome", {}, {server: command.channel.guild.id});
+        if (command.args.length > 0 && command.args[0].toLowerCase() === "false") {
+          this.config.set("welcome", {}, {server: command.channel.guild.id, conflict: "replace"});
+          command.replyAutoDeny(":thumbsup::skin-tone-2:");
+          return true;
+        }
+        if (command.args.length > 0) {
+          settings.message = command.args.join(" ");
+        }
+        if (command.channel) {
+          settings.channel = command.channel.id;
+        }
+        settings.private = command.flags.indexOf('p') > -1;
+        if (command.options.delay) {
+          settings.delay = Math.max(Math.min(command.options.delay.valueOf() || 0, 20), 0) * 1000;
+        }
+        this.config.set("welcome", settings, {server: command.channel.guild.id});
         command.replyAutoDeny(":thumbsup::skin-tone-2:");
         return true;
       }
-      if (command.args.length > 0) {
-        settings.message = command.args.join(" ");
-      }
-      if (command.channel) {
-        settings.channel = command.channel.id;
-      }
-      settings.private = command.flags.indexOf('p') > -1;
-      if (command.options.delay) {
-        settings.delay = Math.max(Math.min(command.options.delay.valueOf() || 0, 20), 0) * 1000;
-      }
-      this.config.set("welcome", settings, {server: msg.channel.guild.id});
-      command.replyAutoDeny(":thumbsup::skin-tone-2:");
-      return true;
-    }
-    return false;
+    }];
   }
 }
 

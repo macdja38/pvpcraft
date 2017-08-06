@@ -172,10 +172,6 @@ class moderationV2 {
     }
   }
 
-  static getCommands() {
-    return ["purge", "ban", "kick", "unban"];
-  }
-
   moderationAction(msg, command, perms, action) {
     // locate user
     let user;
@@ -233,146 +229,157 @@ class moderationV2 {
   }
 
   /**
-   * Called with a command, returns true or a promise if it is handling the command, returns false if it should be passed on.
-   * @param {Message} msg
-   * @param {Command} command
-   * @param {Permissions} perms
-   * @returns {boolean | Promise}
+   * Returns an array of commands that can be called by the command handler
+   * @returns {[{triggers: [string], permissionCheck: function, channels: [string], execute: function}]}
    */
-  onCommand(msg, command, perms) {
-    if (command.command === "ban" && perms.check(msg, "moderation.ban")) {
-      this.moderationAction(msg, command, perms, "ban");
-      return true;
-    }
-
-    if (command.command === "kick" && perms.check(msg, "moderation.kick")) {
-      this.moderationAction(msg, command, perms, "kick");
-      return true;
-    }
-
-    if (command.command === "unban" && perms.check(msg, "moderation.unban")) {
-      this.moderationAction(msg, command, perms, "unban");
-      return true;
-    }
-
-    if (command.command === "purge" && perms.check(msg, "moderation.tools.purge")) {
-      let channel = command.channel ? command.channel : msg.channel;
-      let options = {};
-      if (/<@!?\d+>/.test(command.options.user)) {
-        let user = msg.channel.guild.members.get(command.options.user.match(/<@!?(\d+)>/)[1]);
-        if (user) {
-          options.user = user;
-        } else {
-          command.reply("Cannot find that user.")
-        }
-      }
-      if (!isNaN(command.options.before)) {
-        options.before = command.options.before;
-      }
-      if (!isNaN(command.options.after)) {
-        options.after = command.options.after;
-      }
-      let length;
-      if (command.args[0]) {
-        length = Math.min(parseInt(command.args[0]) + 1 || this.config.get("purgeLength", 100), this.config.get("maxPurgeLength", 1000));
-      } else {
-        length = this.config.get("purgeLength", 100)
-      }
-      if (command.flags.includes("d")) {
-        this.updateServerIgnores(1, channel.guild.id);
-      }
-      let purger;
-      let status;
-      let purgeQueue = [];
-      let totalFetched = 0;
-      let totalPurged = 0;
-      let done = false;
-      let statusMessage = false;
-      let errorMessage = false;
-      let oldMessagesFound = false;
-
-      let updateStatus = (text) => {
-        if (statusMessage) {
-          utils.handleErisRejection(statusMessage.channel.editMessage(statusMessage.id, text));
-        } else {
-          utils.handleErisRejection(channel.createMessage(text)
-            .then(message => statusMessage = message));
-        }
-      };
-
-      this.fetchMessages(channel, length, options, (messages, error) => {
-        if (error) {
-          errorMessage = error;
-          done = true;
-          purgeQueue = [];
-          updateStatus(`\`\`\`xl\n${error}\`\`\``);
-        } else {
-          if (messages) {
-            totalFetched += messages.length;
-            purgeQueue = purgeQueue.concat(messages);
+  getCommands() {
+    return [{
+      triggers: ["ban"],
+      permissionCheck: this.perms.genCheckCommand("moderation.ban"),
+      channels: ["guild"],
+      execute: command => {
+        this.moderationAction(msg, command, perms, "ban");
+        return true;
+      },
+    }, {
+      triggers: ["kick"],
+      permissionCheck: this.perms.genCheckCommand("moderation.kick"),
+      channels: ["guild"],
+      execute: command => {
+        this.moderationAction(msg, command, perms, "kick");
+        return true;
+      },
+    }, {
+      triggers: ["unban"],
+      permissionCheck: this.perms.genCheckCommand("moderation.unban"),
+      channels: ["guild"],
+      execute: command => {
+        this.moderationAction(msg, command, perms, "unban");
+        return true;
+      },
+    }, {
+      triggers: ["purge"],
+      permissionCheck: this.perms.genCheckCommand("moderation.tools.purge"),
+      channels: ["guild"],
+      execute: command => {
+        let channel = command.channel ? command.channel : command.channel;
+        let options = {};
+        if (/<@!?\d+>/.test(command.options.user)) {
+          let user = command.channel.guild.members.get(command.options.user.match(/<@!?(\d+)>/)[1]);
+          if (user) {
+            options.user = user;
           } else {
-            done = true;
+            command.reply("Cannot find that user.")
           }
         }
-      });
-      purger = setInterval(() => {
-        if (purgeQueue.length > 0 && !errorMessage) {
-          const messagesToPurge = purgeQueue.splice(0, 100);
-          const twoWeeksAgo = Date.now() - 60 * 60 * 24 * 7 * 2 * 1000;
-          const youngMessagesToPurge = messagesToPurge.filter(msg => msg.timestamp > twoWeeksAgo);
-          if (youngMessagesToPurge.length < messagesToPurge.length) {
-            oldMessagesFound = true;
-          }
-          channel.deleteMessages(youngMessagesToPurge.map(m => m.id)).then(() => {
-            totalPurged += messagesToPurge.length;
-          }).catch((error) => {
-            let responseCode;
-            if (error.response) {
-              responseCode = JSON.parse(error.response).code;
-            }
-            if (responseCode === 50013) {
-              errorMessage = error.response;
-              done = true;
-              purgeQueue = [];
-              updateStatus("```xl\ndiscord permission Manage Messages required to purge messages.```");
-            } else if (responseCode === 429) {
-              purgeQueue = purgeQueue.concat(messagesToPurge);
-            } else {
-              if (this.raven) {
-                this.raven.captureException(error);
-              }
-              console.error(error);
-              console.error(error.response);
-            }
-          })
-        } else if (done) {
-          clearInterval(purger);
+        if (!isNaN(command.options.before)) {
+          options.before = command.options.before;
         }
-      }, 1100);
+        if (!isNaN(command.options.after)) {
+          options.after = command.options.after;
+        }
+        let length;
+        if (command.args[0]) {
+          length = Math.min(parseInt(command.args[0]) + 1 || this.config.get("purgeLength", 100), this.config.get("maxPurgeLength", 1000));
+        } else {
+          length = this.config.get("purgeLength", 100)
+        }
+        if (command.flags.includes("d")) {
+          this.updateServerIgnores(1, channel.guild.id);
+        }
+        let purger;
+        let status;
+        let purgeQueue = [];
+        let totalFetched = 0;
+        let totalPurged = 0;
+        let done = false;
+        let statusMessage = false;
+        let errorMessage = false;
+        let oldMessagesFound = false;
 
-      let updateStatusFunction = () => {
-        if (done && purgeQueue.length === 0) {
-          if (!errorMessage) {
-            updateStatus(this.getStatus(totalPurged, totalFetched, length, oldMessagesFound));
+        let updateStatus = (text) => {
+          if (statusMessage) {
+            utils.handleErisRejection(statusMessage.channel.editMessage(statusMessage.id, text));
+          } else {
+            utils.handleErisRejection(channel.createMessage(text)
+              .then(message => statusMessage = message));
           }
-          setTimeout(() => {
-            utils.handleErisRejection(channel.deleteMessage(statusMessage.id));
-            if (command.flags.includes("d")) {
-              this.updateServerIgnores(-1, channel.guild.id);
+        };
+
+        this.fetchMessages(channel, length, options, (messages, error) => {
+          if (error) {
+            errorMessage = error;
+            done = true;
+            purgeQueue = [];
+            updateStatus(`\`\`\`xl\n${error}\`\`\``);
+          } else {
+            if (messages) {
+              totalFetched += messages.length;
+              purgeQueue = purgeQueue.concat(messages);
+            } else {
+              done = true;
             }
-          }, 5000);
-          clearInterval(status);
-        }
-        else {
-          if (!errorMessage) {
-            updateStatus(this.getStatus(totalPurged, totalFetched, length, oldMessagesFound));
           }
-        }
-      };
-      setTimeout(updateStatusFunction, 500);
-      status = setInterval(updateStatusFunction, 2500);
-      return true;
-    }
+        });
+        purger = setInterval(() => {
+          if (purgeQueue.length > 0 && !errorMessage) {
+            const messagesToPurge = purgeQueue.splice(0, 100);
+            const twoWeeksAgo = Date.now() - 60 * 60 * 24 * 7 * 2 * 1000;
+            const youngMessagesToPurge = messagesToPurge.filter(msg => msg.timestamp > twoWeeksAgo);
+            if (youngMessagesToPurge.length < messagesToPurge.length) {
+              oldMessagesFound = true;
+            }
+            channel.deleteMessages(youngMessagesToPurge.map(m => m.id)).then(() => {
+              totalPurged += messagesToPurge.length;
+            }).catch((error) => {
+              let responseCode;
+              if (error.response) {
+                responseCode = JSON.parse(error.response).code;
+              }
+              if (responseCode === 50013) {
+                errorMessage = error.response;
+                done = true;
+                purgeQueue = [];
+                updateStatus("```xl\ndiscord permission Manage Messages required to purge messages.```");
+              } else if (responseCode === 429) {
+                purgeQueue = purgeQueue.concat(messagesToPurge);
+              } else {
+                if (this.raven) {
+                  this.raven.captureException(error);
+                }
+                console.error(error);
+                console.error(error.response);
+              }
+            })
+          } else if (done) {
+            clearInterval(purger);
+          }
+        }, 1100);
+
+        let updateStatusFunction = () => {
+          if (done && purgeQueue.length === 0) {
+            if (!errorMessage) {
+              updateStatus(this.getStatus(totalPurged, totalFetched, length, oldMessagesFound));
+            }
+            setTimeout(() => {
+              utils.handleErisRejection(channel.deleteMessage(statusMessage.id));
+              if (command.flags.includes("d")) {
+                this.updateServerIgnores(-1, channel.guild.id);
+              }
+            }, 5000);
+            clearInterval(status);
+          }
+          else {
+            if (!errorMessage) {
+              updateStatus(this.getStatus(totalPurged, totalFetched, length, oldMessagesFound));
+            }
+          }
+        };
+        setTimeout(updateStatusFunction, 500);
+        status = setInterval(updateStatusFunction, 2500);
+        return true;
+      },
+    }];
   }
 
   getStatus(totalPurged, totalFetched, total, oldMessagesFound) {

@@ -4,9 +4,7 @@
 "use strict";
 
 const utils = require('../lib/utils');
-
 const request = require("request");
-//const qs = require("querystring");
 
 const pledges = {
   iron: 5066827,
@@ -40,6 +38,7 @@ class dualUniverse {
   constructor(e) {
     this.client = e.client;
     this.raven = e.raven;
+    this.perms = e.perms;
   }
 
   duFetch(options) {
@@ -61,7 +60,7 @@ class dualUniverse {
       method: 'GET',
       url: 'http://api.du-tools.com/docs/du/duexplorer/users',
       qs: {fields: 'user,pledgeStatus,organizations,createdDate', query: JSON.stringify({user: name.toLowerCase()})},
-      headers: {'cache-control': 'no-cache'}
+      headers: {'cache-control': 'no-cache'},
     };
     return this.duFetch(options)
   }
@@ -71,7 +70,7 @@ class dualUniverse {
       method: 'GET',
       url: 'http://api.du-tools.com/docs/du/duexplorer/orgs',
       qs: {fields: 'name', query: JSON.stringify({org: name.toLowerCase()})},
-      headers: {'cache-control': 'no-cache'}
+      headers: {'cache-control': 'no-cache'},
     };
     return this.duFetch(options)
   }
@@ -85,59 +84,63 @@ class dualUniverse {
   }
 
   /**
-   * Called with a command, returns true or a promise if it is handling the command, returns false if it should be passed on.
-   * @param {Message} msg
-   * @param {Command} command
-   * @param {Permissions} perms
-   * @returns {boolean | Promise}
+   * Returns an array of commands that can be called by the command handler
+   * @returns {[{triggers: [string], permissionCheck: function, channels: [string], execute: function}]}
    */
-  onCommand(msg, command, perms) {
-    if (command.command === "duuser" || command.command === "duser" && perms.check(msg, "du.user")) {
-      let targetUser = command.args.join(" ");
-      return this.getUser(targetUser).then(body => {
-        if (body.data.length < 1) {
-          command.replyAutoDeny(`Could not find user ${utils.clean(targetUser)}`);
-          return true;
-        }
-        const user = body.data[0];
-        console.log(user);
-        command.replyAutoDeny({
-          embed: {
-            title: "Du User info",
-            url: `https://community.dualthegame.com/accounts/profile/${targetUser.toLowerCase()}`,
-            color: user.hasOwnProperty("pledgeStatus") && pledges.hasOwnProperty(user.pledgeStatus) ? pledges[user.pledgeStatus] : 0,
-            fields: [
-              {name: "username", value: user.user},
-              {name: "created", value: user.createdDate},
-              {name: "org count", value: user.organizations.length}
-            ],
+  getCommands() {
+    return [{
+      triggers: ["duuser", "duser"],
+      permissionCheck: this.perms.genCheckCommand("du.user"),
+      channels: ["*"],
+      execute: command => {
+        let targetUser = command.args.join(" ");
+        return this.getUser(targetUser).then(body => {
+          if (body.data.length < 1) {
+            command.replyAutoDeny(`Could not find user ${utils.clean(targetUser)}`);
+            return true;
           }
+          const user = body.data[0];
+          console.log(user);
+          command.replyAutoDeny({
+            embed: {
+              title: "Du User info",
+              url: `https://community.dualthegame.com/accounts/profile/${targetUser.toLowerCase()}`,
+              color: user.hasOwnProperty("pledgeStatus") && pledges.hasOwnProperty(user.pledgeStatus) ? pledges[user.pledgeStatus] : 0,
+              fields: [
+                {name: "username", value: user.user},
+                {name: "created", value: user.createdDate},
+                {name: "org count", value: user.organizations.length},
+              ],
+            },
+          });
         });
-      });
-    }
-
-    if (command.command === "duorg" && perms.check(msg, "du.org")) {
-      let targetOrg = command.args.join(" ");
-      return this.getOrg(targetOrg).then(body => {
-        if (body.data.length < 1) {
-          command.replyAutoDeny(`Could not find user ${utils.clean(targetOrg)}`);
-          return true;
-        }
-        const org = body.data[0];
-        console.log(org);
-        command.replyAutoDeny({
-          embed: {
-            title: "Du User info",
-            url: `https://community.dualthegame.com/organization/${targetOrg.toLowerCase()}`,
-            color: org.hasOwnProperty("pledgeStatus") && pledges.hasOwnProperty(org.pledgeStatus) ? pledges[org.pledgeStatus] : 0,
-            fields: [
-              {name: "name", value: org.name},
-            ],
+      },
+    }, {
+      triggers: ["duuser"],
+      permissionCheck: this.perms.genCheckCommand("du.user"),
+      channels: ["*"],
+      execute: command => {
+        let targetOrg = command.args.join(" ");
+        return this.getOrg(targetOrg).then(body => {
+          if (body.data.length < 1) {
+            command.replyAutoDeny(`Could not find user ${utils.clean(targetOrg)}`);
+            return true;
           }
+          const org = body.data[0];
+          console.log(org);
+          command.replyAutoDeny({
+            embed: {
+              title: "Du User info",
+              url: `https://community.dualthegame.com/organization/${targetOrg.toLowerCase()}`,
+              color: org.hasOwnProperty("pledgeStatus") && pledges.hasOwnProperty(org.pledgeStatus) ? pledges[org.pledgeStatus] : 0,
+              fields: [
+                {name: "name", value: org.name},
+              ],
+            },
+          });
         });
-      });
-    }
-    return false;
+      },
+    }];
   }
 }
 

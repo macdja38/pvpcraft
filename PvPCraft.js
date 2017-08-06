@@ -467,40 +467,61 @@ class PvPCraft {
   reload() {
     this.prefix = this.configDB.get("prefix", ["!!", "//", "/"], {server: "*"});
     this.id = this.client.user.id;
-    console.log("defaults");
-    console.log(this.prefix);
+    console.log("Default prefix", this.prefix);
     this.name = this.client.user.username;
-    for (let middleware in this.middlewareList) {
-      if (this.middlewareList.hasOwnProperty(middleware)) {
+
+    let oldModuleAndWareList = this.middlewareList.slice(0);
+    oldModuleAndWareList.push(...this.moduleList);
+
+    for (let module in oldModuleAndWareList) {
+      if (oldModuleAndWareList.hasOwnProperty(module)) {
         try {
-          if (this.middlewareList[middleware].module && this.middlewareList[middleware].module.onDisconnect) {
-            console.log(`Removing Listeners for middleware ${middleware}`.green);
-            this.middlewareList[middleware].module.onDisconnect();
+          if (oldModuleAndWareList[module].module && oldModuleAndWareList[module].module.onDisconnect) {
+            console.log(`Removing Listeners for ${module}`.green);
+            oldModuleAndWareList[module].module.onDisconnect();
           }
-          delete this.middlewareList[middleware];
+          delete oldModuleAndWareList[module];
         } catch (error) {
           console.error(error);
         }
       }
     }
-    for (let module in this.moduleList) {
-      if (this.moduleList.hasOwnProperty(module)) {
-        try {
-          if (this.moduleList[module].module && this.moduleList[module].module.onDisconnect) {
-            console.log(`Removing Listeners for module ${module}`.green);
-            this.moduleList[module].module.onDisconnect();
-          }
-          delete this.moduleList[module];
-        } catch (error) {
-          console.error(error);
-        }
-      }
-    }
+
     this.middlewareList = [];
     this.moduleList = [];
+
     let middlewares = this.fileConfig.get("middleware");
     let modules = this.fileConfig.get("modules");
-    let moduleVariables = {
+
+    let moduleVariables = this.getModuleVariables();
+
+    for (let module in modules) {
+      if (modules.hasOwnProperty(module)) {
+        try {
+          let mod = new (require(modules[module]))(moduleVariables);
+          if (mod.onReady) mod.onReady();
+          this.moduleList.push({"commands": mod.getCommands ? mod.getCommands() : [], "module": mod});
+        }
+        catch (error) {
+          console.error(error);
+        }
+      }
+    }
+    for (let middleware in middlewares) {
+      if (middlewares.hasOwnProperty(middleware)) {
+        try {
+          let ware = new (require(middlewares[middleware]))(moduleVariables);
+          if (ware.onReady) ware.onReady();
+          this.middlewareList.push({"commands": ware.getCommands ? ware.getCommands() : [], "ware": ware});
+        } catch (error) {
+          console.error(error);
+        }
+      }
+    }
+  }
+
+  getModuleVariables() {
+    return {
       client: this.client,
       config: this.fileConfig,
       raven: this.raven,
@@ -517,30 +538,6 @@ class PvPCraft {
       modules: this.moduleList,
       middleWares: this.middlewareList,
     };
-    for (let module in modules) {
-      if (modules.hasOwnProperty(module)) {
-        try {
-          let Module = require(modules[module]);
-          let mod = new Module(moduleVariables);
-          if (mod.onReady) mod.onReady();
-          this.moduleList.push({"commands": Module.getCommands(), "module": mod});
-        }
-        catch (error) {
-          console.error(error);
-        }
-      }
-    }
-    for (let middleware in middlewares) {
-      if (middlewares.hasOwnProperty(middleware)) {
-        try {
-          let ware = new (require(middlewares[middleware]))(moduleVariables);
-          if (ware.onReady) ware.onReady();
-          this.middlewareList.push({"ware": ware});
-        } catch (error) {
-          console.error(error);
-        }
-      }
-    }
   }
 
   reloadTarget(msg, command) {
@@ -555,21 +552,7 @@ class PvPCraft {
         utils.handleErisRejection(channel.createMessage("Reloading " + command.args[0]));
         console.log("Reloading ".yellow + command.args[0].yellow);
         let Mod = require(modules[command.args[0]]);
-        let mod = new Mod({
-          client: this.client,
-          config: this.fileConfig,
-          raven: this.raven,
-          git: this.git,
-          auth: this.fileAuth,
-          configDB: this.configDB,
-          r: this.r,
-          perms: this.perms,
-          feeds: this.feeds,
-          pvpcraft: this,
-          messageSender: this.messageSender,
-          slowSender: this.slowSender,
-          pvpClient: this.pvpClient,
-        });
+        let mod = new Mod(this.getModuleVariables());
         if (mod.onReady) mod.onReady();
         this.moduleList[module].module = mod;
         this.moduleList[module].commands = Mod.getCommands();
@@ -582,32 +565,28 @@ class PvPCraft {
   onMessage(msg) {
     if (msg.author && msg.author.id === this.id) return;
     lastMessage = Date.now();
-    let l;
-    let mod;
-    let ware;
+    let prefixes;
 
     // handle per server prefixes.
     if (msg.channel.guild) {
-      l = this.configDB.get("prefix", this.prefix, {server: msg.channel.guild.id});
-      //noinspection EqualityComparisonWithCoercionJS
-      if (l == null) {
-        l = this.prefix;
-      } else {
-        l.push(...this.prefix.filter(p => l.indexOf(p) < 0));
-      }
+      prefixes = this.configDB.get("prefix", this.prefix, {server: msg.channel.guild.id});
     } else {
-      l = this.prefix;
+      prefixes = this.prefix;
     }
     //console.log(`Prefix ${l}`);
     //Message middleware starts here.
-    for (ware in this.middlewareList) {
+    for (let ware in this.middlewareList) {
       if (this.middlewareList.hasOwnProperty(ware) && this.middlewareList[ware].ware.onMessage) {
         this.middlewareList[ware].ware.onMessage(msg, this.perms)
       }
     }
     let command;
     try {
-      command = Command.parse(l, msg, this.perms, {allowMention: this.id, botName: this.name, raven: this.raven});
+      command = Command.parse(prefixes, msg, this.perms, {
+        allowMention: this.id,
+        botName: this.name,
+        raven: this.raven,
+      });
     } catch (error) {
       if (this.raven) {
         let extra = {
@@ -630,29 +609,7 @@ class PvPCraft {
       utils.handleErisRejection(msg.channel.createMessage(`${msg.author.mention}, Sorry about that an unknown problem occurred processing your command, an error report has been logged and we are looking into the problem.`));
     }
 
-    if (command) {
-      //Reload command starts here.
-      if (command.command === "reload" && msg.author.id === "85257659694993408") {
-        if (command.flags.indexOf("a") > -1) {
-          this.reload();
-        } else {
-          this.reloadTarget(msg, command, this.perms, l)
-        }
-        return;
-      }
-    }
-
-    //Command middleware starts here.
-    if (command) {
-      for (ware in this.middlewareList) {
-        if (this.middlewareList.hasOwnProperty(ware) && this.middlewareList[ware].ware.onCommand) {
-          this._commandWrapper(ware, command, msg, () => {
-            this.middlewareList[ware].ware.onCommand(msg, command, this.perms, l)
-          })
-        }
-      }
-    }
-    for (ware in this.middlewareList) {
+    for (let ware in this.middlewareList) {
       if (this.middlewareList.hasOwnProperty(ware) && this.middlewareList[ware].ware.changeMessage) {
         this._commandWrapper(ware, command, msg, () => {
           msg = this.middlewareList[ware].ware.changeMessage(msg, this.perms);
@@ -660,36 +617,55 @@ class PvPCraft {
       }
     }
     if (command) {
-      for (ware in this.middlewareList) {
+      for (let ware in this.middlewareList) {
         if (this.middlewareList.hasOwnProperty(ware) && this.middlewareList[ware].ware.changeCommand) {
           this._commandWrapper(ware, command, msg, () => {
-            command = this.middlewareList[ware].ware.changeCommand(msg, command, this.perms, l);
+            command = this.middlewareList[ware].ware.changeCommand(msg, command, this.perms);
           });
         }
       }
-    }
-    if (command) {
-      for (mod in this.moduleList) {
-        if (this.moduleList.hasOwnProperty(mod) &&
-          (this.moduleList[mod].commands.includes(command.commandnos) || this.moduleList[mod].commands.includes("*"))) {
-          let shouldReturn;
-          this._commandWrapper(mod, command, msg, () => {
-            shouldReturn = this.moduleList[mod].module.onCommand(msg, command, this.perms, this.moduleList, mod);
-            return shouldReturn;
-          });
-          if (shouldReturn) return;
-        }
-      }
+
+      this.handleCommand(msg, command, this.moduleList, this.middlewareList)
     }
     //apply misc responses.
-    for (mod in this.moduleList) {
+    for (let mod in this.moduleList) {
       if (this.moduleList.hasOwnProperty(mod) && this.moduleList[mod].module.checkMisc) {
         let shouldReturn;
         this._commandWrapper(mod, command, msg, () => {
-          shouldReturn = this.moduleList[mod].module.checkMisc(msg, this.perms, l);
+          shouldReturn = this.moduleList[mod].module.checkMisc(msg, this.perms, prefixes);
           return shouldReturn;
         });
         if (shouldReturn) return;
+      }
+    }
+  }
+
+  /**
+   * Checks if a command is set to be usable with in a list of allowed types
+   * @param {Channel|GuildChannel} channel
+   * @param {Array<string>} allowed
+   * @returns {boolean}
+   */
+  checkChannelAllowed(channel, allowed) {
+    if (allowed.includes("*")) return true;
+    if (channel instanceof Eris.GuildChannel && allowed.includes("guild")) return true;
+    if (channel instanceof channel && allowed.includes("dm")) return true;
+    return false
+  }
+
+  async handleCommand(msg, userCommand, modules, middleware) {
+    const modulesAndMiddleware = middleware.slice(0);
+    modulesAndMiddleware.push(...modules);
+
+    for (let module of modulesAndMiddleware) {
+      for (let command of module.commands) {
+        if (!command.triggers.includes(userCommand.commandnos)) continue;
+        if (!command.permissionCheck(userCommand)) continue;
+        if (!this.checkChannelAllowed(userCommand.channel, command.channels)) continue;
+        const result = await this._commandWrapper(command, userCommand, msg, () => {
+          return command.execute(userCommand)
+        });
+        if (result) return;
       }
     }
   }
@@ -712,49 +688,43 @@ class PvPCraft {
    * @param msg containing offending command
    * @param callCommandFunction function to call and capture errors from
    */
-  _commandWrapper(mod, command, msg, callCommandFunction) {
-    let returnValue = false;
+  async _commandWrapper(mod, command, msg, callCommandFunction) {
+    let returnValue;
     try {
-      returnValue = callCommandFunction();
-      if (returnValue === true) {
-        return;
-      }
+      returnValue = await callCommandFunction();
     } catch (error) {
-      returnValue = Promise.reject(error);
-    }
-    if (returnValue && returnValue.catch) {
-      returnValue.catch((error) => {
-        if (this.raven) {
-          let extra = {
-            mod: mod,
-            channel: msg.channel,
-            command: command && command.toJSON ? command.toJSON() : command,
-          };
-          if (msg.channel.hasOwnProperty("guild")) {
-            extra.guild = msg.channel.guild;
+      if (this.raven) {
+        let extra = {
+          mod: mod,
+          channel: msg.channel,
+          command: command && command.toJSON ? command.toJSON() : command,
+        };
+        if (msg.channel.hasOwnProperty("guild")) {
+          extra.guild = msg.channel.guild;
+        }
+        if (process.env.dev === "true") {
+          console.error(error);
+        }
+        this.raven.captureException(error, {
+          user: (msg.hasOwnProperty("author") && msg.author.toJSON) ? msg.author.toJSON() : msg.author,
+          extra,
+        }, (ravenError, id) => {
+          if (ravenError) {
+            console.error("Error reporting error to sentry:\n", ravenError, "Error sentry was trying to report:\n", ravenError);
+          } else {
+            utils.handleErisRejection(msg.channel.createMessage("Sorry their was an error processing your command. The error is ```" + error +
+              "``` reference code `" + id + "`"));
           }
           if (process.env.dev === "true") {
             console.error(error);
           }
-          this.raven.captureException(error, {
-            user: (msg.hasOwnProperty("author") && msg.author.toJSON) ? msg.author.toJSON() : msg.author,
-            extra,
-          }, (ravenError, id) => {
-            if (ravenError) {
-              console.error("Error reporting error to sentry:\n", ravenError, "Error sentry was trying to report:\n", ravenError);
-            } else {
-              utils.handleErisRejection(msg.channel.createMessage("Sorry their was an error processing your command. The error is ```" + error +
-                "``` reference code `" + id + "`"));
-            }
-            if (process.env.dev === "true") {
-              console.error(error);
-            }
-          });
-        } else {
-          console.error(error);
-        }
-      })
+        });
+      } else {
+        console.error(error);
+      }
+      return true;
     }
+    return returnValue;
   }
 
   captureError(error) {

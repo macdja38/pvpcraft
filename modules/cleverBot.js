@@ -38,10 +38,6 @@ class cleverBot {
     }
   }
 
-  static getCommands() {
-    return [];
-  }
-
   /**
    * Optional function that will be called with every message for the purpose of misc responses / other
    * @param {Message} msg
@@ -71,17 +67,6 @@ class cleverBot {
         });
       });
     }
-    return false;
-  }
-
-  /**
-   * Called with a command, returns true or a promise if it is handling the command, returns false if it should be passed on.
-   * @param {Message} msg
-   * @param {Command} command
-   * @param {Permissions} perms
-   * @returns {boolean | Promise}
-   */
-  onCommand(msg, command, perms) {
     return false;
   }
 }

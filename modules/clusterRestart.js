@@ -30,29 +30,22 @@ class clusterRestart {
     this.raven = e.raven;
   }
 
-  static getCommands() {
-    return ["restart"];
-  }
-
-  /**
-   * Called with a command, returns true or a promise if it is handling the command, returns false if it should be passed on.
-   * @param {Message} msg
-   * @param {Command} command
-   * @param {Permissions} perms
-   * @returns {boolean | Promise}
-   */
-  onCommand(msg, command, perms) {
-    if (command.command === "restart" && this.fileConfig.get("permissions", {"permissions": {admins: []}}).admins.includes(msg.author.id)) {
-      console.log(command);
-      process.send({
-        op: 1,
-        command: "restart",
-        global: command.flags.indexOf("g") > -1,
-        profile: command.flags.indexOf("p") > -1
-      });
-      return true;
-    }
-    return false;
+  getCommands() {
+    return [{
+      triggers: ["restart"],
+      permissionCheck: (command) => this.fileConfig.get("permissions", {"permissions": {admins: []}}).admins.includes(command.author.id),
+      channels: ["*"],
+      execute: (command) => {
+        console.log("Triggering restart");
+        process.send({
+          op: 1,
+          command: "restart",
+          global: command.flags.indexOf("g") > -1,
+          profile: command.flags.indexOf("p") > -1
+        });
+        return true;
+      }
+    }];
   }
 }
 

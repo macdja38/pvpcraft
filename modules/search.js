@@ -31,49 +31,45 @@ class search {
   constructor(e) {
     this.client = e.client;
     this.raven = e.raven;
+    this.perms = e.perms;
   }
 
-  static getCommands() {
-    //this needs to return a list of commands that should activate the onCommand function
-    //of this class. array of strings with trailing s's removed.
-    return ["google"];
+  getCommands() {
+    return [{
+      triggers: ["g", "google"],
+      permissionCheck: this.perms.genCheckCommand("search.google"),
+      channels: ["*"],
+      execute: this.executeSearch.bind(this),
+    }];
   }
 
   /**
-   * Called with a command, returns true or a promise if it is handling the command, returns false if it should be passed on.
-   * @param {Message} msg
+   * Searches google
    * @param {Command} command
-   * @param {Permissions} perms
-   * @returns {boolean | Promise}
    */
-  onCommand(msg, command, perms) {
-
-    //check if this is a command we should handle and if the user has permissions to execute it.
-    if (command.command === "google" && perms.check(msg, "search.google")) {
-      if (command.args.length < 1) {
-        command.replyAutoDeny("Please supply something to search for.");
-        return true;
-      }
-      let search = command.args.join(" ");
-      google(search, (err, response) => {
-        if (err || !response || !response.links) command.reply("Your search resulted in an error");
-        else if (response.links.length < 1) command.reply("No results found");
-        else {
-          if (response.links[0].link === null) {
-            for (let i = 1; i < response.links.length; i++) {
-              if (response.links[i].link !== null) {
-                command.createMessageAutoDeny(`Found ${utils.clean(response.links[i].link)})`);
-                return;
-              }
-            }
-          } else {
-            command.createMessageAutoDeny(`Found ${utils.clean(response.links[0].link)}`);
-          }
-        }
-      });
+  executeSearch(command) {
+    if (command.args.length < 1) {
+      command.replyAutoDeny("Please supply something to search for.");
       return true;
     }
-    return false;
+    let search = command.args.join(" ");
+    google(search, (err, response) => {
+      if (err || !response || !response.links) command.reply("Your search resulted in an error");
+      else if (response.links.length < 1) command.reply("No results found");
+      else {
+        if (response.links[0].link === null) {
+          for (let i = 1; i < response.links.length; i++) {
+            if (response.links[i].link !== null) {
+              command.createMessageAutoDeny(`Found ${utils.clean(response.links[i].link)})`);
+              return;
+            }
+          }
+        } else {
+          command.createMessageAutoDeny(`Found ${utils.clean(response.links[0].link)}`);
+        }
+      }
+    });
+    return true;
   }
 }
 

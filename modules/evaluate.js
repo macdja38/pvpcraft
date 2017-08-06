@@ -39,6 +39,8 @@ class evaluate {
    * @param {MessageSender} e.messageSender Instantiated message sender
    * @param {SlowSender} e.slowSender Instantiated slow sender
    * @param {PvPClient} e.pvpClient PvPCraft client library instance
+   * @param {Array} e.modules Array of modules
+   * @param {pvpcraft} e.pvpcraft Instance of pvpcraft
    */
   constructor(e) {
     this.e = e;
@@ -46,6 +48,7 @@ class evaluate {
     this.modules = e.modules;
     this.config = e.config;
     this.r = e.r;
+    this.pvpcraft = e.pvpcraft;
     this.configDB = e.configDB;
     this.pvpClient = e.pvpClient;
     this.messageSender = e.messageSender;
@@ -81,6 +84,16 @@ class evaluate {
 
     if (command.command === "eval" && msg.author.id === "85257659694993408") {
       return this.evalCommand(msg, command);
+    }
+
+    //Reload command starts here.
+    if (command.command === "reload" && command.author.id === "85257659694993408") {
+      if (command.flags.indexOf("a") > -1) {
+        this.pvpcraft.reload();
+      } else {
+        this.pvpcraft.reloadTarget(msg, command);
+      }
+      return true;
     }
 
     if (command.command === "testdc" && msg.author.id === "85257659694993408") {
