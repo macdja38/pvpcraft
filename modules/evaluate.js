@@ -68,73 +68,79 @@ class evaluate {
     this.slowSender.onDisconnect();
   }
 
-  //noinspection JSUnusedLocalSymbols
+  // id is hardcoded to prevent problems stemming from the misuse of eval.
+  // no perms check because this extends past the bounds of a server.
+  // if you know what you are doing and would like to use the id in the config file you may replace msg.author.id == id, with
+  // this.config.get("permissions", {"permissions": {admins: []}}).admins.includes(msg.author.id)
   /**
-   * Called with a command, returns true or a promise if it is handling the command, returns false if it should be passed on.
-   * @param {Message} msg
-   * @param {Command} command
-   * @param {Permissions} perms
-   * @returns {boolean | Promise}
+   * Returns an array of commands that can be called by the command handler
+   * @returns {[{triggers: [string], permissionCheck: function, channels: [string], execute: function}]}
    */
-  onCommand(msg, command, perms) {
-    //id is hardcoded to prevent problems stemming from the misuse of eval.
-    //no perms check because this extends past the bounds of a server.
-    //if you know what you are doing and would like to use the id in the config file you may replace msg.author.id == id, with
-    //this.config.get("permissions", {"permissions": {admins: []}}).admins.includes(msg.author.id)
-
-    if (command.command === "eval" && msg.author.id === "85257659694993408") {
-      return this.evalCommand(msg, command);
-    }
-
-    //Reload command starts here.
-    if (command.command === "reload" && command.author.id === "85257659694993408") {
-      if (command.flags.indexOf("a") > -1) {
-        this.pvpcraft.reload();
-      } else {
-        this.pvpcraft.reloadTarget(msg, command);
-      }
-      return true;
-    }
-
-    if (command.command === "testdc" && msg.author.id === "85257659694993408") {
-      if (command.args.length < 1) {
-        command.reply(`${command.prefix}testdc <reconnect|resume>`);
+  getCommands() {
+    return [{
+      triggers: ["eval"],
+      permissionCheck: command => command.author.id === "85257659694993408",
+      channels: ["*"],
+      execute: command => {
+        return this.evalCommand(command.msg, command);
+      },
+    }, {
+      triggers: ["reload"],
+      permissionCheck: command => command.author.id === "85257659694993408",
+      channels: ["*"],
+      execute: command => {
+        if (command.flags.indexOf("a") > -1) {
+          this.pvpcraft.reload();
+        } else {
+          this.pvpcraft.reloadTarget(command);
+        }
         return true;
-      }
-      switch (command.args[0].toLowerCase()) {
-        case "reconnect": {
-          command.reply("Initiating reconnect.");
-          let packed = packer({op: 7});
-          this.client.shards.random().ws.onmessage({data: packed});
-          break;
+      },
+    }, {
+      triggers: ["testdc"],
+      permissionCheck: command => command.author.id === "85257659694993408",
+      channels: ["*"],
+      execute: command => {
+        if (command.args.length < 1) {
+          command.reply(`${command.prefix}testdc <reconnect|resume>`);
+          return true;
         }
-        case "resume": {
-          command.reply("Initiating resume sequence");
-          this.client.shards.random().ws.onclose({code: 1006, reason: "testing", wasClean: true});
-          break;
+        switch (command.args[0].toLowerCase()) {
+          case "reconnect": {
+            command.reply("Initiating reconnect.");
+            let packed = packer({op: 7});
+            this.client.shards.random().ws.onmessage({data: packed});
+            break;
+          }
+          case "resume": {
+            command.reply("Initiating resume sequence");
+            this.client.shards.random().ws.onclose({code: 1006, reason: "testing", wasClean: true});
+            break;
+          }
         }
-      }
-    }
-
-    if (command.command === "setavatar" && this.fileConfig.get("permissions", {"permissions": {admins: []}}).admins.includes(msg.author.id)) {
-      return request({
-        method: 'GET',
-        url: command.args[0],
-        encoding: null,
-      }).then((image) => {
-        this.client.editSelf({avatar: `data:image/png;base64,${image.toString("base64")}`}).then(() => {
-          this.client.createMessage(msg.channel.id, "Changed avatar.");
+      },
+    }, {
+      triggers: ["setavatar"],
+      permissionCheck: command => this.fileConfig.get("permissions", {"permissions": {admins: []}}).admins.includes(command.author.id),
+      channels: ["*"],
+      execute: command => {
+        return request({
+          method: 'GET',
+          url: command.args[0],
+          encoding: null,
+        }).then((image) => {
+          this.client.editSelf({avatar: `data:image/png;base64,${image.toString("base64")}`}).then(() => {
+            command.reply("Changed avatar.");
+          }).catch((err) => {
+            command.reply("Failed setting avatar." + err);
+            return true;
+          });
         }).catch((err) => {
-          this.client.createMessage(msg.channel.id, "Failed setting avatar." + err);
+          command.reply("Failed to get a valid image." + err);
           return true;
         });
-      }).catch((err) => {
-        this.client.createMessage(msg.channel.id, "Failed to get a valid image." + err);
-        return true;
-      });
-    }
-
-    return false;
+      },
+    }];
   }
 
   async evalCommand(msg, command) {

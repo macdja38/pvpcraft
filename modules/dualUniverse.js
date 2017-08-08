@@ -76,14 +76,6 @@ class dualUniverse {
   }
 
   /**
-   * Returns the triggers that will cause this module's onCommand function to be called
-   * @returns {string[]}
-   */
-  static getCommands() {
-    return ["duuser", "duser", "duorg"];
-  }
-
-  /**
    * Returns an array of commands that can be called by the command handler
    * @returns {[{triggers: [string], permissionCheck: function, channels: [string], execute: function}]}
    */

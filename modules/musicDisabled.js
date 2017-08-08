@@ -21,24 +21,22 @@ class music {
    * @param {PvPClient} e.pvpClient PvPCraft client library instance
    */
   constructor(e) {
+    this.perms = e.perms;
   }
 
-  static getCommands() {
-    return ["init", "play", "skip", "list", "time", "pause", "resume", "volume", "shuffle", "next", "destroy", "logchannel", "link"];
-  }
-
-  //noinspection JSMethodCanBeStatic
   /**
-   * Called with a command, returns true or a promise if it is handling the command, returns false if it should be passed on.
-   * @param {Message} msg
-   * @param {Command} command
-   * @param {Permissions} perms
-   * @returns {boolean | Promise}
+   * Returns an array of commands that can be called by the command handler
+   * @returns {[{triggers: [string], permissionCheck: function, channels: [string], execute: function}]}
    */
-  onCommand(msg, command, perms) {
-    if (!msg.channel.guild) return false; //this is a pm... we can't do music stuff here.
-    if (!perms.check(msg, `music.${command.command}`)) return false;
-    return command.replyAutoDeny("Sorry music is currently disabled at the moment, please join https://join.pvpcraft.ca and check the #announcements chat for info on why and status updates");
+  getCommands() {
+    return [{
+      triggers: ["init", "play", "list", "time", "pause", "resume", "volume", "shuffle", "next", "destroy", "logchannel", "link"],
+      permissionCheck: (command) => this.perms.check(command, `music.${command.command}`),
+      channels: ["guild"],
+      execute: command => {
+        return command.replyAutoDeny("Sorry music is currently disabled at the moment, please join https://join.pvpcraft.ca and check the #announcements chat for info on why and status updates");
+      },
+    }];
   }
 }
 

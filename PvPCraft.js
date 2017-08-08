@@ -540,8 +540,7 @@ class PvPCraft {
     };
   }
 
-  reloadTarget(msg, command) {
-    let channel = msg.channel;
+  reloadTarget(command) {
     for (let module in this.moduleList) {
       if (this.moduleList.hasOwnProperty(module) && this.moduleList[module].module.constructor.name === command.args[0]) {
         if (this.moduleList[module].module.onDisconnect) {
@@ -549,7 +548,7 @@ class PvPCraft {
         }
         let modules = this.fileConfig.get("modules");
         delete require.cache[require.resolve(modules[command.args[0]])];
-        utils.handleErisRejection(channel.createMessage("Reloading " + command.args[0]));
+        utils.handleErisRejection(command.reply("Reloading " + command.args[0]));
         console.log("Reloading ".yellow + command.args[0].yellow);
         let Mod = require(modules[command.args[0]]);
         let mod = new Mod(this.getModuleVariables());
@@ -557,7 +556,7 @@ class PvPCraft {
         this.moduleList[module].module = mod;
         this.moduleList[module].commands = Mod.getCommands();
         console.log("Reloded ".yellow + command.args[0].yellow);
-        utils.handleErisRejection(channel.createMessage("Reloded " + command.args[0]));
+        utils.handleErisRejection(command.reply("Reloded " + command.args[0]));
       }
     }
   }
