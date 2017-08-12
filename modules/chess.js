@@ -171,6 +171,17 @@ class chess {
       console.log(emoteArray);
       command.createMessageAutoDeny({embed: attachment});
     }
+
+    if (command.command === "end" && perms.check(msg, "games.chess.end")) {
+      if (!this.games.hasOwnProperty(msg.channel.id)) {
+        command.replyAutoDeny("Sorry, no game is in progress.");
+        return true;
+      }
+      delete this.games[msg.channel.id];
+      delete this.turns[msg.channel.id];
+      command.replyAutoDeny("Game ended");
+      //r.table(table).insert({})
+    }
   }
 }
 
