@@ -155,6 +155,20 @@ class chess {
         console.log(emoteArray);
         command.createMessageAutoDeny({embed: attachment});
       },
+    }, {
+      triggers: ["end"],
+      permissionCheck: this.perms.genCheckCommand("chess.game.end"),
+      channels: ["*"],
+      execute: (command) => {
+        if (this.games.hasOwnProperty(command.channel.id)) {
+          command.replyAutoDeny("Sorry, game already in progress");
+          return true;
+        }
+        delete this.games[command.channel.id];
+        delete this.turns[command.channel.id];
+        command.replyAutoDeny("Game ended");
+        //r.table(table).insert({})
+      },
     }];
   }
 }
