@@ -97,7 +97,7 @@ class rank {
             command.replyAutoDeny("Could not find role with that name, please try a mention or name, names are case sensitive");
             return true;
           }
-          let roleName = command.args[1].toLowerCase();
+          let roleName = command.args.join(" ").toLowerCase();
           let oldRoles = this.config.get("roles", {}, {server: msg.channel.guild.id});
           oldRoles[roleName] = roleId;
           this.config.set("roles", oldRoles, {server: msg.channel.guild.id});
@@ -113,7 +113,7 @@ class rank {
           command.replyAutoDeny(`Please supply a rank to remove using \`${command.prefix}rank remove \<rank\>\`, for a list of ranks use \`${command.prefix}rank list\``);
           return true;
         }
-        let rankToJoin = command.args[1].toLowerCase();
+        let rankToJoin = command.args.join(" ").toLowerCase();
         let oldRoles = this.config.get("roles", {}, {server: msg.channel.guild.id});
         if (oldRoles.hasOwnProperty(rankToJoin)) {
           delete oldRoles[rankToJoin];
@@ -155,7 +155,7 @@ class rank {
             .then(this.possiblyDelete(msg));
           return true;
         }
-        let rankToJoin = command.args[1].toLowerCase();
+        let rankToJoin = command.args.join(" ").toLowerCase();
         if (rankToJoin[0] == "+" || rankToJoin[0] == "-") {
           rankToJoin = rankToJoin.substring(1);
         }
@@ -193,7 +193,7 @@ class rank {
             .then(this.possiblyDelete(msg));
           return true;
         }
-        let rankToLeave = command.args[1].toLowerCase();
+        let rankToLeave = command.args.join(" ").toLowerCase();
         if (rankToLeave[0] == "+" || rankToLeave[0] == "-") {
           rankToLeave = rankToLeave.substring(1);
         }
