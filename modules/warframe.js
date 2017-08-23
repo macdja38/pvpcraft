@@ -333,7 +333,7 @@ class Warframe {
             return;
           }
           let options = {
-            name: command.args[1].toLowerCase(),
+            name: command.args.join(" ").toLowerCase(),
             permissions: 0,
             mentionable: false
           };
@@ -375,7 +375,7 @@ class Warframe {
             command.reply(`Resource is not being tracked, use \`${command.prefix}alert add ${utils.clean(command.args[1])}\` to add it.`);
             return true;
           }
-          let roleName = command.args[1].toLowerCase();
+          let roleName = command.args.join(" ").toLowerCase();
           let role = msg.channel.guild.roles.find(r => r.name.toLowerCase() === roleName);
           if (role) {
             msg.channel.guild.deleteRole(role.id).then(() => {
