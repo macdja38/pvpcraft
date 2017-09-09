@@ -29,20 +29,22 @@ class rank {
     this.raven = e.raven;
     this.perms = e.perms;
 
-    this.onJoin = (server, user) => {
-      let rank = this.config.get("roles", false, {server: server.id});
-      utils.handleErisRejection(server.addMemberRole(user.id, rank));
+    this.onJoin = (guild, member) => {
+      let roles = this.config.get("roles", false, {server: guild.id});
+      if (roles.hasOwnProperty("joinrole")) {
+        utils.handleErisRejection(guild.addMemberRole(member.id, roles.joinrole, "Automated joinrole, use `/rank remove joinrole` to disable"));
+      }
     };
 
     this.possiblyDelete = this.possiblyDelete.bind(this);
   }
 
   onDisconnect() {
-    this.client.removeListener("serverNewMember", this.onJoin);
+    this.client.removeListener("guildMemberAdd", this.onJoin);
   }
 
   onReady() {
-    this.client.on("serverNewMember", this.onJoin);
+    this.client.on("guildMemberAdd", this.onJoin);
   }
 
   /**
