@@ -57,7 +57,10 @@ class welcome {
               welcomeChannel = server.channels.get(welcomeInfo.channel);
             }
             if (!welcomeChannel) {
-              welcomeChannel = server.defaultChannel;
+              welcomeChannel = server.channels.get(server.id);
+            }
+            if (!welcomeChannel) {
+              return;
             }
           } else {
             welcomeChannel = await this.client.getDMChannel(user.id);
