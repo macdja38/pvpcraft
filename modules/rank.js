@@ -121,10 +121,10 @@ class rank {
           }
           if (coloredRolesList != "") {
             command.createMessageAutoDeny(`Roles you can join are highlighted in green\`\`\`diff\n${coloredRolesList}\`\`\``)
-              .then(this.possiblyDelete(command.message));
+              .then(this.possiblyDelete(command.msg));
           } else {
             command.replyAutoDeny(`No ranks are setup to be join-able.`)
-              .then(this.possiblyDelete(command.message));
+              .then(this.possiblyDelete(command.msg));
           }
           return true;
         }
@@ -133,7 +133,7 @@ class rank {
         if (command.args[0] === "join" && this.perms.check(command, "rank.join.use")) {
           if (!command.args[1]) {
             command.replyAutoDeny(`Please supply a rank to join using \`${command.prefix}rank join \<rank\>\`, for a list of ranks use \`${command.prefix}rank list\``)
-              .then(this.possiblyDelete(command.message));
+              .then(this.possiblyDelete(command.msg));
             return true;
           }
           let rankToJoin = command.args[1].toLowerCase();
@@ -143,19 +143,19 @@ class rank {
           let roles = this.config.get("roles", rankToJoin, {server: command.channel.guild.id});
           if (!roles[rankToJoin]) {
             command.replyAutoDeny(`Invalid rank, for a list of ranks use \`${command.prefix}rank list\``)
-              .then(this.possiblyDelete(command.message));
+              .then(this.possiblyDelete(command.msg));
             return true;
           }
           if (!this.perms.check(command, `rank.join.${rankToJoin}`)) {
             command.replyAutoDeny(`You do not have perms to join this rank for a list of ranks use \`${command.prefix}rank list\``)
-              .then(this.possiblyDelete(command.message));
+              .then(this.possiblyDelete(command.msg));
             return true;
           }
           let role = command.channel.guild.roles.get(roles[rankToJoin]);
           if (role) {
             command.channel.guild.addMemberRole(command.author.id, role.id).then(() => {
               command.replyAutoDeny(":thumbsup::skin-tone-2:")
-                .then(this.possiblyDelete(command.message));
+                .then(this.possiblyDelete(command.msg));
             }).catch((error) => {
               if (error) {
                 command.replyAutoDeny(`Error ${error} promoting ${utils.removeBlocks(command.author.username)} try redefining your rank and making sure the bot has enough permissions.`)
@@ -171,7 +171,7 @@ class rank {
         if (command.args[0] === "leave" && this.perms.check(command, "rank.leave.use")) {
           if (!command.args[1]) {
             command.replyAutoDeny(`Please supply a rank to leave using \`${command.prefix}rank leave \<rank\>\`, for a list of ranks use \`${command.prefix}rank list\``)
-              .then(this.possiblyDelete(command.message));
+              .then(this.possiblyDelete(command.msg));
             return true;
           }
           let rankToLeave = command.args[1].toLowerCase();
@@ -181,19 +181,19 @@ class rank {
           let roles = this.config.get("roles", rankToLeave, {server: command.channel.guild.id});
           if (!roles[rankToLeave]) {
             command.replyAutoDeny(`Invalid rank, for a list of ranks use \`${command.prefix}rank list\``)
-              .then(this.possiblyDelete(command.message));
+              .then(this.possiblyDelete(command.msg));
             return true;
           }
           if (!this.perms.check(command, `rank.leave.${rankToLeave}`)) {
             command.replyAutoDeny(`You do not have perms to leave this rank for a list of ranks use \`${command.prefix}rank list\``)
-              .then(this.possiblyDelete(command.message));
+              .then(this.possiblyDelete(command.msg));
             return true;
           }
           let role = command.channel.guild.roles.get(roles[rankToLeave]);
           if (role) {
             command.channel.guild.removeMemberRole(command.author.id, role.id).then(() => {
               command.replyAutoDeny(":thumbsup::skin-tone-2:")
-                .then(this.possiblyDelete(command.message));
+                .then(this.possiblyDelete(command.msg));
             }).catch((error) => {
               command.createMessageAutoDeny(`${error} demoting ${utils.removeBlocks(command.author.username)} try redefining your rank and making sure the bot has enough permissions.`).catch(console.error)
             })
@@ -208,6 +208,7 @@ class rank {
   }
 
   possiblyDelete(triggerMessage) {
+    console.log(triggerMessage);
     return (msg) => {
       if (msg == null) return;
       let serverId = msg.channel.guild.id;
