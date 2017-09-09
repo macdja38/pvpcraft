@@ -1077,7 +1077,7 @@ class moderationV2 {
   }
 
   memberUpdated(guild, member, oldMember) {
-    if (this.perms.checkUserChannel(member, guild.defaultChannel, "msglog.whitelist.member.updated")) return;
+    if (this.perms.checkUserGuild(member, guild, "msglog.whitelist.member.updated")) return;
     if (!oldMember) return;
     let fields = [{
       title: "User",
