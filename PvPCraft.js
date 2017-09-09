@@ -658,7 +658,7 @@ class PvPCraft {
 
     for (let module of modulesAndMiddleware) {
       for (let command of module.commands) {
-        if (!command.triggers.includes(userCommand.commandnos)) continue;
+        if (!command.triggers.includes(userCommand.command)) continue;
         if (!command.permissionCheck(userCommand)) continue;
         if (!this.checkChannelAllowed(userCommand.channel, command.channels)) continue;
         const result = await this._commandWrapper(command, userCommand, msg, () => {
