@@ -7,7 +7,7 @@ Paths.json which can be found at pvpcraft.ca/Paths.json (place one folder above 
 For web https://github.com/macdja38/pvpsite must be setup and urls configured in this project's config/config.json
 
 # installation instructions
- Requires **node.js** v7.6 or greater, must be able to build native module's using node-gyp. RethinkDB is required for the master branch. **pm2** is optional but highly recommended.
+ Requires **node.js** v8.1 or greater, must be able to build native module's using node-gyp, must have [git](https://git-scm.com/) installed. RethinkDB is required for the master branch. **pm2** is optional but highly recommended.
 
  - `git clone https://github.com/macdja38/pvpcraft.git` to download the project
  - `cd pvpcraft` to open new directory.
