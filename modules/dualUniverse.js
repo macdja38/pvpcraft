@@ -108,14 +108,14 @@ class dualUniverse {
         });
       },
     }, {
-      triggers: ["duuser"],
-      permissionCheck: this.perms.genCheckCommand("du.user"),
+      triggers: ["duorg"],
+      permissionCheck: this.perms.genCheckCommand("du.org"),
       channels: ["*"],
       execute: command => {
         let targetOrg = command.args.join(" ");
         return this.getOrg(targetOrg).then(body => {
           if (body.data.length < 1) {
-            command.replyAutoDeny(`Could not find user ${utils.clean(targetOrg)}`);
+            command.replyAutoDeny(`Could not find organisation ${utils.clean(targetOrg)}`);
             return true;
           }
           const org = body.data[0];

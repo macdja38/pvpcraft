@@ -236,7 +236,7 @@ class music {
 
         if (!this.boundChannels.hasOwnProperty(id)) {
           if (this.perms.check(command, "music.init")) {
-            await this.init(id, command, perms)
+            await this.init(id, command, this.perms)
           } else {
             command.replyAutoDeny(`Please have someone with the permission node \`music.init\` run ${command.prefix}init`);
             return true;

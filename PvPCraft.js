@@ -611,7 +611,7 @@ class PvPCraft {
     for (let ware in this.middlewareList) {
       if (this.middlewareList.hasOwnProperty(ware) && this.middlewareList[ware].ware.changeMessage) {
         this._commandWrapper(ware, command, msg, () => {
-          msg = this.middlewareList[ware].ware.changeMessage(msg, this.perms);
+          msg = this.middlewareList[ware].ware.changeMessage(msg);
         });
       }
     }
