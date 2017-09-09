@@ -838,7 +838,7 @@ class moderationV2 {
     if (fields.length < 2) return;
     this.client.guilds.forEach(guild => {
       if (guild.members.get(user.id)) {
-        if (this.perms.checkUserChannel(user, guild.defaultChannel, "msglog.whitelist.user")) return;
+        if (this.perms.checkUserGuild(user, guild, "msglog.whitelist.user")) return;
         this.sendHookedMessage("user", {user}, embed, guild.id);
       }
     });
