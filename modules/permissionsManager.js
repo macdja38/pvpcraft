@@ -56,7 +56,7 @@ class permissionsManager {
         return true;
       },
     }, {
-      triggers: ["pex", "perms", "perm"],
+      triggers: ["perms", "perm", "pex"],
       permissionCheck: () => true,
       channels: ["guild"],
       execute: command => {
