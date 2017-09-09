@@ -349,7 +349,7 @@ class music {
         const id = command.channel.guild.id;
         if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
           if (this.boundChannels[id].connection.paused) {
-            this.boundChannels[id].resume(msg);
+            this.boundChannels[id].resume(command);
             command.replyAutoDeny("Playback resumed.")
           } else {
             command.replyAutoDeny(`Cannot resume unless something is paused.`)
@@ -368,7 +368,7 @@ class music {
         if (this.boundChannels.hasOwnProperty(id)) {
           return this.boundChannels[id].prettyList().then((list) => {
             command.createMessageAutoDeny("```xl\n" + list
-              + "```\n" + this.fileConfig.get("website", {musicUrl: "https://bot.pvpcraft.ca/login/"}).musicUrl.replace(/\$id/, msg.channel.guild.id));
+              + "```\n" + this.fileConfig.get("website", {musicUrl: "https://bot.pvpcraft.ca/login/"}).musicUrl.replace(/\$id/, command.channel.guild.id));
           })
         } else {
           command.createMessageAutoDeny("Sorry, Bot is not currently in a voice channel use " + command.prefix + "init while in a voice channel to bind it.")
