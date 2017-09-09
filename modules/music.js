@@ -191,7 +191,7 @@ class music {
           return true;
         }
         if (command.member.voiceState.channelID) {
-          this.init(id, command, perms, command.flags.includes("d"));
+          this.init(id, command,this.perms, command.flags.includes("d"));
         }
         else {
           command.createMessageAutoDeny(command.member.mention + ", You must be in a voice channel this command. If you are currently in a voice channel please rejoin it.")
