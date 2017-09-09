@@ -369,6 +369,7 @@ class music {
           return this.boundChannels[id].prettyList().then((list) => {
             command.createMessageAutoDeny("```xl\n" + list
               + "```\n" + this.fileConfig.get("website", {musicUrl: "https://bot.pvpcraft.ca/login/"}).musicUrl.replace(/\$id/, command.channel.guild.id));
+            return true;
           })
         } else {
           command.createMessageAutoDeny("Sorry, Bot is not currently in a voice channel use " + command.prefix + "init while in a voice channel to bind it.")
@@ -387,6 +388,7 @@ class music {
         }
         return this.musicDB.clearQueue(id, options).then((result) => {
           command.replyAutoDeny("Queue cleared");
+          return true;
         });
       },
     }, {
