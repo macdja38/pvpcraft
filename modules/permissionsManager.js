@@ -100,7 +100,7 @@ class permissionsManager {
             channel = "*";
             server = command.channel.guild.id;
           }
-          if (!this.perms.checkAdminServer(msg) && this.config.get("permissions", {admins: []}).admins.indexOf(msg.author.id) < 0) {
+          if (!this.perms.checkAdminServer(command) && this.config.get("permissions", {admins: []}).admins.indexOf(command.author.id) < 0) {
             command.reply("Discord permission \`Admin\` Required");
             return true;
           }
