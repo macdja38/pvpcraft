@@ -33,14 +33,6 @@ class template {
   }
 
   /**
-   * Returns the triggers that will cause this module's onCommand function to be called
-   * @returns {string[]}
-   */
-  static getCommands() {
-    return [];
-  }
-
-  /**
    * Optional function that will be called with every message for the purpose of misc responses / other
    * @param {Message} msg
    * @param {Permissions} perms
@@ -58,17 +50,6 @@ class template {
       utils.handleErisRejection(msg.delete());
       return true;
     }
-    return false;
-  }
-
-  /**
-   * Called with a command, returns true or a promise if it is handling the command, returns false if it should be passed on.
-   * @param {Message} msg
-   * @param {Command} command
-   * @param {Permissions} perms
-   * @returns {boolean | Promise}
-   */
-  onCommand(msg, command, perms) {
     return false;
   }
 }

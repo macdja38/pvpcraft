@@ -3,7 +3,7 @@
  */
 "use strict";
 
-let utils = require('../lib/utils');
+const utils = require('../lib/utils');
 
 class template {
   /**
@@ -23,52 +23,39 @@ class template {
    * @param {PvPClient} e.pvpClient PvPCraft client library instance
    */
   constructor(e) {
-    //save the client as this.client for later use.
+    // save the client as this.client for later use.
     this.client = e.client;
-    //save the bug reporting thing raven for later use.
+    // save the bug reporting thing raven for later use.
     this.raven = e.raven;
+    this.perms = e.perms;
   }
 
   /**
-   * Returns the triggers that will cause this module's onCommand function to be called
-   * @returns {string[]}
+   * Returns an array of commands that can be called by the command handler
+   * @returns {[{triggers: [string], permissionCheck: function, channels: [string], execute: function}]}
    */
-  static getCommands() {
-    //this needs to return a list of commands that should activate the onCommand function
-    //of this class. array of strings with trailing s's removed.
-    return ["ao"];
+  getCommands() {
+    return [{
+      triggers: ["ao"],
+      permissionCheck: this.perms.genCheckCommand("template.ao"),
+      channels: ["*"],
+      execute: command => {
+        // check if this is a command we should handle and if the user has permissions to execute it.
+        // provide user feedback.
+        command.replyAutoDeny("eo");
+        // return true, which tells the command dispatcher that we processed the command.
+        // if false is returned bot will continue to search for commands that could match
+        return true;
+      },
+    }];
   }
 
   /**
    * Optional function that will be called with every message for the purpose of misc responses / other
    * @param {Message} msg
-   * @param {Permissions} perms
    * @returns {boolean | Promise}
    */
-  checkMisc(msg, perms) {
-    return false;
-  }
-
-  /**
-   * Called with a command, returns true or a promise if it is handling the command, returns false if it should be passed on.
-   * @param {Message} msg
-   * @param {Command} command
-   * @param {Permissions} perms
-   * @returns {boolean | Promise}
-   */
-  onCommand(msg, command, perms) {
-    //log that the module was called.
-    console.log("Template initiated");
-
-    //check if this is a command we should handle and if the user has permissions to execute it.
-    if (command.command === "ao" && perms.check(msg, "template.ao")) {
-      //provide user feedback.
-      command.replyAutoDeny("eo");
-      //return true, which tells the command dispatcher that we processed the command.
-      return true;
-    }
-    //return false, telling the command dispatcher the command was not handled and to keep looking,
-    //or start passing it to misc responses.
+  checkMisc(msg) {
     return false;
   }
 }

@@ -25,10 +25,6 @@ class dmAutoResponder {
     this.raven = e.raven;
   }
 
-  static getCommands() {
-    return [];
-  }
-
   /**
    * Optional function that will be called with every message for the purpose of misc responses / other
    * @param {Message} msg

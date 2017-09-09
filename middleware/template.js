@@ -45,31 +45,37 @@ class template {
    * @param {Message} msg
    * @param {Permissions} perms
    */
-  onMessage(msg, perms) {
+  onMessage(msg) {
     //do something with the message like log it.
     console.log("Got message")
   }
 
   /**
-   * Get's called every command.
-   * @param {Message} msg
-   * @param {Command} command
-   * @param {Permissions} perms
+   * Returns an array of commands that can be called by the command handler
+   * @returns {[{triggers: [string], permissionCheck: function, channels: [string], execute: function}]}
    */
-  onCommand(msg, command, perms) {
-    //do something with the command like logging it to a mod log
-    console.log("Got Command");
-    // Every command will pass through this template entry if your module contains it.
-    // This can't modify commands only log/process them.
+  getCommands() {
+    return [{
+      triggers: ["ao"],
+      permissionCheck: this.perms.genCheckCommand("template.ao"),
+      channels: ["*"],
+      execute: command => {
+        // check if this is a command we should handle and if the user has permissions to execute it.
+        // provide user feedback.
+        command.replyAutoDeny("eo");
+        // return true, which tells the command dispatcher that we processed the command.
+        // if false is returned bot will continue to search for commands that could match
+        return true;
+      },
+    }];
   }
 
   /**
    * get's called every Message, (unless a previous middleware on the list override it.) can modify message.
    * @param {Message} msg
-   * @param {Permissions} perms
    * @returns {Message} msg that will be passed to modules and other middleware
    */
-  changeMessage(msg, perms) {
+  changeMessage(msg) {
     //return a modified version of the message.
     console.log("Changed Message");
     return msg;
@@ -79,10 +85,9 @@ class template {
    * get's called every Command, (unless a previous middleware on the list override it.) can modify message.
    * @param {Message} msg
    * @param {Command} command
-   * @param {Permissions} perms
    * @returns {Command | boolean}
    */
-  changeCommand(msg, command, perms) {
+  changeCommand(msg, command) {
     console.log("Changed Command");
     //modify the command like rate limiting it.
     if (command.command === "ahh") {
