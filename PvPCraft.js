@@ -648,7 +648,7 @@ class PvPCraft {
   checkChannelAllowed(channel, allowed) {
     if (allowed.includes("*")) return true;
     if (channel instanceof Eris.GuildChannel && allowed.includes("guild")) return true;
-    if (channel instanceof channel && allowed.includes("dm")) return true;
+    if (channel instanceof Eris.PrivateChannel && allowed.includes("dm")) return true;
     return false
   }
 
