@@ -34,7 +34,7 @@ class feedManager {
    */
   getCommands() {
     return [{
-      triggers: ["feed"],
+      triggers: ["feed", "feeds"],
       permissionCheck: this.perms.genCheckCommand("feeds.manage"),
       channels: ["guild"],
       execute: command => {
