@@ -711,7 +711,7 @@ class PvPCraft {
           if (ravenError) {
             console.error("Error reporting error to sentry:\n", ravenError, "Error sentry was trying to report:\n", ravenError);
           } else {
-            utils.handleErisRejection(msg.channel.createMessage("Sorry their was an error processing your command. The error is ```" + error +
+            utils.handleErisRejection(msg.channel.createMessage("Sorry, there was an error processing your command. The error is ```" + error +
               "``` reference code `" + id + "`"));
           }
           if (process.env.dev === "true") {
