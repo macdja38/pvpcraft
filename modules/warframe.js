@@ -229,7 +229,7 @@ class Warframe {
         });
       },
     }, {
-      triggers: ["alert"],
+      triggers: ["alert", "alerts"],
       permissionCheck: () => true,
       channels: ["guild"],
       execute: command => {
