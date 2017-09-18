@@ -238,7 +238,7 @@ class moderationV2 {
       permissionCheck: this.perms.genCheckCommand("moderation.ban"),
       channels: ["guild"],
       execute: command => {
-        this.moderationAction(msg, command, perms, "ban");
+        this.moderationAction(command.msg, command, this.perms, "ban");
         return true;
       },
     }, {
@@ -246,7 +246,7 @@ class moderationV2 {
       permissionCheck: this.perms.genCheckCommand("moderation.kick"),
       channels: ["guild"],
       execute: command => {
-        this.moderationAction(msg, command, perms, "kick");
+        this.moderationAction(command.msg, command, this.perms, "kick");
         return true;
       },
     }, {
@@ -254,7 +254,7 @@ class moderationV2 {
       permissionCheck: this.perms.genCheckCommand("moderation.unban"),
       channels: ["guild"],
       execute: command => {
-        this.moderationAction(msg, command, perms, "unban");
+        this.moderationAction(command.msg, command, this.perms, "unban");
         return true;
       },
     }, {
