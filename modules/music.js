@@ -436,6 +436,7 @@ class music {
         const id = command.channel.guild.id;
         if (!this.boundChannels.hasOwnProperty(id) || !this.boundChannels[id].hasOwnProperty("connection")) {
           command.createMessageAutoDeny(`Sorry, Bot is not currently in a voice channel use ${command.prefix} init while in a voice channel to bind it.`);
+          return true;
         }
         let boundChannel = this.boundChannels[id];
         if (!boundChannel.premium) {
