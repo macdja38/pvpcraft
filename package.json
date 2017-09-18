@@ -38,9 +38,9 @@
   },
   "devDependencies": {
     "docma": "^1.4.0",
-    "eslint": "^4.6.1",
-    "jest-cli": "^20.0.4",
-    "jsdoc": "^3.5.4",
+    "eslint": "^4.7.0",
+    "jest-cli": "^21.1.0",
+    "jsdoc": "^3.5.5",
     "jsdoc-strip-async-await": "^0.1.0"
   },
   "engines": {
