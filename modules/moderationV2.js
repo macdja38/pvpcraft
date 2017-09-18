@@ -931,12 +931,21 @@ class moderationV2 {
    * @param {string | null} reason
    * @param {Error | null} error
    */
-  memberBanned(server, user, instigator, reason, error) {
-    let fields = [{
+  async memberBanned(server, user, instigator, reason, error) {
+    const node = instigator ? "moderation.action.ban" : "member.banned";
+
+    const fields = [{
       title: "User",
       value: typeof user === "string" ? `<@${user}>` : user.mention,
       short: true,
     }];
+
+    if (!instigator && !reason) {
+      const possibleMeta = await getLastAuditLog(server, 22);
+      console.log(possibleMeta);
+      instigator = getAuditLogCause(possibleMeta);
+      reason = getAuditLogReason(possibleMeta);
+    }
 
     if (instigator) {
       fields.push({
@@ -962,7 +971,7 @@ class moderationV2 {
       })
     }
 
-    this.sendHookedMessage(instigator ? "moderation.action.ban" : "member.banned", {user}, {
+    this.sendHookedMessage(node, {user}, {
       title: "User Banned",
       fields,
     }, server.id);
@@ -1242,6 +1251,42 @@ function findNewRoles(more, less) {
     }
   }
   return false;
+}
+
+function getLastAuditLog(guild, event) {
+  return guild.getAuditLogs(1, null, event).catch(error => null);
+}
+
+function getAuditLogTargetID(event) {
+  if (event == null) return event;
+  if (event.entries && event.entries.length > 0) {
+    const entry = event.entries[0];
+    return entry.targetID;
+  }
+}
+
+function getAuditLogTarget(event) {
+  if (event == null) return event;
+  if (event.entries && event.entries.length > 0) {
+    const entry = event.entries[0];
+    return entry.target;
+  }
+}
+
+function getAuditLogCause(event) {
+  if (event == null) return event;
+  if (event.entries && event.entries.length > 0) {
+    const entry = event.entries[0];
+    return entry.user;
+  }
+}
+
+function getAuditLogReason(event) {
+  if (event == null) return event;
+  if (event.entries && event.entries.length > 0) {
+    const entry = event.entries[0];
+    return entry.reason;
+  }
 }
 
 /**
