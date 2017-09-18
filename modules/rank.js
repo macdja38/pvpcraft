@@ -160,7 +160,7 @@ class rank {
                 .then(this.possiblyDelete(command.msg));
             }).catch((error) => {
               if (error) {
-                command.replyAutoDeny(`Error ${error} promoting ${utils.removeBlocks(command.author.username)} try redefining your rank and making sure the bot has enough permissions.`)
+                command.replyAutoDeny(`Error ${error} promoting ${utils.removeBlocks(command.author.username)} try making sure the bot's highest role is above the role you want it to add and that the bot has Manage Permissions or Admin.`)
               }
             });
           } else {
