@@ -289,6 +289,7 @@ class PvPCraft {
   }
 
   onGuildDelete(server) {
+    this.pvpClient.removeGuild(server.id);
     for (let middleware of this.middlewareList) {
       if (middleware.ware) {
         try {
