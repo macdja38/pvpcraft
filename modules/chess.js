@@ -144,8 +144,10 @@ class chess {
         });
         let attachment = {
           description: emoteArray
+            .reverse()
             .map((e, i) => (Math.ceil((i + 1) / 8) % 2 !== (i % 2)) ? e.toUpperCase() : e)
-            .map(e => emotes[e]).map((c, i) => ((i + 1) % 8 === 0) ? `${c} ${Math.ceil(i / 8)}\n` : c)
+            .map(e => emotes[e])
+            .map((c, i) => ((i + 1) % 8 === 0) ? `${c} ${9 - Math.ceil(i / 8)}\n` : c)
             .join("") + "  a     b     c     d     e     f     g     h",
           author: {
             "username": "Chess Bot 3000",
