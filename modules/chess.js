@@ -203,21 +203,20 @@ class chess {
         if (status.isStalemate) {
           attachment.footer.text += " | Stalemate";
         }
-        command.createMessageAutoDeny({embed: attachment});
+        return command.createMessageAutoDeny({embed: attachment});
       },
     }, {
       triggers: ["end"],
       permissionCheck: genDualCheckCommand("game.chess.end", "chess.game.end"),
       channels: ["*"],
       execute: (command) => {
-        if (this.games.hasOwnProperty(command.channel.id)) {
-          command.replyAutoDeny("Sorry, game already in progress");
+        if (!this.games.hasOwnProperty(command.channel.id)) {
+          command.replyAutoDeny("Sorry, game is not in progress");
           return true;
         }
         delete this.games[command.channel.id];
         delete this.turns[command.channel.id];
-        command.replyAutoDeny("Game ended");
-        //r.table(table).insert({})
+        return command.replyAutoDeny("Game ended");
       },
     }];
   }
