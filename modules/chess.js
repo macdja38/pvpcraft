@@ -37,6 +37,18 @@ let emotes = {
   "RW": "<:RW:333047426191589379>",
 };
 
+/**
+ * checks two permission nodes (|| operation)
+ * @param {string} node1
+ * @param {string} node2
+ * @returns {Function}
+ */
+function genDualCheckCommand(node1, node2) {
+  return function(command) {
+    return command.perms.check(command, node1) || command.perms.check(command, node2);
+  };
+}
+
 class chess {
   /**
    * Instantiates the module
@@ -80,7 +92,7 @@ class chess {
     //of this class. array of strings with trailing s's removed.
     return [{
       triggers: ["start"],
-      permissionCheck: this.perms.genCheckCommand("chess.game.start"),
+      permissionCheck: genDualCheckCommand("game.chess.start", "chess.game.start"),
       channels: ["*"],
       execute: (command) => {
         if (this.games.hasOwnProperty(command.channel.id)) {
@@ -94,7 +106,7 @@ class chess {
       },
     }, {
       triggers: ["move"],
-      permissionCheck: this.perms.genCheckCommand("chess.game.move"),
+      permissionCheck: genDualCheckCommand("game.chess.move", "chess.game.move"),
       channels: ["*"],
       execute: (command) => {
         if (!this.games.hasOwnProperty(command.channel.id)) {
@@ -157,7 +169,7 @@ class chess {
       },
     }, {
       triggers: ["end"],
-      permissionCheck: this.perms.genCheckCommand("chess.game.end"),
+      permissionCheck: genDualCheckCommand("game.chess.end", "chess.game.end"),
       channels: ["*"],
       execute: (command) => {
         if (this.games.hasOwnProperty(command.channel.id)) {
