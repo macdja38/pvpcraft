@@ -44,9 +44,71 @@ let emotes = {
  * @returns {Function}
  */
 function genDualCheckCommand(node1, node2) {
-  return function(command) {
+  return function (command) {
     return command.perms.check(command, node1) || command.perms.check(command, node2);
   };
+}
+
+/**
+ * Converts the file notation to a 0 indexed column.
+ * @param {string} file
+ * @returns {number}
+ */
+function squareFileToColumn(file) {
+  return file.charCodeAt(0) - 97;
+}
+
+/**
+ * Converts an array of 64 squares into 2D array [row][column]
+ * @param {Array<Object>} squares
+ * @returns {Array<Array<Object>>}
+ */
+function squaresTo2DArray(squares) {
+  const rows = new Array(8).fill(null).map(() => []);
+  squares.forEach((square) => {
+    rows[square.rank - 1][squareFileToColumn(square.file)] = square;
+  });
+  return rows
+}
+
+/**
+ * Converts a chess piece to an emote
+ * @param {Object} piece
+ * @returns {string}
+ */
+function pieceToEmote(piece) {
+  let emote;
+  if (piece.piece !== null) {
+    if (piece.piece.type === "pawn") {
+      emote = `p${piece.piece.side.name[0]}`
+    } else {
+      emote = `${piece.piece.notation.toLowerCase()}${piece.piece.side.name[0]}`;
+    }
+  } else {
+    emote = "b3"
+  }
+  const evenRow = piece.rank % 2 === 0;
+  if ((piece.file === "a" || piece.file === "c" || piece.file === "e" || piece.file === "g") ? evenRow : !evenRow) {
+    return emotes[emote.toUpperCase()];
+  } else {
+    return emotes[emote];
+  }
+}
+
+/**
+ * Turns a chess board from the chess library into a signified representation using discord emotes for pieces
+ * @param {{squares: Array<Object>}} board
+ * @returns {string}
+ */
+function stringifyBoard(board) {
+  const squares = board.squares.slice(0);
+  const rows = squaresTo2DArray(squares)
+    .map(r => r.map(pieceToEmote))
+    .map(r => r.join(""))
+    .map((r, i) => `${r} ${i + 1}`)
+    .reverse();
+  rows.push("  a     b     c     d     e     f     g     h");
+  return rows.join("\n");
 }
 
 class chess {
@@ -113,46 +175,21 @@ class chess {
           command.replyAutoDeny("Sorry, no game in progress");
           return true;
         }
-        if (command.args.length > 0) {
-          let m1;
-          try {
-            m1 = this.games[command.channel.id].move(command.args[0]);
-          } catch (error) {
-            command.replyAutoDeny(error);
-            console.log(error);
-          }
-          if (m1) {
-            if (this.turns[command.channel.id] === "white") {
-              this.turns[command.channel.id] = "black";
-            } else {
-              this.turns[command.channel.id] = "white";
-            }
-          }
-          console.log("m1", m1);
+        if (command.args.length < 1) {
+          command.replyAutoDeny(`usage \`${command.prefix}move <move in Algebraic Chess Notation>\``);
+          return true;
         }
+        try {
+          this.games[command.channel.id].move(command.args[0]);
+        } catch (error) {
+          command.replyAutoDeny(error);
+          console.log(error);
+          return true;
+        }
+        this.turns[command.channel.id] = this.turns[command.channel.id] === "white" ? "black" : "white";
         let status = this.games[command.channel.id].getStatus();
-        let squares = status.board.squares;
-        let emoteArray = squares.map(p => {
-          if (p.hasOwnProperty("piece") && p.piece !== null) {
-            if (p.piece.type === "pawn") {
-              return `p${p.piece.side.name[0]}`
-            }
-            return `${p.piece.notation.toLowerCase()}${p.piece.side.name[0]}`
-          } else {
-            return "b3"
-          }
-        });
         let attachment = {
-          description: emoteArray
-            .reverse()
-            .map((e, i) => (Math.ceil((i + 1) / 8) % 2 !== (i % 2)) ? e.toUpperCase() : e)
-            .map(e => emotes[e])
-            .map((c, i) => ((i + 1) % 8 === 0) ? `${c} ${9 - Math.ceil(i / 8)}\n` : c)
-            .join("") + "  a     b     c     d     e     f     g     h",
-          author: {
-            "username": "Chess Bot 3000",
-            "icon_url": "http://www.clipartkid.com/images/844/27-chess-piece-pictures-free-cliparts-that-you-can-download-to-you-fAbN54-clipart.jpeg",
-          },
+          description: stringifyBoard(status.board),
         };
         attachment.footer = {text: `Currently up ${this.turns[command.channel.id]}`};
         if (status.isCheckmate) {
@@ -166,7 +203,6 @@ class chess {
         if (status.isStalemate) {
           attachment.footer.text += " | Stalemate";
         }
-        console.log(emoteArray);
         command.createMessageAutoDeny({embed: attachment});
       },
     }, {
