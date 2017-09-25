@@ -941,6 +941,7 @@ class moderationV2 {
     }];
 
     if (!instigator && !reason) {
+      await utils.delay(1000);
       const possibleMeta = await getLastAuditLog(server, 22);
       console.log(possibleMeta);
       instigator = getAuditLogCause(possibleMeta);
