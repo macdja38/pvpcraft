@@ -47,7 +47,7 @@ class permissionsManager {
    */
   getCommands() {
     return [{
-      triggers: ["setting"],
+      triggers: ["setting", "settings"],
       permissionCheck: () => true,
       channels: ["guild"],
       execute: command => {
