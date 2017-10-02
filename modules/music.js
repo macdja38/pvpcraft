@@ -473,18 +473,14 @@ class music {
         return true;
       },
     }, {
-      triggers: ["logchannel", "logchannels"],
-      permissionCheck: this.perms.genCheckCommand("music.logchannels"),
+      triggers: ["mquality"],
+      permissionCheck: this.perms.genCheckCommand("music.quality"),
       channels: ["guild"],
       execute: command => {
         const id = command.channel.guild.id;
-        if (this.boundChannels.length === 0) {
-          command.createMessageAutoDeny("Bot is currently not in use");
-        } else {
-          let listText = this.boundChannels.map(channel => `Server: ${channel.guild.name} in voice channel ${channel.text.name}`).join("\n");
-          command.createMessageAutoDeny("Playing Music in:\n" + listText);
-        }
-        return true;
+        if (this.possiblySendNotConnected(command)) return true;
+        if (this.possiblySendNotPlaying(command)) return true;
+        command.replyAutoDeny(this.boundChannels[id].getQuality());
       },
     }];
   }
@@ -532,6 +528,20 @@ class music {
       return false;
     }
     command.createMessageAutoDeny("Sorry, Bot is not currently in a voice channel use " + command.prefix + "init while in a voice channel to bind it.");
+    return true;
+  }
+
+  /**
+   *
+   * @param {Command} command
+   * @returns {boolean}
+   */
+  possiblySendNotPlaying(command) {
+    let id = command.channel.guild.id;
+    if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection") && this.boundChannels[id].connection.playing) {
+      return false;
+    }
+    command.createMessageAutoDeny("Sorry, Bot is not currently playing a song.");
     return true;
   }
 
