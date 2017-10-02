@@ -5,6 +5,13 @@
 
 let request = require('request');
 
+let Music;
+try {
+  Music = require("../modules/music");
+} catch (error) {
+
+}
+
 let StandardDB = require('../lib/StandardDB');
 
 class shardedInfo {
@@ -81,7 +88,7 @@ class shardedInfo {
         return this.botReady;
       })
       .then(() => {
-        let musicModule = this._modules.find(m => m && (m.commands.indexOf("play") > -1));
+        let musicModule = this._modules.find(m => m && (m.module.constructor.name === "music"));
         let connectionDiscordsIds = 0;
         let connectionBoundChannels = 0;
         let playing = 0;
