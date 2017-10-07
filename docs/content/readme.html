@@ -1,24 +1,26 @@
 
-<html><head></head><body><h1 id="pvpcraft">pvpcraft</h1>
-<hr />
-<p>modular version of PvPBot with permissions, modules, access control and many many more features</p>
-<h1 id="setup">setup</h1>
-<hr />
-<p>Bot requires 1 file not yet here.
-Paths.json which can be found at pvpcraft.ca/Paths.json (place one folder above project root)
-For web <a href="https://github.com/macdja38/pvpsite">https://github.com/macdja38/pvpsite</a> must be setup and urls configured in this project's config/config.json</p>
-<h1 id="installation-instructions">installation instructions</h1>
-<hr />
-<p> Requires <strong>node.js</strong> v8.1 or greater, must be able to build native module's using node-gyp, must have <a href="https://git-scm.com/">git</a> installed. RethinkDB is required for the master branch. <strong>pm2</strong> is optional but highly recommended.</p>
+<html><head></head><body><h2 id="pvpcraft">pvpcraft</h2>
+<p>A modular version of PvPBot with permissions, modules, access control, and many, many more features</p>
+<h2 id="setup">setup</h2>
+<p>The bot requires 1 file not yet here: Paths.json. It can be found at <a href="https://pvpcraft.ca/Paths.json">pvpcraft.ca/Paths.json</a> (place it one folder above project root).
+For web, <a href="https://github.com/macdja38/pvpsite">github.com/macdja38/pvpsite</a> must be setup, and URLs must be configured in this project's <code>config/config.json</code>.</p>
+<h2 id="installation-instructions">installation instructions</h2>
+<p>Requires <strong>node.js</strong> v8.1 or greater, the ability to build native module's using node-gyp, and <a href="https://git-scm.com/">git</a>. RethinkDB is required for the master branch. <strong>pm2</strong> is optional, but it's highly recommended.</p>
+<h4 id="in-your-command-line-of-choice-enter-">In your command line of choice, enter:</h4>
 <ul>
-<li><code>git clone https://github.com/macdja38/pvpcraft.git</code> to download the project</li>
-<li><code>cd pvpcraft</code> to open new directory.</li>
-<li><code>npm install</code> to install it's dependencies</li>
-<li>if you have pm2 run the bot with <code>pm2 start pm2.json</code> if not run it using <code>node main.js</code></li>
-<li>bot will restart for the first 3 time's or so you run it. If modules fail to load they can be disabled by removing their lines in the config. </li>
-<li>Edit the config's to your liking (located in the config folder) make sure to add your bot account's token in auth.json</li>
+<li><code>git clone https://github.com/macdja38/pvpcraft.git</code> to download the project,</li>
+<li><code>cd pvpcraft</code> to open the new project directory made by git,</li>
+<li><code>npm install</code> to install it's dependencies,</li>
+<li><code>pm2 start pm2.json</code> to start the bot if you have pm2
+<strong>OR</strong></li>
+<li><p><code>node main.js</code> if you don't</p>
+<h4 id="note-">Note:</h4>
+</li>
+<li>The bot will restart for the first 3-ish times you run it</li>
+<li>If modules fail to load, they can be disabled by removing their lines in the config file</li>
+<li>Edit the configs to your liking (they're located in the config folder)</li>
+<li>Make sure to add your bot account's token to auth.json</li>
 </ul>
-<h1 id="usage">Usage</h1>
-<hr />
-<p>For instruction's on how to use the instance of PvPCraft I host publicly please see <a href="https://bot.pvpcraft.ca/docs">user docs</a><br>For documentation to help with getting started writing your own modules please see <a href="https://macdja38.github.io/pvpcraft/">developers docs</a></p>
+<h2 id="usage">Usage</h2>
+<p>For instructions on how to use the instance of PvPCraft I host publicly, please see <a href="https://bot.pvpcraft.ca/docs">user docs</a>.<br>For documentation to help with getting started writing your own modules, please see <a href="https://macdja38.github.io/pvpcraft/">developers docs</a>.</p>
 </body></html>
