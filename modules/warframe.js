@@ -7,7 +7,7 @@ const parseState = require('../lib/parseState');
 
 const utils = require('../lib/utils');
 
-const newStateGrabber = require("../lib/newWorldState");
+const WorldState = require("../lib/WorldState");
 
 const BaseDB = require("../lib/BaseDB");
 
@@ -47,7 +47,7 @@ class Warframe {
     this.raven = e.raven;
     this.perms = e.perms;
     //noinspection JSUnresolvedVariable
-    this.worldState = new newStateGrabber(e.r, master ? 30000 : false);
+    this.worldState = new WorldState(e.r, master ? 30000 : false);
     this.r = e.r;
     this.alerts = [];
     this.rebuildAlerts = this.rebuildAlerts.bind(this);
