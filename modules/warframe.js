@@ -3,16 +3,11 @@
  */
 "use strict";
 
-const StateGrabber = require("../lib/worldState.js");
-const worldState = new StateGrabber();
-
 const parseState = require('../lib/parseState');
 
 const utils = require('../lib/utils');
 
 const newStateGrabber = require("../lib/newWorldState");
-
-let cluster = require("cluster");
 
 const BaseDB = require("../lib/BaseDB");
 
@@ -217,7 +212,7 @@ class Warframe {
       permissionCheck: this.perms.genCheckCommand("warframe.deal"),
       channels: ["*"],
       execute: command => {
-        return worldState.get().then((state) => {
+        return this.worldState.get("pc").then((state) => {
           command.createMessageAutoDeny("```haskell\n" + "Darvo is selling " +
             parseState.getName(state.DailyDeals[0].StoreItem) +
             " for " + state.DailyDeals[0].SalePrice +
@@ -411,7 +406,7 @@ class Warframe {
       permissionCheck: this.perms.genCheckCommand("warframe.trader"),
       channels: ["*"],
       execute: command => {
-        return worldState.get().then((state) => {
+        return this.worldState.get("pc").then((state) => {
           if (!state.VoidTraders || !state.VoidTraders[0]) {
             command.createMessageAutoDeny("Baro has disappeared from the universe.");
             return true;
@@ -461,11 +456,11 @@ class Warframe {
         return true;
       },
     }, {
-      triggers: ["alert"],
+      triggers: ["alert", "alerts"],
       permissionCheck: this.perms.genCheckCommand("warframe.alert"),
       channels: ["*"],
       execute: command => {
-        return worldState.get().then((state) => {
+        return this.worldState.get("pc").then((state) => {
           if (state.Alerts) {
             for (let alert of state.Alerts) {
               let {embed} = parseState.buildAlertEmbed(alert, "pc", state);
@@ -479,7 +474,7 @@ class Warframe {
       permissionCheck: this.perms.genCheckCommand("warframe.rift"),
       channels: ["*"],
       execute: command => {
-        return worldState.get().then((state) => {
+        return this.worldState.get("pc").then((state) => {
           if (state.ActiveMissions) {
             let string = "";
             for (let mission of state.ActiveMissions) {
@@ -531,7 +526,7 @@ class Warframe {
       permissionCheck: this.perms.genCheckCommand("warframe.sortie"),
       channels: ["*"],
       execute: command => {
-        return worldState.get().then((state) => {
+        return this.worldState.get("pc").then((state) => {
           if (state.Sorties.length > 0) {
             let sortie = state.Sorties[0];
             let fields = sortie.Variants.map(mission => {
@@ -575,7 +570,7 @@ class Warframe {
       permissionCheck: this.perms.genCheckCommand("warframe.access"),
       channels: ["*"],
       execute: command => {
-        return worldState.get().then((state) => {
+        return this.worldState.get("pc").then((state) => {
           let text = "```haskell\n";
           for (let event of state.Events) {
             if (event.Messages[0].Message.toLowerCase().indexOf("access") > -1) {
@@ -595,7 +590,7 @@ class Warframe {
       permissionCheck: this.perms.genCheckCommand("warframe.update"),
       channels: ["*"],
       execute: command => {
-        return worldState.get().then((state) => {
+        return this.worldState.get("pc").then((state) => {
           let fields = [];
           let embed = {
             title: "Warframe updates",
