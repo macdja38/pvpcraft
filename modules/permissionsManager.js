@@ -3,7 +3,7 @@
  */
 "use strict";
 
-let utils = require('../lib/utils');
+const utils = require('../lib/utils');
 
 let defaultURL = "https://bot.pvpcraft.ca/login/";
 

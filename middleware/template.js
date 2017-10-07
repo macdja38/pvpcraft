@@ -3,7 +3,7 @@
  */
 "use strict";
 
-let utils = require('../lib/utils');
+const utils = require('../lib/utils');
 
 class template {
   /**

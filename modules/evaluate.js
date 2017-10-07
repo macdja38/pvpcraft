@@ -20,7 +20,7 @@ try {
 
 //noinspection JSUnusedLocalSymbols
 let Eris = require('eris');
-let utils = require('../lib/utils');
+const utils = require('../lib/utils');
 let util = require('util');
 
 class evaluate {

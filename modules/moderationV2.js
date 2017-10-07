@@ -2,7 +2,7 @@
  * Created by macdja38 on 2016-08-23.
  */
 
-let utils = require('../lib/utils');
+const utils = require('../lib/utils');
 let util = require('util');
 let colors = require('colors');
 let Eris = require("eris");

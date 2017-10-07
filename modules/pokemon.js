@@ -5,7 +5,7 @@
 
 let Pokedex = require('pokedex-promise-v2');
 let pokedex = new Pokedex();
-let utils = require('../lib/utils.js');
+const utils = require('../lib/utils');
 
 class pokemon {
   /**
