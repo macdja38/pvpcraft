@@ -81,10 +81,7 @@ class feedManager {
           channel = command.channel;
         }
         this._feeds.set(adding, utils.stripNull(command.args[1].toLowerCase()), channel.id, channel.guild.id);
-        command.reply(`${adding ? "Starting" : "Stopping"} ${command.args[1].toLowerCase()} in channel ${channel.mention}`);
-
-        //return true, which tells the command dispatcher that we processed the command.
-        return true;
+        return command.reply(`${adding ? "Starting" : "Stopping"} ${command.args[1].toLowerCase()} in channel ${channel.mention}`);
       },
     }, {
       triggers: ["find"],
@@ -92,9 +89,9 @@ class feedManager {
       channels: ["guild"],
       execute: command => {
         if (!command.args[0]) {
-          command.replyAutoDeny(`Usage ${command.prefix}${command.command} <node>`)
+          return command.replyAutoDeny(`Usage ${command.prefix}${command.command} <node>`)
         }
-        command.replyAutoDeny(`${
+        return command.replyAutoDeny(`${
           this._feeds.find(command.args[0].toLowerCase(), command.channel.id)
             .map(channelId => command.channel.guild.channels.get(channelId) || channelId)
           }`);
