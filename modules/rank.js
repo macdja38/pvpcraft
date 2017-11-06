@@ -210,14 +210,12 @@ class rank {
   }
 
   possiblyDelete(triggerMessage) {
-    console.log(triggerMessage);
     return (msg) => {
       if (msg == null) return;
       let serverId = msg.channel.guild.id;
       let deleteAfter = this.pvpClient.get(`${serverId}.ranks.deleteAfter.value`, {fallBack: false});
-      console.log("deleteAfter", deleteAfter);
-      let deleteDelay = this.pvpClient.get(`${serverId}.ranks.deleteDelay.value`, {fallBack: 5});
       if (deleteAfter) {
+        let deleteDelay = this.pvpClient.get(`${serverId}.ranks.deleteDelay.value`, { fallBack: 5 });
         setTimeout(() => {
           msg.delete();
           triggerMessage.delete();
