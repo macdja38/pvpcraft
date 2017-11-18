@@ -383,8 +383,8 @@ class music {
       execute: command => {
         const id = command.channel.guild.id;
         let options;
-        if (command.user) {
-          options = {user_id: command.user.id};
+        if (command.targetUser) {
+          options = {user_id: command.targetUser.id};
         }
         return this.musicDB.clearQueue(id, options).then((result) => {
           command.replyAutoDeny("Queue cleared");
