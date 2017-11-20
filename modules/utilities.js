@@ -54,7 +54,7 @@ class utilities {
             `Owner: ${utils.clean(owner.username)}\n` +
             `Humans: ${(guild.members.size - botCount)} Bots: ${botCount}\n` +
             `Voice Region: ${guild.region}\n` +
-            `Roles: ${utils.clean(guild.roles.map(r => r.name).join(", "))}` +
+            `Roles: ${utils.clean(guild.roles.map(r => r.name).join(", "))}\n` +
             `Icon URL: ${guild.iconURL}`,
             thumbnail: {url: guild.iconURL},
           },
