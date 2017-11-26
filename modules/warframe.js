@@ -12,7 +12,7 @@ const WorldState = require("../lib/WorldState");
 const BaseDB = require("../lib/BaseDB");
 
 let master;
-if (process.env.id == 0) {
+if (process.env.id == 0 || process.env.dev) {
   master = true;
 }
 
@@ -110,6 +110,7 @@ class Warframe {
         let guildID = this.client.channelGuildMap[server.channel];
         let guild = this.client.guilds.get(guildID);
         if (!guild) return;
+        if (platform !== this.getGuildPlatform(guild)) return;
         let channel = guild.channels.get(server.channel);
         if (!channel || server.tracking !== true) return;
         if (channel.type !== 0) return; // return if it's a voice channel
@@ -188,6 +189,24 @@ class Warframe {
     this.rebuildAlerts();
   }
 
+  getGuildPlatform(guild) {
+      return this.config.get("warframeAlerts",
+        {
+          platform: "pc",
+        }, {
+          server: guild.id,
+        },
+      ).platform || "pc";
+  }
+
+  getCommandPlatform(command) {
+    return this.getGuildPlatform(command.channel.guild);
+  }
+
+  getPlatformDependantWorldState(command) {
+    return this.worldState.get(this.getCommandPlatform(command));
+  }
+
   //noinspection JSUnusedGlobalSymbols,JSMethodCanBeStatic
   /**
    * Optional function that will be called with every message for the purpose of misc responses / other
@@ -212,7 +231,7 @@ class Warframe {
       permissionCheck: this.perms.genCheckCommand("warframe.deal"),
       channels: ["*"],
       execute: command => {
-        return this.worldState.get("pc").then((state) => {
+        return this.getPlatformDependantWorldState(command).then((state) => {
           command.createMessageAutoDeny("```haskell\n" + "Darvo is selling " +
             parseState.getName(state.DailyDeals[0].StoreItem) +
             " for " + state.DailyDeals[0].SalePrice +
@@ -292,6 +311,13 @@ class Warframe {
               server: command.channel.guild.id,
             },
           );
+          if (command.options.platform) {
+            if (Object.keys(this.worldState.getEnabledStates()).includes(command.options.platform)) {
+              config.platform = command.options.platform;
+            } else {
+              return command.replyAutoDeny(`Invalid platform provided, please try one of the following ${Object.keys(this.worldState.getEnabledStates()).join(", ")}`)
+            }
+          }
           config.tracking = command.args[0] === "enable";
           if (command.channel) {
             config.channel = command.channel.id;
@@ -406,7 +432,7 @@ class Warframe {
       permissionCheck: this.perms.genCheckCommand("warframe.trader"),
       channels: ["*"],
       execute: command => {
-        return this.worldState.get("pc").then((state) => {
+        return this.getPlatformDependantWorldState(command).then((state) => {
           if (!state.VoidTraders || !state.VoidTraders[0]) {
             command.createMessageAutoDeny("Baro has disappeared from the universe.");
             return true;
@@ -460,10 +486,11 @@ class Warframe {
       permissionCheck: this.perms.genCheckCommand("warframe.alert"),
       channels: ["*"],
       execute: command => {
-        return this.worldState.get("pc").then((state) => {
+        const platform = this.getCommandPlatform(command);
+        return this.getPlatformDependantWorldState(command).then((state) => {
           if (state.Alerts) {
             for (let alert of state.Alerts) {
-              let {embed} = parseState.buildAlertEmbed(alert, "pc", state);
+              let {embed} = parseState.buildAlertEmbed(alert, platform, state);
               command.createMessageAutoDeny({embed});
             }
           }
@@ -474,7 +501,7 @@ class Warframe {
       permissionCheck: this.perms.genCheckCommand("warframe.rift"),
       channels: ["*"],
       execute: command => {
-        return this.worldState.get("pc").then((state) => {
+        return this.getPlatformDependantWorldState(command).then((state) => {
           if (state.ActiveMissions) {
             let string = "";
             for (let mission of state.ActiveMissions) {
@@ -526,7 +553,7 @@ class Warframe {
       permissionCheck: this.perms.genCheckCommand("warframe.sortie"),
       channels: ["*"],
       execute: command => {
-        return this.worldState.get("pc").then((state) => {
+        return this.getPlatformDependantWorldState(command).then((state) => {
           if (state.Sorties.length > 0) {
             let sortie = state.Sorties[0];
             let fields = sortie.Variants.map(mission => {
@@ -570,7 +597,7 @@ class Warframe {
       permissionCheck: this.perms.genCheckCommand("warframe.access"),
       channels: ["*"],
       execute: command => {
-        return this.worldState.get("pc").then((state) => {
+        return this.getPlatformDependantWorldState(command).then((state) => {
           let text = "```haskell\n";
           for (let event of state.Events) {
             if (event.Messages[0].Message.toLowerCase().indexOf("access") > -1) {
@@ -590,7 +617,7 @@ class Warframe {
       permissionCheck: this.perms.genCheckCommand("warframe.update"),
       channels: ["*"],
       execute: command => {
-        return this.worldState.get("pc").then((state) => {
+        return this.getPlatformDependantWorldState(command).then((state) => {
           let fields = [];
           let embed = {
             title: "Warframe updates",
