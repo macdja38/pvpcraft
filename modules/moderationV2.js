@@ -607,6 +607,13 @@ class moderationV2 {
       }
       fields.push(field)
     }
+    if (message.id) {
+      fields.push({
+        title: "ID",
+        value: message.id,
+        short: true,
+      })
+    }
     //if their are attachments log them.
     if (message.attachments) {
       for (let i in message.attachments) {
