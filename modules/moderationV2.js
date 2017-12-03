@@ -578,6 +578,11 @@ class moderationV2 {
         value: utils.idToUTCString(message.id),
         short: true,
       })
+      fields.push({
+        title: "ID",
+        value: message.id,
+        short: true,
+      })
     }
     if (message.channel) {
       fields.push({
