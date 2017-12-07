@@ -6,7 +6,7 @@ The bot requires 1 file not yet here: Paths.json. It can be found at [pvpcraft.c
 For web, [github.com/macdja38/pvpsite](https://github.com/macdja38/pvpsite) must be setup, and URLs must be configured in this project's `config/config.json`.
 
 ## installation instructions
-Requires **node.js** v8.1 or greater, the ability to build native module's using node-gyp, and [git](https://git-scm.com/). RethinkDB is required for the master branch. **pm2** is optional, but it's highly recommended.
+Requires **node.js** v8.9 or greater, the ability to build native module's using [node-gyp](https://github.com/nodejs/node-gyp#installation), and [git](https://git-scm.com/). RethinkDB is required for the master branch. **pm2** is optional, but it's highly recommended.
 
 #### In your command line of choice, enter:
  - `git clone https://github.com/macdja38/pvpcraft.git` to download the project,
