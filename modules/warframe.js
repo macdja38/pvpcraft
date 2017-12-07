@@ -200,6 +200,7 @@ class Warframe {
   }
 
   getCommandPlatform(command) {
+    if (!command.guild) return "pc";
     return this.getGuildPlatform(command.channel.guild);
   }
 
