@@ -238,7 +238,7 @@ class Warframe {
             " for " + state.DailyDeals[0].SalePrice +
             "p (" +
             state.DailyDeals[0].Discount + "% off, " + (state.DailyDeals[0].AmountTotal - state.DailyDeals[0].AmountSold) +
-            "/" + state.DailyDeals[0].AmountTotal + " left, refreshing in " + utils.secondsToTime(state.DailyDeals[0].Expiry.sec - state.Time) +
+            "/" + state.DailyDeals[0].AmountTotal + " left, refreshing in " + parseState.toTimeDifference(state, state.DailyDeals[0].Expiry) +
             ")" +
             "\n```");
         });
