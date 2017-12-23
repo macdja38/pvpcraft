@@ -653,19 +653,32 @@ class PvPCraft {
     return false
   }
 
+  /**
+   * Handles executing a command
+   * @param {Message} msg
+   * @param {Command} userCommand
+   * @param {Module || Array} modules
+   * @param {Middleware || Array} middleware
+   * @returns {Promise<boolean>}
+   */
   async handleCommand(msg, userCommand, modules, middleware) {
     const modulesAndMiddleware = middleware.slice(0);
     modulesAndMiddleware.push(...modules);
 
     for (let module of modulesAndMiddleware) {
-      for (let command of module.commands) {
+      for (let command of module.commands || module) {
         if (!command.triggers.includes(userCommand.command)) continue;
         if (!command.permissionCheck(userCommand)) continue;
         if (!this.checkChannelAllowed(userCommand.channel, command.channels)) continue;
+        if (command.subCommands && userCommand.args.length > 0) {
+          if (this.handleCommand(msg, userCommand.subCommand(), [command.subCommands], [])) {
+            return true;
+          }
+        }
         const result = await this._commandWrapper(command, userCommand, msg, () => {
           return command.execute(userCommand)
         });
-        if (result) return;
+        if (result) return true;
       }
     }
   }
