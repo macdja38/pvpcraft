@@ -245,189 +245,226 @@ class Warframe {
       },
     }, {
       triggers: ["alert", "alerts"],
-      permissionCheck: () => true,
-      channels: ["guild"],
+      permissionCheck: this.perms.genCheckCommand("warframe.alert"),
+      channels: ["*"],
       execute: command => {
-        if (command.args[0] === "list" && this.perms.check(command, "warframe.alerts.list")) {
-          let roles = this.config.get("warframeAlerts", {items: {}}, {server: command.channel.guild.id}).items;
-          let coloredRolesList = "";
-          for (let role in roles) {
-            if (roles.hasOwnProperty(role) && role !== "joinrole") {
-              coloredRolesList += `${role}\n`;
+        const platform = this.getCommandPlatform(command);
+        return this.getPlatformDependantWorldState(command).then((state) => {
+          if (state.Alerts) {
+            for (let alert of state.Alerts) {
+              let { embed } = parseState.buildAlertEmbed(alert, platform, state);
+              command.createMessageAutoDeny({ embed });
             }
           }
-          if (coloredRolesList !== "") {
-            command.createMessageAutoDeny(`Available alerts include \`\`\`xl\n${coloredRolesList}\`\`\``)
-          } else {
-            command.replyAutoDeny(`No alerts are being tracked.`)
-          }
-          return true;
-        }
-        if (command.args[0] === "join" && this.perms.check(command, "warframe.alerts.join")) {
-          let roles = this.config.get("warframeAlerts", {items: {}}, {server: command.channel.guild.id}).items;
-          if (!command.args[1] || !roles[command.args[1]]) {
-            command.replyAutoDeny(`Please supply an item to join using \`${command.prefix}alert join \<rank\>\`, for a list of items use \`${command.prefix}alert list\``);
-            return true;
-          }
-          let rankToJoin = command.args[1].toLowerCase();
-          let role = command.channel.guild.roles.get(roles[rankToJoin]);
-          if (role) {
-            command.channel.guild.addMemberRole(command.author.id, role.id).catch((error) => {
-              command.replyAutoDeny(`Error ${error} promoting ${utils.removeBlocks(command.author.username)} try redefining your rank and making sure the bot has enough permissions.`)
-            }).then(() => {
-              command.replyAutoDeny(":thumbsup::skin-tone-2:");
-            })
-          } else {
-            command.replyAutoDeny(`Role could not be found, have an administrator use \`${command.prefix}tracking --add <item>\` to add it.`);
-          }
-          return true;
-        }
-        if (command.args[0] === "leave" && this.perms.check(command, "warframe.alerts.leave")) {
-          let roles = this.config.get("warframeAlerts", {items: {}}, {server: command.channel.guild.id}).items;
-          if (!command.args[1] || !roles[command.args[1]]) {
-            command.replyAutoDeny(`Please supply a rank to leave using \`${command.prefix}alerts leave \<rank\>\`, for a list of items use \`${command.prefix}alerts list\``);
-            return true;
-          }
-          let role = command.channel.guild.roles.get(roles[command.args[1]]);
-          if (role) {
-            command.channel.guild.removeMemberRole(command.author.id, role.id).catch((error) => {
-              command.replyAutoDeny(`Error ${error} demoting ${utils.removeBlocks(command.author.username)} try redefining your rank and making sure the bot has enough permissions.`)
-            }).then(() => {
-              command.replyAutoDeny(":thumbsup::skin-tone-2:");
-            })
-          } else {
-            command.reply(`Role could not be found, have an administrator use \`${command.prefix}alerts add <item>\` to add it.`);
-            return true;
-          }
-          return true;
-        }
-
-        if ((command.args[0] === "enable" || command.args[0] === "disable") && this.perms.check(command, "admin.warframe.alerts")) {
-          let config = this.config.get("warframeAlerts",
-            {
-              "tracking": true,
-              "channel": "",
-              "items": {},
-            }, {
-              server: command.channel.guild.id,
-            },
-          );
-          if (command.options.platform) {
-            if (Object.keys(this.worldState.getEnabledStates()).includes(command.options.platform)) {
-              config.platform = command.options.platform;
+        });
+      },
+      subCommands: [
+        {
+          triggers: ["list"],
+          permissionCheck: () => this.perms.genCheckCommand("warframe.alerts.list"),
+          channels: ["guild"],
+          execute: command => {
+            let roles = this.config.get("warframeAlerts", { items: {} }, { server: command.channel.guild.id }).items;
+            let coloredRolesList = "";
+            for (let role in roles) {
+              if (roles.hasOwnProperty(role) && role !== "joinrole") {
+                coloredRolesList += `${role}\n`;
+              }
+            }
+            if (coloredRolesList !== "") {
+              command.createMessageAutoDeny(`Available alerts include \`\`\`xl\n${coloredRolesList}\`\`\``)
             } else {
-              return command.replyAutoDeny(`Invalid platform provided, please try one of the following ${Object.keys(this.worldState.getEnabledStates()).join(", ")}`)
+              command.replyAutoDeny(`No alerts are being tracked.`)
             }
-          }
-          config.tracking = command.args[0] === "enable";
-          if (command.channel) {
-            config.channel = command.channel.id;
-          } else {
-            config.channel = command.channel.id;
-          }
-          if (!config.items) {
-            config.items = {};
-          }
-          this.config.set("warframeAlerts", config, {server: command.channel.guild.id});
-          this.rebuildAlerts();
-          command.replyAutoDeny(":thumbsup::skin-tone-2:");
-          return true;
-        }
-
-        if (command.args[0] === "add" && this.perms.check(command, "admin.warframe.alerts")) {
-          if (command.args[1]) {
-            let config = this.config.get("warframeAlerts",
-              {
-                "tracking": false,
-                "channel": "",
-                "items": {},
-              }
-
-              , {server: command.channel.guild.id});
-            if (typeof(config.tracking) !== "boolean") {
-              config.tracking = false;
-            }
-            if (!config.items) {
-              config.items = {};
-            }
-            if (config.items.hasOwnProperty(command.args[1].toLowerCase())) {
-              command.createMessageAutoDeny(`${command.author.mention}, Resource is already being tracked, use \`${command.prefix}alert join ${utils.clean(command.args[1])}\` to join it.`);
-              return;
-            }
-            let options = {
-              name: command.args[1].toLowerCase(),
-              permissions: 0,
-              mentionable: false,
-            };
-            command.channel.guild.createRole(options).then((role) => {
-              config.items[role.name] = role.id;
-              this.config.set("warframeAlerts", config, {server: command.channel.guild.id});
-              command.replyAutoDeny(`Created role ${utils.clean(role.name)} with id ${role.id}`);
-            }).catch((error) => {
-              if (error.code === 50013) {
-                command.replyAutoDeny("Error, insufficient permissions, please give me manage roles.");
-              }
-              else {
-                command.replyAutoDeny(`Unexpected error \`${error}\` please report the issue https://invite.pvpcraft.ca/`);
-                console.dir(error, {depth: 2, color: true});
-              }
-            });
             return true;
-          }
-          command.replyAutoDeny("invalid option's please specify the name of a resource to track to change tracking options");
-          return true;
-        }
-
-        if (command.args[0] === "remove" && this.perms.check(command, "admin.warframe.alerts")) {
-          if (command.args[1]) {
-            let config = this.config.get("warframeAlerts",
-              {
-                "tracking": false,
-                "channel": "",
-                "items": {},
-              }
-              , {server: command.channel.guild.id});
-            if (typeof(config.tracking) !== "boolean") {
-              config.tracking = false;
-            }
-            if (!config.items) {
-              config.items = {};
-            }
-            if (!config.items.hasOwnProperty(command.args[1])) {
-              command.reply(`Resource is not being tracked, use \`${command.prefix}alert add ${utils.clean(command.args[1])}\` to add it.`);
+          },
+        },
+        {
+          triggers: ["join"],
+          permissionCheck: () => this.perms.genCheckCommand("warframe.alerts.join"),
+          channels: ["guild"],
+          execute: command => {
+            let roles = this.config.get("warframeAlerts", { items: {} }, { server: command.channel.guild.id }).items;
+            if (!command.args[0] || !roles[command.args[0]]) {
+              command.replyAutoDeny(`Please supply an item to join using \`${command.prefix}alert join \<rank\>\`, for a list of items use \`${command.prefix}alert list\``);
               return true;
             }
-            let roleName = command.args[1].toLowerCase();
-            let role = command.channel.guild.roles.find(r => r.name.toLowerCase() === roleName);
+            let rankToJoin = command.args[0].toLowerCase();
+            let role = command.channel.guild.roles.get(roles[rankToJoin]);
             if (role) {
-              command.channel.guild.deleteRole(role.id).then(() => {
-                delete config.items[command.args[1]];
-                this.config.set("warframeAlerts", config, {server: command.channel.guild.id, conflict: "replace"});
-                command.replyAutoDeny("Deleted role " + utils.clean(command.args[1]) + " with id `" + role.id + "`");
+              command.channel.guild.addMemberRole(command.author.id, role.id).catch((error) => {
+                command.replyAutoDeny(`Error ${error} promoting ${utils.removeBlocks(command.author.username)} try redefining your rank and making sure the bot has enough permissions.`)
+              }).then(() => {
+                command.replyAutoDeny(":thumbsup::skin-tone-2:");
+              })
+            } else {
+              command.replyAutoDeny(`Role could not be found, have an administrator use \`${command.prefix}tracking --add <item>\` to add it.`);
+            }
+            return true;
+          },
+        },
+        {
+          triggers: ["leave"],
+          permissionCheck: () => this.perms.genCheckCommand("warframe.alerts.leave"),
+          channels: ["guild"],
+          execute: command => {
+            let roles = this.config.get("warframeAlerts", { items: {} }, { server: command.channel.guild.id }).items;
+            if (!command.args[0] || !roles[command.args[0]]) {
+              command.replyAutoDeny(`Please supply a rank to leave using \`${command.prefix}alerts leave \<rank\>\`, for a list of items use \`${command.prefix}alerts list\``);
+              return true;
+            }
+            let role = command.channel.guild.roles.get(roles[command.args[0]]);
+            if (role) {
+              command.channel.guild.removeMemberRole(command.author.id, role.id).catch((error) => {
+                command.replyAutoDeny(`Error ${error} demoting ${utils.removeBlocks(command.author.username)} try redefining your rank and making sure the bot has enough permissions.`)
+              }).then(() => {
+                command.replyAutoDeny(":thumbsup::skin-tone-2:");
+              })
+            } else {
+              command.reply(`Role could not be found, have an administrator use \`${command.prefix}alerts add <item>\` to add it.`);
+              return true;
+            }
+            return true;
+          },
+        },
+        {
+          triggers: ["enable", "disable"],
+          permissionCheck: () => this.perms.genCheckCommand("admin.warframe.alerts"),
+          channels: ["guild"],
+          execute: command => {
+            let config = this.config.get("warframeAlerts",
+              {
+                "tracking": true,
+                "channel": "",
+                "items": {},
+              }, {
+                server: command.channel.guild.id,
+              },
+            );
+            if (command.options.platform) {
+              if (Object.keys(this.worldState.getEnabledStates()).includes(command.options.platform)) {
+                config.platform = command.options.platform;
+              } else {
+                return command.replyAutoDeny(`Invalid platform provided, please try one of the following ${Object.keys(this.worldState.getEnabledStates()).join(", ")}`)
+              }
+            }
+            config.tracking = command.command === "enable";
+            if (command.channel) {
+              config.channel = command.channel.id;
+            } else {
+              config.channel = command.channel.id;
+            }
+            if (!config.items) {
+              config.items = {};
+            }
+            this.config.set("warframeAlerts", config, { server: command.channel.guild.id });
+            this.rebuildAlerts();
+            command.replyAutoDeny(":thumbsup::skin-tone-2:");
+            return true;
+          },
+        },
+        {
+          triggers: ["add"],
+          permissionCheck: () => this.perms.genCheckCommand("admin.warframe.alerts"),
+          channels: ["guild"],
+          execute: command => {
+            if (command.args[0]) {
+              let config = this.config.get("warframeAlerts",
+                {
+                  "tracking": false,
+                  "channel": "",
+                  "items": {},
+                }
+                , { server: command.channel.guild.id });
+              if (typeof(config.tracking) !== "boolean") {
+                config.tracking = false;
+              }
+              if (!config.items) {
+                config.items = {};
+              }
+              if (config.items.hasOwnProperty(command.args[0].toLowerCase())) {
+                command.createMessageAutoDeny(`${command.author.mention}, Resource is already being tracked, use \`${command.prefix}alert join ${utils.clean(command.args[0])}\` to join it.`);
+                return;
+              }
+              let options = {
+                name: command.args[0].toLowerCase(),
+                permissions: 0,
+                mentionable: false,
+              };
+              command.channel.guild.createRole(options).then((role) => {
+                config.items[role.name] = role.id;
+                this.config.set("warframeAlerts", config, { server: command.channel.guild.id });
+                command.replyAutoDeny(`Created role ${utils.clean(role.name)} with id ${role.id}`);
               }).catch((error) => {
-                if (error) {
-                  if (error.status === 403) {
-                    command.replyAutoDeny("Error, insufficient permissions, please give me manage roles.");
-                  }
-                  else {
-                    command.replyAutoDeny("Unexpected error please report the issue https://pvpcraft.ca/pvpbot");
-                    console.log(error);
-                    console.log(error.stack);
-                  }
+                if (error.code === 50013) {
+                  command.replyAutoDeny("Error, insufficient permissions, please give me manage roles.");
+                }
+                else {
+                  command.replyAutoDeny(`Unexpected error \`${error}\` please report the issue https://invite.pvpcraft.ca/`);
+                  console.dir(error, { depth: 2, color: true });
                 }
               });
               return true;
-            } else {
-              delete config.items[command.args[1]];
-              this.config.set("warframeAlerts", config, {server: command.channel.guild.id, conflict: "replace"});
-              command.replyAutoDeny("Role not found, removed " + utils.clean(command.args[1]) + " from list.");
-              return true;
             }
-          }
-          command.replyAutoDeny("Invalid option's please specify the name of a resource to track to change tracking options");
-          return true;
-        }
-      },
+            command.replyAutoDeny("invalid option's please specify the name of a resource to track to change tracking options");
+            return true;
+          },
+        },
+        {
+          triggers: ["remove"],
+          permissionCheck: () => this.perms.genCheckCommand("admin.warframe.alerts"),
+          channels: ["guild"],
+          execute: command => {
+            if (command.args[0]) {
+              let config = this.config.get("warframeAlerts",
+                {
+                  "tracking": false,
+                  "channel": "",
+                  "items": {},
+                }
+                , { server: command.channel.guild.id });
+              if (typeof(config.tracking) !== "boolean") {
+                config.tracking = false;
+              }
+              if (!config.items) {
+                config.items = {};
+              }
+              if (!config.items.hasOwnProperty(command.args[0])) {
+                command.reply(`Resource is not being tracked, use \`${command.prefix}alert add ${utils.clean(command.args[0])}\` to add it.`);
+                return true;
+              }
+              let roleName = command.args[0].toLowerCase();
+              let role = command.channel.guild.roles.find(r => r.name.toLowerCase() === roleName);
+              if (role) {
+                command.channel.guild.deleteRole(role.id).then(() => {
+                  delete config.items[command.args[0]];
+                  this.config.set("warframeAlerts", config, { server: command.channel.guild.id, conflict: "replace" });
+                  command.replyAutoDeny("Deleted role " + utils.clean(command.args[0]) + " with id `" + role.id + "`");
+                }).catch((error) => {
+                  if (error) {
+                    if (error.status === 403) {
+                      command.replyAutoDeny("Error, insufficient permissions, please give me manage roles.");
+                    }
+                    else {
+                      command.replyAutoDeny("Unexpected error please report the issue https://pvpcraft.ca/pvpbot");
+                      console.log(error);
+                      console.log(error.stack);
+                    }
+                  }
+                });
+                return true;
+              } else {
+                delete config.items[command.args[0]];
+                this.config.set("warframeAlerts", config, { server: command.channel.guild.id, conflict: "replace" });
+                command.replyAutoDeny("Role not found, removed " + utils.clean(command.args[0]) + " from list.");
+                return true;
+              }
+            }
+            command.replyAutoDeny("Invalid option's please specify the name of a resource to track to change tracking options");
+            return true;
+          },
+        },
+      ],
     }, {
       triggers: ["trader", "voidtrader", "baro"],
       permissionCheck: this.perms.genCheckCommand("warframe.trader"),
@@ -481,21 +518,6 @@ class Warframe {
         }
         command.createMessageAutoDeny(link);
         return true;
-      },
-    }, {
-      triggers: ["alert", "alerts"],
-      permissionCheck: this.perms.genCheckCommand("warframe.alert"),
-      channels: ["*"],
-      execute: command => {
-        const platform = this.getCommandPlatform(command);
-        return this.getPlatformDependantWorldState(command).then((state) => {
-          if (state.Alerts) {
-            for (let alert of state.Alerts) {
-              let {embed} = parseState.buildAlertEmbed(alert, platform, state);
-              command.createMessageAutoDeny({embed});
-            }
-          }
-        });
       },
     }, {
       triggers: ["rift", "fissure"],

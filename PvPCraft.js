@@ -668,13 +668,13 @@ class PvPCraft {
     for (let module of modulesAndMiddleware) {
       for (let command of module.commands || module) {
         if (!command.triggers.includes(userCommand.command)) continue;
-        if (!command.permissionCheck(userCommand)) continue;
-        if (!this.checkChannelAllowed(userCommand.channel, command.channels)) continue;
         if (command.subCommands && userCommand.args.length > 0) {
           if (this.handleCommand(msg, userCommand.subCommand(), [command.subCommands], [])) {
             return true;
           }
         }
+        if (!command.permissionCheck(userCommand)) continue;
+        if (!this.checkChannelAllowed(userCommand.channel, command.channels)) continue;
         const result = await this._commandWrapper(command, userCommand, msg, () => {
           return command.execute(userCommand)
         });
