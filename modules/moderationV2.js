@@ -229,6 +229,21 @@ class moderationV2 {
   }
 
   /**
+   * Used to build documentation strings
+   * @returns {{name: string, description: string, commands: Array<{triggers: Array<string>,
+   * permissionCheck: Function, channels: Array<string>, execute: Function}>}}
+   */
+  getContent() {
+    return {
+      name: "Moderation",
+      description: "Moderation commands including kick, ban, unban and purge",
+      key: "moderation",
+      permNode: "moderation",
+      commands: this.getCommands(),
+    };
+  }
+
+  /**
    * Returns an array of commands that can be called by the command handler
    * @returns {[{triggers: [string], permissionCheck: function, channels: [string], execute: function}]}
    */

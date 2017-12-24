@@ -131,7 +131,86 @@ class PvPCraft {
       .then(this.reload.bind(this))
       .then(this.registerPostReadyClientListeners.bind(this))
       .then(this.announceReady.bind(this))
+      .then(this.uploadSettingsIfChanged.bind(this))
       .catch(console.error)
+  }
+
+  static moduleToConfigMap(acc, module) {
+    if (!module.module.getContent) return acc;
+    const content = module.module.getContent();
+
+    const result = {
+      description: content.description,
+      key: content.key,
+      name: content.name,
+      permNode: content.permNode,
+      type: "commands",
+    };
+
+    result.children = module.commands.reduce(PvPCraft.commandToConfigMap, {});
+
+    acc[result.key] = result;
+    return acc;
+  }
+
+  static commandToConfigMap(acc, command) {
+    if (!command.triggers || command.triggers.length < 1) return acc;
+    const result = {
+      children: {},
+      description: command.description || command.triggers[0],
+      key: command.triggers[0],
+      name: command.name || command.triggers[0],
+      permNode: command.permNode || "",
+      type: "commands",
+    };
+
+    if (command.subCommands) {
+      result.children = command.subCommands.reduce(PvPCraft.commandToConfigMap, {});
+    }
+
+    acc[command.triggers[0]] = result;
+
+    return acc;
+  }
+
+  uploadSettingsIfChanged() {
+    const config = this.pvpClient.getConfigMap();
+    if (!config || this.git && this.git.commit !== config.version) {
+      return this.uploadSettings(this.git.commit)
+    }
+
+  }
+
+  uploadSettings(version) {
+    this.pvpClient.getConfigMap().then(config => {
+      console.log(config);
+      if (config.version && config.version === version) return;
+      config.version = version;
+      config.layout = Object.assign({}, {
+        default: "commands",
+        key: "pageSelector",
+        type: "pageSelector",
+        children: {},
+      }, config.layout || {});
+      config.layout.children.commands = this.genCommandChildren();
+      console.log(require("util").inspect(config, { depth: 10 }));
+      this.pvpClient.replaceConfigMap("*", config);
+    });
+  }
+
+  genCommandChildren() {
+    let commandChildren = {
+      description: "bot commands",
+      key: "commands",
+      name: "commands",
+      permNode: "",
+      type: "commands",
+      children: {},
+    };
+
+    commandChildren.children = this.moduleList.reduce(PvPCraft.moduleToConfigMap, {});
+
+    return commandChildren;
   }
 
   readyIdleRestart() {
@@ -162,7 +241,7 @@ class PvPCraft {
   }
 
   readyPvPClient() {
-    this.pvpClient = new PvPClient(this.fileAuth.get("pvpApiEndpoint"), this.fileAuth.get("pvpApiToken"), this.client.user.id, this.client.guilds.map(g => g.id), this.client);
+    this.pvpClient = new PvPClient(this.fileAuth.get("pvpApiEndpoint"), this.fileAuth.get("pvpApiHttps", true), this.fileAuth.get("pvpApiToken"), this.client.user.id, this.client.guilds.map(g => g.id), this.client);
     this.pvpClient.on("error", (error) => {
       console.log(error);
       this.raven.captureException(error);

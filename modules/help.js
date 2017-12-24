@@ -25,6 +25,21 @@ class help {
     this.raven = e.raven;
   }
 
+  /**
+   * Used to build documentation strings
+   * @returns {{name: string, description: string, commands: Array<{triggers: Array<string>,
+   * permissionCheck: Function, channels: Array<string>, execute: Function}>}}
+   */
+  getContent() {
+    return {
+      name: "Help",
+      description: "Help",
+      key: "help",
+      permNode: "",
+      commands: this.getCommands(),
+    };
+  }
+
   // noinspection JSMethodCanBeStatic
   /**
    * Returns an array of commands that can be called by the command handler

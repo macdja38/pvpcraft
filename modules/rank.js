@@ -48,12 +48,27 @@ class rank {
   }
 
   /**
+   * Used to build documentation strings
+   * @returns {{name: string, description: string, commands: Array<{triggers: Array<string>,
+   * permissionCheck: Function, channels: Array<string>, execute: Function}>}}
+   */
+  getContent() {
+    return {
+      name: "Role commands",
+      description: "Create joinable roles, or assign a role to users when they join",
+      key: "role",
+      permNode: "role",
+      commands: this.getCommands(),
+    };
+  }
+
+  /**
    * Returns an array of commands that can be called by the command handler
    * @returns {[{triggers: [string], permissionCheck: function, channels: [string], execute: function}]}
    */
   getCommands() {
     return [{
-      triggers: ["rank"],
+      triggers: ["role", "rank"],
       permissionCheck: () => true,
       channels: ["guild"],
       subCommands: [

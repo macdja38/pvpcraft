@@ -176,6 +176,21 @@ class music {
   }
 
   /**
+   * Used to build documentation strings
+   * @returns {{name: string, description: string, commands: Array<{triggers: Array<string>,
+   * permissionCheck: Function, channels: Array<string>, execute: Function}>}}
+   */
+  getContent() {
+    return {
+      name: "Music",
+      description: "Play music with pvpcraft",
+      key: "music",
+      permNode: "music",
+      commands: this.getCommands(),
+    };
+  }
+
+  /**
    * Returns an array of commands that can be called by the command handler
    * @returns {[{triggers: [string], permissionCheck: function, channels: [string], execute: function}]}
    */
@@ -363,6 +378,8 @@ class music {
       triggers: ["list"],
       permissionCheck: this.perms.genCheckCommand("music.list"),
       channels: ["guild"],
+      docstring: "usage `/list`",
+      explanation: "Lists all the songs in a channel",
       execute: command => {
         const id = command.channel.guild.id;
         if (this.boundChannels.hasOwnProperty(id)) {

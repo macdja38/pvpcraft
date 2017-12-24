@@ -149,12 +149,33 @@ class chess {
       }).run()
   }
 
+  /**
+   * Used to build documentation strings
+   * @returns {{name: string, description: string, commands: Array<{triggers: Array<string>,
+   * permissionCheck: Function, channels: Array<string>, execute: Function}>}}
+   */
+  getContent() {
+    return {
+      name: "Chess",
+      description: "Chess commands",
+      key: "chess",
+      permNode: "game.chess",
+      commands: this.getCommands(),
+    };
+  }
+
+  /**
+   * Get's the commands for the module
+   * @returns {Array<{triggers: Array<string> permissionCheck: function channels: Array<string> execute: function}>}
+   */
   getCommands() {
     //this needs to return a list of commands that should activate the onCommand function
     //of this class. array of strings with trailing s's removed.
     return [{
       triggers: ["start"],
       permissionCheck: genDualCheckCommand("game.chess.start", "chess.game.start"),
+      description: "Start a chess game.",
+      usage: "start",
       channels: ["*"],
       execute: (command) => {
         if (this.games.hasOwnProperty(command.channel.id)) {
@@ -170,6 +191,8 @@ class chess {
       triggers: ["move"],
       permissionCheck: genDualCheckCommand("game.chess.move", "chess.game.move"),
       channels: ["*"],
+      description: "Move a piece on the chess board",
+      usage: "move <move in [algebraic chess notation](https://truckersection.com/guide-to-algebraic-chess-notation/)>",
       execute: (command) => {
         if (!this.games.hasOwnProperty(command.channel.id)) {
           command.replyAutoDeny("Sorry, no game in progress");
@@ -208,6 +231,8 @@ class chess {
     }, {
       triggers: ["end"],
       permissionCheck: genDualCheckCommand("game.chess.end", "chess.game.end"),
+      description: "End a chess game",
+      usage: "end",
       channels: ["*"],
       execute: (command) => {
         if (!this.games.hasOwnProperty(command.channel.id)) {

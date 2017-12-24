@@ -76,6 +76,21 @@ class dualUniverse {
   }
 
   /**
+   * Used to build documentation strings
+   * @returns {{name: string, description: string, commands: Array<{triggers: Array<string>,
+   * permissionCheck: Function, channels: Array<string>, execute: Function}>}}
+   */
+  getContent() {
+    return {
+      name: "Dual Universe",
+      description: "Commands surrounding the video game dual universe",
+      key: "du",
+      permNode: "du",
+      commands: this.getCommands(),
+    };
+  }
+
+  /**
    * Returns an array of commands that can be called by the command handler
    * @returns {[{triggers: [string], permissionCheck: function, channels: [string], execute: function}]}
    */

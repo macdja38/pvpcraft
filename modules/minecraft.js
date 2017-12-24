@@ -109,6 +109,21 @@ class minecraft {
   }
 
   /**
+   * Used to build documentation strings
+   * @returns {{name: string, description: string, commands: Array<{triggers: Array<string>,
+   * permissionCheck: Function, channels: Array<string>, execute: Function}>}}
+   */
+  getContent() {
+    return {
+      name: "Minecraft",
+      description: "Minecraft commands",
+      key: "minecraft",
+      permNode: "minecraft",
+      commands: this.getCommands(),
+    };
+  }
+
+  /**
    * Returns an array of commands that can be called by the command handler
    * @returns {[{triggers: [string], permissionCheck: function, channels: [string], execute: function}]}
    */

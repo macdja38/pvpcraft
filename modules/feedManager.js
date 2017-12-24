@@ -28,6 +28,46 @@ class feedManager {
     this.perms = e.perms;
   }
 
+  addOrRemoveFeed(adding, command) {
+    if (!command.args[0]) {
+      command.reply(`Usage ${command.prefix}${command.command} <start|stop> <node>[ --channel <channel>]`);
+      return true;
+    }
+    let channel = command.channel;
+    if (command.options.hasOwnProperty("webhook")
+      && /https:\/\/(?:ptb.|canary\.)?discordapp\.com\/api\/webhooks\/(\d+)\/(.+)/.test(command.options.webhook)) {
+      let matches = command.options.webhook
+        .match(/https:\/\/(?:ptb.|canary\.)?discordapp\.com\/api\/webhooks\/(\d+)\/(.+)/i);
+      channel = {
+        id: `https://discordapp.com/api/webhooks/${matches[1]}/${matches[2]}`,
+        server: {id: command.channel.guild.id},
+        mention: function mention() {
+          return `another Discord`;
+        }
+      };
+    }
+    else if (!channel) {
+      channel = command.channel;
+    }
+    this._feeds.set(adding, utils.stripNull(command.args[0].toLowerCase()), channel.id, channel.guild.id);
+    return command.reply(`${adding ? "Starting" : "Stopping"} ${command.args[0].toLowerCase()} in channel ${channel.mention}`);
+  }
+
+  /**
+   * Used to build documentation strings
+   * @returns {{name: string, description: string, commands: Array<{triggers: Array<string>,
+   * permissionCheck: Function, channels: Array<string>, execute: Function}>}}
+   */
+  getContent() {
+    return {
+      name: "Feeds",
+      description: "Commands used to manage feeds, see the feeds section of the documentation for more",
+      key: "feeds",
+      permNode: "feeds",
+      commands: this.getCommands(),
+    };
+  }
+
   /**
    * Returns an array of commands that can be called by the command handler
    * @returns {[{triggers: [string], permissionCheck: function, channels: [string], execute: function}]}
@@ -37,10 +77,12 @@ class feedManager {
       triggers: ["feed", "feeds"],
       permissionCheck: this.perms.genCheckCommand("feeds.manage"),
       channels: ["guild"],
-      execute: command => {
-        let adding;
-        switch (command.args[0]) {
-          case "list": {
+      subCommands: [
+        {
+          triggers: ["list"],
+          permissionCheck: this.perms.genCheckCommand("feeds.manage"),
+          channels: ["guild"],
+          execute: command => {
             let data = this._feeds.list(command.channel.guild.id);
             if (data.hasOwnProperty("feeds")) {
               console.log(data.feeds);
@@ -50,38 +92,27 @@ class feedManager {
             }
             return true;
           }
-          case "start":
-            adding = true;
-            break;
-          case "stop":
-            adding = false;
-            break;
-          default:
-            command.reply(`Usage ${command.prefix}${command.command} <start|stop> <node>[ --channel <channel>]`);
-            return true;
+        },
+        {
+          triggers: ["start"],
+          permissionCheck: this.perms.genCheckCommand("feeds.manage"),
+          channels: ["guild"],
+          execute: command => {
+            return this.addOrRemoveFeed(true, command);
+          }
+        },
+        {
+          triggers: ["stop"],
+          permissionCheck: this.perms.genCheckCommand("feeds.manage"),
+          channels: ["guild"],
+          execute: command => {
+            return this.addOrRemoveFeed(false, command);
+          }
         }
-        if (!command.args[1]) {
-          command.reply(`Usage ${command.prefix}${command.command} <start|stop> <node>[ --channel <channel>]`);
-          return true;
-        }
-        let channel = command.channel;
-        if (command.options.hasOwnProperty("webhook")
-          && /https:\/\/(?:ptb.|canary\.)?discordapp\.com\/api\/webhooks\/(\d+)\/(.+)/.test(command.options.webhook)) {
-          let matches = command.options.webhook
-            .match(/https:\/\/(?:ptb.|canary\.)?discordapp\.com\/api\/webhooks\/(\d+)\/(.+)/i);
-          channel = {
-            id: `https://discordapp.com/api/webhooks/${matches[1]}/${matches[2]}`,
-            server: {id: command.channel.guild.id},
-            mention: function mention() {
-              return `another Discord`;
-            }
-          };
-        }
-        else if (!channel) {
-          channel = command.channel;
-        }
-        this._feeds.set(adding, utils.stripNull(command.args[1].toLowerCase()), channel.id, channel.guild.id);
-        return command.reply(`${adding ? "Starting" : "Stopping"} ${command.args[1].toLowerCase()} in channel ${channel.mention}`);
+      ],
+      execute: command => {
+        command.reply(`Usage ${command.prefix}${command.command} <start|stop> <node>[ --channel <channel>]`);
+        return true;
       },
     }, {
       triggers: ["find"],

@@ -93,6 +93,21 @@ class welcome {
     this.client.on("guildMemberAdd", this.onJoin);
   }
 
+  /**
+   * Used to build documentation strings
+   * @returns {{name: string, description: string, commands: Array<{triggers: Array<string>,
+   * permissionCheck: Function, channels: Array<string>, execute: Function}>}}
+   */
+  getContent() {
+    return {
+      name: "Join messages",
+      description: "Welcome new users to your server with a customised join message",
+      key: "welcome",
+      permNode: "welcome",
+      commands: this.getCommands(),
+    };
+  }
+
   getCommands() {
     return [{
       triggers: ["setwelcome"],

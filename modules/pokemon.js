@@ -29,8 +29,19 @@ class pokemon {
     this.perms = e.perms;
   }
 
-  static getCommands() {
-    return ["pokemon", "shiny", "pokestat", "hiddenability"];
+  /**
+   * Used to build documentation strings
+   * @returns {{name: string, description: string, commands: Array<{triggers: Array<string>,
+   * permissionCheck: Function, channels: Array<string>, execute: Function}>}}
+   */
+  getContent() {
+    return {
+      name: "Pokemon",
+      description: "Pokemon commands",
+      key: "pokemon",
+      permNode: "pokemon",
+      commands: this.getCommands(),
+    };
   }
 
   /**
