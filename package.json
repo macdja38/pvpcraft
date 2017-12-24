@@ -25,7 +25,7 @@
     "minecraft-jsonapi": "0.0.3",
     "performance-now": "^2.1.0",
     "pokedex-promise-v2": "^3.1.1",
-    "pvpclient": "github:macdja38/pvpclient",
+    "pvpclient": "~1.0.1",
     "raven": "^2.3.0",
     "request": "^2.83.0",
     "request-promise-native": "^1.0.5",
