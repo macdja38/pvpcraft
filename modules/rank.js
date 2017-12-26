@@ -71,6 +71,9 @@ class rank {
       triggers: ["role", "rank"],
       permissionCheck: () => true,
       channels: ["guild"],
+      execute: command => {
+        command.replyAutoDeny(`Usage ${command.prefix}${command.command} <add|remove|list|join|leave>`)
+      },
       subCommands: [
         {
           triggers: ["add"],
