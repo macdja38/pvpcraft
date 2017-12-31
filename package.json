@@ -15,6 +15,7 @@
     "deepmerge": "^1.5.2",
     "ebml": "^2.2.1",
     "eris": "github:macdja38/eris#voice-error",
+    "eris-errors": "^1.0.1",
     "erlpack": "github:hammerandchisel/erlpack",
     "eventemitter3": "^2.0.2",
     "git-rev": "^0.2.1",

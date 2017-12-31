@@ -641,7 +641,7 @@ class PvPCraft {
     }
   }
 
-  onMessage(msg) {
+  async onMessage(msg) {
     if (msg.author && msg.author.id === this.id) return;
     lastMessage = Date.now();
     let prefixes;
@@ -704,7 +704,8 @@ class PvPCraft {
         }
       }
 
-      this.handleCommand(msg, command, this.moduleList, this.middlewareList)
+      let result = await this.handleCommand(msg, command, this.moduleList, this.middlewareList);
+      if (result) return result;
     }
     //apply misc responses.
     for (let mod in this.moduleList) {
