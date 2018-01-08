@@ -32,17 +32,17 @@
     "request": "^2.83.0",
     "request-promise-native": "^1.0.5",
     "rethinkdbdash": "^2.3.31",
-    "sodium-native": "^2.0.1",
+    "sodium-native": "^2.1.3",
     "stream-resume": "0.0.6",
     "superagent": "^3.8.2",
     "universal-analytics": "^0.4.16",
     "youtube-dl": "^1.12.2",
-    "ytdl-core": "^0.18.4"
+    "ytdl-core": "^0.18.5"
   },
   "devDependencies": {
-    "docma": "^1.5.2",
-    "eslint": "^4.13.1",
-    "jest-cli": "^21.1.0",
+    "docma": "^1.5.3",
+    "eslint": "^4.15.0",
+    "jest-cli": "^22.0.4",
     "jsdoc": "^3.5.5",
     "jsdoc-strip-async-await": "^0.1.0"
   },
