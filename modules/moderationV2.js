@@ -78,6 +78,7 @@ class moderationV2 {
    * @param {MessageSender} e.messageSender Instantiated message sender
    * @param {SlowSender} e.slowSender Instantiated slow sender
    * @param {PvPClient} e.pvpClient PvPCraft client library instance
+   * @param {TaskQueue} e.taskQueue Instantiated task queue ready to receive orders.
    */
   constructor(e) {
     this.client = e.client;
@@ -90,6 +91,7 @@ class moderationV2 {
     this.feeds = e.feeds;
     this.tempServerIgnores = {};
     this._slowSender = e.slowSender;
+    this.taskQueue = e.taskQueue;
     this.messageDeleted = this.tryAndLog(this.messageDeleted);
     this.messageDeletedBulk = this.tryAndLog(this.messageDeletedBulk);
     this.messageUpdated = this.tryAndLog(this.messageUpdated);
@@ -176,8 +178,8 @@ class moderationV2 {
     // locate user
     let user;
     let possibleId;
-    if (command.user) {
-      user = command.user;
+    if (command.targetUser) {
+      user = command.targetUser;
     } else if (command.args.length > 0) {
       if (msg.mentions.length > 0) {
         user = msg.mentions[0];
@@ -273,14 +275,88 @@ class moderationV2 {
         return true;
       },
     }, {
+      triggers: ["setupmute"],
+      permissionCheck: this.perms.genCheckCommand("admin.moderation.setup.mute"),
+      channels: ["guild"],
+      execute: async command => {
+        let muteRole;
+
+        if (command.targetRole) {
+          muteRole = command.targetRole;
+        } else {
+          muteRole = await command.channel.guild.createRole({
+            name: "muted",
+            permissions: 0,
+            hoist: false,
+            mentionable: false,
+            reason: `Created in response to ${command.prefix}setupmute run by <@${command.author.id}>`,
+          });
+        }
+
+        this.configDB.set("muteRole", muteRole.id, {server: command.channel.guild.id});
+
+        command.replyAutoDeny(`Muted role created with name ${utils.clean(muteRole.name)}. Now attempting to deny sendMessage in all text channels and speaking in all voice channels.`);
+
+        let muteRoleCreationResults = command.channel.guild.channels.map(channel => {
+          return channel.editPermission(muteRole.id, 0, channel.type === 0 ? Eris.Constants.Permissions.sendMessages : Eris.Constants.Permissions.voiceSpeak, "role", `Created in response to ${command.prefix}setupmute run by <@${command.author.id}> in order to make the muted role effective`);
+        });
+
+        return utils.resolveAllPromises(muteRoleCreationResults).then(() => {
+          Promise.all(muteRoleCreationResults).then(() => {
+            return command.replyAutoDeny(`Denied text and voice permissions for the ${utils.clean(muteRole.name)} role.`);
+          }).catch(() => {
+            return command.replyAutoDeny(`Failed to automatically deny permissions in all voice and text channels, please manually ensure the ${utils.clean(muteRole.name)} can only talk where you intend it to.`)
+          });
+        })
+      },
+    }, {
+      triggers: ["mute"],
+      permissionCheck: this.perms.genCheckCommand("moderation.mute"),
+      channels: ["guild"],
+      execute: command => {
+        const member = command.targetUser;
+
+        if (!member) {
+          command.replyAutoDeny(`Please target a user by adding --user <user mention or name>`);
+          return true;
+        }
+
+        // check to see if user has ban immunity
+        if (this.perms.checkUserChannel(member, command.msg.channel, `moderation.immunity.mute`)) {
+          command.replyAutoDeny(`Sorry you do not have permission to ${action} this user`);
+          return true;
+        }
+
+        let muteRoleID = this.configDB.get("muteRole", false, {server: command.channel.guild.id});
+        if (!muteRoleID) {
+          command.replyAutoDeny(`mute role not defined, try using ${command.prefix}setupmute to set it up.`)
+        }
+        console.log(muteRoleID);
+        let newRoles = member.roles.slice(0);
+        newRoles.push(muteRoleID);
+        command.channel.guild.editMember(member.id, {roles: newRoles}, `Member muted by <@${command.author.id}>${command.options.reason ? ` with reason: ${utils.clean(command.options.reason)}` : ""}`);
+        if (command.options.unmute) {
+          const task = {
+            action: "unmute",
+            meta: {
+              userID: member.id,
+              guildID: command.channel.guild.id,
+              roleIDs: [muteRoleID],
+              reason: command.options.reason,
+            }
+          };
+          this.taskQueue.schedule(task, `in ${command.options.unmute}`);
+        }
+      },
+    }, {
       triggers: ["purge"],
       permissionCheck: this.perms.genCheckCommand("moderation.tools.purge"),
       channels: ["guild"],
       execute: command => {
         let channel = command.channel ? command.channel : command.channel;
         let options = {};
-        if (/<@!?\d+>/.test(command.options.user)) {
-          let user = command.channel.guild.members.get(command.options.user.match(/<@!?(\d+)>/)[1]);
+        if (command.targetUser) {
+          let user = command.targetUser;
           if (user) {
             options.user = user;
           } else {

@@ -45,6 +45,7 @@ for (let thing in Eris) {
     }
   }
 }
+const TaskQueue = require("./lib/TaskQueue");
 const MessageSender = require("./lib/MessageSender");
 const Permissions = require("./lib/Permissions.js");
 const Analytics = require("./lib/Analytics");
@@ -118,6 +119,7 @@ class PvPCraft {
       .then(this.registerProcessListeners.bind(this))
       .then(this.readyRethinkDB.bind(this))
       .then(this.createClient.bind(this))
+      .then(this.readyTaskQueue.bind(this))
       .then(this.registerPreReadyClientListeners.bind(this))
       .then(this.registerReadyListener.bind(this))
       .then(this.readyIdleRestart.bind(this))
@@ -234,6 +236,10 @@ class PvPCraft {
 
   readyRethinkDB() {
     this.r = R(this.fileAuth.get("reThinkDB", {}));
+  }
+
+  readyTaskQueue() {
+    this.taskQueue = new TaskQueue({r: this.r, client: this.client, restClient: this.restClient});
   }
 
   resolveWhenReady() {
@@ -424,6 +430,13 @@ class PvPCraft {
       maxShards: this.shardCount,
       defaultImageFormat: "png",
     });
+    this.restClient = new Eris(`Bot ${token}`, {
+      autoReconnect: true,
+      compress: true,
+      disableEveryone: false,
+      restMode: true,
+      defaultImageFormat: "png",
+    });
   }
 
   /**
@@ -603,6 +616,7 @@ class PvPCraft {
   getModuleVariables() {
     return {
       client: this.client,
+      restClient: this.restClient,
       config: this.fileConfig,
       raven: this.raven,
       git: this.git,
@@ -617,6 +631,7 @@ class PvPCraft {
       pvpcraft: this,
       modules: this.moduleList,
       middleWares: this.middlewareList,
+      taskQueue: this.taskQueue,
     };
   }
 
