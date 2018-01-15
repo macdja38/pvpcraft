@@ -323,7 +323,7 @@ class moderationV2 {
 
         // check to see if user has ban immunity
         if (this.perms.checkUserChannel(member, command.msg.channel, `moderation.immunity.mute`)) {
-          command.replyAutoDeny(`Sorry you do not have permission to ${action} this user`);
+          command.replyAutoDeny(`This user has the mute immunity permission \`moderation.immunity.mute\`, you may not mute them.`);
           return true;
         }
 
