@@ -59,7 +59,7 @@ const colorMap = {
   "server.updated": "#FF7F00",
   "action.kick": "#BE3F3F",
   "action.ban": "#BE003F",
-  "action.unban": "#BEBE3F"
+  "action.unban": "#BEBE3F",
 };
 
 class moderationV2 {
@@ -164,7 +164,7 @@ class moderationV2 {
           this.raven.captureException(err, {
             extra: {
               args: args,
-            }
+            },
           });
         } else {
           console.error(err);
@@ -203,7 +203,7 @@ class moderationV2 {
       return true;
     }
 
-    if (possibleId && perms.checkUserChannel({id: possibleId}, msg.channel, `moderation.immunity.${action}`)) {
+    if (possibleId && perms.checkUserChannel({ id: possibleId }, msg.channel, `moderation.immunity.${action}`)) {
       command.reply("Sorry but you don't have permission to ban the user this id belongs to.");
       return true;
     }
@@ -293,7 +293,7 @@ class moderationV2 {
           });
         }
 
-        this.configDB.set("muteRole", muteRole.id, {server: command.channel.guild.id});
+        this.configDB.set("muteRole", muteRole.id, { server: command.channel.guild.id });
 
         command.replyAutoDeny(`Muted role created with name ${utils.clean(muteRole.name)}. Now attempting to deny sendMessage in all text channels and speaking in all voice channels.`);
 
@@ -327,26 +327,28 @@ class moderationV2 {
           return true;
         }
 
-        let muteRoleID = this.configDB.get("muteRole", false, {server: command.channel.guild.id});
+        let muteRoleID = this.configDB.get("muteRole", false, { server: command.channel.guild.id });
         if (!muteRoleID) {
           command.replyAutoDeny(`mute role not defined, try using ${command.prefix}setupmute to set it up.`)
         }
         console.log(muteRoleID);
         let newRoles = member.roles.slice(0);
         newRoles.push(muteRoleID);
-        command.channel.guild.editMember(member.id, {roles: newRoles}, `Member muted by <@${command.author.id}>${command.options.reason ? ` with reason: ${utils.clean(command.options.reason)}` : ""}`);
-        if (command.options.unmute) {
-          const task = {
-            action: "unmute",
-            meta: {
-              userID: member.id,
-              guildID: command.channel.guild.id,
-              roleIDs: [muteRoleID],
-              reason: command.options.reason,
-            }
-          };
-          this.taskQueue.schedule(task, `in ${command.options.unmute}`);
-        }
+        return command.channel.guild.editMember(member.id, { roles: newRoles }, `Member muted by <@${command.author.id}>${command.options.reason ? ` with reason: ${utils.clean(command.options.reason)}` : ""}`).then(() => {
+          if (command.options.unmute) {
+            const task = {
+              action: "unmute",
+              meta: {
+                userID: member.id,
+                guildID: command.channel.guild.id,
+                roleIDs: [muteRoleID],
+                reason: command.options.reason,
+              },
+            };
+            this.taskQueue.schedule(task, `in ${command.options.unmute}`);
+            command.replyAutoDeny(`${member.mention} muted till ${command.options.unmute}${command.options.reason ? `with reason \`${utils.clean(command.options.reason)}\`` : ""}.`);
+          }
+        });
       },
     }, {
       triggers: ["purge"],
@@ -736,7 +738,7 @@ class moderationV2 {
       options.user = message.member;
     }
     let content = false;
-    let changeThresh = this.configDB.get("changeThresh", this.configDB.get("changeThresh", 1), {server: message.channel.guild.id});
+    let changeThresh = this.configDB.get("changeThresh", this.configDB.get("changeThresh", 1), { server: message.channel.guild.id });
     if (oldMessage && oldMessage.content) {
       if (utils.compare(message.content, oldMessage.content) > changeThresh) {
         content = `${utils.bubble(oldMessage.content)} to ${utils.bubble(message.content)}`;
@@ -796,17 +798,17 @@ class moderationV2 {
     let fields = [{
       title: "Name",
       value: channel.name,
-      short: true
+      short: true,
     }, {
       title: "Age",
       value: utils.idToUTCString(channel.id),
-      short: true
+      short: true,
     }];
     if (channel.topic) {
       fields.push({
         title: "Topic",
         value: channel.topic,
-        short: true
+        short: true,
       })
     }
     this.sendHookedMessage("channel.deleted", {}, {
@@ -822,8 +824,8 @@ class moderationV2 {
       fields: [{
         title: "Channel",
         value: channel.mention,
-        short: true
-      }]
+        short: true,
+      }],
     }, channel.guild.id);
   };
 
@@ -855,7 +857,7 @@ class moderationV2 {
     let changes = findOverrideChanges(channel.permissionOverwrites, oldChannel.permissionOverwrites);
 
     for (let change of changes) {
-      let newField = {short: true, value: ""};
+      let newField = { short: true, value: "" };
       fields.push(newField);
       if (change.overwrite.type === "member") {
         newField.title = "User Overwrite";
@@ -892,7 +894,7 @@ class moderationV2 {
       }
     }
     if (fields.length > 2) {
-      this.sendHookedMessage("channel.updated", {}, {title: "Channel Updated", fields}, channel.guild.id);
+      this.sendHookedMessage("channel.updated", {}, { title: "Channel Updated", fields }, channel.guild.id);
     }
   };
 
@@ -903,7 +905,7 @@ class moderationV2 {
       value: user.mention,
       short: true,
     }];
-    let embed = {title: `Member Updated`, fields};
+    let embed = { title: `Member Updated`, fields };
     if (oldUser.username !== user.username) {
       fields.push({
         title: "Username",
@@ -937,7 +939,7 @@ class moderationV2 {
     this.client.guilds.forEach(guild => {
       if (guild.members.get(user.id)) {
         if (this.perms.checkUserGuild(user, guild, "msglog.whitelist.user")) return;
-        this.sendHookedMessage("user", {user}, embed, guild.id);
+        this.sendHookedMessage("user", { user }, embed, guild.id);
       }
     });
   };
@@ -948,7 +950,7 @@ class moderationV2 {
         title: "Role",
         value: role.mention,
         short: true,
-      }]
+      }],
     }, guild.id);
   }
 
@@ -966,7 +968,7 @@ class moderationV2 {
         title: "Created",
         value: utils.idToUTCString(role.id),
         short: true,
-      }]
+      }],
     }, guild.id);
   }
 
@@ -1018,7 +1020,7 @@ class moderationV2 {
       });
     }
     if (fields.length < 3) return;
-    this.sendHookedMessage("role.updated", {}, {title: `Role Updated`, fields}, guild.id)
+    this.sendHookedMessage("role.updated", {}, { title: `Role Updated`, fields }, guild.id)
   };
 
   /**
@@ -1070,7 +1072,7 @@ class moderationV2 {
       })
     }
 
-    this.sendHookedMessage(node, {user}, {
+    this.sendHookedMessage(node, { user }, {
       title: "User Banned",
       fields,
     }, server.id);
@@ -1115,19 +1117,19 @@ class moderationV2 {
       })
     }
 
-    this.sendHookedMessage(instigator ? "moderation.action.unban" : "member.unbanned", {user}, {
+    this.sendHookedMessage(instigator ? "moderation.action.unban" : "member.unbanned", { user }, {
       title: "User Unbanned",
       fields,
     }, server.id);
   };
 
   memberAdded(server, user) {
-    this.sendHookedMessage("member.added", {user}, {
+    this.sendHookedMessage("member.added", { user }, {
       title: "User Joined", fields: [{
         title: "User",
         value: user.mention,
         short: true,
-      }]
+      }],
     }, server.id);
   };
 
@@ -1178,7 +1180,7 @@ class moderationV2 {
       })
     }
 
-    this.sendHookedMessage(instigator ? "moderation.action.kick" : "member.removed", {user}, {
+    this.sendHookedMessage(instigator ? "moderation.action.kick" : "member.removed", { user }, {
       title: "User Left or was Kicked",
       fields,
     }, server.id);
@@ -1232,12 +1234,12 @@ class moderationV2 {
       });
     }
     if (fields.length < 2) return;
-    this.sendHookedMessage("member.updated", {user: member}, {title: `Member Updated`, fields}, guild.id);
+    this.sendHookedMessage("member.updated", { user: member }, { title: `Member Updated`, fields }, guild.id);
   };
 
   voiceJoin(member, newChannel) {
     if (this.perms.checkUserChannel(member, newChannel, "msglog.whitelist.voice.join")) return;
-    this.sendHookedMessage("voice.join", {user: member}, {
+    this.sendHookedMessage("voice.join", { user: member }, {
       title: "Voice Join", fields: [{
         title: "User",
         value: member.mention,
@@ -1246,13 +1248,13 @@ class moderationV2 {
         title: "Channel",
         value: newChannel.mention,
         short: true,
-      }]
+      }],
     }, newChannel.guild.id);
   }
 
   voiceSwitch(member, newChannel, oldChannel) {
     if (this.perms.checkUserChannel(member, newChannel, "msglog.whitelist.voice.switch")) return;
-    this.sendHookedMessage("voice.switch", {user: member}, {
+    this.sendHookedMessage("voice.switch", { user: member }, {
       title: "Voice Switch", fields: [{
         title: "User",
         value: member.mention,
@@ -1265,13 +1267,13 @@ class moderationV2 {
         title: "New Channel",
         value: newChannel.mention,
         short: true,
-      }]
+      }],
     }, newChannel.guild.id);
   }
 
   voiceLeave(member, oldChannel) {
     if (this.perms.checkUserChannel(member, oldChannel, "msglog.whitelist.voice.leave")) return;
-    this.sendHookedMessage("voice.leave", {user: member}, {
+    this.sendHookedMessage("voice.leave", { user: member }, {
       title: "Voice Leave", fields: [{
         title: "User",
         value: member.mention,
@@ -1280,7 +1282,7 @@ class moderationV2 {
         title: "Channel",
         value: oldChannel.mention,
         short: true,
-      }]
+      }],
     }, oldChannel.guild.id);
   }
 }
@@ -1297,16 +1299,16 @@ function findOverrideChanges(thing1, thing2) {
     let thing2Overwrite = thing2.get(permissionOverwrite.id);
     if (thing2Overwrite) {
       if (thing2Overwrite.allow !== permissionOverwrite.allow || thing2Overwrite.deny !== permissionOverwrite.deny) {
-        changes.push({change: "change", from: permissionOverwrite, to: thing2Overwrite, overwrite: thing2Overwrite});
+        changes.push({ change: "change", from: permissionOverwrite, to: thing2Overwrite, overwrite: thing2Overwrite });
       }
     } else {
-      changes.push({change: "add", overwrite: permissionOverwrite, type: permissionOverwrite.type});
+      changes.push({ change: "add", overwrite: permissionOverwrite, type: permissionOverwrite.type });
     }
   });
   thing2.forEach(permissionOverwrite => {
     let thing1Overwrite = thing1.get(permissionOverwrite.id);
     if (!thing1Overwrite) {
-      changes.push({change: "remove", overwrite: permissionOverwrite, type: permissionOverwrite.type});
+      changes.push({ change: "remove", overwrite: permissionOverwrite, type: permissionOverwrite.type });
     }
   });
   return changes;
