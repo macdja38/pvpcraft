@@ -346,7 +346,9 @@ class moderationV2 {
               },
             };
             this.taskQueue.schedule(task, `in ${command.options.unmute}`);
-            command.replyAutoDeny(`${member.mention} muted till ${command.options.unmute}${command.options.reason ? `with reason \`${utils.clean(command.options.reason)}\`` : ""}.`);
+            command.replyAutoDeny(`${member.mention} muted till ${command.options.unmute}${command.options.reason ? ` with reason \`${utils.clean(command.options.reason)}\`` : ""}.`);
+          } else {
+            command.replyAutoDeny(`${member.mention} muted forever${command.options.reason ? ` with reason \`${utils.clean(command.options.reason)}\`` : ""}.`);
           }
         });
       },
