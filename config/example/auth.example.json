@@ -13,5 +13,5 @@
   "sentryURL": "",
   "googleAnalyticsId": "trackingId",
   "pvpApiToken": "tokenGoesHere",
-  "pvpApiEndpoint": "wss://api.pvpcraft.ca/botconfig/v1/ws"
+  "pvpApiEndpoint": "api.pvpcraft.ca"
 }

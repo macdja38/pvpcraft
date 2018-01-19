@@ -181,8 +181,10 @@ class moderationV2 {
     if (command.targetUser) {
       user = command.targetUser;
     } else if (command.args.length > 0) {
-      if (msg.mentions.length > 0) {
+      if (msg.mentions.length > 0 && msg.mentions[0].id !== this.client.user.id) {
         user = msg.mentions[0];
+      } else if(msg.mentions.length > 1) {
+        user = msg.mentions[1];
       } else {
         if (!isNaN(parseInt(command.args[0]))) {
           possibleId = command.args[0];
@@ -208,7 +210,16 @@ class moderationV2 {
       return true;
     }
 
+    let args = [user ? user.id : possibleId];
+    if (action === "ban") {
+      args.push(command.options.hasOwnProperty("time") ? command.options.time : 1);
+    }
+
     let reason = command.options.reason;
+    if (reason) {
+      args.push(reason);
+    }
+    console.log("reason", reason);
     if (!perms.check(msg, "moderation.reasonless")) {
       if (!reason) {
         command.reply(`Sorry but you do not have permission to ban without providing a reason eg \`${command.prefix}${action} --user @devCodex --reason Annoying\``);
@@ -216,10 +227,6 @@ class moderationV2 {
       }
     }
 
-    let args = [user ? user.id : possibleId];
-    if (action === "ban") {
-      args.push(command.options.hasOwnProperty("time") ? command.options.time : 1);
-    }
     msg.channel.guild[`${action}Member`](...args)
       .then(() => {
         return this[moderationMethodNameMap[action]](msg.channel.guild, user, msg.author, reason, false);

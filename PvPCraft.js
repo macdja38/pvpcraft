@@ -247,7 +247,14 @@ class PvPCraft {
   }
 
   readyPvPClient() {
-    this.pvpClient = new PvPClient(this.fileAuth.get("pvpApiEndpoint"), this.fileAuth.get("pvpApiHttps", true), this.fileAuth.get("pvpApiToken"), this.client.user.id, this.client.guilds.map(g => g.id), this.client);
+    const endpoint = this.fileAuth.get("pvpApiEndpoint");
+    const https = this.fileAuth.get("pvpApiHttps", true);
+    const apiToken = this.fileAuth.get("pvpApiToken", "");
+    if (!endpoint || !https || !apiToken) {
+      console.log("enable pvpapi integration by completing the pvpApiEndpoint, pvpApiHttps and pvpApiToken fields of the auth.json config file");
+      return;
+    }
+    this.pvpClient = new PvPClient(endpoint, https, apiToken, this.client.user.id, this.client.guilds.map(g => g.id), this.client);
     this.pvpClient.on("error", (error) => {
       console.log(error);
       this.raven.captureException(error);
