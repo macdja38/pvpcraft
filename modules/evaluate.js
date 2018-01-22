@@ -237,7 +237,7 @@ class evaluate {
         embed: {
           description: "```xl\n" +
           "\n- - - - - - - errors-in- - - - - - - \n" +
-          utils.clean(this._shortenTo(error.toString(), 1800)) +
+          utils.clean(this._shortenTo(this._convertToObject(error.toString()), 1800)) +
           "\n- - - - - - - - - - - - - - - - - - -\n" +
           "In " + (t1 - t0) + " milliseconds!\n```",
           color: 0xFF0000,
