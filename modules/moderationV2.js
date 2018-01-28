@@ -341,6 +341,9 @@ class moderationV2 {
         console.log(muteRoleID);
         let newRoles = member.roles.slice(0);
         newRoles.push(muteRoleID);
+
+        this.memberMuted(command.channel.guild, member, command.member, command.options.reason, null);
+
         return command.channel.guild.editMember(member.id, { roles: newRoles }, `Member muted by <@${command.author.id}>${command.options.reason ? ` with reason: ${utils.clean(command.options.reason)}` : ""}`).then(() => {
           if (command.options.unmute) {
             const task = {
@@ -1083,6 +1086,61 @@ class moderationV2 {
 
     this.sendHookedMessage(node, { user }, {
       title: "User Banned",
+      fields,
+    }, server.id);
+  };
+
+  /**
+   *
+   * @param {Guild} server
+   * @param {User | string} user
+   * @param {User | null} instigator
+   * @param {string | null} reason
+   * @param {Error | null} error
+   */
+  async memberMuted(server, user, instigator, reason, error) {
+    const node = instigator ? "moderation.action.mute" : "member.mute";
+
+    const fields = [{
+      title: "User",
+      value: typeof user === "string" ? `<@${user}>` : user.mention,
+      short: true,
+    }];
+
+    if (!instigator && !reason) {
+      await utils.delay(1000);
+      const possibleMeta = await getLastAuditLog(server, 22);
+      console.log(possibleMeta);
+      instigator = getAuditLogCause(possibleMeta);
+      reason = getAuditLogReason(possibleMeta);
+    }
+
+    if (instigator) {
+      fields.push({
+        title: "Responsible Moderator",
+        value: instigator.mention,
+        short: true,
+      })
+    }
+
+    if (reason) {
+      fields.push({
+        title: "Reason",
+        value: utils.clean(reason),
+        short: true,
+      })
+    }
+
+    if (error) {
+      fields.push({
+        title: "Failed due to",
+        value: utils.clean(error.toString()).slice(0, 250),
+        short: true,
+      })
+    }
+
+    this.sendHookedMessage(node, { user }, {
+      title: "User Muted",
       fields,
     }, server.id);
   };
