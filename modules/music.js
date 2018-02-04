@@ -297,7 +297,7 @@ class music {
           }
           let isForced = (command.flags.includes('f') && this.perms.check(command, "music.forceskip"));
           if (isForced) {
-            command.replyAutoDeny(`Removing ${videoUtils.prettyPrint(await this.skipSongGetInfo(id, index))} From the queue`);
+            return command.replyAutoDeny(`Removing ${videoUtils.prettyPrint(await this.skipSongGetInfo(id, index))} From the queue`);
           } else {
             let promise;
             if (index < 0) {
