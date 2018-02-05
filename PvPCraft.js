@@ -176,28 +176,26 @@ class PvPCraft {
   }
 
   uploadSettingsIfChanged() {
-    const config = this.pvpClient.getConfigMap();
-    if (!config || this.git && this.git.commit !== config.version) {
-      return this.uploadSettings(this.git.commit)
-    }
-
+    setTimeout(() => {
+      if (!this.pvpClient) return;
+      const config = this.pvpClient.getConfigMap();
+      if (!config || this.git && this.git.commit !== config.version) {
+        return this.uploadSettings(this.git.commit, config)
+      }
+    }, 5000);
   }
 
-  uploadSettings(version) {
-    this.pvpClient.getConfigMap().then(config => {
-      console.log(config);
-      if (config.version && config.version === version) return;
-      config.version = version;
-      config.layout = Object.assign({}, {
-        default: "commands",
-        key: "pageSelector",
-        type: "pageSelector",
-        children: {},
-      }, config.layout || {});
-      config.layout.children.commands = this.genCommandChildren();
-      console.log(require("util").inspect(config, { depth: 10 }));
-      this.pvpClient.replaceConfigMap("*", config);
-    });
+  uploadSettings(version, config) {
+    if (config.version && config.version === version) return;
+    config.version = version;
+    config.layout = Object.assign({}, {
+      default: "commands",
+      key: "pageSelector",
+      type: "pageSelector",
+      children: {},
+    }, config.layout || {});
+    config.layout.children.commands = this.genCommandChildren();
+    this.pvpClient.replaceConfigMap("*", config);
   }
 
   genCommandChildren() {
@@ -247,10 +245,10 @@ class PvPCraft {
   }
 
   readyPvPClient() {
-    const endpoint = this.fileAuth.get("pvpApiEndpoint");
+    const endpoint = this.fileAuth.get("pvpApiEndpoint", "api.pvpcraft.ca");
     const https = this.fileAuth.get("pvpApiHttps", true);
     const apiToken = this.fileAuth.get("pvpApiToken", "");
-    if (!endpoint || !https || !apiToken) {
+    if (!endpoint || !apiToken) {
       console.log("enable pvpapi integration by completing the pvpApiEndpoint, pvpApiHttps and pvpApiToken fields of the auth.json config file");
       return;
     }
@@ -349,7 +347,9 @@ class PvPCraft {
   }
 
   onGuildCreate(server) {
-    this.pvpClient.addGuild(server.id);
+    if (this.pvpClient) {
+      this.pvpClient.addGuild(server.id);
+    }
     let configs = [this.configDB.serverCreated(server), this.permsDB.serverCreated(server)];
     Promise.all(configs).then(() => {
       for (let middleware of this.middlewareList) {
@@ -381,7 +381,9 @@ class PvPCraft {
   }
 
   onGuildDelete(server) {
-    this.pvpClient.removeGuild(server.id);
+    if (this.pvpClient) {
+      this.pvpClient.removeGuild(server.id);
+    }
     for (let middleware of this.middlewareList) {
       if (middleware.ware) {
         try {
