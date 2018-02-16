@@ -3,9 +3,10 @@
  */
 
 const utils = require('../lib/utils');
-let util = require('util');
-let colors = require('colors');
-let Eris = require("eris");
+const util = require('util');
+const colors = require('colors');
+const Eris = require("eris");
+const EE = require("eris-errors");
 
 const moderationMethodNameMap = {
   ban: "memberBanned",
@@ -484,7 +485,76 @@ class moderationV2 {
         status = setInterval(updateStatusFunction, 2500);
         return true;
       },
+    }, {
+      triggers: ["killioscrash"],
+      permissionCheck: this.perms.genCheckCommand("moderation.automations.killioscrash"),
+      channels: ["guild"],
+      execute: command => {
+        if (command.args.length < 1 || !["delete", "mute", "ban", "off"].includes(command.args[0].toLowerCase())) {
+          return command.replyAutoDeny(`Choose an action \`${command.prefix}killioscrash <delete|mute|ban|off>\` note that if \`setupmute has not been run the user will be banned instead of muted.`)
+        }
+        const lArg = command.args[0].toLowerCase();
+
+        let mode;
+        if (lArg === "off") {
+          mode = false;
+        } else {
+          mode = lArg;
+        }
+        this.configDB.set("killioscrash", mode, { server: command.channel.guild.id });
+        command.replyAutoDeny("Action saved, ios users saved.")
+      },
     }];
+  }
+
+  /**
+   *
+   * @param {Message} message
+   * @returns {*}
+   */
+  checkMisc(message) {
+    const del = (message) => {
+      message.delete("Crashing iOS users").catch(error => {
+        console.log(error);
+        if (error.code === EE.DISCORD_RESPONSE_MISSING_PERMISSIONS) {
+          message.channel.createMessage("Could not delete message due to lack of permissions");
+        } else {
+          throw error;
+        }
+      });
+    };
+
+    if (message.content.includes("జ్ఞ‌ా")) {
+      const mode = this.configDB.get("killioscrash", false, { server: message.channel.guild.id });
+      switch (mode) {
+        case "delete":
+          return del(message);
+        case "mute":
+          let muteRoleID = this.configDB.get("muteRole", false, { server: message.channel.guild.id });
+          if (muteRoleID) {
+
+            del(message);
+
+            const member = message.member;
+
+            console.log("mutedRole", muteRoleID);
+
+            console.log("oldRoles", member.roles);
+
+            let newRoles = member.roles.slice(0);
+            newRoles.push(muteRoleID);
+
+            console.log("newRoles", newRoles);
+
+            this.memberMuted(message.channel.guild, member, this.client.user, "Trying to crash ios users", null);
+
+            return message.channel.guild.editMember(member.id, { roles: newRoles }, `Member muted by <@${this.client.user.id}> with reason trying to crash ios users`)
+          }
+        case "ban":
+          del(message);
+          return message.member.ban(1, "Trying to crash ios users");
+      }
+    }
   }
 
   getStatus(totalPurged, totalFetched, total, oldMessagesFound) {
