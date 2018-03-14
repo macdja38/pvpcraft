@@ -6,7 +6,7 @@
 const utils = require('../lib/utils');
 const EE = require("eris-errors");
 
-class template {
+class invites {
   /**
    * Instantiates the module
    * @constructor
@@ -138,4 +138,4 @@ class template {
   }
 }
 
-module.exports = template;
+module.exports = invites;
