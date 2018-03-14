@@ -176,9 +176,9 @@ class PvPCraft {
   }
 
   uploadSettingsIfChanged() {
-    setTimeout(() => {
+    setTimeout(async () => {
       if (!this.pvpClient) return;
-      const config = this.pvpClient.getConfigMap();
+      const config = await this.pvpClient.getConfigMap();
       if (!config || this.git && this.git.commit !== config.version) {
         return this.uploadSettings(this.git.commit, config)
       }
