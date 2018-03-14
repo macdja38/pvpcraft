@@ -236,8 +236,12 @@ class evaluate {
       command.createMessage({
         embed: {
           description: "```xl\n" +
-          "\n- - - - - - - errors-in- - - - - - - \n" +
-          utils.clean(this._shortenTo(this._convertToObject(error.toString()), 1800)) +
+          "\n- - - - - - - errors-in - - - - - - -\n" +
+          utils.clean(this._shortenTo(this._convertToObject(error.toString()), 1200)) +
+          (error ?
+            "\n- - - - - - - stack - - - - - - - - -\n" +
+            this._shortenTo(utils.clean(this.shortenErrorStack(error)), 500)
+            : "") +
           "\n- - - - - - - - - - - - - - - - - - -\n" +
           "In " + (t1 - t0) + " milliseconds!\n```",
           color: 0xFF0000,
@@ -246,6 +250,18 @@ class evaluate {
       console.error(error);
     }
     return true;
+  }
+
+  shortenErrorStack(error) {
+    let arr = error.stack.split('at eval (eval at evalCommand');
+    if (arr.length > 1) {
+      return arr[0];
+    }
+    arr = error.stack.split('at evaluate.evalCommand');
+    if (arr.length > 1) {
+      return arr[0];
+    }
+    return error.stack;
   }
 
   /**
