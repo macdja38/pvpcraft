@@ -156,7 +156,7 @@ class minecraft {
                 title: `Server info of ${utils.clean(`${address}:${port}`)}`,
                 fields: [{
                   name: "Ping",
-                  value: `${now() - t1}`,
+                  value: `${now() - t1}ms`,
                   inline: true,
                 }, {
                   name: "Version",
