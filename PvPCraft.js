@@ -63,9 +63,7 @@ if (process.env.dev === "true") {
 
 let lastMessage = Date.now();
 
-/**
- * log blocking events
- setTimeout(() => {
+setTimeout(() => {
   blocked(ms => {
     const text = `C${process.env.id}/${process.env.shards} blocked for ${ms}ms\nup-time ${process.uptime()}`;
     let attachment = {text, ts: Date.now() / 1000};
@@ -87,7 +85,7 @@ let lastMessage = Date.now();
     }
   }, {threshold: 500});
 }, 30000);
- */
+
 
 /**
  * @prop {Config} fileConfig
