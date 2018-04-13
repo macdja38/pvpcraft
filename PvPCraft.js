@@ -63,28 +63,6 @@ if (process.env.dev === "true") {
 
 let lastMessage = Date.now();
 
-setTimeout(() => {
-  blocked(ms => {
-    const text = `C${process.env.id}/${process.env.shards} blocked for ${ms}ms\nup-time ${process.uptime()}`;
-    let attachment = {text, ts: Date.now() / 1000};
-    attachment.title = "Event loop blocked";
-    attachment.color = "#ff0000";
-    let hookOptions = {
-      username: client.user.username,
-      text: "",
-      icon_url: client.user.avatarURL,
-      slack: true,
-    };
-    hookOptions.attachments = [attachment];
-    let hooks = config.get("blockHooks");
-    if (hooks) {
-      hooks.forEach(hook => client.sendWebhookMessage(hook, "", hookOptions)
-        .catch(() => {
-        })
-      );
-    }
-  }, {threshold: 500});
-}, 30000);
 
 
 /**
@@ -133,6 +111,32 @@ class PvPCraft {
       .then(this.announceReady.bind(this))
       .then(this.uploadSettingsIfChanged.bind(this))
       .catch(console.error)
+  }
+
+  startEventLoopMonitoring() {
+    setTimeout(() => {
+      blocked(ms => {
+        const text = `C${process.env.id}/${process.env.shards} blocked for ${ms}ms\nup-time ${process.uptime()}`;
+        let attachment = {text, ts: Date.now() / 1000};
+        attachment.title = "Event loop blocked";
+        attachment.color = "#ff0000";
+        let hookOptions = {
+          username: this.client.user.username,
+          text: "",
+          icon_url: this.client.user.avatarURL,
+          slack: true,
+        };
+        hookOptions.attachments = [attachment];
+        let hooks = this.fileConfig.get("blockHooks");
+        if (hooks) {
+          hooks.forEach(hook => this.client.executeSlackWebhook(hook.id, hook.token, hookOptions)
+            .catch((error) => {
+              console.error(error);
+            })
+          );
+        }
+      }, {threshold: 500});
+    }, 30000);
   }
 
   static moduleToConfigMap(acc, module) {
