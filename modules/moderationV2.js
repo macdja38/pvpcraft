@@ -912,6 +912,8 @@ class moderationV2 {
   };
 
   channelUpdated(channel, oldChannel) {
+    if (!channel || this.perms.checkChannel(channel, "msglog.whitelist.channel.updated")) return;
+
     let fields = [{
       title: "Channel",
       value: channel.mention,
