@@ -181,10 +181,10 @@ class evaluate {
       evaluated = eval(code);
       t1 = now();
       let embedText = "```xl\n" +
-        "\n- - - - - - evaluates-to- - - - - - -\n" +
+        i10010n `\n- - - - - - evaluates-to- - - - - - -\n` +
         utils.clean(this._shortenTo(this._convertToObject(evaluated), 1800)) +
         "\n- - - - - - - - - - - - - - - - - - -\n" +
-        "In " + (t1 - t0) + " milliseconds!\n```";
+        i10010n `In ${t1 - t0} milliseconds!\n\`\`\``;
       if (evaluated && evaluated.catch) evaluated.catch(() => {
       }).then(() => {
         t2Resolve(now());
@@ -197,10 +197,10 @@ class evaluate {
         try {
           let result = await evaluated;
           embedText = embedText.substring(0, embedText.length - 4);
-          embedText += "\n- - - - -Promise resolves to- - - - -\n";
+          embedText += i10010n `\n- - - - -Promise resolves to- - - - -\n`;
           embedText += utils.clean(this._shortenTo(this._convertToObject(result), 1800));
           embedText += "\n- - - - - - - - - - - - - - - - - - -\n";
-          embedText += "In " + (resolvedTime2 - t0) + " milliseconds!\n```";
+          embedText += i10010n `In ${resolvedTime2 - t0} milliseconds!\n\`\`\``;
           this.client.editMessage(msg.channel.id, initialMessage.id, {
             content: msg.content,
             embed: {
@@ -216,10 +216,10 @@ class evaluate {
             error = "null"
           }
           embedText = embedText.substring(0, embedText.length - 4);
-          embedText += "\n- - - - - Promise throws- - - - - - -\n";
+          embedText += i10010n `\n- - - - - Promise throws- - - - - - -\n`;
           embedText += utils.clean(this._shortenTo(error.toString(), 1800));
           embedText += "\n- - - - - - - - - - - - - - - - - - -\n";
-          embedText += "In " + (resolvedTime2 - t0) + " milliseconds!\n```";
+          embedText += i10010n `In ${resolvedTime2 - t0} milliseconds!\n\`\`\``;
           this.client.editMessage(msg.channel.id, initialMessage.id, {
             content: msg.content,
             embed: {
@@ -236,14 +236,14 @@ class evaluate {
       command.createMessage({
         embed: {
           description: "```xl\n" +
-          "\n- - - - - - - errors-in - - - - - - -\n" +
+          i10010n `\n- - - - - - - errors-in - - - - - - -\n` +
           utils.clean(this._shortenTo(this._convertToObject(error.toString()), 1200)) +
           (error ?
-            "\n- - - - - - - stack - - - - - - - - -\n" +
+            i10010n `\n- - - - - - - stack - - - - - - - - -\n` +
             this._shortenTo(utils.clean(this.shortenErrorStack(error)), 500)
             : "") +
           "\n- - - - - - - - - - - - - - - - - - -\n" +
-          "In " + (t1 - t0) + " milliseconds!\n```",
+          i10010n `In ${t1 - t0} milliseconds!\n\`\`\``,
           color: 0xFF0000,
         },
       });

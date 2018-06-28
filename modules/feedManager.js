@@ -88,7 +88,7 @@ class feedManager {
               console.log(data.feeds);
               command.createMessageAutoDeny(`\`\`\`json\n${JSON.stringify(data.feeds, null, 2)}\n\`\`\``);
             } else {
-              command.createMessageAutoDeny("No feeds are configured");
+              command.createMessageAutoDeny(i10010n `No feeds are configured`);
             }
             return true;
           }
@@ -111,7 +111,7 @@ class feedManager {
         }
       ],
       execute: command => {
-        command.reply(`Usage ${command.prefix}${command.command} <start|stop> <node>[ --channel <channel>]`);
+        command.reply(i10010n `Usage ${command.prefix}${command.command} <start|stop> <node>[ --channel <channel>]`);
         return true;
       },
     }, {
@@ -120,7 +120,7 @@ class feedManager {
       channels: ["guild"],
       execute: command => {
         if (!command.args[0]) {
-          return command.replyAutoDeny(`Usage ${command.prefix}${command.command} <node>`)
+          return command.replyAutoDeny(i10010n `Usage ${command.prefix}${command.command} <node>`)
         }
         return command.replyAutoDeny(`${
           this._feeds.find(command.args[0].toLowerCase(), command.channel.id)

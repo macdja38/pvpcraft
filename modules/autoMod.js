@@ -43,9 +43,8 @@ class template {
     if (!this.pvpClient.get(`${msg.channel.guild.id}.automod.invites.autodelete`, {fallBack: false})) return false;
     if (perms.check(msg, "moderation.whitelist.invites") && (inviteRegex.test(msg.content) || inviteRegex2.test(msg.content))) {
       msg.author.getDMChannel().then(channel =>
-        channel.createMessage(`Hello, I've removed an invite link you posted in channel ` +
-          `${msg.channel.mention} on ${msg.channel.guild.name} as Invite filtering is enabled and you do not have the ` +
-          `whitelist permission, please contact the moderation team if you believe this is in error.`)
+        channel.createMessage(i10010n `Hello, I've removed an invite link you posted in channel ${
+          msg.channel.mention} on ${msg.channel.guild.name} as Invite filtering is enabled and you do not have the whitelist permission, please contact the moderation team if you believe this is in error.`)
       );
       utils.handleErisRejection(msg.delete());
       return true;

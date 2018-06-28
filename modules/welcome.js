@@ -117,7 +117,7 @@ class welcome {
         let settings = this.config.get("welcome", {}, {server: command.channel.guild.id});
         if (command.args.length > 0 && command.args[0].toLowerCase() === "false") {
           this.config.set("welcome", {}, {server: command.channel.guild.id, conflict: "replace"});
-          command.replyAutoDeny(":thumbsup::skin-tone-2:");
+          command.replyAutoDeny(i10010n `:thumbsup::skin-tone-2:`);
           return true;
         }
         if (command.args.length > 0) {
@@ -131,7 +131,7 @@ class welcome {
           settings.delay = Math.max(Math.min(command.options.delay.valueOf() || 0, 20), 0) * 1000;
         }
         this.config.set("welcome", settings, {server: command.channel.guild.id});
-        command.replyAutoDeny(":thumbsup::skin-tone-2:");
+        command.replyAutoDeny(i10010n `:thumbsup::skin-tone-2:`);
         return true;
       }
     }];

@@ -107,12 +107,12 @@ class invites {
           const nextRole = rolesUserShouldNotHave.length > 0 ? rolesUserShouldNotHave[0] : false;
 
           return Promise.all(addedRolesPromises)
-            .then(addedRoles => command.replyAutoDeny(`You have ${inviteCount} invite${inviteCount !== 1 ? "s" : ""}` +
-              (highestRole ? `\nCongratulations on reaching ${utils.clean(highestRole.name)}` : "") +
-              (nextRole ? `\n${nextRole.invites - inviteCount} invite${nextRole.invites - inviteCount !== 1 ? "s" : ""} left to become ${utils.clean(nextRole.name)}`: "")));
+            .then(addedRoles => command.replyAutoDeny(i10010n `You have ${inviteCount} invite${inviteCount !== 1 ? "s" : ""}` +
+              (highestRole ? i10010n `\nCongratulations on reaching ${utils.clean(highestRole.name)}` : "") +
+              (nextRole ? i10010n `\n${nextRole.invites - inviteCount} invite${nextRole.invites - inviteCount !== 1 ? "s" : ""} left to become ${utils.clean(nextRole.name)}`: "")));
         }).catch(error => {
           if (error.code == EE.DISCORD_RESPONSE_MISSING_PERMISSIONS) {
-            command.replyAutoDeny("Bot does not have sufficient permissions to check guild invites.")
+            command.replyAutoDeny(i10010n `Bot does not have sufficient permissions to check guild invites.`)
           }
           throw error;
         });
@@ -129,10 +129,10 @@ class invites {
     if (!msg.channel.guild) return false;
     let deleteChannels = this.config.get("deleteNonCommands", [], {server: msg.channel.guild.id});
     if (deleteChannels.includes(msg.channel.id)) {
-      msg.channel.createMessage(`<@${msg.member.id}> Sorry but this channel is restricted to commands only. What you entered was not seen as a valid command or you do not have permission to use it. If this is an error please contact a moderator.`).then(botMsg => {
+      msg.channel.createMessage(i10010n `<@${msg.member.id}> Sorry but this channel is restricted to commands only. What you entered was not seen as a valid command or you do not have permission to use it. If this is an error please contact a moderator.`).then(botMsg => {
         setTimeout(() => botMsg.delete(), 10000);
       });
-      return msg.delete("used a command in a non command channel");
+      return msg.delete(i10010n `used a command in a non command channel`);
     }
     return false;
   }

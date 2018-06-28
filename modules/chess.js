@@ -179,12 +179,12 @@ class chess {
       channels: ["*"],
       execute: (command) => {
         if (this.games.hasOwnProperty(command.channel.id)) {
-          command.replyAutoDeny("Sorry, game already in progress");
+          command.replyAutoDeny(i10010n `Sorry, game already in progress`);
           return true;
         }
         this.games[command.channel.id] = chessClient.create();
         this.turns[command.channel.id] = "white";
-        command.replyAutoDeny("Game started");
+        command.replyAutoDeny(i10010n `Game started`);
         //r.table(table).insert({})
       },
     }, {
@@ -195,11 +195,11 @@ class chess {
       usage: "move <move in [algebraic chess notation](https://truckersection.com/guide-to-algebraic-chess-notation/)>",
       execute: (command) => {
         if (!this.games.hasOwnProperty(command.channel.id)) {
-          command.replyAutoDeny("Sorry, no game in progress");
+          command.replyAutoDeny(i10010n `Sorry, no game in progress`);
           return true;
         }
         if (command.args.length < 1) {
-          command.replyAutoDeny(`usage \`${command.prefix}move <move in Algebraic Chess Notation>\``);
+          command.replyAutoDeny(i10010n `usage \`${command.prefix}move <move in Algebraic Chess Notation>\``);
           return true;
         }
         try {
@@ -236,12 +236,12 @@ class chess {
       channels: ["*"],
       execute: (command) => {
         if (!this.games.hasOwnProperty(command.channel.id)) {
-          command.replyAutoDeny("Sorry, game is not in progress");
+          command.replyAutoDeny(i10010n `Sorry, game is not in progress`);
           return true;
         }
         delete this.games[command.channel.id];
         delete this.turns[command.channel.id];
-        return command.replyAutoDeny("Game ended");
+        return command.replyAutoDeny(i10010n `Game ended`);
       },
     }];
   }
