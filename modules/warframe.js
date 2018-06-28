@@ -644,17 +644,15 @@ class Warframe {
       channels: ["*"],
       execute: command => {
         return this.getPlatformDependantWorldState(command).then((state) => {
-          let text = "```haskell\n";
-          for (let event of state.Events) {
-            if (event.Messages[0].Message.toLowerCase().indexOf("access") > -1) {
-              text += event.Messages[0].Message.toUpperCase()
-                + " since " + utils.secondsToTime(state.Time - event.Date.sec) + " ago\n";
-            }
-          }
-          if (text !== "```haskell\n") {
-            command.createMessageAutoDeny(text + "```")
+          const events = state.Events.map(e =>
+            event.Messages[0].Message.toLowerCase().indexOf("acces") > -1
+            ? i10010n `${event.Messages[0].Message.toUpperCase()} since ${utils.secondsToTime(state.Time - event.Date.sec)} ago`
+            : undefined
+          );
+          if (events) {
+            command.createMessageAutoDeny(i10010n `\`\`\`haskell\n${events}\`\`\``)
           } else {
-            this.client.createMessage("No prime access could be found");
+            this.client.createMessage(i10010n `No prime access could be found`);
           }
         });
       },
@@ -693,26 +691,24 @@ class Warframe {
       channels: ["*"],
       execute: command => {
         if (command.args.length < 1 || command.args.length === 2 || command.args.length > 3) {
-          command.createMessageAutoDeny("```haskell\npossible uses include:\n" +
-            command.prefix + "armor (Base Armor) (Base Level) (Current Level) calculate armor and stats.\n" +
-            command.prefix + "armor (Current Armor)\n```");
+          command.createMessageAutoDeny(i10010n `\`\`\`haskell\npossible uses include:\n${
+            command.prefix}armor (Base Armor) (Base Level) (Current Level) calculate armor and stats.\n${
+            command.prefix}armor (Current Armor)\n\`\`\``);
           return true;
         }
         let text = "```haskell\n";
-        let armor;
-        if (command.args.length === 3) {
-          if ((parseInt(command.args[2]) - parseInt(command.args[1])) < 0) {
-            command.createMessageAutoDeny("```haskell\nPlease check your input values\n```");
-            return true;
-          }
-          armor = parseInt(command.args[0]) * (1 + (Math.pow((parseInt(command.args[2]) - parseInt(command.args[1])), 1.75) / 200));
-          text += "at level " + command.args[2] + " your enemy would have " + armor + " Armor\n";
+        const armor = command.args.length === 3
+          ? parseInt(command.args[0]) * (1 + (Math.pow((parseInt(command.args[2]) - parseInt(command.args[1])), 1.75) / 200))
+          : parseInt(command.args[0]);
+        if (command.args.length === 3 && (parseInt(command.args[2]) - parseInt(command.args[1])) < 0) {
+          command.createMessageAutoDeny(i10010n `\`\`\`haskell\nPlease check your input values\n\`\`\``);
+          return true;
         }
-        else {
-          armor = parseInt(command.args[0]);
-        }
-        text += armor / (armor + 300) * 100 + "% damage reduction\n";
-        command.createMessageAutoDeny(text + "```");
+        command.createMessageAutoDeny(
+          "```haskell"
+          + (command.args.length === 3 ? i10010n `at level ${command.args[2]} your enemy would have ${armor} Armor\n` : "")
+          + i10010n `${armor / (armor + 300) * 100}% damage reduction\n\`\`\``
+        );
         return true;
 
       },
