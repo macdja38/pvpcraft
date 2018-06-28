@@ -125,18 +125,13 @@ class giveaways {
         }
         this.entries.getRandom("entries", winnersCount, {server: command.channel.guild.id}).then((winners) => {
           if (winners.length > 0) {
-            let string = "Congrats to";
-            winners.forEach((winnerId) => {
-              let winnerUser = command.channel.guild.members.get(winnerId);
-              if (winnerUser) {
-                string += ` ${winnerUser.mention}, `;
-              } else {
-                string += ` <@${winnerId}>, `;
-              }
-            });
-            command.replyAutoDeny(string + "for winning!");
+            const winner = winners.map(winnerId => {
+              const winnerUser = command.channel.guild.members.get(winnerId);
+              return winnerUser ? winnerUser.mention : `<@${winnerId}>`;
+            }).join(", ");
+            command.replyAutoDeny(i10010n `Congrats to ${winner} for winning!`);
           } else {
-            command.replyAutoDeny(`No winner could be decided, make sure at least 1 person has entered.`);
+            command.replyAutoDeny(i10010n `No winner could be decided, make sure at least 1 person has entered.`);
           }
         });
       },
