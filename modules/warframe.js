@@ -276,7 +276,7 @@ class Warframe {
       subCommands: [
         {
           triggers: ["list"],
-          permissionCheck: () => this.perms.genCheckCommand("warframe.alerts.list"),
+          permissionCheck: this.perms.genCheckCommand("warframe.alerts.list"),
           channels: ["guild"],
           execute: command => {
             let roles = this.config.get("warframeAlerts", { items: {} }, { server: command.channel.guild.id }).items;
@@ -296,7 +296,7 @@ class Warframe {
         },
         {
           triggers: ["join"],
-          permissionCheck: () => this.perms.genCheckCommand("warframe.alerts.join"),
+          permissionCheck: this.perms.genCheckCommand("warframe.alerts.join"),
           channels: ["guild"],
           execute: command => {
             let roles = this.config.get("warframeAlerts", { items: {} }, { server: command.channel.guild.id }).items;
@@ -320,7 +320,7 @@ class Warframe {
         },
         {
           triggers: ["leave"],
-          permissionCheck: () => this.perms.genCheckCommand("warframe.alerts.leave"),
+          permissionCheck: this.perms.genCheckCommand("warframe.alerts.leave"),
           channels: ["guild"],
           execute: command => {
             let roles = this.config.get("warframeAlerts", { items: {} }, { server: command.channel.guild.id }).items;
@@ -344,7 +344,7 @@ class Warframe {
         },
         {
           triggers: ["enable", "disable"],
-          permissionCheck: () => this.perms.genCheckCommand("admin.warframe.alerts"),
+          permissionCheck: this.perms.genCheckCommand("admin.warframe.alerts"),
           channels: ["guild"],
           execute: command => {
             let config = this.config.get("warframeAlerts",
@@ -380,7 +380,7 @@ class Warframe {
         },
         {
           triggers: ["add"],
-          permissionCheck: () => this.perms.genCheckCommand("admin.warframe.alerts"),
+          permissionCheck: this.perms.genCheckCommand("admin.warframe.alerts"),
           channels: ["guild"],
           execute: command => {
             if (command.args[0]) {
@@ -427,7 +427,7 @@ class Warframe {
         },
         {
           triggers: ["remove"],
-          permissionCheck: () => this.perms.genCheckCommand("admin.warframe.alerts"),
+          permissionCheck: this.perms.genCheckCommand("admin.warframe.alerts"),
           channels: ["guild"],
           execute: command => {
             if (command.args[0]) {
