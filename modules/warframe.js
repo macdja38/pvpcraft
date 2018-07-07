@@ -6,6 +6,7 @@
 const parseState = require('../lib/parseState');
 
 const utils = require('../lib/utils');
+const i10010n = require("i10010n").init({});
 
 const WorldState = require("../lib/WorldState");
 
@@ -216,7 +217,7 @@ class Warframe {
    */
   checkMisc(msg) {
     if (msg.content.toLowerCase().indexOf("soon") === 0 && msg.content.indexOf(":tm:") < 0 && this.perms.check(msg, "warframe.misc.soon")) {
-      msg.channel.createMessage("Soon:tm:").catch(this.perms.getAutoDeny(msg));
+      msg.channel.createMessage(i10010n() `Soon:tm:`).catch(this.perms.getAutoDeny(msg));
       return true;
     }
     return false;
@@ -248,14 +249,9 @@ class Warframe {
       channels: ["*"],
       execute: command => {
         return this.getPlatformDependantWorldState(command).then((state) => {
-          command.createMessageAutoDeny("```haskell\n" + "Darvo is selling " +
-            parseState.getName(state.DailyDeals[0].StoreItem) +
-            " for " + state.DailyDeals[0].SalePrice +
-            "p (" +
-            state.DailyDeals[0].Discount + "% off, " + (state.DailyDeals[0].AmountTotal - state.DailyDeals[0].AmountSold) +
-            "/" + state.DailyDeals[0].AmountTotal + " left, refreshing in " + parseState.toTimeDifference(state, state.DailyDeals[0].Expiry) +
-            ")" +
-            "\n```");
+          command.createMessageAutoDeny(i10010n() `\`\`\`haskell
+Darvo is selling ${parseState.getName(state.DailyDeals[0].StoreItem)} for ${state.DailyDeals[0].SalePrice}p (${state.DailyDeals[0].Discount}% off, ${state.DailyDeals[0].AmountTotal - state.DailyDeals[0].AmountSold}/${state.DailyDeals[0].AmountTotal} left, refreshing in ${parseState.toTimeDifference(state, state.DailyDeals[0].Expiry)})
+\`\`\``);
         });
       },
     }, {
@@ -287,9 +283,9 @@ class Warframe {
               }
             }
             if (coloredRolesList !== "") {
-              command.createMessageAutoDeny(i10010n `Available alerts include \`\`\`xl\n${coloredRolesList}\`\`\``)
+              command.createMessageAutoDeny(i10010n() `Available alerts include \`\`\`xl\n${coloredRolesList}\`\`\``)
             } else {
-              command.replyAutoDeny(i10010n `No alerts are being tracked.`)
+              command.replyAutoDeny(i10010n() `No alerts are being tracked.`)
             }
             return true;
           },
@@ -301,19 +297,19 @@ class Warframe {
           execute: command => {
             let roles = this.config.get("warframeAlerts", { items: {} }, { server: command.channel.guild.id }).items;
             if (!command.args[0] || !roles[command.args[0]]) {
-              command.replyAutoDeny(i10010n `Please supply an item to join using \`${command.prefix}alert join \<rank\>\`, for a list of items use \`${command.prefix}alert list\``);
+              command.replyAutoDeny(i10010n() `Please supply an item to join using \`${command.prefix}alert join \<rank\>\`, for a list of items use \`${command.prefix}alert list\``);
               return true;
             }
             let rankToJoin = command.args[0].toLowerCase();
             let role = command.channel.guild.roles.get(roles[rankToJoin]);
             if (role) {
               command.channel.guild.addMemberRole(command.author.id, role.id).catch((error) => {
-                command.replyAutoDeny(i10010n `Error ${error} promoting ${utils.removeBlocks(command.author.username)} try redefining your rank and making sure the bot has enough permissions.`)
+                command.replyAutoDeny(i10010n() `Error ${error} promoting ${utils.removeBlocks(command.author.username)} try redefining your rank and making sure the bot has enough permissions.`)
               }).then(() => {
-                command.replyAutoDeny(i10010n `:thumbsup::skin-tone-2:`);
+                command.replyAutoDeny(i10010n() `:thumbsup::skin-tone-2:`);
               })
             } else {
-              command.replyAutoDeny(i10010n `Role could not be found, have an administrator use \`${command.prefix}tracking --add <item>\` to add it.`);
+              command.replyAutoDeny(i10010n() `Role could not be found, have an administrator use \`${command.prefix}tracking --add <item>\` to add it.`);
             }
             return true;
           },
@@ -325,18 +321,18 @@ class Warframe {
           execute: command => {
             let roles = this.config.get("warframeAlerts", { items: {} }, { server: command.channel.guild.id }).items;
             if (!command.args[0] || !roles[command.args[0]]) {
-              command.replyAutoDeny(i10010n `Please supply a rank to leave using \`${command.prefix}alerts leave \<rank\>\`, for a list of items use \`${command.prefix}alerts list\``);
+              command.replyAutoDeny(i10010n() `Please supply a rank to leave using \`${command.prefix}alerts leave \<rank\>\`, for a list of items use \`${command.prefix}alerts list\``);
               return true;
             }
             let role = command.channel.guild.roles.get(roles[command.args[0]]);
             if (role) {
               command.channel.guild.removeMemberRole(command.author.id, role.id).catch((error) => {
-                command.replyAutoDeny(i10010n `Error ${error} demoting ${utils.removeBlocks(command.author.username)} try redefining your rank and making sure the bot has enough permissions.`)
+                command.replyAutoDeny(i10010n() `Error ${error} demoting ${utils.removeBlocks(command.author.username)} try redefining your rank and making sure the bot has enough permissions.`)
               }).then(() => {
-                command.replyAutoDeny(i10010n `:thumbsup::skin-tone-2:`);
+                command.replyAutoDeny(i10010n() `:thumbsup::skin-tone-2:`);
               })
             } else {
-              command.reply(`Role could not be found, have an administrator use \`${command.prefix}alerts add <item>\` to add it.`);
+              command.reply(i10010n() `Role could not be found, have an administrator use \`${command.prefix}alerts add <item>\` to add it.`);
               return true;
             }
             return true;
@@ -360,7 +356,7 @@ class Warframe {
               if (Object.keys(this.worldState.getEnabledStates()).includes(command.options.platform)) {
                 config.platform = command.options.platform;
               } else {
-                return command.replyAutoDeny(i10010n `Invalid platform provided, please try one of the following ${Object.keys(this.worldState.getEnabledStates()).join(", ")}`)
+                return command.replyAutoDeny(i10010n() `Invalid platform provided, please try one of the following ${Object.keys(this.worldState.getEnabledStates()).join(", ")}`)
               }
             }
             config.tracking = command.command === "enable";
@@ -374,7 +370,7 @@ class Warframe {
             }
             this.config.set("warframeAlerts", config, { server: command.channel.guild.id });
             this.rebuildAlerts();
-            command.replyAutoDeny(i10010n `:thumbsup::skin-tone-2:`);
+            command.replyAutoDeny(i10010n() `:thumbsup::skin-tone-2:`);
             return true;
           },
         },
@@ -398,7 +394,7 @@ class Warframe {
                 config.items = {};
               }
               if (config.items.hasOwnProperty(command.args[0].toLowerCase())) {
-                command.createMessageAutoDeny(`${command.author.mention}, Resource is already being tracked, use \`${command.prefix}alert join ${utils.clean(command.args[0])}\` to join it.`);
+                command.createMessageAutoDeny(i10010n() `${command.author.mention}, Resource is already being tracked, use \`${command.prefix}alert join ${utils.clean(command.args[0])}\` to join it.`);
                 return;
               }
               let options = {
@@ -409,19 +405,19 @@ class Warframe {
               command.channel.guild.createRole(options).then((role) => {
                 config.items[role.name] = role.id;
                 this.config.set("warframeAlerts", config, { server: command.channel.guild.id });
-                command.replyAutoDeny(i10010n `Created role ${utils.clean(role.name)} with id ${role.id}`);
+                command.replyAutoDeny(i10010n() `Created role ${utils.clean(role.name)} with id ${role.id}`);
               }).catch((error) => {
                 if (error.code === 50013) {
-                  command.replyAutoDeny(i10010n `Error, insufficient permissions, please give me manage roles.`);
+                  command.replyAutoDeny(i10010n() `Error, insufficient permissions, please give me manage roles.`);
                 }
                 else {
-                  command.replyAutoDeny(i10010n `Unexpected error \`${error}\` please report the issue https://invite.pvpcraft.ca/`);
+                  command.replyAutoDeny(i10010n() `Unexpected error \`${error}\` please report the issue https://invite.pvpcraft.ca/`);
                   console.dir(error, { depth: 2, color: true });
                 }
               });
               return true;
             }
-            command.replyAutoDeny(i10010n `invalid option's please specify the name of a resource to track to change tracking options`);
+            command.replyAutoDeny(i10010n() `invalid option's please specify the name of a resource to track to change tracking options`);
             return true;
           },
         },
@@ -445,7 +441,7 @@ class Warframe {
                 config.items = {};
               }
               if (!config.items.hasOwnProperty(command.args[0])) {
-                command.reply(i10010n `Resource is not being tracked, use \`${command.prefix}alert add ${utils.clean(command.args[0])}\` to add it.`);
+                command.reply(i10010n() `Resource is not being tracked, use \`${command.prefix}alert add ${utils.clean(command.args[0])}\` to add it.`);
                 return true;
               }
               let roleName = command.args[0].toLowerCase();
@@ -454,14 +450,14 @@ class Warframe {
                 command.channel.guild.deleteRole(role.id).then(() => {
                   delete config.items[command.args[0]];
                   this.config.set("warframeAlerts", config, { server: command.channel.guild.id, conflict: "replace" });
-                  command.replyAutoDeny(i10010n `Deleted role ${utils.clean(command.args[0])} with id \`${role.id}\``);
+                  command.replyAutoDeny(i10010n() `Deleted role ${utils.clean(command.args[0])} with id \`${role.id}\``);
                 }).catch((error) => {
                   if (error) {
                     if (error.status === 403) {
-                      command.replyAutoDeny(i10010n `Error, insufficient permissions, please give me manage roles.`);
+                      command.replyAutoDeny(i10010n() `Error, insufficient permissions, please give me manage roles.`);
                     }
                     else {
-                      command.replyAutoDeny(i10010n `Unexpected error please report the issue https://pvpcraft.ca/pvpbot`);
+                      command.replyAutoDeny(i10010n() `Unexpected error please report the issue https://pvpcraft.ca/pvpbot`);
                       console.log(error);
                       console.log(error.stack);
                     }
@@ -471,11 +467,11 @@ class Warframe {
               } else {
                 delete config.items[command.args[0]];
                 this.config.set("warframeAlerts", config, { server: command.channel.guild.id, conflict: "replace" });
-                command.replyAutoDeny(i10010n `Role not found, removed ${utils.clean(command.args[0])} from list.`);
+                command.replyAutoDeny(i10010n() `Role not found, removed ${utils.clean(command.args[0])} from list.`);
                 return true;
               }
             }
-            command.replyAutoDeny(i10010n `Invalid option's please specify the name of a resource to track to change tracking options`);
+            command.replyAutoDeny(i10010n() `Invalid option's please specify the name of a resource to track to change tracking options`);
             return true;
           },
         },
@@ -487,7 +483,7 @@ class Warframe {
       execute: command => {
         return this.getPlatformDependantWorldState(command).then((state) => {
           if (!state.VoidTraders || !state.VoidTraders[0]) {
-            command.createMessageAutoDeny(i10010n `Baro has disappeared from the universe.`);
+            command.createMessageAutoDeny(i10010n() `Baro has disappeared from the universe.`);
             return true;
           }
           if (state.VoidTraders[0].Manifest) {
@@ -499,15 +495,15 @@ class Warframe {
             }
             rep += "```";
 
-            command.createMessageAutoDeny(i10010n `\`\`\`haskell\nBaro leaving ${state.VoidTraders[0].Node} in ${
+            command.createMessageAutoDeny(i10010n() `\`\`\`haskell\nBaro leaving ${state.VoidTraders[0].Node} in ${
               utils.secondsToTime(state.VoidTraders[0].Expiry.$date.$numberLong / 1000 - state.Time)
             }\n${
-              state.VoidTraders[0].Manifest.map(item => i10010n `item: ${parseState.getName(item.ItemType)} - price: ${item.PrimePrice} ducats ${item.RegularPrice}cr\n`)
+              state.VoidTraders[0].Manifest.map(item => i10010n() `item: ${parseState.getName(item.ItemType)} - price: ${item.PrimePrice} ducats ${item.RegularPrice}cr\n`)
             }\`\`\``)
             command.createMessageAutoDeny(rep);
           }
           else {
-            command.createMessageAutoDeny(`\`\`\`haskell\nBaro appearing at ${state.VoidTraders[0].Node} in ${
+            command.createMessageAutoDeny(i10010n() `\`\`\`haskell\nBaro appearing at ${state.VoidTraders[0].Node} in ${
               parseState.toTimeDifference(state, state.VoidTraders[0].Activation)
             }\n\`\`\``);
           }
@@ -524,20 +520,20 @@ class Warframe {
           return true;
         }
         if (command.args[0].toLowerCase() === "help") {
-          command.reply(i10010n `\`${command.prefix}${command.command} <jv | lor> <username>\``);
+          command.reply(i10010n() `\`${command.prefix}${command.command} <jv | lor> <username>\``);
           return true;
         }
         if (command.args.length < 2) {
           command.createMessageAutoDeny(
-            i10010n `​http://wf.christx.tw/search.php?id=${utils.clean(command.args[0])}`);
+            i10010n() `​http://wf.christx.tw/search.php?id=${utils.clean(command.args[0])}`);
           return true;
         }
         let place = command.args[0].toLowerCase();
         let link;
         if (place === "jv" || place === "jordasverdict") {
-          link = i10010n `https://wf.christx.tw/JordasSearch.php?id=${command.args[1]}`;
+          link = `https://wf.christx.tw/JordasSearch.php?id=${command.args[1]}`;
         } else {
-          link = i10010n `https://wf.christx.tw/search.php?id=${command.args[1]}`;
+          link = `https://wf.christx.tw/search.php?id=${command.args[1]}`;
         }
         command.createMessageAutoDeny(link);
         return true;
@@ -555,9 +551,9 @@ class Warframe {
               if (node) {
                 let nodeFaction = parseState.getFaction(node.faction);
                 let nodeMission = parseState.getMissionType(node.mission_type);
-                string += i10010n `\`\`\`xl\n${parseState.getTierName(mission.Modifier).name} (${mission.Modifier.slice(4)}) rift active on ${parseState.getNodeName(mission.Node)} (${nodeFaction} ${nodeMission}) for ${parseState.toTimeDifference(state, mission.Expiry)}\n\`\`\``;
+                string += i10010n() `\`\`\`xl\n${parseState.getTierName(mission.Modifier).name} (${mission.Modifier.slice(4)}) rift active on ${parseState.getNodeName(mission.Node)} (${nodeFaction} ${nodeMission}) for ${parseState.toTimeDifference(state, mission.Expiry)}\n\`\`\``;
               } else {
-                string += i10010n `\`\`\`xl\n${parseState.getTierName(mission.Modifier).name} (${mission.Modifier.slice(4)}) rift active for ${utils.secondsToTime(mission.Expiry.sec - state.Time)}\n\`\`\``;
+                string += i10010n() `\`\`\`xl\n${parseState.getTierName(mission.Modifier).name} (${mission.Modifier.slice(4)}) rift active for ${utils.secondsToTime(mission.Expiry.sec - state.Time)}\n\`\`\``;
               }
             }
             command.createMessageAutoDeny(string);
@@ -571,7 +567,7 @@ class Warframe {
       execute: command => {
         //use wikia's api to search for the item.
         if (command.args.length === 0) {
-          command.createMessageAutoDeny(i10010n `Please provide something to search for!`);
+          command.createMessageAutoDeny(i10010n() `Please provide something to search for!`);
           return true;
         }
         request.post("http://warframe.wikia.com/api/v1/Search/List", {
@@ -581,7 +577,7 @@ class Warframe {
           },
         }, (err, response, body) => {
           if (err || response.statusCode === 404) {
-            command.createMessageAutoDeny(i10010n `Could not find **${utils.clean(command.args.join(' '))}**`);
+            command.createMessageAutoDeny(i10010n() `Could not find **${utils.clean(command.args.join(' '))}**`);
           } else if (response.statusCode !== 200) {
             console.error(' returned HTTP status ' + response.statusCode);
           } else {
@@ -605,15 +601,15 @@ class Warframe {
             let fields = sortie.Variants.map(mission => {
               return {
                 name: `  ${parseState.getNodeName(mission.node)} `,
-                value: i10010n `  ${parseState.getMissionType(mission.missionType)} with ${parseState.getSortieModifier(mission.modifierType)} ‎`,
+                value: i10010n() `  ${parseState.getMissionType(mission.missionType)} with ${parseState.getSortieModifier(mission.modifierType)} ‎`,
                 inline: true,
               };
             });
             let embed = {
-              title: i10010n `${(sortie.Boss || "").split("_").pop()} Sortie`,
+              title: i10010n() `${(sortie.Boss || "").split("_").pop()} Sortie`,
               timestamp: parseState.toISOTime(sortie.Expiry),
               footer: {
-                text: i10010n `Expires in ${parseState.toTimeDifference(state, sortie.Expiry)} which is on `,
+                text: i10010n() `Expires in ${parseState.toTimeDifference(state, sortie.Expiry)} which is on `,
               },
               fields,
             };
@@ -627,7 +623,7 @@ class Warframe {
       permissionCheck: this.perms.genCheckCommand("warframe.farm"),
       channels: ["*"],
       execute: command => {
-        command.createMessageAutoDeny(i10010n `You can probably find that resource here: \<https://steamcommunity.com/sharedfiles/filedetails/?id=181630751\>`);
+        command.createMessageAutoDeny(i10010n() `You can probably find that resource here: \<https://steamcommunity.com/sharedfiles/filedetails/?id=181630751\>`);
         return true;
       },
     }, {
@@ -635,7 +631,7 @@ class Warframe {
       permissionCheck: this.perms.genCheckCommand("warframe.damage"),
       channels: ["*"],
       execute: command => {
-        command.createMessageAutoDeny(i10010n `\`\`\`haskell\nDamage 2.0: https://pvpcraft.ca/wfd2.png Thanks for image Telkhines\n\`\`\``);
+        command.createMessageAutoDeny(i10010n() `\`\`\`haskell\nDamage 2.0: https://pvpcraft.ca/wfd2.png Thanks for image Telkhines\n\`\`\``);
         return true;
       },
     }, {
@@ -646,13 +642,13 @@ class Warframe {
         return this.getPlatformDependantWorldState(command).then((state) => {
           const events = state.Events.map(e =>
             event.Messages[0].Message.toLowerCase().indexOf("acces") > -1
-            ? i10010n `${event.Messages[0].Message.toUpperCase()} since ${utils.secondsToTime(state.Time - event.Date.sec)} ago`
+            ? i10010n() `${event.Messages[0].Message.toUpperCase()} since ${utils.secondsToTime(state.Time - event.Date.sec)} ago`
             : undefined
           );
           if (events) {
-            command.createMessageAutoDeny(i10010n `\`\`\`haskell\n${events}\`\`\``)
+            command.createMessageAutoDeny(i10010n() `\`\`\`haskell\n${events}\`\`\``)
           } else {
-            this.client.createMessage(i10010n `No prime access could be found`);
+            this.client.createMessage(i10010n() `No prime access could be found`);
           }
         });
       },
@@ -664,7 +660,7 @@ class Warframe {
         return this.getPlatformDependantWorldState(command).then((state) => {
           let fields = [];
           let embed = {
-            title: i10010n `Warframe updates`,
+            title: i10010n() `Warframe updates`,
             fields,
           };
           let checks = ["update", "hotfix"];
@@ -672,8 +668,8 @@ class Warframe {
             for (let check of checks) {
               if (event.Messages[0].Message.toLowerCase().indexOf(check) > -1) {
                 fields.push({
-                  value: i10010n `[${event.Messages[0].Message.toLowerCase()}](${event.Prop}) Since ${parseState.toTimeDifferenceInPast(state, event.Date)} ago.`,
-                  name: i10010n `\u00A0\u200A\u000B\u3000\uFEFF\u2004\u2000\u200E`,
+                  value: i10010n() `[${event.Messages[0].Message.toLowerCase()}](${event.Prop}) Since ${parseState.toTimeDifferenceInPast(state, event.Date)} ago.`,
+                  name: i10010n() `\u00A0\u200A\u000B\u3000\uFEFF\u2004\u2000\u200E`,
                   inline: false,
                 });
                 checks.slice(check);
@@ -691,7 +687,7 @@ class Warframe {
       channels: ["*"],
       execute: command => {
         if (command.args.length < 1 || command.args.length === 2 || command.args.length > 3) {
-          command.createMessageAutoDeny(i10010n `\`\`\`haskell\npossible uses include:\n${
+          command.createMessageAutoDeny(i10010n() `\`\`\`haskell\npossible uses include:\n${
             command.prefix}armor (Base Armor) (Base Level) (Current Level) calculate armor and stats.\n${
             command.prefix}armor (Current Armor)\n\`\`\``);
           return true;
@@ -701,13 +697,13 @@ class Warframe {
           ? parseInt(command.args[0]) * (1 + (Math.pow((parseInt(command.args[2]) - parseInt(command.args[1])), 1.75) / 200))
           : parseInt(command.args[0]);
         if (command.args.length === 3 && (parseInt(command.args[2]) - parseInt(command.args[1])) < 0) {
-          command.createMessageAutoDeny(i10010n `\`\`\`haskell\nPlease check your input values\n\`\`\``);
+          command.createMessageAutoDeny(i10010n() `\`\`\`haskell\nPlease check your input values\n\`\`\``);
           return true;
         }
         command.createMessageAutoDeny(
           "```haskell"
-          + (command.args.length === 3 ? i10010n `at level ${command.args[2]} your enemy would have ${armor} Armor\n` : "")
-          + i10010n `${armor / (armor + 300) * 100}% damage reduction\n\`\`\``
+          + (command.args.length === 3 ? i10010n() `at level ${command.args[2]} your enemy would have ${armor} Armor\n` : "")
+          + i10010n() `${armor / (armor + 300) * 100}% damage reduction\n\`\`\``
         );
         return true;
 

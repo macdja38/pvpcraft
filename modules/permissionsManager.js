@@ -4,6 +4,7 @@
 "use strict";
 
 const utils = require('../lib/utils');
+const i10010n = require("i10010n").init({});
 
 let defaultURL = "https://bot.pvpcraft.ca/login/";
 
@@ -77,7 +78,7 @@ class permissionsManager {
       execute: command => {
         //if no command is supplied supply help url
         if (command.args.length === 0) {
-          command.reply("You need help! visit \<https://bot.pvpcraft.ca/docs\> for more info");
+          command.reply(i10010n() `You need help! visit <https://bot.pvpcraft.ca/docs> for more info`);
           return true;
         }
         //command to set permissions.
@@ -106,7 +107,7 @@ class permissionsManager {
               channel = channel.id;
             }
             else {
-              command.reply("Could not find channel specified please either mention the channel or use it's full name");
+              command.reply(i10010n() `Could not find channel specified please either mention the channel or use it's full name`);
               return true;
             }
           }
@@ -116,7 +117,7 @@ class permissionsManager {
             server = command.channel.guild.id;
           }
           if (!this.perms.checkAdminServer(command) && this.config.get("permissions", {admins: []}).admins.indexOf(command.author.id) < 0) {
-            command.reply("Discord permission \`Admin\` Required");
+            command.reply(i10010n() `Discord permission \`Admin\` Required`);
             return true;
           }
           //here we find the group's or users effected.
@@ -135,7 +136,7 @@ class permissionsManager {
               target = "u" + target.id
             }
             else {
-              command.reply("Could not find user with that name, please try a mention or name, names are case sensitive");
+              command.reply(i10010n() `Could not find user with that name, please try a mention or name, names are case sensitive`);
               return true;
             }
           }
@@ -150,7 +151,7 @@ class permissionsManager {
               target = "g" + target.id
             }
             else {
-              command.reply("Could not find role with that name, please try a mention or name, names are case sensitive");
+              command.reply(i10010n() `Could not find role with that name, please try a mention or name, names are case sensitive`);
               return true;
             }
           }
@@ -160,17 +161,16 @@ class permissionsManager {
           let action = command.args.shift();
           if (action === "remove") action = "remov";
           const node = server + "." + channel + "." + target + "." + command.args[0];
-          command.reply(`${utils.clean(action)}ing node \`\`\`xl\n${node}\n\`\`\`\
-${utils.clean(action)}ing permission node ${utils.clean(command.args[0])} in ${channel === "*" ? "all channels" : channel } for \
-${target === "*" ? "everyone" : utils.clean(target)}`);
+          command.reply(i10010n() `${utils.clean(action)}ing node \`\`\`xl\n${node}\n\`\`\`\
+${utils.clean(action)}ing permission node ${utils.clean(command.args[0])} in ${channel === "*" ? i10010n() `all channels` : channel } for \
+${target === "*" ? i10010n() `everyone` : utils.clean(target)}`);
           let numValue = parseInt(action);
           if (!isNaN(numValue)) {
             action = numValue;
           }
           this.perms.set(utils.stripNull(node), action).then((result) => {
             if (!result || result === undefined) {
-              command.reply("Error: while saving: Database write could not be confirmed the permissions configuration," +
-                " will be cached locally but may reset in the future.")
+              command.reply(i10010n() `Error: while saving: Database write could not be confirmed the permissions configuration, will be cached locally but may reset in the future.`)
             }
           }).catch(console.error);
         }
@@ -180,9 +180,9 @@ ${target === "*" ? "everyone" : utils.clean(target)}`);
         if (command.args[0].toLowerCase() === "hardreset") {
           if (command.author.id === command.channel.guild.ownerID) {
             this.perms.set(command.channel.guild.id, "remov");
-            command.reply(`All permissions have been reset!`)
+            command.reply(i10010n() `All permissions have been reset!`)
           } else {
-            command.reply(`Only the server owner can use this command.`);
+            command.reply(i10010n() `Only the server owner can use this command.`);
           }
         }
         return true;

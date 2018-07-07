@@ -4,6 +4,7 @@
 "use strict";
 
 const utils = require('../lib/utils');
+const i10010n = require("i10010n").init({});
 
 class feedManager {
   /**
@@ -30,7 +31,7 @@ class feedManager {
 
   addOrRemoveFeed(adding, command) {
     if (!command.args[0]) {
-      command.reply(`Usage ${command.prefix}${command.command} <start|stop> <node>[ --channel <channel>]`);
+      command.reply(i10010n() `Usage ${command.prefix}${command.command} <start|stop> <node>[ --channel <channel>]`);
       return true;
     }
     let channel = command.channel;
@@ -50,7 +51,7 @@ class feedManager {
       channel = command.channel;
     }
     this._feeds.set(adding, utils.stripNull(command.args[0].toLowerCase()), channel.id, channel.guild.id);
-    return command.reply(`${adding ? "Starting" : "Stopping"} ${command.args[0].toLowerCase()} in channel ${channel.mention}`);
+    return command.reply(i10010n() `${adding ? "Starting" : "Stopping"} ${command.args[0].toLowerCase()} in channel ${channel.mention}`);
   }
 
   /**
@@ -88,7 +89,7 @@ class feedManager {
               console.log(data.feeds);
               command.createMessageAutoDeny(`\`\`\`json\n${JSON.stringify(data.feeds, null, 2)}\n\`\`\``);
             } else {
-              command.createMessageAutoDeny(i10010n `No feeds are configured`);
+              command.createMessageAutoDeny(i10010n() `No feeds are configured`);
             }
             return true;
           }
@@ -111,7 +112,7 @@ class feedManager {
         }
       ],
       execute: command => {
-        command.reply(i10010n `Usage ${command.prefix}${command.command} <start|stop> <node>[ --channel <channel>]`);
+        command.reply(i10010n() `Usage ${command.prefix}${command.command} <start|stop> <node>[ --channel <channel>]`);
         return true;
       },
     }, {
@@ -120,7 +121,7 @@ class feedManager {
       channels: ["guild"],
       execute: command => {
         if (!command.args[0]) {
-          return command.replyAutoDeny(i10010n `Usage ${command.prefix}${command.command} <node>`)
+          return command.replyAutoDeny(i10010n() `Usage ${command.prefix}${command.command} <node>`)
         }
         return command.replyAutoDeny(`${
           this._feeds.find(command.args[0].toLowerCase(), command.channel.id)

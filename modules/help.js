@@ -3,6 +3,8 @@
  */
 "use strict";
 
+const i10010n = require("i10010n").init({});
+
 class help {
   /**
    * Instantiates the module
@@ -51,7 +53,7 @@ class help {
       permissionCheck: command => true,
       channels: ["*"],
       execute: command => {
-        command.reply("Help can be found at https://bot.pvpcraft.ca/docs");
+        command.reply(i10010n() `Help can be found at https://bot.pvpcraft.ca/docs`);
         return true;
       },
     }];

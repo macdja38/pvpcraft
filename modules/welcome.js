@@ -4,6 +4,7 @@
 "use strict";
 
 const utils = require('../lib/utils');
+const i10010n = require("i10010n").init({});
 
 class welcome {
   /**
@@ -38,13 +39,13 @@ class welcome {
         //TODO: once config loader v2 is done make this configurable.
         if (server.id === "77176186148499456") {
           utils.handleErisRejection(this.client.createMessage("171382498020950016",
-            `Hop to it @here, ${utils.clean(user.username)} Just joined ${utils.clean(server.name)} ` +
-            `announce it in <#77176186148499456>\n\`\`\`\nWelcome **${utils.clean(user.username)}**!\n\`\`\``
+            i10010n() `Hop to it @here, ${utils.clean(user.username)} Just joined ${utils.clean(server.name)} ` +
+            i10010n() `announce it in <#77176186148499456>\n\`\`\`\nWelcome **${utils.clean(user.username)}**!\n\`\`\``
           ));
         }
         if (server.id === "191052428228034560") {
           utils.handleErisRejection(this.client.createMessage("215030357727117313",
-            `Hop to it @here, <@${user.id}> baru saja bergabung di ${utils.clean(server.name)}, umumkan di  <#191052428228034560>
+            i10010n() `Hop to it @here, <@${user.id}> baru saja bergabung di ${utils.clean(server.name)}, umumkan di  <#191052428228034560>
 \`\`\`Selamat datang <@${user.id}> di **Warframe Indonesia Community**!\`\`\``
           ));
         }
@@ -100,8 +101,8 @@ class welcome {
    */
   getContent() {
     return {
-      name: "Join messages",
-      description: "Welcome new users to your server with a customised join message",
+      name: i10010n() `Join messages`,
+      description: i10010n() `Welcome new users to your server with a customised join message`,
       key: "welcome",
       permNode: "welcome",
       commands: this.getCommands(),
@@ -117,7 +118,7 @@ class welcome {
         let settings = this.config.get("welcome", {}, {server: command.channel.guild.id});
         if (command.args.length > 0 && command.args[0].toLowerCase() === "false") {
           this.config.set("welcome", {}, {server: command.channel.guild.id, conflict: "replace"});
-          command.replyAutoDeny(i10010n `:thumbsup::skin-tone-2:`);
+          command.replyAutoDeny(i10010n() `:thumbsup::skin-tone-2:`);
           return true;
         }
         if (command.args.length > 0) {
@@ -131,7 +132,7 @@ class welcome {
           settings.delay = Math.max(Math.min(command.options.delay.valueOf() || 0, 20), 0) * 1000;
         }
         this.config.set("welcome", settings, {server: command.channel.guild.id});
-        command.replyAutoDeny(i10010n `:thumbsup::skin-tone-2:`);
+        command.replyAutoDeny(i10010n() `:thumbsup::skin-tone-2:`);
         return true;
       }
     }];

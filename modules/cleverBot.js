@@ -4,6 +4,7 @@
 "use strict";
 
 const utils = require('../lib/utils');
+const i10010n = require("i10010n").init({});
 
 let CleverBotIO = require('better-cleverbot-io');
 
@@ -47,7 +48,7 @@ class cleverBot {
   checkMisc(msg, perms) {
     if (msg.mentions.includes(this.client.user) && perms.check(msg, "cleverbot.misc")) {
       if (!this.cleverEnabled) {
-        msg.channel.createMessage(i10010n `${msg.author.mention}, Bot was not configured with an api key and is therefore disabled.`).catch(perms.getAutoDeny(msg));
+        msg.channel.createMessage(i10010n() `${msg.author.mention}, Bot was not configured with an api key and is therefore disabled.`).catch(perms.getAutoDeny(msg));
         return true;
       }
       let query = msg.content.replace(this.startRegex, "").replace(this.middleRegex, "CleverBot").trim();
