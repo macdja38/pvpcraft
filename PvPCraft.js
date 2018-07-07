@@ -660,7 +660,7 @@ class PvPCraft {
         }
         let modules = this.fileConfig.get("modules");
         delete require.cache[require.resolve(modules[command.args[0]])];
-        utils.handleErisRejection(command.reply(i10010n() `Reloading ${command.args[0]}`));
+        utils.handleErisRejection(command.reply(this.i10010n() `Reloading ${command.args[0]}`));
         console.log("Reloading ".yellow + command.args[0].yellow);
         let Mod = require(modules[command.args[0]]);
         let mod = new Mod(this.getModuleVariables());
@@ -668,7 +668,7 @@ class PvPCraft {
         this.moduleList[module].module = mod;
         this.moduleList[module].commands = Mod.getCommands();
         console.log("Reloded ".yellow + command.args[0].yellow);
-        utils.handleErisRejection(command.reply(i10010n() `Reloded ${command.args[0]}`));
+        utils.handleErisRejection(command.reply(this.i10010n() `Reloded ${command.args[0]}`));
       }
     }
   }
@@ -697,6 +697,7 @@ class PvPCraft {
         allowMention: this.id,
         botName: this.name,
         raven: this.raven,
+        i10010n: this.i10010n,
       });
     } catch (error) {
       if (this.raven) {
@@ -717,7 +718,7 @@ class PvPCraft {
           extra,
         });
       }
-      utils.handleErisRejection(msg.channel.createMessage(i10010n() `${msg.author.mention}, Sorry about that an unknown problem occurred processing your command, an error report has been logged and we are looking into the problem.`));
+      utils.handleErisRejection(msg.channel.createMessage(this.i10010n() `${msg.author.mention}, Sorry about that an unknown problem occurred processing your command, an error report has been logged and we are looking into the problem.`));
     }
 
     for (let ware in this.middlewareList) {
@@ -837,7 +838,7 @@ class PvPCraft {
           if (ravenError) {
             console.error("Error reporting error to sentry:\n", ravenError, "Error sentry was trying to report:\n", ravenError);
           } else {
-            utils.handleErisRejection(msg.channel.createMessage(i10010n() `Sorry, there was an error processing your command. The error is \`\`\`${error
+            utils.handleErisRejection(msg.channel.createMessage(this.i10010n() `Sorry, there was an error processing your command. The error is \`\`\`${error
               }\`\`\` reference code \`${id}\``));
           }
           if (process.env.dev === "true") {
