@@ -4,6 +4,7 @@
 "use strict";
 
 let colors = require('colors');
+const i10010n = require('i10010n').init({});
 
 class rateLimits {
   /**
@@ -124,7 +125,7 @@ class rateLimits {
     }
     if (this.userCommandCount[msg.author.id] === this.userLimit + 1) {
       this.userCommandCount[msg.author.id] += this.userLimit * 2;
-      command.reply("WOAH THERE. WAY TOO SPICY\nYou have exceeded the rate limit.");
+      command.reply(i10010n() `WOAH THERE. WAY TOO SPICY\nYou have exceeded the rate limit.`);
       console.log(`User ${msg.author.username} was rate Limited running command ${command.prefix}${command.command}, userId:${msg.author.id}`.magenta);
     }
     if (this.userCommandCount[msg.author.id] > this.userLimit) {
@@ -146,7 +147,7 @@ class rateLimits {
       }
       if (this.channelCommandCount[msg.channel.id] === this.channelLimit + 1) {
         this.channelCommandCount[msg.channel.id] += this.channelLimit * 2;
-        command.reply("WOAH THERE. WAY TOO SPICY\nChannel has exceeded the rate limit.");
+        command.reply(i10010n() `WOAH THERE. WAY TOO SPICY\nChannel has exceeded the rate limit.`);
         console.log(`Channel ${msg.channel.name}:${msg.channel.id} was rate Limited running command ${command.prefix}${command.command} in ${msg.server.name}:${msg.server.id}`.magenta);
       }
       if (this.channelCommandCount[msg.channel.id] > this.channelLimit) {
@@ -163,7 +164,7 @@ class rateLimits {
       }
       if (this.serverCommandCount[msg.server.id] === this.serverLimit + 1) {
         this.serverCommandCount[msg.server.id] += this.serverLimit * 2;
-        command.reply("WOAH THERE. WAY TOO SPICY\nServer has exceeded the rate limit.");
+        command.reply(i10010n() `WOAH THERE. WAY TOO SPICY\nServer has exceeded the rate limit.`);
         console.log(`Server ${msg.server.name}:${msg.server.id} was rate Limited running command ${command.prefix}${command.command}`.magenta);
       }
       if (this.serverCommandCount[msg.server.id] > this.serverLimit) {

@@ -4,6 +4,7 @@
 "use strict";
 
 const utils = require('../lib/utils');
+const i10010n = require("i10010n").init({});
 
 class template {
   /**
@@ -41,7 +42,7 @@ class template {
             || this.perms.check(command, "custom.add")
             || this.perms.check(command, "custom.edit")
             || this.perms.check(command, "custom.remove"))) {
-          command.replyAutoDeny(i10010n `${command.prefix}custom <add|edit|remove>`);
+          command.replyAutoDeny(i10010n() `${command.prefix}custom <add|edit|remove>`);
           return true;
         }
 
@@ -51,17 +52,17 @@ class template {
           let addPermAdmin = this.perms.check(command, "admin.custom.add");
           if (addPerm || addPermAdmin) {
             if (command.args.length < 3) {
-              command.replyAutoDeny(i10010n `${command.prefix}custom add <name> <content>`);
+              command.replyAutoDeny(i10010n() `${command.prefix}custom add <name> <content>`);
               return true;
             }
             let tagName = command.args[1];
             let tagText = command.args.slice(2).join(" ");
             if (this.configDB.get("custom", {}, {server: command.channel.guild.id}).hasOwnProperty(tagName)) {
-              command.replyAutoDeny(i10010n `Custom command with this name already exists`);
+              command.replyAutoDeny(i10010n() `Custom command with this name already exists`);
               return true;
             }
             this.configDB.directSet({custom: {[tagName]: {text: tagText}}}, {server: command.channel.guild.id});
-            command.replyAutoDeny(i10010n `Custom command created with name ${tagName} and description ${utils.clean(tagText)}`);
+            command.replyAutoDeny(i10010n() `Custom command created with name ${tagName} and description ${utils.clean(tagText)}`);
           }
           return false;
         }

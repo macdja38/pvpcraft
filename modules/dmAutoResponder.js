@@ -3,6 +3,8 @@
  */
 "use strict";
 
+const i10010n = require("i10010n").init({});
+
 class dmAutoResponder {
   /**
    * Instantiates the module
@@ -34,9 +36,9 @@ class dmAutoResponder {
     if (msg.channel.guild) return false;
     if (msg.author.bot) return false;
     const lowercaseContents = msg.content.toLowerCase();
-    if (lowercaseContents.includes("invite") || lowercaseContents.includes("discord.gg")) return msg.channel.createMessage(i10010n `https://invite.pvpcraft.ca`);
-    if (lowercaseContents.includes("help") || lowercaseContents.includes("docs")) return msg.channel.createMessage(i10010n `https://bot.pvpcraft.ca/docs`);
-    if (lowercaseContents.startsWith("/") || lowercaseContents.startsWith("!!") || lowercaseContents.startsWith("//")) return msg.channel.createMessage(i10010n `This command cannot be used in dms`);
+    if (lowercaseContents.includes("invite") || lowercaseContents.includes("discord.gg")) return msg.channel.createMessage(i10010n() `https://invite.pvpcraft.ca`);
+    if (lowercaseContents.includes("help") || lowercaseContents.includes("docs")) return msg.channel.createMessage(i10010n() `https://bot.pvpcraft.ca/docs`);
+    if (lowercaseContents.startsWith("/") || lowercaseContents.startsWith("!!") || lowercaseContents.startsWith("//")) return msg.channel.createMessage(i10010n() `This command cannot be used in dms`);
     return false;
   }
 }

@@ -5,6 +5,7 @@
 
 const utils = require('../lib/utils');
 const request = require("request");
+const i10010n = require("i10010n").init({});
 
 const pledges = {
   iron: 5066827,
@@ -103,7 +104,7 @@ class dualUniverse {
         let targetUser = command.args.join(" ");
         return this.getUser(targetUser).then(body => {
           if (body.data.length < 1) {
-            command.replyAutoDeny(i10010n `Could not find user ${utils.clean(targetUser)}`);
+            command.replyAutoDeny(i10010n() `Could not find user ${utils.clean(targetUser)}`);
             return true;
           }
           const user = body.data[0];
@@ -111,7 +112,7 @@ class dualUniverse {
           command.replyAutoDeny({
             embed: {
               title: "Du User info",
-              url: i10010n `https://community.dualthegame.com/accounts/profile/${targetUser.toLowerCase()}`,
+              url: i10010n() `https://community.dualthegame.com/accounts/profile/${targetUser.toLowerCase()}`,
               color: user.hasOwnProperty("pledgeStatus") && pledges.hasOwnProperty(user.pledgeStatus) ? pledges[user.pledgeStatus] : 0,
               fields: [
                 {name: "username", value: user.user},
@@ -130,7 +131,7 @@ class dualUniverse {
         let targetOrg = command.args.join(" ");
         return this.getOrg(targetOrg).then(body => {
           if (body.data.length < 1) {
-            command.replyAutoDeny(i10010n `Could not find organisation ${utils.clean(targetOrg)}`);
+            command.replyAutoDeny(i10010n() `Could not find organisation ${utils.clean(targetOrg)}`);
             return true;
           }
           const org = body.data[0];
@@ -138,7 +139,7 @@ class dualUniverse {
           command.replyAutoDeny({
             embed: {
               title: "Du User info",
-              url: i10010n `https://community.dualthegame.com/organization/${targetOrg.toLowerCase()}`,
+              url: i10010n() `https://community.dualthegame.com/organization/${targetOrg.toLowerCase()}`,
               color: org.hasOwnProperty("pledgeStatus") && pledges.hasOwnProperty(org.pledgeStatus) ? pledges[org.pledgeStatus] : 0,
               fields: [
                 {name: "name", value: org.name},

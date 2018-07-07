@@ -4,6 +4,7 @@
 "use strict";
 
 const utils = require('../lib/utils');
+const i10010n = require("i10010n").init({});
 
 let inviteRegex = /discord(?:(?:.{0,7})(?:gg|me)(?:\/)(?:\w{5}|\w{7})(?:\s|\n)|\.me(?:\/\w*)|app\.com\/invite)/i;
 let inviteRegex2 = /(?:discord(?:(?:\.|.?dot.?)(?:me|gg)|app(?:\.|.?dot.?)com\/invite)\/([\w]{10,16}|[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{4,8}))/g;
@@ -43,7 +44,7 @@ class template {
     if (!this.pvpClient.get(`${msg.channel.guild.id}.automod.invites.autodelete`, {fallBack: false})) return false;
     if (perms.check(msg, "moderation.whitelist.invites") && (inviteRegex.test(msg.content) || inviteRegex2.test(msg.content))) {
       msg.author.getDMChannel().then(channel =>
-        channel.createMessage(i10010n `Hello, I've removed an invite link you posted in channel ${
+        channel.createMessage(i10010n() `Hello, I've removed an invite link you posted in channel ${
           msg.channel.mention} on ${msg.channel.guild.name} as Invite filtering is enabled and you do not have the whitelist permission, please contact the moderation team if you believe this is in error.`)
       );
       utils.handleErisRejection(msg.delete());

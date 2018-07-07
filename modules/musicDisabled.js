@@ -3,6 +3,8 @@
  */
 "use strict";
 
+const i10010n = require("i10010n").init({});
+
 class music {
   /**
    * Instantiates the module
@@ -34,7 +36,7 @@ class music {
       permissionCheck: (command) => this.perms.check(command, `music.${command.command}`),
       channels: ["guild"],
       execute: command => {
-        return command.replyAutoDeny(i10010n `Sorry music is currently disabled at the moment, please join https://join.pvpcraft.ca and check the #announcements chat for info on why and status updates`);
+        return command.replyAutoDeny(i10010n() `Sorry music is currently disabled at the moment, please join https://join.pvpcraft.ca and check the #announcements chat for info on why and status updates`);
       },
     }];
   }

@@ -7,6 +7,7 @@ const util = require('util');
 const colors = require('colors');
 const Eris = require("eris");
 const EE = require("eris-errors");
+const i10010n = require("i10010n").init({});
 
 const moderationMethodNameMap = {
   ban: "memberBanned",
@@ -192,22 +193,22 @@ class moderationV2 {
         }
       }
     } else {
-      command.reply(`Who do you want to ${action}? ${command.prefix}${action} <user>`);
+      command.reply(i10010n() `Who do you want to ${action}? ${command.prefix}${action} <user>`);
       return true;
     }
     if (!user && !possibleId) {
-      command.reply(`Sorry, user could not be located or their id was not a number. Please try a valid mention or id`);
+      command.reply(i10010n() `Sorry, user could not be located or their id was not a number. Please try a valid mention or id`);
       return true;
     }
 
     // check to see if user has ban immunity
     if (user && perms.checkUserChannel(user, msg.channel, `moderation.immunity.${action}`)) {
-      command.reply(`Sorry you do not have permission to ${action} this user`);
+      command.reply(i10010n() `Sorry you do not have permission to ${action} this user`);
       return true;
     }
 
     if (possibleId && perms.checkUserChannel({ id: possibleId }, msg.channel, `moderation.immunity.${action}`)) {
-      command.reply("Sorry but you don't have permission to ban the user this id belongs to.");
+      command.reply(i10010n() `Sorry but you don't have permission to ban the user this id belongs to.`);
       return true;
     }
 
@@ -223,7 +224,7 @@ class moderationV2 {
     console.log("reason", reason);
     if (!perms.check(msg, "moderation.reasonless")) {
       if (!reason) {
-        command.reply(`Sorry but you do not have permission to ban without providing a reason eg \`${command.prefix}${action} --user @devCodex --reason Annoying\``);
+        command.reply(i10010n() `Sorry but you do not have permission to ban without providing a reason eg \`${command.prefix}${action} --user @devCodex --reason Annoying\``);
         return true;
       }
     }
@@ -235,7 +236,7 @@ class moderationV2 {
       .catch((error) => {
         return this[moderationMethodNameMap[action]](msg.channel.guild, user, msg.author, reason, error)
       });
-    command.reply(`${user ? user.mention : possibleId} has been ${action}ned!`);
+    command.reply(i10010n() `${user ? user.mention : possibleId} has been ${action}ned!`);
   }
 
   /**
@@ -245,8 +246,8 @@ class moderationV2 {
    */
   getContent() {
     return {
-      name: "Moderation",
-      description: "Moderation commands including kick, ban, unban and purge",
+      name: i10010n() `Moderation`,
+      description: i10010n() `Moderation commands including kick, ban, unban and purge`,
       key: "moderation",
       permNode: "moderation",
       commands: this.getCommands(),
@@ -297,13 +298,13 @@ class moderationV2 {
             permissions: 0,
             hoist: false,
             mentionable: false,
-            reason: `Created in response to ${command.prefix}setupmute run by <@${command.author.id}>`,
+            reason: i10010n() `Created in response to ${command.prefix}setupmute run by <@${command.author.id}>`,
           });
         }
 
         this.configDB.set("muteRole", muteRole.id, { server: command.channel.guild.id });
 
-        command.replyAutoDeny(i10010n `Muted role created with name ${utils.clean(muteRole.name)}. Now attempting to deny sendMessage in all text channels and speaking in all voice channels.`);
+        command.replyAutoDeny(i10010n() `Muted role created with name ${utils.clean(muteRole.name)}. Now attempting to deny sendMessage in all text channels and speaking in all voice channels.`);
 
         let muteRoleCreationResults = command.channel.guild.channels.map(channel => {
           return channel.editPermission(muteRole.id, 0, channel.type === 0 ? Eris.Constants.Permissions.sendMessages : Eris.Constants.Permissions.voiceSpeak, "role", `Created in response to ${command.prefix}setupmute run by <@${command.author.id}> in order to make the muted role effective`);
@@ -311,9 +312,9 @@ class moderationV2 {
 
         return utils.resolveAllPromises(muteRoleCreationResults).then(() => {
           Promise.all(muteRoleCreationResults).then(() => {
-            return command.replyAutoDeny(i10010n `Denied text and voice permissions for the ${utils.clean(muteRole.name)} role.`);
+            return command.replyAutoDeny(i10010n() `Denied text and voice permissions for the ${utils.clean(muteRole.name)} role.`);
           }).catch(() => {
-            return command.replyAutoDeny(i10010n `Failed to automatically deny permissions in all voice and text channels, please manually ensure the ${utils.clean(muteRole.name)} can only talk where you intend it to.`)
+            return command.replyAutoDeny(i10010n() `Failed to automatically deny permissions in all voice and text channels, please manually ensure the ${utils.clean(muteRole.name)} can only talk where you intend it to.`)
           });
         })
       },
@@ -325,19 +326,19 @@ class moderationV2 {
         const member = command.targetUser;
 
         if (!member) {
-          command.replyAutoDeny(i10010n `Please target a user by adding --user <user mention or name>`);
+          command.replyAutoDeny(i10010n() `Please target a user by adding --user <user mention or name>`);
           return true;
         }
 
         // check to see if user has ban immunity
         if (this.perms.checkUserChannel(member, command.msg.channel, `moderation.immunity.mute`)) {
-          command.replyAutoDeny(i10010n `This user has the mute immunity permission \`moderation.immunity.mute\`, you may not mute them.`);
+          command.replyAutoDeny(i10010n() `This user has the mute immunity permission \`moderation.immunity.mute\`, you may not mute them.`);
           return true;
         }
 
         let muteRoleID = this.configDB.get("muteRole", false, { server: command.channel.guild.id });
         if (!muteRoleID) {
-          command.replyAutoDeny(i10010n `mute role not defined, try using ${command.prefix}setupmute to set it up.`)
+          command.replyAutoDeny(i10010n() `mute role not defined, try using ${command.prefix}setupmute to set it up.`)
         }
         console.log(muteRoleID);
         let newRoles = member.roles.slice(0);
@@ -357,9 +358,9 @@ class moderationV2 {
               },
             };
             this.taskQueue.schedule(task, `in ${command.options.unmute}`);
-            command.replyAutoDeny(i10010n `${member.mention} muted till ${command.options.unmute}${command.options.reason ? ` with reason \`${utils.clean(command.options.reason)}\`` : ""}.`);
+            command.replyAutoDeny(i10010n() `${member.mention} muted till ${command.options.unmute}${command.options.reason ? ` with reason \`${utils.clean(command.options.reason)}\`` : ""}.`);
           } else {
-            command.replyAutoDeny(i10010n `${member.mention} muted forever${command.options.reason ? ` with reason \`${utils.clean(command.options.reason)}\`` : ""}.`);
+            command.replyAutoDeny(i10010n() `${member.mention} muted forever${command.options.reason ? ` with reason \`${utils.clean(command.options.reason)}\`` : ""}.`);
           }
         });
       },
@@ -375,7 +376,7 @@ class moderationV2 {
           if (user) {
             options.user = user;
           } else {
-            command.reply("Cannot find that user.")
+            command.reply(i10010n() `Cannot find that user.`)
           }
         }
         if (!isNaN(command.options.before)) {
@@ -446,7 +447,7 @@ class moderationV2 {
                 errorMessage = error.response;
                 done = true;
                 purgeQueue = [];
-                updateStatus(i10010n `\`\`\`xl\ndiscord permission Manage Messages required to purge messages.\`\`\``);
+                updateStatus(i10010n() `\`\`\`xl\ndiscord permission Manage Messages required to purge messages.\`\`\``);
               } else if (responseCode === 429) {
                 purgeQueue = purgeQueue.concat(messagesToPurge);
               } else {
@@ -491,7 +492,7 @@ class moderationV2 {
       channels: ["guild"],
       execute: command => {
         if (command.args.length < 1 || !["delete", "mute", "ban", "off"].includes(command.args[0].toLowerCase())) {
-          return command.replyAutoDeny(i10010n `Choose an action \`${command.prefix}killioscrash <delete|mute|ban|off>\` note that if \`setupmute has not been run the user will be banned instead of muted.`)
+          return command.replyAutoDeny(i10010n() `Choose an action \`${command.prefix}killioscrash <delete|mute|ban|off>\` note that if \`setupmute has not been run the user will be banned instead of muted.`)
         }
         const lArg = command.args[0].toLowerCase();
 
@@ -502,7 +503,7 @@ class moderationV2 {
           mode = lArg;
         }
         this.configDB.set("killioscrash", mode, { server: command.channel.guild.id });
-        command.replyAutoDeny(i10010n `Action saved, ios users saved.`)
+        command.replyAutoDeny(i10010n() `Action saved, ios users saved.`)
       },
     }];
   }
@@ -517,7 +518,7 @@ class moderationV2 {
       message.delete("Crashing iOS users").catch(error => {
         console.log(error);
         if (error.code === EE.DISCORD_RESPONSE_MISSING_PERMISSIONS) {
-          message.channel.createMessage(i10010n `Could not delete message due to lack of permissions`);
+          message.channel.createMessage(i10010n() `Could not delete message due to lack of permissions`);
         } else {
           throw error;
         }
@@ -546,20 +547,20 @@ class moderationV2 {
 
             console.log("newRoles", newRoles);
 
-            this.memberMuted(message.channel.guild, member, this.client.user, i10010n `Trying to crash ios users`, null);
+            this.memberMuted(message.channel.guild, member, this.client.user, i10010n() `Trying to crash ios users`, null);
 
-            return message.channel.guild.editMember(member.id, { roles: newRoles }, i10010n `Member muted by <@${this.client.user.id}> with reason trying to crash ios users`)
+            return message.channel.guild.editMember(member.id, { roles: newRoles }, i10010n() `Member muted by <@${this.client.user.id}> with reason trying to crash ios users`)
           }
         case "ban":
           del(message);
-          return message.member.ban(1, i10010n `Trying to crash ios users`);
+          return message.member.ban(1, i10010n() `Trying to crash ios users`);
       }
     }
   }
 
   getStatus(totalPurged, totalFetched, total, oldMessagesFound) {
-    return i10010n `\`\`\`xl\nStatus:\nPurged: ${getBar(totalPurged, totalFetched, 16)}\nFetched:${getBar(totalFetched, total, 16)}` +
-      (oldMessagesFound ? i10010n `\nMessages older than two weeks cannot be purged due to it breaking discord.` : "") + "\n\`\`\`";
+    return i10010n() `\`\`\`xl\nStatus:\nPurged: ${getBar(totalPurged, totalFetched, 16)}\nFetched:${getBar(totalFetched, total, 16)}` +
+      (oldMessagesFound ? i10010n() `\nMessages older than two weeks cannot be purged due to it breaking discord.` : "") + "\n\`\`\`";
   }
 
   updateServerIgnores(count, serverId) {
@@ -692,35 +693,35 @@ class moderationV2 {
     //grab url's to the message's attachments
     let fields = [];
     let attachment = {
-      title: i10010n `Bulk Delete`,
+      title: i10010n() `Bulk Delete`,
       fields,
     };
     if (message.channel) {
       fields.push({
-        title: i10010n `Channel`,
+        title: i10010n() `Channel`,
         value: message.channel.mention,
         short: true,
       })
     }
     fields.push({
-      title: i10010n `Cached`,
+      title: i10010n() `Cached`,
       value: `${cached.length}`,
       short: true,
     });
     fields.push({
-      title: i10010n `Not Cached`,
+      title: i10010n() `Not Cached`,
       value: `${messages.length - cached.length}`,
       short: true,
     });
     fields.push({
-      title: i10010n `Total Messages`,
+      title: i10010n() `Total Messages`,
       value: `${messages.length}`,
       short: true,
     });
     if (channelIgnored) {
       fields.push({
-        title: i10010n `Purge with don't log`,
-        value: i10010n `The purge command was used with the don't log flag, and therefore cached messages are not being logged.`,
+        title: i10010n() `Purge with don't log`,
+        value: i10010n() `The purge command was used with the don't log flag, and therefore cached messages are not being logged.`,
         short: true,
       });
     }
@@ -741,7 +742,7 @@ class moderationV2 {
     let options = {};
     let fields = [];
     let attachment = {
-      title: i10010n `Message Deleted`,
+      title: i10010n() `Message Deleted`,
       fields,
     };
     if (message.member) {
@@ -749,28 +750,28 @@ class moderationV2 {
     }
     if (message.id) {
       fields.push({
-        title: i10010n `Age`,
+        title: i10010n() `Age`,
         value: utils.idToUTCString(message.id),
         short: true,
       })
     }
     if (message.channel) {
       fields.push({
-        title: i10010n `Channel`,
+        title: i10010n() `Channel`,
         value: message.channel.mention,
         short: true,
       })
     }
     if (message.author) {
       fields.push({
-        title: i10010n `User`,
+        title: i10010n() `User`,
         value: message.author.mention,
         short: true,
       })
     }
     if (message.content) {
       let field = {
-        title: i10010n `Content`,
+        title: i10010n() `Content`,
         short: true,
       };
       if (message.content) {
@@ -784,7 +785,7 @@ class moderationV2 {
     }
     if (message.id) {
       fields.push({
-        title: i10010n `ID`,
+        title: i10010n() `ID`,
         value: message.id,
         short: true,
       })
@@ -794,7 +795,7 @@ class moderationV2 {
       for (let i in message.attachments) {
         if (message.attachments.hasOwnProperty(i)) {
           fields.push({
-            title: i10010n `Attachment`,
+            title: i10010n() `Attachment`,
             value: message.attachments[i].proxy_url,
             short: true,
           });
@@ -813,7 +814,7 @@ class moderationV2 {
     let options = {};
     let fields = [];
     let attachment = {
-      title: i10010n `Message Updated`,
+      title: i10010n() `Message Updated`,
       fields,
     };
     if (message.member) {
@@ -828,32 +829,32 @@ class moderationV2 {
         return;
       }
     } else {
-      content = i10010n `**Uncached** to ${utils.bubble(message.content)}`;
+      content = i10010n() `**Uncached** to ${utils.bubble(message.content)}`;
     }
     if (message.id) {
       fields.push({
-        title: i10010n `Age`,
+        title: i10010n() `Age`,
         value: utils.idToUTCString(message.id),
         short: true,
       })
     }
     if (message.channel) {
       fields.push({
-        title: i10010n `Channel`,
+        title: i10010n() `Channel`,
         value: message.channel.mention,
         short: true,
       })
     }
     if (message.author) {
       fields.push({
-        title: i10010n `User`,
+        title: i10010n() `User`,
         value: message.author.mention,
         short: true,
       })
     }
     if (content) {
       let field = {
-        title: i10010n `Content`,
+        title: i10010n() `Content`,
         value: content,
         short: true,
       };
@@ -864,7 +865,7 @@ class moderationV2 {
       for (let i in message.attachments) {
         if (message.attachments.hasOwnProperty(i)) {
           fields.push({
-            title: i10010n `Attachment`,
+            title: i10010n() `Attachment`,
             value: message.attachments[i].proxy_url,
             short: true,
           });
@@ -878,23 +879,23 @@ class moderationV2 {
   channelDeleted(channel) {
     if (!channel.guild) return;
     let fields = [{
-      title: i10010n `Name`,
+      title: i10010n() `Name`,
       value: channel.name,
       short: true,
     }, {
-      title: i10010n `Age`,
+      title: i10010n() `Age`,
       value: utils.idToUTCString(channel.id),
       short: true,
     }];
     if (channel.topic) {
       fields.push({
-        title: i10010n `Topic`,
+        title: i10010n() `Topic`,
         value: channel.topic,
         short: true,
       })
     }
     this.sendHookedMessage("channel.deleted", {}, {
-      title: i10010n `Channel Deleted`,
+      title: i10010n() `Channel Deleted`,
       fields,
     }, channel.guild.id);
   };
@@ -902,9 +903,9 @@ class moderationV2 {
   channelCreated(channel) {
     if (!channel.guild) return;
     this.sendHookedMessage("channel.created", {}, {
-      title: i10010n `Channel Created`,
+      title: i10010n() `Channel Created`,
       fields: [{
-        title: i10010n `Channel`,
+        title: i10010n() `Channel`,
         value: channel.mention,
         short: true,
       }],
@@ -915,25 +916,25 @@ class moderationV2 {
     if (!channel || this.perms.checkChannel(channel, "msglog.whitelist.channel.updated")) return;
 
     let fields = [{
-      title: i10010n `Channel`,
+      title: i10010n() `Channel`,
       value: channel.mention,
       short: true,
     }, {
-      title: i10010n `Age`,
+      title: i10010n() `Age`,
       value: utils.idToUTCString(channel.id),
       short: true,
     }];
     if (oldChannel.name != channel.name) {
       fields.push({
-        title: i10010n `Name changed`,
-        value: i10010n `${utils.removeBlocks(oldChannel.name)} **to** ${utils.removeBlocks(channel.name)}`,
+        title: i10010n() `Name changed`,
+        value: i10010n() `${utils.removeBlocks(oldChannel.name)} **to** ${utils.removeBlocks(channel.name)}`,
         short: true,
       })
     }
     if (oldChannel.topic != channel.topic) {
       fields.push({
-        title: i10010n `Topic changed`,
-        value: i10010n `${utils.removeBlocks(oldChannel.topic)} **to** ${utils.removeBlocks(channel.topic)}`,
+        title: i10010n() `Topic changed`,
+        value: i10010n() `${utils.removeBlocks(oldChannel.topic)} **to** ${utils.removeBlocks(channel.topic)}`,
         short: true,
       });
     }
@@ -944,17 +945,17 @@ class moderationV2 {
       let newField = { short: true, value: "" };
       fields.push(newField);
       if (change.overwrite.type === "member") {
-        newField.title = i10010n `User Overwrite`;
+        newField.title = i10010n() `User Overwrite`;
         newField.value = `<@${change.overwrite.id}>`;
       }
       if (change.overwrite.type === "role") {
-        newField.title = i10010n `Role Overwrite`;
+        newField.title = i10010n() `Role Overwrite`;
         newField.value = `<@&${change.overwrite.id}>`;
       }
       if (change.change === "add") {
-        newField.value += i10010n ` added ${permissionsListFromNumber(change.overwrite)}`;
+        newField.value += i10010n() ` added ${permissionsListFromNumber(change.overwrite)}`;
       } else if (change.change === "remove") {
-        newField.value += i10010n ` removed ${permissionsListFromNumber(change.overwrite)}`;
+        newField.value += i10010n() ` removed ${permissionsListFromNumber(change.overwrite)}`;
       }
       else {
         let before = change.from;
@@ -962,45 +963,45 @@ class moderationV2 {
 
         if (before.allow !== after.allow) {
           if (before.allow > after.allow) {
-            newField.value += i10010n ` Add allow ${permissionsListFromNumber(before.allow - after.allow)}`;
+            newField.value += i10010n() ` Add allow ${permissionsListFromNumber(before.allow - after.allow)}`;
           } else {
-            newField.value += i10010n ` Remove allow ${permissionsListFromNumber(after.allow - before.allow)}`;
+            newField.value += i10010n() ` Remove allow ${permissionsListFromNumber(after.allow - before.allow)}`;
           }
         }
 
         if (before.deny !== after.deny) {
           if (before.deny > after.deny) {
-            newField.value += i10010n ` Add deny ${permissionsListFromNumber(before.deny - after.deny)}`;
+            newField.value += i10010n() ` Add deny ${permissionsListFromNumber(before.deny - after.deny)}`;
           } else {
-            newField.value += i10010n ` Remove deny ${permissionsListFromNumber(after.deny - before.deny)}`;
+            newField.value += i10010n() ` Remove deny ${permissionsListFromNumber(after.deny - before.deny)}`;
           }
         }
       }
     }
     if (fields.length > 2) {
-      this.sendHookedMessage("channel.updated", {}, { title: i10010n `Channel Updated`, fields }, channel.guild.id);
+      this.sendHookedMessage("channel.updated", {}, { title: i10010n() `Channel Updated`, fields }, channel.guild.id);
     }
   };
 
   userUpdate(user, oldUser) {
     if (!oldUser) return;
     let fields = [{
-      title: i10010n `User`,
+      title: i10010n() `User`,
       value: user.mention,
       short: true,
     }];
-    let embed = { title: i10010n `Member Updated`, fields };
+    let embed = { title: i10010n() `Member Updated`, fields };
     if (oldUser.username !== user.username) {
       fields.push({
-        title: i10010n `Username`,
-        value: i10010n `${utils.clean(oldUser.username)} to ${utils.clean(user.username)}`,
+        title: i10010n() `Username`,
+        value: i10010n() `${utils.clean(oldUser.username)} to ${utils.clean(user.username)}`,
         short: true,
       });
     }
     if (oldUser.discriminator !== user.discriminator) {
       fields.push({
-        title: i10010n `Discriminator`,
-        value: i10010n `${oldUser.discriminator} to ${user.discriminator}`,
+        title: i10010n() `Discriminator`,
+        value: i10010n() `${oldUser.discriminator} to ${user.discriminator}`,
         short: true,
       });
     }
@@ -1010,8 +1011,8 @@ class moderationV2 {
         oldURL = `https://cdn.discordapp.com/avatars/${user.id}/${oldUser.avatar}.${oldUser.avatar.startsWith("_a") ? "gif" : "png"}?size=128`;
       }
       fields.push({
-        title: i10010n `Avatar`,
-        value: i10010n `${oldURL || "Default"} to ${user.avatarURL}`,
+        title: i10010n() `Avatar`,
+        value: i10010n() `${oldURL || "Default"} to ${user.avatarURL}`,
         short: true,
       });
       embed.image_url = user.avatarURL;
@@ -1030,8 +1031,8 @@ class moderationV2 {
 
   roleCreated(guild, role) {
     this.sendHookedMessage("role.created", {}, {
-      title: i10010n `Role Created`, fields: [{
-        title: i10010n `Role`,
+      title: i10010n() `Role Created`, fields: [{
+        title: i10010n() `Role`,
         value: role.mention,
         short: true,
       }],
@@ -1040,16 +1041,16 @@ class moderationV2 {
 
   roleDeleted(guild, role) {
     this.sendHookedMessage("role.deleted", {}, {
-      title: i10010n `Role Deleted`, fields: [{
-        title: i10010n `Role`,
+      title: i10010n() `Role Deleted`, fields: [{
+        title: i10010n() `Role`,
         value: role.mention,
         short: true,
       }, {
-        title: i10010n `Name`,
+        title: i10010n() `Name`,
         value: role.name,
         short: true,
       }, {
-        title: i10010n `Created`,
+        title: i10010n() `Created`,
         value: utils.idToUTCString(role.id),
         short: true,
       }],
@@ -1058,11 +1059,11 @@ class moderationV2 {
 
   roleUpdated(guild, role, oldRole) {
     let fields = [{
-      title: i10010n `Role`,
+      title: i10010n() `Role`,
       value: role.mention,
       short: true,
     }, {
-      title: i10010n `Created`,
+      title: i10010n() `Created`,
       value: utils.idToUTCString(role.id),
       short: true,
     }];
@@ -1070,41 +1071,41 @@ class moderationV2 {
     let newPerms = arrayOfTrues(role.permissions.json).toString();
     if (oldPerms !== newPerms) {
       fields.push({
-        title: i10010n `Permissions`,
-        value: i10010n `${oldPerms} to ${newPerms}`,
+        title: i10010n() `Permissions`,
+        value: i10010n() `${oldPerms} to ${newPerms}`,
         short: true,
       });
     }
     if (oldRole.name !== role.name) {
       fields.push({
-        title: i10010n `Name Changed`,
-        value: i10010n `${utils.clean(oldRole.name)} to ${utils.clean(role.name)}`,
+        title: i10010n() `Name Changed`,
+        value: i10010n() `${utils.clean(oldRole.name)} to ${utils.clean(role.name)}`,
         short: true,
       });
     }
     if (oldRole.position !== role.position) {
       fields.push({
-        title: i10010n `Position Changed`,
-        value: i10010n `${oldRole.position} to ${role.position}`,
+        title: i10010n() `Position Changed`,
+        value: i10010n() `${oldRole.position} to ${role.position}`,
         short: true,
       });
     }
     if (oldRole.hoist !== role.hoist) {
       fields.push({
-        title: i10010n `Display separately`,
-        value: i10010n `${oldRole.hoist} to ${role.hoist}`,
+        title: i10010n() `Display separately`,
+        value: i10010n() `${oldRole.hoist} to ${role.hoist}`,
         short: true,
       });
     }
     if (oldRole.color !== role.color) {
       fields.push({
-        title: i10010n `Color`,
-        value: i10010n `${oldRole.color} to ${role.color}`,
+        title: i10010n() `Color`,
+        value: i10010n() `${oldRole.color} to ${role.color}`,
         short: true,
       });
     }
     if (fields.length < 3) return;
-    this.sendHookedMessage("role.updated", {}, { title: i10010n `Role Updated`, fields }, guild.id)
+    this.sendHookedMessage("role.updated", {}, { title: i10010n() `Role Updated`, fields }, guild.id)
   };
 
   /**
@@ -1119,7 +1120,7 @@ class moderationV2 {
     const node = instigator ? "moderation.action.ban" : "member.banned";
 
     const fields = [{
-      title: i10010n `User`,
+      title: i10010n() `User`,
       value: typeof user === "string" ? `<@${user}>` : user.mention,
       short: true,
     }];
@@ -1134,7 +1135,7 @@ class moderationV2 {
 
     if (instigator) {
       fields.push({
-        title: i10010n `Responsible Moderator`,
+        title: i10010n() `Responsible Moderator`,
         value: instigator.mention,
         short: true,
       })
@@ -1142,7 +1143,7 @@ class moderationV2 {
 
     if (reason) {
       fields.push({
-        title: i10010n `Reason`,
+        title: i10010n() `Reason`,
         value: utils.clean(reason),
         short: true,
       })
@@ -1150,14 +1151,14 @@ class moderationV2 {
 
     if (error) {
       fields.push({
-        title: i10010n `Failed due to`,
+        title: i10010n() `Failed due to`,
         value: utils.clean(error.toString()).slice(0, 250),
         short: true,
       })
     }
 
     this.sendHookedMessage(node, { user }, {
-      title: i10010n `User Banned`,
+      title: i10010n() `User Banned`,
       fields,
     }, server.id);
   };
@@ -1174,7 +1175,7 @@ class moderationV2 {
     const node = instigator ? "moderation.action.mute" : "member.mute";
 
     const fields = [{
-      title: i10010n `User`,
+      title: i10010n() `User`,
       value: typeof user === "string" ? `<@${user}>` : user.mention,
       short: true,
     }];
@@ -1189,7 +1190,7 @@ class moderationV2 {
 
     if (instigator) {
       fields.push({
-        title: i10010n `Responsible Moderator`,
+        title: i10010n() `Responsible Moderator`,
         value: instigator.mention,
         short: true,
       })
@@ -1197,7 +1198,7 @@ class moderationV2 {
 
     if (reason) {
       fields.push({
-        title: i10010n `Reason`,
+        title: i10010n() `Reason`,
         value: utils.clean(reason),
         short: true,
       })
@@ -1205,14 +1206,14 @@ class moderationV2 {
 
     if (error) {
       fields.push({
-        title: i10010n `Failed due to`,
+        title: i10010n() `Failed due to`,
         value: utils.clean(error.toString()).slice(0, 250),
         short: true,
       })
     }
 
     this.sendHookedMessage(node, { user }, {
-      title: i10010n `User Muted`,
+      title: i10010n() `User Muted`,
       fields,
     }, server.id);
   };
@@ -1227,14 +1228,14 @@ class moderationV2 {
    */
   memberUnbanned(server, user, instigator, reason, error) {
     let fields = [{
-      title: i10010n `User`,
+      title: i10010n() `User`,
       value: typeof user === "string" ? `<@${user}>` : user.mention,
       short: true,
     }];
 
     if (instigator) {
       fields.push({
-        title: i10010n `Responsible Moderator`,
+        title: i10010n() `Responsible Moderator`,
         value: instigator.mention,
         short: true,
       })
@@ -1242,7 +1243,7 @@ class moderationV2 {
 
     if (reason) {
       fields.push({
-        title: i10010n `Reason`,
+        title: i10010n() `Reason`,
         value: utils.clean(reason),
         short: true,
       })
@@ -1250,22 +1251,22 @@ class moderationV2 {
 
     if (error) {
       fields.push({
-        title: i10010n `Failed due to`,
+        title: i10010n() `Failed due to`,
         value: utils.clean(error.toString()).slice(0, 250),
         short: true,
       })
     }
 
     this.sendHookedMessage(instigator ? "moderation.action.unban" : "member.unbanned", { user }, {
-      title: i10010n `User Unbanned`,
+      title: i10010n() `User Unbanned`,
       fields,
     }, server.id);
   };
 
   memberAdded(server, user) {
     this.sendHookedMessage("member.added", { user }, {
-      title: i10010n `User Joined`, fields: [{
-        title: i10010n `User`,
+      title: i10010n() `User Joined`, fields: [{
+        title: i10010n() `User`,
         value: user.mention,
         short: true,
       }],
@@ -1282,14 +1283,14 @@ class moderationV2 {
    */
   memberRemoved(server, user, instigator, reason, error) {
     let fields = [{
-      title: i10010n `User`,
+      title: i10010n() `User`,
       value: typeof user === "string" ? `<@${user}>` : user.mention,
       short: true,
     }];
 
     if (typeof user !== "string") {
       fields.push({
-        title: i10010n `Username`,
+        title: i10010n() `Username`,
         value: user.username,
         short: true,
       })
@@ -1297,7 +1298,7 @@ class moderationV2 {
 
     if (instigator) {
       fields.push({
-        title: i10010n `Responsible Moderator`,
+        title: i10010n() `Responsible Moderator`,
         value: instigator.mention,
         short: true,
       })
@@ -1305,7 +1306,7 @@ class moderationV2 {
 
     if (reason) {
       fields.push({
-        title: i10010n `Reason`,
+        title: i10010n() `Reason`,
         value: utils.clean(reason),
         short: true,
       })
@@ -1313,14 +1314,14 @@ class moderationV2 {
 
     if (error) {
       fields.push({
-        title: i10010n `Failed due to`,
+        title: i10010n() `Failed due to`,
         value: utils.clean(error.toString()).slice(0, 250),
         short: true,
       })
     }
 
     this.sendHookedMessage(instigator ? "moderation.action.kick" : "member.removed", { user }, {
-      title: i10010n `User Left or was Kicked`,
+      title: i10010n() `User Left or was Kicked`,
       fields,
     }, server.id);
   }
@@ -1329,29 +1330,29 @@ class moderationV2 {
     if (this.perms.checkUserGuild(member, guild, "msglog.whitelist.member.updated")) return;
     if (!oldMember) return;
     let fields = [{
-      title: i10010n `User`,
+      title: i10010n() `User`,
       value: member.mention,
       short: true,
     }];
     if (oldMember.nick != member.nick) {
       fields.push({
-        title: i10010n `Nick`,
-        value: i10010n `${utils.clean(oldMember.nick)} to ${utils.clean(member.nick)}`,
+        title: i10010n() `Nick`,
+        value: i10010n() `${utils.clean(oldMember.nick)} to ${utils.clean(member.nick)}`,
         short: true,
       });
     }
     if (oldMember.voiceState) { // eris does not currently supply previous voice states. This will probably be added in the future.
       if (oldMember.voiceState.mute != member.voiceState.mute) {
         fields.push({
-          title: i10010n `Muted`,
-          value: i10010n `${oldMember.voiceState.mute} to ${member.voiceState.mute}`,
+          title: i10010n() `Muted`,
+          value: i10010n() `${oldMember.voiceState.mute} to ${member.voiceState.mute}`,
           short: true,
         });
       }
       if (oldMember.voiceState.deaf != member.voiceState.deaf) {
         fields.push({
-          title: i10010n `Death`,
-          value: i10010n `${oldMember.voiceState.deaf} to ${member.voiceState.deaf}`,
+          title: i10010n() `Death`,
+          value: i10010n() `${oldMember.voiceState.deaf} to ${member.voiceState.deaf}`,
           short: true,
         });
       }
@@ -1359,7 +1360,7 @@ class moderationV2 {
     if (oldMember.roles.length < member.roles.length) {
       let newRole = findNewRoles(member.roles, oldMember.roles);
       fields.push({
-        title: i10010n `Role Added`,
+        title: i10010n() `Role Added`,
         value: `<@&${newRole}>`,
         short: true,
       });
@@ -1367,24 +1368,24 @@ class moderationV2 {
     else if (oldMember.roles.length > member.roles.length) {
       let oldRole = findNewRoles(oldMember.roles, member.roles);
       fields.push({
-        title: i10010n `Role Removed`,
+        title: i10010n() `Role Removed`,
         value: `<@&${oldRole}>`,
         short: true,
       });
     }
     if (fields.length < 2) return;
-    this.sendHookedMessage("member.updated", { user: member }, { title: i10010n `Member Updated`, fields }, guild.id);
+    this.sendHookedMessage("member.updated", { user: member }, { title: i10010n() `Member Updated`, fields }, guild.id);
   };
 
   voiceJoin(member, newChannel) {
     if (this.perms.checkUserChannel(member, newChannel, "msglog.whitelist.voice.join")) return;
     this.sendHookedMessage("voice.join", { user: member }, {
-      title: i10010n `Voice Join`, fields: [{
-        title: i10010n `User`,
+      title: i10010n() `Voice Join`, fields: [{
+        title: i10010n() `User`,
         value: member.mention,
         short: true,
       }, {
-        title: i10010n `Channel`,
+        title: i10010n() `Channel`,
         value: newChannel.mention,
         short: true,
       }],
@@ -1394,16 +1395,16 @@ class moderationV2 {
   voiceSwitch(member, newChannel, oldChannel) {
     if (this.perms.checkUserChannel(member, newChannel, "msglog.whitelist.voice.switch")) return;
     this.sendHookedMessage("voice.switch", { user: member }, {
-      title: i10010n `Voice Switch`, fields: [{
-        title: i10010n `User`,
+      title: i10010n() `Voice Switch`, fields: [{
+        title: i10010n() `User`,
         value: member.mention,
         short: true,
       }, {
-        title: i10010n `Old Channel`,
+        title: i10010n() `Old Channel`,
         value: oldChannel.mention,
         short: true,
       }, {
-        title: i10010n `New Channel`,
+        title: i10010n() `New Channel`,
         value: newChannel.mention,
         short: true,
       }],
@@ -1413,12 +1414,12 @@ class moderationV2 {
   voiceLeave(member, oldChannel) {
     if (this.perms.checkUserChannel(member, oldChannel, "msglog.whitelist.voice.leave")) return;
     this.sendHookedMessage("voice.leave", { user: member }, {
-      title: i10010n `Voice Leave`, fields: [{
-        title: i10010n `User`,
+      title: i10010n() `Voice Leave`, fields: [{
+        title: i10010n() `User`,
         value: member.mention,
         short: true,
       }, {
-        title: i10010n `Channel`,
+        title: i10010n() `Channel`,
         value: oldChannel.mention,
         short: true,
       }],
