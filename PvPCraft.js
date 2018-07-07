@@ -45,7 +45,7 @@ for (let thing in Eris) {
     }
   }
 }
-const i10010n = require("i10010n").init({});
+const i10010n = require("i10010n");
 const TaskQueue = require("./lib/TaskQueue");
 const MessageSender = require("./lib/MessageSender");
 const Permissions = require("./lib/Permissions.js");
@@ -245,6 +245,10 @@ class PvPCraft {
 
   resolveWhenReady() {
     return this.readyPromise;
+  }
+
+  readyI10010n() {
+    this.i10010n = i10010n.init({});
   }
 
   readyPvPClient() {
@@ -644,6 +648,7 @@ class PvPCraft {
       modules: this.moduleList,
       middleWares: this.middlewareList,
       taskQueue: this.taskQueue,
+      i10010n: this.i10010n,
     };
   }
 
