@@ -3,7 +3,6 @@
  */
 
 let StandardDB = require('../lib/StandardDB');
-const i10010n = require("i10010n").init({});
 
 let chessClient = require('chess');
 
@@ -128,10 +127,12 @@ class chess {
    * @param {MessageSender} e.messageSender Instantiated message sender
    * @param {SlowSender} e.slowSender Instantiated slow sender
    * @param {PvPClient} e.pvpClient PvPCraft client library instance
+   * @param {Function} e.i10010n internationalization function
    */
   constructor(e) {
     this.client = e.client;
     this.raven = e.raven;
+    this.i10010n = e.i10010n;
     this.r = e.r;
     this.perms = e.perms;
     this.games = {};
@@ -180,12 +181,12 @@ class chess {
       channels: ["*"],
       execute: (command) => {
         if (this.games.hasOwnProperty(command.channel.id)) {
-          command.replyAutoDeny(i10010n() `Sorry, game already in progress`);
+          command.replyAutoDeny(this.i10010n() `Sorry, game already in progress`);
           return true;
         }
         this.games[command.channel.id] = chessClient.create();
         this.turns[command.channel.id] = "white";
-        command.replyAutoDeny(i10010n() `Game started`);
+        command.replyAutoDeny(this.i10010n() `Game started`);
         //r.table(table).insert({})
       },
     }, {
@@ -196,11 +197,11 @@ class chess {
       usage: "move <move in [algebraic chess notation](https://truckersection.com/guide-to-algebraic-chess-notation/)>",
       execute: (command) => {
         if (!this.games.hasOwnProperty(command.channel.id)) {
-          command.replyAutoDeny(i10010n() `Sorry, no game in progress`);
+          command.replyAutoDeny(this.i10010n() `Sorry, no game in progress`);
           return true;
         }
         if (command.args.length < 1) {
-          command.replyAutoDeny(i10010n() `usage \`${command.prefix}move <move in Algebraic Chess Notation>\``);
+          command.replyAutoDeny(this.i10010n() `usage \`${command.prefix}move <move in Algebraic Chess Notation>\``);
           return true;
         }
         try {
@@ -237,12 +238,12 @@ class chess {
       channels: ["*"],
       execute: (command) => {
         if (!this.games.hasOwnProperty(command.channel.id)) {
-          command.replyAutoDeny(i10010n() `Sorry, game is not in progress`);
+          command.replyAutoDeny(this.i10010n() `Sorry, game is not in progress`);
           return true;
         }
         delete this.games[command.channel.id];
         delete this.turns[command.channel.id];
-        return command.replyAutoDeny(i10010n() `Game ended`);
+        return command.replyAutoDeny(this.i10010n() `Game ended`);
       },
     }];
   }

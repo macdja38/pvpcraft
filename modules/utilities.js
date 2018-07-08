@@ -5,7 +5,6 @@
 
 const utils = require('../lib/utils');
 const now = require('performance-now');
-const i10010n = require("i10010n").init({});
 
 const os = require('os');
 const numCPUs = os.cpus().length;
@@ -26,12 +25,14 @@ class utilities {
    * @param {MessageSender} e.messageSender Instantiated message sender
    * @param {SlowSender} e.slowSender Instantiated slow sender
    * @param {PvPClient} e.pvpClient PvPCraft client library instance
+   * @param {Function} e.i10010n internationalization function
    */
   constructor(e) {
     this.git = e.git;
     this.perms = e.perms;
     this.client = e.client;
     this.config = e.config;
+    this.i10010n = e.i10010n;
   }
 
   /**
@@ -98,20 +99,20 @@ class utilities {
             let comaUserNameCodes = [...member.username].map(char => char.charCodeAt(0)).join(", ");
             command.createMessageAutoDeny({
               embed: {
-                title: i10010n() `User Info for ${utils.clean(member.username)}`,
-                description: i10010n() `Char Codes: ${comaUserNameCodes}\n` +
-                ((member.nick) ? i10010n() `Nick: ${utils.clean(member.nick)}\n` : "") +
+                title: this.i10010n() `User Info for ${utils.clean(member.username)}`,
+                description: this.i10010n() `Char Codes: ${comaUserNameCodes}\n` +
+                ((member.nick) ? this.i10010n() `Nick: ${utils.clean(member.nick)}\n` : "") +
                 `Id: ${member.id}\n` +
-                i10010n() `Descrim: ${member.discriminator}\n` +
-                i10010n() `Created: ${new Date(member.createdAt).toUTCString()}\n` +
-                i10010n() `Joined: ${new Date(member.joinedAt).toUTCString()}\n` +
-                i10010n() `Avatar URL: ${member.avatarURL}\n`,
+                this.i10010n() `Descrim: ${member.discriminator}\n` +
+                this.i10010n() `Created: ${new Date(member.createdAt).toUTCString()}\n` +
+                this.i10010n() `Joined: ${new Date(member.joinedAt).toUTCString()}\n` +
+                this.i10010n() `Avatar URL: ${member.avatarURL}\n`,
                 thumbnail: {url: member.avatarURL},
               },
             });
           }
           else {
-            string += i10010n() `Could not find **${utils.clean(arg)}**.
+            string += this.i10010n() `Could not find **${utils.clean(arg)}**.
 `;
           }
         }
@@ -146,13 +147,13 @@ class utilities {
       execute: command => {
         command.createMessageAutoDeny({
           embed: {
-            title: i10010n() `Status info`,
-            description: i10010n() `\`\`\`xl\nShard: ${process.env.id}/${process.env.shards}\n` +
-            i10010n() `CPU: ${os.loadavg()[0] / numCPUs * 100}%\n` +
-            i10010n() `LoadAverage ${os.loadavg()}\n` +
-            i10010n() `Memory usage: ${process.memoryUsage().heapTotal / 1000000}MB\n` +
+            title: this.i10010n() `Status info`,
+            description: this.i10010n() `\`\`\`xl\nShard: ${process.env.id}/${process.env.shards}\n` +
+            this.i10010n() `CPU: ${os.loadavg()[0] / numCPUs * 100}%\n` +
+            this.i10010n() `LoadAverage ${os.loadavg()}\n` +
+            this.i10010n() `Memory usage: ${process.memoryUsage().heapTotal / 1000000}MB\n` +
             `RSS: ${process.memoryUsage().rss / 1000000}MB\n\`\`\`` +
-            i10010n() `Version: [current](https://github.com/macdja38/pvpcraft/commit/${this.git.commit}), [outdated by](https://github.com/macdja38/pvpcraft/compare/${this.git.commit}...${this.git.branch})`,
+            this.i10010n() `Version: [current](https://github.com/macdja38/pvpcraft/commit/${this.git.commit}), [outdated by](https://github.com/macdja38/pvpcraft/compare/${this.git.commit}...${this.git.branch})`,
             thumbnail: {url: this.client.user.avatarURL},
           },
         });

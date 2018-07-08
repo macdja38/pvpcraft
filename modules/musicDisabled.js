@@ -3,8 +3,6 @@
  */
 "use strict";
 
-const i10010n = require("i10010n").init({});
-
 class music {
   /**
    * Instantiates the module
@@ -21,9 +19,11 @@ class music {
    * @param {MessageSender} e.messageSender Instantiated message sender
    * @param {SlowSender} e.slowSender Instantiated slow sender
    * @param {PvPClient} e.pvpClient PvPCraft client library instance
+   * @param {Function} e.i10010n internationalization function
    */
   constructor(e) {
     this.perms = e.perms;
+    this.i10010n = e.i10010n;
   }
 
   /**
@@ -36,7 +36,7 @@ class music {
       permissionCheck: (command) => this.perms.check(command, `music.${command.command}`),
       channels: ["guild"],
       execute: command => {
-        return command.replyAutoDeny(i10010n() `Sorry music is currently disabled at the moment, please join https://join.pvpcraft.ca and check the #announcements chat for info on why and status updates`);
+        return command.replyAutoDeny(this.i10010n() `Sorry music is currently disabled at the moment, please join https://join.pvpcraft.ca and check the #announcements chat for info on why and status updates`);
       },
     }];
   }

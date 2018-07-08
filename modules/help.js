@@ -3,8 +3,6 @@
  */
 "use strict";
 
-const i10010n = require("i10010n").init({});
-
 class help {
   /**
    * Instantiates the module
@@ -21,10 +19,12 @@ class help {
    * @param {MessageSender} e.messageSender Instantiated message sender
    * @param {SlowSender} e.slowSender Instantiated slow sender
    * @param {PvPClient} e.pvpClient PvPCraft client library instance
+   * @param {Function} e.i10010n internationalization function
    */
   constructor(e) {
     this.client = e.client;
     this.raven = e.raven;
+    this.i10010n = e.i10010n;
   }
 
   /**
@@ -53,7 +53,7 @@ class help {
       permissionCheck: command => true,
       channels: ["*"],
       execute: command => {
-        command.reply(i10010n() `Help can be found at https://bot.pvpcraft.ca/docs`);
+        command.reply(this.i10010n() `Help can be found at https://bot.pvpcraft.ca/docs`);
         return true;
       },
     }];

@@ -4,7 +4,6 @@
 "use strict";
 
 let colors = require('colors');
-const i10010n = require("i10010n").init({});
 
 let request = require('request-promise-native');
 
@@ -42,6 +41,7 @@ class evaluate {
    * @param {PvPClient} e.pvpClient PvPCraft client library instance
    * @param {Array} e.modules Array of modules
    * @param {pvpcraft} e.pvpcraft Instance of pvpcraft
+   * @param {Function} e.i10010n internationalization function
    */
   constructor(e) {
     this.e = e;
@@ -55,6 +55,7 @@ class evaluate {
     this.messageSender = e.messageSender;
     this.fileConfig = e.config;
     this.slowSender = new SlowSender(e);
+    this.i10010n = e.i10010n;
   }
 
   static getCommands() {
@@ -108,13 +109,13 @@ class evaluate {
         }
         switch (command.args[0].toLowerCase()) {
           case "reconnect": {
-            command.reply(i10010n() `Initiating reconnect.`);
+            command.reply(this.i10010n() `Initiating reconnect.`);
             let packed = packer({op: 7});
             this.client.shards.random().ws.onmessage({data: packed});
             break;
           }
           case "resume": {
-            command.reply(i10010n() `Initiating resume sequence`);
+            command.reply(this.i10010n() `Initiating resume sequence`);
             this.client.shards.random().ws.onclose({code: 1006, reason: "testing", wasClean: true});
             break;
           }
@@ -131,13 +132,13 @@ class evaluate {
           encoding: null,
         }).then((image) => {
           this.client.editSelf({avatar: `data:image/png;base64,${image.toString("base64")}`}).then(() => {
-            command.reply(i10010n() `Changed avatar.`);
+            command.reply(this.i10010n() `Changed avatar.`);
           }).catch((err) => {
-            command.reply(i10010n() `Failed setting avatar.${err}`);
+            command.reply(this.i10010n() `Failed setting avatar.${err}`);
             return true;
           });
         }).catch((err) => {
-          command.reply(i10010n() `Failed to get a valid image.${err}`);
+          command.reply(this.i10010n() `Failed to get a valid image.${err}`);
           return true;
         });
       },
@@ -182,10 +183,10 @@ class evaluate {
       evaluated = eval(code);
       t1 = now();
       let embedText = "```xl\n" +
-        i10010n() `\n- - - - - - evaluates-to- - - - - - -\n` +
+        this.i10010n() `\n- - - - - - evaluates-to- - - - - - -\n` +
         utils.clean(this._shortenTo(this._convertToObject(evaluated), 1800)) +
         "\n- - - - - - - - - - - - - - - - - - -\n" +
-        i10010n() `In ${t1 - t0} milliseconds!\n\`\`\``;
+        this.i10010n() `In ${t1 - t0} milliseconds!\n\`\`\``;
       if (evaluated && evaluated.catch) evaluated.catch(() => {
       }).then(() => {
         t2Resolve(now());
@@ -198,10 +199,10 @@ class evaluate {
         try {
           let result = await evaluated;
           embedText = embedText.substring(0, embedText.length - 4);
-          embedText += i10010n() `\n- - - - -Promise resolves to- - - - -\n`;
+          embedText += this.i10010n() `\n- - - - -Promise resolves to- - - - -\n`;
           embedText += utils.clean(this._shortenTo(this._convertToObject(result), 1800));
           embedText += "\n- - - - - - - - - - - - - - - - - - -\n";
-          embedText += i10010n() `In ${resolvedTime2 - t0} milliseconds!\n\`\`\``;
+          embedText += this.i10010n() `In ${resolvedTime2 - t0} milliseconds!\n\`\`\``;
           this.client.editMessage(msg.channel.id, initialMessage.id, {
             content: msg.content,
             embed: {
@@ -217,10 +218,10 @@ class evaluate {
             error = "null"
           }
           embedText = embedText.substring(0, embedText.length - 4);
-          embedText += i10010n() `\n- - - - - Promise throws- - - - - - -\n`;
+          embedText += this.i10010n() `\n- - - - - Promise throws- - - - - - -\n`;
           embedText += utils.clean(this._shortenTo(error.toString(), 1800));
           embedText += "\n- - - - - - - - - - - - - - - - - - -\n";
-          embedText += i10010n() `In ${resolvedTime2 - t0} milliseconds!\n\`\`\``;
+          embedText += this.i10010n() `In ${resolvedTime2 - t0} milliseconds!\n\`\`\``;
           this.client.editMessage(msg.channel.id, initialMessage.id, {
             content: msg.content,
             embed: {
@@ -237,14 +238,14 @@ class evaluate {
       command.createMessage({
         embed: {
           description: "```xl\n" +
-          i10010n() `\n- - - - - - - errors-in - - - - - - -\n` +
+          this.i10010n() `\n- - - - - - - errors-in - - - - - - -\n` +
           utils.clean(this._shortenTo(this._convertToObject(error.toString()), 1200)) +
           (error ?
-            i10010n() `\n- - - - - - - stack - - - - - - - - -\n` +
+            this.i10010n() `\n- - - - - - - stack - - - - - - - - -\n` +
             this._shortenTo(utils.clean(this.shortenErrorStack(error)), 500)
             : "") +
           "\n- - - - - - - - - - - - - - - - - - -\n" +
-          i10010n() `In ${t1 - t0} milliseconds!\n\`\`\``,
+          this.i10010n() `In ${t1 - t0} milliseconds!\n\`\`\``,
           color: 0xFF0000,
         },
       });

@@ -4,7 +4,6 @@
 "use strict";
 
 let request = require('request');
-const i10010n = require("i10010n").init({});
 
 let Music;
 try {
@@ -31,6 +30,7 @@ class shardedInfo {
    * @param {MessageSender} e.messageSender Instantiated message sender
    * @param {SlowSender} e.slowSender Instantiated slow sender
    * @param {PvPClient} e.pvpClient PvPCraft client library instance
+   * @param {Function} e.i10010n
    */
   constructor(e) {
     this._auth = e.auth;
@@ -53,6 +53,7 @@ class shardedInfo {
     this.botReady = new Promise((resolve) => {
       this.botReadyResolve = resolve;
     })
+    this.i10010n = e.i10010n;
   }
 
   /**
@@ -279,7 +280,7 @@ class shardedInfo {
     try {
       if (command.command === "getshardedinfo") {
         if (!this._standardDB.data) {
-          command.createMessage(i10010n() `Sorry db connection not ready yet`);
+          command.createMessage(this.i10010n() `Sorry db connection not ready yet`);
           return true;
         }
         let serverData = [];
@@ -296,10 +297,10 @@ class shardedInfo {
         let users = serverData.map(s => s.users).reduce((total, num) => total + num, 0);
         command.createMessage({
           embed: {
-            title: i10010n() `Status info`,
-            description: i10010n() `\`\`\`xl\nshards online: ${shardsOnline}/${process.env.shards || 1}\n` +
-                         i10010n() `shards connected: ${shardsReceivingMessages}/${process.env.shards || 1}\n` +
-                         i10010n() `servers: ${serverCount}\nconnections: ${connections}\nplaying: ${playing}\nusers: ${users}\n\`\`\``,
+            title: this.i10010n() `Status info`,
+            description: this.i10010n() `\`\`\`xl\nshards online: ${shardsOnline}/${process.env.shards || 1}\n` +
+                         this.i10010n() `shards connected: ${shardsReceivingMessages}/${process.env.shards || 1}\n` +
+                         this.i10010n() `servers: ${serverCount}\nconnections: ${connections}\nplaying: ${playing}\nusers: ${users}\n\`\`\``,
             thumbnail: {url: this._client.user.avatarURL},
           }
         });

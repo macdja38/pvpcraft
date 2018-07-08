@@ -92,6 +92,7 @@ class PvPCraft {
 
     Promise.resolve()
       .then(this.loadAnalytics.bind(this))
+      .then(this.readyI10010n.bind(this))
       .then(this.readyRaven.bind(this))
       .then(this.registerProcessListeners.bind(this))
       .then(this.readyRethinkDB.bind(this))
@@ -228,7 +229,7 @@ class PvPCraft {
   }
 
   readyMessageSender() {
-    this.messageSender = new MessageSender({client: this.client});
+    this.messageSender = new MessageSender({client: this.client, i10010n: this.i10010n});
   }
 
   readySlowSender() {
@@ -248,7 +249,7 @@ class PvPCraft {
   }
 
   readyI10010n() {
-    this.i10010n = i10010n.init({});
+    this.i10010n = i10010n.init({db: {}});
   }
 
   readyPvPClient() {
@@ -475,7 +476,7 @@ class PvPCraft {
     return new Promise((resolve) => {
       this.configDB = new ConfigsDB(this.r, "servers", this.client);
       this.permsDB = new ConfigsDB(this.r, "permissions", this.client);
-      this.perms = new Permissions(this.permsDB, this.analytics);
+      this.perms = new Permissions(this.permsDB, this.analytics, this.i10010n);
       Promise.all([this.configDB.reload(), this.permsDB.reload()]).then(() => {
         resolve(true);
       }).catch(console.error);
