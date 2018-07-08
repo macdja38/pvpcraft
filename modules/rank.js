@@ -4,7 +4,6 @@
 "use strict";
 
 const utils = require('../lib/utils');
-const i10010n = require("i10010n").init({});
 
 class rank {
   /**
@@ -22,6 +21,7 @@ class rank {
    * @param {MessageSender} e.messageSender Instantiated message sender
    * @param {SlowSender} e.slowSender Instantiated slow sender
    * @param {PvPClient} e.pvpClient PvPCraft client library instance
+   * @param {Function} e.i10010n internationalization function
    */
   constructor(e) {
     this.client = e.client;
@@ -29,6 +29,7 @@ class rank {
     this.config = e.configDB;
     this.raven = e.raven;
     this.perms = e.perms;
+    this.i10010n = e.i10010n;
 
     this.onJoin = (guild, member) => {
       let roles = this.config.get("roles", false, {server: guild.id});
@@ -73,7 +74,7 @@ class rank {
       permissionCheck: () => true,
       channels: ["guild"],
       execute: command => {
-        command.replyAutoDeny(i10010n() `Usage ${command.prefix}${command.command} <add|remove|list|join|leave>`)
+        command.replyAutoDeny(this.i10010n() `Usage ${command.prefix}${command.command} <add|remove|list|join|leave>`)
       },
       subCommands: [
         {
@@ -82,7 +83,7 @@ class rank {
           channels: ["guild"],
           execute: command => {
             if (command.args.length < 1 || (!command.options.group && !command.options.role)) {
-              command.createMessage(i10010n() `Usage \`${utils.clean(command.prefix)}rank add <simpleName> --role <role>\``);
+              command.createMessage(this.i10010n() `Usage \`${utils.clean(command.prefix)}rank add <simpleName> --role <role>\``);
               return true;
             }
             let roleId;
@@ -100,14 +101,14 @@ class rank {
                 roleId = roleId.id
               }
               else {
-                command.replyAutoDeny(i10010n() `Could not find role with that name, please try a mention or name, names are case sensitive`);
+                command.replyAutoDeny(this.i10010n() `Could not find role with that name, please try a mention or name, names are case sensitive`);
                 return true;
               }
               let roleName = command.args[0].toLowerCase();
               let oldRoles = this.config.get("roles", {}, {server: command.channel.guild.id});
               oldRoles[roleName] = roleId;
               this.config.set("roles", oldRoles, {server: command.channel.guild.id});
-              command.replyAutoDeny(i10010n() `Role added to list of join-able roles`);
+              command.replyAutoDeny(this.i10010n() `Role added to list of join-able roles`);
               return true;
             }
             return true;
@@ -119,7 +120,7 @@ class rank {
           channels: ["guild"],
           execute: command => {
             if (!command.args[0]) {
-              command.replyAutoDeny(i10010n() `Please supply a rank to remove using \`${command.prefix}rank remove \<rank\>\`, for a list of ranks use \`${command.prefix}rank list\``);
+              command.replyAutoDeny(this.i10010n() `Please supply a rank to remove using \`${command.prefix}rank remove \<rank\>\`, for a list of ranks use \`${command.prefix}rank list\``);
               return true;
             }
             let rankToJoin = command.args[0].toLowerCase();
@@ -127,9 +128,9 @@ class rank {
             if (oldRoles.hasOwnProperty(rankToJoin)) {
               delete oldRoles[rankToJoin];
               this.config.set("roles", oldRoles, {server: command.channel.guild.id, conflict: "replace"});
-              command.replyAutoDeny(i10010n() `:thumbsup::skin-tone-2:`);
+              command.replyAutoDeny(this.i10010n() `:thumbsup::skin-tone-2:`);
             } else {
-              command.replyAutoDeny(i10010n() `Role could not be found, use \`${command.prefix}rank list\` to see the current ranks.`);
+              command.replyAutoDeny(this.i10010n() `Role could not be found, use \`${command.prefix}rank list\` to see the current ranks.`);
             }
             return true;
           }
@@ -151,10 +152,10 @@ class rank {
               }
             }
             if (coloredRolesList != "") {
-              command.createMessageAutoDeny(i10010n() `Roles you can join are highlighted in green\`\`\`diff\n${coloredRolesList}\`\`\``)
+              command.createMessageAutoDeny(this.i10010n() `Roles you can join are highlighted in green\`\`\`diff\n${coloredRolesList}\`\`\``)
                 .then(this.possiblyDelete(command.msg));
             } else {
-              command.replyAutoDeny(i10010n() `No ranks are setup to be join-able.`)
+              command.replyAutoDeny(this.i10010n() `No ranks are setup to be join-able.`)
                 .then(this.possiblyDelete(command.msg));
             }
             return true;
@@ -166,7 +167,7 @@ class rank {
           channels: ["guild"],
           execute: command => {
             if (!command.args[0]) {
-              command.replyAutoDeny(i10010n() `Please supply a rank to join using \`${command.prefix}rank join \<rank\>\`, for a list of ranks use \`${command.prefix}rank list\``)
+              command.replyAutoDeny(this.i10010n() `Please supply a rank to join using \`${command.prefix}rank join \<rank\>\`, for a list of ranks use \`${command.prefix}rank list\``)
                 .then(this.possiblyDelete(command.msg));
               return true;
             }
@@ -176,27 +177,27 @@ class rank {
             }
             let roles = this.config.get("roles", rankToJoin, {server: command.channel.guild.id});
             if (!roles[rankToJoin]) {
-              command.replyAutoDeny(i10010n() `Invalid rank, for a list of ranks use \`${command.prefix}rank list\``)
+              command.replyAutoDeny(this.i10010n() `Invalid rank, for a list of ranks use \`${command.prefix}rank list\``)
                 .then(this.possiblyDelete(command.msg));
               return true;
             }
             if (!this.perms.check(command, `rank.join.${rankToJoin}`)) {
-              command.replyAutoDeny(i10010n() `You do not have perms to join this rank for a list of ranks use \`${command.prefix}rank list\``)
+              command.replyAutoDeny(this.i10010n() `You do not have perms to join this rank for a list of ranks use \`${command.prefix}rank list\``)
                 .then(this.possiblyDelete(command.msg));
               return true;
             }
             let role = command.channel.guild.roles.get(roles[rankToJoin]);
             if (role) {
               command.channel.guild.addMemberRole(command.author.id, role.id).then(() => {
-                command.replyAutoDeny(i10010n() `:thumbsup::skin-tone-2:`)
+                command.replyAutoDeny(this.i10010n() `:thumbsup::skin-tone-2:`)
                   .then(this.possiblyDelete(command.msg));
               }).catch((error) => {
                 if (error) {
-                  command.replyAutoDeny(i10010n() `Error ${error} promoting ${utils.removeBlocks(command.author.username)} try making sure the bot's highest role is above the role you want it to add and that the bot has Manage Permissions or Admin.`)
+                  command.replyAutoDeny(this.i10010n() `Error ${error} promoting ${utils.removeBlocks(command.author.username)} try making sure the bot's highest role is above the role you want it to add and that the bot has Manage Permissions or Admin.`)
                 }
               });
             } else {
-              command.replyAutoDeny(i10010n() `Role could not be found, have an administrator use \`${command.prefix}rank add\` to update it.`);
+              command.replyAutoDeny(this.i10010n() `Role could not be found, have an administrator use \`${command.prefix}rank add\` to update it.`);
             }
             return true;
           }
@@ -207,7 +208,7 @@ class rank {
           channels: ["guild"],
           execute: command => {
             if (!command.args[0]) {
-              command.replyAutoDeny(i10010n() `Please supply a rank to leave using \`${command.prefix}rank leave \<rank\>\`, for a list of ranks use \`${command.prefix}rank list\``)
+              command.replyAutoDeny(this.i10010n() `Please supply a rank to leave using \`${command.prefix}rank leave \<rank\>\`, for a list of ranks use \`${command.prefix}rank list\``)
                 .then(this.possiblyDelete(command.msg));
               return true;
             }
@@ -217,25 +218,25 @@ class rank {
             }
             let roles = this.config.get("roles", rankToLeave, {server: command.channel.guild.id});
             if (!roles[rankToLeave]) {
-              command.replyAutoDeny(i10010n() `Invalid rank, for a list of ranks use \`${command.prefix}rank list\``)
+              command.replyAutoDeny(this.i10010n() `Invalid rank, for a list of ranks use \`${command.prefix}rank list\``)
                 .then(this.possiblyDelete(command.msg));
               return true;
             }
             if (!this.perms.check(command, `rank.leave.${rankToLeave}`)) {
-              command.replyAutoDeny(i10010n() `You do not have perms to leave this rank for a list of ranks use \`${command.prefix}rank list\``)
+              command.replyAutoDeny(this.i10010n() `You do not have perms to leave this rank for a list of ranks use \`${command.prefix}rank list\``)
                 .then(this.possiblyDelete(command.msg));
               return true;
             }
             let role = command.channel.guild.roles.get(roles[rankToLeave]);
             if (role) {
               command.channel.guild.removeMemberRole(command.author.id, role.id).then(() => {
-                command.replyAutoDeny(i10010n() `:thumbsup::skin-tone-2:`)
+                command.replyAutoDeny(this.i10010n() `:thumbsup::skin-tone-2:`)
                   .then(this.possiblyDelete(command.msg));
               }).catch((error) => {
-                command.createMessageAutoDeny(i10010n() `${error} demoting ${utils.removeBlocks(command.author.username)} try redefining your rank and making sure the bot has enough permissions.`).catch(console.error)
+                command.createMessageAutoDeny(this.i10010n() `${error} demoting ${utils.removeBlocks(command.author.username)} try redefining your rank and making sure the bot has enough permissions.`).catch(console.error)
               })
             } else {
-              command.replyAutoDeny(i10010n() `Role could not be found, have an administrator use \`${command.prefix}rank add\` to update it.`);
+              command.replyAutoDeny(this.i10010n() `Role could not be found, have an administrator use \`${command.prefix}rank add\` to update it.`);
               return true;
             }
             return true;

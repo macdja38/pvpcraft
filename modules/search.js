@@ -4,7 +4,6 @@
 "use strict";
 
 const utils = require("../lib/utils");
-const i10010n = require("i10010n").init({});
 
 let google = require("google");
 
@@ -28,11 +27,13 @@ class search {
    * @param {MessageSender} e.messageSender Instantiated message sender
    * @param {SlowSender} e.slowSender Instantiated slow sender
    * @param {PvPClient} e.pvpClient PvPCraft client library instance
+   * @param {Function} e.i10010n internationalization function
    */
   constructor(e) {
     this.client = e.client;
     this.raven = e.raven;
     this.perms = e.perms;
+    this.i10010n = e.i10010n;
   }
 
   getCommands() {
@@ -50,23 +51,23 @@ class search {
    */
   executeSearch(command) {
     if (command.args.length < 1) {
-      command.replyAutoDeny(i10010n() `Please supply something to search for.`);
+      command.replyAutoDeny(this.i10010n() `Please supply something to search for.`);
       return true;
     }
     let search = command.args.join(" ");
     google(search, (err, response) => {
-      if (err || !response || !response.links) command.reply(i10010n() `Your search resulted in an error`);
-      else if (response.links.length < 1) command.reply(i10010n() `No results found`);
+      if (err || !response || !response.links) command.reply(this.i10010n() `Your search resulted in an error`);
+      else if (response.links.length < 1) command.reply(this.i10010n() `No results found`);
       else {
         if (response.links[0].link === null) {
           for (let i = 1; i < response.links.length; i++) {
             if (response.links[i].link !== null) {
-              command.createMessageAutoDeny(i10010n() `Found ${utils.clean(response.links[i].link)})`);
+              command.createMessageAutoDeny(this.i10010n() `Found ${utils.clean(response.links[i].link)})`);
               return;
             }
           }
         } else {
-          command.createMessageAutoDeny(i10010n() `Found ${utils.clean(response.links[0].link)}`);
+          command.createMessageAutoDeny(this.i10010n() `Found ${utils.clean(response.links[0].link)}`);
         }
       }
     });
