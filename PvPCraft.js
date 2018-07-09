@@ -90,6 +90,8 @@ class PvPCraft {
       // this.rejectReadyPromise = reject;
     });
 
+    this.getChannelLanguage = this.getChannelLanguage.bind(this);
+
     Promise.resolve()
       .then(this.loadAnalytics.bind(this))
       .then(this.readyI10010n.bind(this))
@@ -229,7 +231,7 @@ class PvPCraft {
   }
 
   readyMessageSender() {
-    this.messageSender = new MessageSender({client: this.client, i10010n: this.i10010n});
+    this.messageSender = new MessageSender({client: this.client, i10010n: this.i10010n, getChannelLanguage: this.getChannelLanguage});
   }
 
   readySlowSender() {
@@ -476,7 +478,7 @@ class PvPCraft {
     return new Promise((resolve) => {
       this.configDB = new ConfigsDB(this.r, "servers", this.client);
       this.permsDB = new ConfigsDB(this.r, "permissions", this.client);
-      this.perms = new Permissions(this.permsDB, this.analytics, this.i10010n);
+      this.perms = new Permissions(this.permsDB, this.analytics, this.i10010n, this.getChannelLanguage);
       Promise.all([this.configDB.reload(), this.permsDB.reload()]).then(() => {
         resolve(true);
       }).catch(console.error);
@@ -650,6 +652,7 @@ class PvPCraft {
       middleWares: this.middlewareList,
       taskQueue: this.taskQueue,
       i10010n: this.i10010n,
+      getChannelLanguage: this.getChannelLanguage,
     };
   }
 
@@ -661,7 +664,7 @@ class PvPCraft {
         }
         let modules = this.fileConfig.get("modules");
         delete require.cache[require.resolve(modules[command.args[0]])];
-        utils.handleErisRejection(command.reply(this.i10010n() `Reloading ${command.args[0]}`));
+        utils.handleErisRejection(command.reply(command.translate `Reloading ${command.args[0]}`));
         console.log("Reloading ".yellow + command.args[0].yellow);
         let Mod = require(modules[command.args[0]]);
         let mod = new Mod(this.getModuleVariables());
@@ -669,7 +672,7 @@ class PvPCraft {
         this.moduleList[module].module = mod;
         this.moduleList[module].commands = Mod.getCommands();
         console.log("Reloded ".yellow + command.args[0].yellow);
-        utils.handleErisRejection(command.reply(this.i10010n() `Reloded ${command.args[0]}`));
+        utils.handleErisRejection(command.reply(command.translate `Reloded ${command.args[0]}`));
       }
     }
   }
@@ -699,6 +702,7 @@ class PvPCraft {
         botName: this.name,
         raven: this.raven,
         i10010n: this.i10010n,
+        getChannelLanguage: this.getChannelLanguage,
       });
     } catch (error) {
       if (this.raven) {
@@ -719,7 +723,7 @@ class PvPCraft {
           extra,
         });
       }
-      utils.handleErisRejection(msg.channel.createMessage(this.i10010n() `${msg.author.mention}, Sorry about that an unknown problem occurred processing your command, an error report has been logged and we are looking into the problem.`));
+      utils.handleErisRejection(msg.channel.createMessage(this.i10010n(this.getChannelLanguage(msg.channel.id)) `${msg.author.mention}, Sorry about that an unknown problem occurred processing your command, an error report has been logged and we are looking into the problem.`));
     }
 
     for (let ware in this.middlewareList) {
@@ -839,7 +843,7 @@ class PvPCraft {
           if (ravenError) {
             console.error("Error reporting error to sentry:\n", ravenError, "Error sentry was trying to report:\n", ravenError);
           } else {
-            utils.handleErisRejection(msg.channel.createMessage(this.i10010n() `Sorry, there was an error processing your command. The error is \`\`\`${error
+            utils.handleErisRejection(msg.channel.createMessage(this.i10010n(this.getChannelLanguage(msg.channel.id)) `Sorry, there was an error processing your command. The error is \`\`\`${error
               }\`\`\` reference code \`${id}\``));
           }
           if (process.env.dev === "true") {
@@ -869,6 +873,20 @@ class PvPCraft {
     } else {
       console.error(error);
     }
+  }
+
+  getChannelLanguage(channelID, guildID) {
+    if (!guildID) {
+      guildID = this.pvpClient.channelGuildMap[channelID];
+    }
+    const languages = this.configDB.get("languages", null, {server: guildID});
+    if (languages.hasOwnProperty(channelID)) {
+      return languages[channelID];
+    }
+    if (languages.hasOwnProperty("*")) {
+      return languages["*"];
+    }
+    return "en";
   }
 }
 

@@ -52,7 +52,7 @@ class shardedInfo {
     this._admins = e.config.get("permissions", {"admins": []}).admins;
     this.botReady = new Promise((resolve) => {
       this.botReadyResolve = resolve;
-    })
+    });
     this.i10010n = e.i10010n;
   }
 
@@ -280,7 +280,7 @@ class shardedInfo {
     try {
       if (command.command === "getshardedinfo") {
         if (!this._standardDB.data) {
-          command.createMessage(this.i10010n() `Sorry db connection not ready yet`);
+          command.createMessage(command.translate `Sorry db connection not ready yet`);
           return true;
         }
         let serverData = [];
@@ -297,10 +297,10 @@ class shardedInfo {
         let users = serverData.map(s => s.users).reduce((total, num) => total + num, 0);
         command.createMessage({
           embed: {
-            title: this.i10010n() `Status info`,
-            description: this.i10010n() `\`\`\`xl\nshards online: ${shardsOnline}/${process.env.shards || 1}\n` +
-                         this.i10010n() `shards connected: ${shardsReceivingMessages}/${process.env.shards || 1}\n` +
-                         this.i10010n() `servers: ${serverCount}\nconnections: ${connections}\nplaying: ${playing}\nusers: ${users}\n\`\`\``,
+            title: command.translate `Status info`,
+            description: command.translate `\`\`\`xl\nshards online: ${shardsOnline}/${process.env.shards || 1}\n` +
+                         command.translate `shards connected: ${shardsReceivingMessages}/${process.env.shards || 1}\n` +
+                         command.translate `servers: ${serverCount}\nconnections: ${connections}\nplaying: ${playing}\nusers: ${users}\n\`\`\``,
             thumbnail: {url: this._client.user.avatarURL},
           }
         });

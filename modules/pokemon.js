@@ -58,7 +58,7 @@ class pokemon {
       execute: command => {
         let pokemon_name = command.args[0];
         if (!pokemon_name || !/^[^<@#\\\/>]*$/g.test(pokemon_name)) {
-          command.replyAutoDeny(this.i10010n() `Sorry invalid input`);
+          command.replyAutoDeny(command.translate `Sorry invalid input`);
         }
         Promise.resolve(pokedex.getPokemonByName(pokemon_name.toLowerCase())).then((response) => {
           let secondtype;
@@ -84,10 +84,10 @@ class pokemon {
         })
           .catch(function (error) {
               if (error.statusCode == "404") {
-                command.replyAutoDeny(this.i10010n() `Could not find **${utils.clean(command.args[0])}**`);
+                command.replyAutoDeny(command.translate `Could not find **${utils.clean(command.args[0])}**`);
               } else {
                 console.log('There was an ERROR with getting the data: ', error);
-                command.replyAutoDeny(this.i10010n() `Error getting data ${error}`);
+                command.replyAutoDeny(command.translate `Error getting data ${error}`);
               }
             },
           );
@@ -111,15 +111,15 @@ class pokemon {
           })
             .catch(function (error) {
               if (error.statusCode == "404") {
-                command.replyAutoDeny(this.i10010n() `Could not find ${command.args[0]}`);
+                command.replyAutoDeny(command.translate `Could not find ${command.args[0]}`);
               } else {
                 console.log('There was an ERROR with getting the data: ', error);
-                command.replyAutoDeny(this.i10010n() `Error getting data ${error}`);
+                command.replyAutoDeny(command.translate `Error getting data ${error}`);
               }
             })
         }
         else {
-          command.replyAutoDeny(this.i10010n() `Sorry invalid input`);
+          command.replyAutoDeny(command.translate `Sorry invalid input`);
         }
         return true;
       },
@@ -148,15 +148,15 @@ class pokemon {
           })
             .catch(function (error) {
               if (error.statusCode == "404") {
-                command.replyAutoDeny(this.i10010n() `Could not find ${command.args[0]}`);
+                command.replyAutoDeny(command.translate `Could not find ${command.args[0]}`);
               } else {
                 console.log('There was an ERROR with getting the data: ', error);
-                command.replyAutoDeny(this.i10010n() `Error getting data ${error}`);
+                command.replyAutoDeny(command.translate `Error getting data ${error}`);
               }
             });
         }
         else {
-          command.replyAutoDeny(this.i10010n() `Sorry invalid input`);
+          command.replyAutoDeny(command.translate `Sorry invalid input`);
         }
         return true;
       },
@@ -184,15 +184,15 @@ class pokemon {
             })
             .catch(function (error) {
               if (error.statusCode == "404") {
-                command.replyAutoDeny(this.i10010n() `Could not find ${command.args[0]}`);
+                command.replyAutoDeny(command.translate `Could not find ${command.args[0]}`);
               } else {
                 console.log('There was an ERROR with getting the data: ', error);
-                command.replyAutoDeny(this.i10010n() `Error getting data ${error}`);
+                command.replyAutoDeny(command.translate `Error getting data ${error}`);
               }
             });
         }
         else {
-          command.replyAutoDeny(this.i10010n() `Sorry invalid input`);
+          command.replyAutoDeny(command.translate `Sorry invalid input`);
         }
         return true;
       },

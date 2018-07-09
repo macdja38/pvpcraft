@@ -53,7 +53,7 @@ class help {
       permissionCheck: command => true,
       channels: ["*"],
       execute: command => {
-        command.reply(this.i10010n() `Help can be found at https://bot.pvpcraft.ca/docs`);
+        command.reply(command.translate `Help can be found at https://bot.pvpcraft.ca/docs`);
         return true;
       },
     }];

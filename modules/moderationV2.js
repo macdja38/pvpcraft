@@ -79,11 +79,13 @@ class moderationV2 {
    * @param {MessageSender} e.messageSender Instantiated message sender
    * @param {SlowSender} e.slowSender Instantiated slow sender
    * @param {PvPClient} e.pvpClient PvPCraft client library instance
+   * @param {PvPCraft} e.pvpcraft PvPCraft instance
    * @param {TaskQueue} e.taskQueue Instantiated task queue ready to receive orders.
    * @param {Function} e.i10010n internationalization function
    */
   constructor(e) {
     this.client = e.client;
+    this.pvpcraft = e.pvpcraft;
     //this.logging = {};
     this.messageSender = e.messageSender;
     this.i10010n = e.i10010n;
@@ -194,22 +196,22 @@ class moderationV2 {
         }
       }
     } else {
-      command.reply(this.i10010n() `Who do you want to ${action}? ${command.prefix}${action} <user>`);
+      command.reply(command.translate `Who do you want to ${action}? ${command.prefix}${action} <user>`);
       return true;
     }
     if (!user && !possibleId) {
-      command.reply(this.i10010n() `Sorry, user could not be located or their id was not a number. Please try a valid mention or id`);
+      command.reply(command.translate `Sorry, user could not be located or their id was not a number. Please try a valid mention or id`);
       return true;
     }
 
     // check to see if user has ban immunity
     if (user && perms.checkUserChannel(user, msg.channel, `moderation.immunity.${action}`)) {
-      command.reply(this.i10010n() `Sorry you do not have permission to ${action} this user`);
+      command.reply(command.translate `Sorry you do not have permission to ${action} this user`);
       return true;
     }
 
     if (possibleId && perms.checkUserChannel({ id: possibleId }, msg.channel, `moderation.immunity.${action}`)) {
-      command.reply(this.i10010n() `Sorry but you don't have permission to ban the user this id belongs to.`);
+      command.reply(command.translate `Sorry but you don't have permission to ban the user this id belongs to.`);
       return true;
     }
 
@@ -225,7 +227,7 @@ class moderationV2 {
     console.log("reason", reason);
     if (!perms.check(msg, "moderation.reasonless")) {
       if (!reason) {
-        command.reply(this.i10010n() `Sorry but you do not have permission to ban without providing a reason eg \`${command.prefix}${action} --user @devCodex --reason Annoying\``);
+        command.reply(command.translate `Sorry but you do not have permission to ban without providing a reason eg \`${command.prefix}${action} --user @devCodex --reason Annoying\``);
         return true;
       }
     }
@@ -237,7 +239,7 @@ class moderationV2 {
       .catch((error) => {
         return this[moderationMethodNameMap[action]](msg.channel.guild, user, msg.author, reason, error)
       });
-    command.reply(this.i10010n() `${user ? user.mention : possibleId} has been ${action}ned!`);
+    command.reply(command.translate `${user ? user.mention : possibleId} has been ${action}ned!`);
   }
 
   /**
@@ -247,8 +249,8 @@ class moderationV2 {
    */
   getContent() {
     return {
-      name: this.i10010n() `Moderation`,
-      description: this.i10010n() `Moderation commands including kick, ban, unban and purge`,
+      name: `Moderation`,
+      description: `Moderation commands including kick, ban, unban and purge`,
       key: "moderation",
       permNode: "moderation",
       commands: this.getCommands(),
@@ -299,13 +301,13 @@ class moderationV2 {
             permissions: 0,
             hoist: false,
             mentionable: false,
-            reason: this.i10010n() `Created in response to ${command.prefix}setupmute run by <@${command.author.id}>`,
+            reason: command.translate `Created in response to ${command.prefix}setupmute run by <@${command.author.id}>`,
           });
         }
 
         this.configDB.set("muteRole", muteRole.id, { server: command.channel.guild.id });
 
-        command.replyAutoDeny(this.i10010n() `Muted role created with name ${utils.clean(muteRole.name)}. Now attempting to deny sendMessage in all text channels and speaking in all voice channels.`);
+        command.replyAutoDeny(command.translate `Muted role created with name ${utils.clean(muteRole.name)}. Now attempting to deny sendMessage in all text channels and speaking in all voice channels.`);
 
         let muteRoleCreationResults = command.channel.guild.channels.map(channel => {
           return channel.editPermission(muteRole.id, 0, channel.type === 0 ? Eris.Constants.Permissions.sendMessages : Eris.Constants.Permissions.voiceSpeak, "role", `Created in response to ${command.prefix}setupmute run by <@${command.author.id}> in order to make the muted role effective`);
@@ -313,9 +315,9 @@ class moderationV2 {
 
         return utils.resolveAllPromises(muteRoleCreationResults).then(() => {
           Promise.all(muteRoleCreationResults).then(() => {
-            return command.replyAutoDeny(this.i10010n() `Denied text and voice permissions for the ${utils.clean(muteRole.name)} role.`);
+            return command.replyAutoDeny(command.translate `Denied text and voice permissions for the ${utils.clean(muteRole.name)} role.`);
           }).catch(() => {
-            return command.replyAutoDeny(this.i10010n() `Failed to automatically deny permissions in all voice and text channels, please manually ensure the ${utils.clean(muteRole.name)} can only talk where you intend it to.`)
+            return command.replyAutoDeny(command.translate `Failed to automatically deny permissions in all voice and text channels, please manually ensure the ${utils.clean(muteRole.name)} can only talk where you intend it to.`)
           });
         })
       },
@@ -327,19 +329,19 @@ class moderationV2 {
         const member = command.targetUser;
 
         if (!member) {
-          command.replyAutoDeny(this.i10010n() `Please target a user by adding --user <user mention or name>`);
+          command.replyAutoDeny(command.translate `Please target a user by adding --user <user mention or name>`);
           return true;
         }
 
         // check to see if user has ban immunity
         if (this.perms.checkUserChannel(member, command.msg.channel, `moderation.immunity.mute`)) {
-          command.replyAutoDeny(this.i10010n() `This user has the mute immunity permission \`moderation.immunity.mute\`, you may not mute them.`);
+          command.replyAutoDeny(command.translate `This user has the mute immunity permission \`moderation.immunity.mute\`, you may not mute them.`);
           return true;
         }
 
         let muteRoleID = this.configDB.get("muteRole", false, { server: command.channel.guild.id });
         if (!muteRoleID) {
-          command.replyAutoDeny(this.i10010n() `mute role not defined, try using ${command.prefix}setupmute to set it up.`)
+          command.replyAutoDeny(command.translate `mute role not defined, try using ${command.prefix}setupmute to set it up.`)
         }
         console.log(muteRoleID);
         let newRoles = member.roles.slice(0);
@@ -359,9 +361,9 @@ class moderationV2 {
               },
             };
             this.taskQueue.schedule(task, `in ${command.options.unmute}`);
-            command.replyAutoDeny(this.i10010n() `${member.mention} muted till ${command.options.unmute}${command.options.reason ? ` with reason \`${utils.clean(command.options.reason)}\`` : ""}.`);
+            command.replyAutoDeny(command.translate `${member.mention} muted till ${command.options.unmute}${command.options.reason ? ` with reason \`${utils.clean(command.options.reason)}\`` : ""}.`);
           } else {
-            command.replyAutoDeny(this.i10010n() `${member.mention} muted forever${command.options.reason ? ` with reason \`${utils.clean(command.options.reason)}\`` : ""}.`);
+            command.replyAutoDeny(command.translate `${member.mention} muted forever${command.options.reason ? ` with reason \`${utils.clean(command.options.reason)}\`` : ""}.`);
           }
         });
       },
@@ -377,7 +379,7 @@ class moderationV2 {
           if (user) {
             options.user = user;
           } else {
-            command.reply(this.i10010n() `Cannot find that user.`)
+            command.reply(command.translate `Cannot find that user.`)
           }
         }
         if (!isNaN(command.options.before)) {
@@ -448,7 +450,7 @@ class moderationV2 {
                 errorMessage = error.response;
                 done = true;
                 purgeQueue = [];
-                updateStatus(this.i10010n() `\`\`\`xl\ndiscord permission Manage Messages required to purge messages.\`\`\``);
+                updateStatus(command.translate `\`\`\`xl\ndiscord permission Manage Messages required to purge messages.\`\`\``);
               } else if (responseCode === 429) {
                 purgeQueue = purgeQueue.concat(messagesToPurge);
               } else {
@@ -467,7 +469,7 @@ class moderationV2 {
         let updateStatusFunction = () => {
           if (done && purgeQueue.length === 0) {
             if (!errorMessage) {
-              updateStatus(this.getStatus(totalPurged, totalFetched, length, oldMessagesFound));
+              updateStatus(this.getStatus(totalPurged, totalFetched, length, oldMessagesFound, command));
             }
             setTimeout(() => {
               utils.handleErisRejection(channel.deleteMessage(statusMessage.id));
@@ -479,7 +481,7 @@ class moderationV2 {
           }
           else {
             if (!errorMessage) {
-              updateStatus(this.getStatus(totalPurged, totalFetched, length, oldMessagesFound));
+              updateStatus(this.getStatus(totalPurged, totalFetched, length, oldMessagesFound, command));
             }
           }
         };
@@ -493,7 +495,7 @@ class moderationV2 {
       channels: ["guild"],
       execute: command => {
         if (command.args.length < 1 || !["delete", "mute", "ban", "off"].includes(command.args[0].toLowerCase())) {
-          return command.replyAutoDeny(this.i10010n() `Choose an action \`${command.prefix}killioscrash <delete|mute|ban|off>\` note that if \`setupmute has not been run the user will be banned instead of muted.`)
+          return command.replyAutoDeny(command.translate `Choose an action \`${command.prefix}killioscrash <delete|mute|ban|off>\` note that if \`setupmute has not been run the user will be banned instead of muted.`)
         }
         const lArg = command.args[0].toLowerCase();
 
@@ -504,7 +506,7 @@ class moderationV2 {
           mode = lArg;
         }
         this.configDB.set("killioscrash", mode, { server: command.channel.guild.id });
-        command.replyAutoDeny(this.i10010n() `Action saved, ios users saved.`)
+        command.replyAutoDeny(command.translate `Action saved, ios users saved.`)
       },
     }];
   }
@@ -515,11 +517,12 @@ class moderationV2 {
    * @returns {*}
    */
   checkMisc(message) {
+    const translate = this.i10010n(this.pvpcraft.getChannelLanguage(message.channel.id));
     const del = (message) => {
       message.delete("Crashing iOS users").catch(error => {
         console.log(error);
         if (error.code === EE.DISCORD_RESPONSE_MISSING_PERMISSIONS) {
-          message.channel.createMessage(this.i10010n() `Could not delete message due to lack of permissions`);
+          message.channel.createMessage(translate `Could not delete message due to lack of permissions`);
         } else {
           throw error;
         }
@@ -548,20 +551,20 @@ class moderationV2 {
 
             console.log("newRoles", newRoles);
 
-            this.memberMuted(message.channel.guild, member, this.client.user, this.i10010n() `Trying to crash ios users`, null);
+            this.memberMuted(message.channel.guild, member, this.client.user, translate `Trying to crash ios users`, null);
 
-            return message.channel.guild.editMember(member.id, { roles: newRoles }, this.i10010n() `Member muted by <@${this.client.user.id}> with reason trying to crash ios users`)
+            return message.channel.guild.editMember(member.id, { roles: newRoles }, translate `Member muted by <@${this.client.user.id}> with reason trying to crash ios users`)
           }
         case "ban":
           del(message);
-          return message.member.ban(1, this.i10010n() `Trying to crash ios users`);
+          return message.member.ban(1, translate `Trying to crash ios users`);
       }
     }
   }
 
-  getStatus(totalPurged, totalFetched, total, oldMessagesFound) {
-    return this.i10010n() `\`\`\`xl\nStatus:\nPurged: ${getBar(totalPurged, totalFetched, 16)}\nFetched:${getBar(totalFetched, total, 16)}` +
-      (oldMessagesFound ? this.i10010n() `\nMessages older than two weeks cannot be purged due to it breaking discord.` : "") + "\n\`\`\`";
+  getStatus(totalPurged, totalFetched, total, oldMessagesFound, command) {
+    return command.translate `\`\`\`xl\nStatus:\nPurged: ${getBar(totalPurged, totalFetched, 16)}\nFetched:${getBar(totalFetched, total, 16)}` +
+      (oldMessagesFound ? command.translate `\nMessages older than two weeks cannot be purged due to it breaking discord.` : "") + "\n\`\`\`";
   }
 
   updateServerIgnores(count, serverId) {
@@ -685,6 +688,7 @@ class moderationV2 {
     if (!messages[0].channel.guild) return;
     let message = messages[0];
     let cached = messages.filter(m => m.hasOwnProperty("content"));
+    const translate = this.i10010n(this.pvpcraft.getChannelLanguage(message.channel.id));
 
     let channelIgnored = this.isServerIgnored(message.channel.guild.id);
     if (!channelIgnored) {
@@ -694,35 +698,35 @@ class moderationV2 {
     //grab url's to the message's attachments
     let fields = [];
     let attachment = {
-      title: this.i10010n() `Bulk Delete`,
+      title: translate `Bulk Delete`,
       fields,
     };
     if (message.channel) {
       fields.push({
-        title: this.i10010n() `Channel`,
+        title: translate `Channel`,
         value: message.channel.mention,
         short: true,
       })
     }
     fields.push({
-      title: this.i10010n() `Cached`,
+      title: translate `Cached`,
       value: `${cached.length}`,
       short: true,
     });
     fields.push({
-      title: this.i10010n() `Not Cached`,
+      title: translate `Not Cached`,
       value: `${messages.length - cached.length}`,
       short: true,
     });
     fields.push({
-      title: this.i10010n() `Total Messages`,
+      title: translate `Total Messages`,
       value: `${messages.length}`,
       short: true,
     });
     if (channelIgnored) {
       fields.push({
-        title: this.i10010n() `Purge with don't log`,
-        value: this.i10010n() `The purge command was used with the don't log flag, and therefore cached messages are not being logged.`,
+        title: translate `Purge with don't log`,
+        value: translate `The purge command was used with the don't log flag, and therefore cached messages are not being logged.`,
         short: true,
       });
     }
@@ -739,11 +743,12 @@ class moderationV2 {
   messageDeleted(message) {
     if (!message || !message.channel.guild) return;
     if (message.author && this.perms.checkUserChannel(message.author, message.channel, "msglog.whitelist.message.deleted")) return;
+    const translate = this.i10010n(this.pvpcraft.getChannelLanguage(message.channel.id));
     //grab url's to the message's attachments
     let options = {};
     let fields = [];
     let attachment = {
-      title: this.i10010n() `Message Deleted`,
+      title: translate `Message Deleted`,
       fields,
     };
     if (message.member) {
@@ -751,28 +756,28 @@ class moderationV2 {
     }
     if (message.id) {
       fields.push({
-        title: this.i10010n() `Age`,
+        title: translate `Age`,
         value: utils.idToUTCString(message.id),
         short: true,
       })
     }
     if (message.channel) {
       fields.push({
-        title: this.i10010n() `Channel`,
+        title: translate `Channel`,
         value: message.channel.mention,
         short: true,
       })
     }
     if (message.author) {
       fields.push({
-        title: this.i10010n() `User`,
+        title: translate `User`,
         value: message.author.mention,
         short: true,
       })
     }
     if (message.content) {
       let field = {
-        title: this.i10010n() `Content`,
+        title: translate `Content`,
         short: true,
       };
       if (message.content) {
@@ -786,7 +791,7 @@ class moderationV2 {
     }
     if (message.id) {
       fields.push({
-        title: this.i10010n() `ID`,
+        title: translate `ID`,
         value: message.id,
         short: true,
       })
@@ -796,7 +801,7 @@ class moderationV2 {
       for (let i in message.attachments) {
         if (message.attachments.hasOwnProperty(i)) {
           fields.push({
-            title: this.i10010n() `Attachment`,
+            title: translate `Attachment`,
             value: message.attachments[i].proxy_url,
             short: true,
           });
@@ -811,11 +816,12 @@ class moderationV2 {
     if (!message || !message.channel.guild) return;
     if (oldMessage && message.content === oldMessage.content) return;
     if (message.author && this.perms.checkUserChannel(message.author, message.channel, "msglog.whitelist.message.updated")) return;
+    const translate = this.i10010n(this.pvpcraft.getChannelLanguage(message.channel.id));
     //grab url's to the message's attachments
     let options = {};
     let fields = [];
     let attachment = {
-      title: this.i10010n() `Message Updated`,
+      title: translate `Message Updated`,
       fields,
     };
     if (message.member) {
@@ -830,32 +836,32 @@ class moderationV2 {
         return;
       }
     } else {
-      content = this.i10010n() `**Uncached** to ${utils.bubble(message.content)}`;
+      content = translate `**Uncached** to ${utils.bubble(message.content)}`;
     }
     if (message.id) {
       fields.push({
-        title: this.i10010n() `Age`,
+        title: translate `Age`,
         value: utils.idToUTCString(message.id),
         short: true,
       })
     }
     if (message.channel) {
       fields.push({
-        title: this.i10010n() `Channel`,
+        title: translate `Channel`,
         value: message.channel.mention,
         short: true,
       })
     }
     if (message.author) {
       fields.push({
-        title: this.i10010n() `User`,
+        title: translate `User`,
         value: message.author.mention,
         short: true,
       })
     }
     if (content) {
       let field = {
-        title: this.i10010n() `Content`,
+        title: translate `Content`,
         value: content,
         short: true,
       };
@@ -866,7 +872,7 @@ class moderationV2 {
       for (let i in message.attachments) {
         if (message.attachments.hasOwnProperty(i)) {
           fields.push({
-            title: this.i10010n() `Attachment`,
+            title: translate `Attachment`,
             value: message.attachments[i].proxy_url,
             short: true,
           });
@@ -879,34 +885,36 @@ class moderationV2 {
 
   channelDeleted(channel) {
     if (!channel.guild) return;
+    const translate = this.i10010n(this.pvpcraft.getChannelLanguage(channel.id));
     let fields = [{
-      title: this.i10010n() `Name`,
+      title: translate `Name`,
       value: channel.name,
       short: true,
     }, {
-      title: this.i10010n() `Age`,
+      title: translate `Age`,
       value: utils.idToUTCString(channel.id),
       short: true,
     }];
     if (channel.topic) {
       fields.push({
-        title: this.i10010n() `Topic`,
+        title: translate `Topic`,
         value: channel.topic,
         short: true,
       })
     }
     this.sendHookedMessage("channel.deleted", {}, {
-      title: this.i10010n() `Channel Deleted`,
+      title: translate `Channel Deleted`,
       fields,
     }, channel.guild.id);
   };
 
   channelCreated(channel) {
+    const translate = this.i10010n(this.pvpcraft.getChannelLanguage(channel.id));
     if (!channel.guild) return;
     this.sendHookedMessage("channel.created", {}, {
-      title: this.i10010n() `Channel Created`,
+      title: translate `Channel Created`,
       fields: [{
-        title: this.i10010n() `Channel`,
+        title: translate `Channel`,
         value: channel.mention,
         short: true,
       }],
@@ -916,26 +924,28 @@ class moderationV2 {
   channelUpdated(channel, oldChannel) {
     if (!channel || this.perms.checkChannel(channel, "msglog.whitelist.channel.updated")) return;
 
+    const translate = this.i10010n(this.pvpcraft.getChannelLanguage(channel.id));
+
     let fields = [{
-      title: this.i10010n() `Channel`,
+      title: translate `Channel`,
       value: channel.mention,
       short: true,
     }, {
-      title: this.i10010n() `Age`,
+      title: translate `Age`,
       value: utils.idToUTCString(channel.id),
       short: true,
     }];
     if (oldChannel.name != channel.name) {
       fields.push({
-        title: this.i10010n() `Name changed`,
-        value: this.i10010n() `${utils.removeBlocks(oldChannel.name)} **to** ${utils.removeBlocks(channel.name)}`,
+        title: translate `Name changed`,
+        value: translate `${utils.removeBlocks(oldChannel.name)} **to** ${utils.removeBlocks(channel.name)}`,
         short: true,
       })
     }
     if (oldChannel.topic != channel.topic) {
       fields.push({
-        title: this.i10010n() `Topic changed`,
-        value: this.i10010n() `${utils.removeBlocks(oldChannel.topic)} **to** ${utils.removeBlocks(channel.topic)}`,
+        title: translate `Topic changed`,
+        value: translate `${utils.removeBlocks(oldChannel.topic)} **to** ${utils.removeBlocks(channel.topic)}`,
         short: true,
       });
     }
@@ -946,17 +956,17 @@ class moderationV2 {
       let newField = { short: true, value: "" };
       fields.push(newField);
       if (change.overwrite.type === "member") {
-        newField.title = this.i10010n() `User Overwrite`;
+        newField.title = translate `User Overwrite`;
         newField.value = `<@${change.overwrite.id}>`;
       }
       if (change.overwrite.type === "role") {
-        newField.title = this.i10010n() `Role Overwrite`;
+        newField.title = translate `Role Overwrite`;
         newField.value = `<@&${change.overwrite.id}>`;
       }
       if (change.change === "add") {
-        newField.value += this.i10010n() ` added ${permissionsListFromNumber(change.overwrite)}`;
+        newField.value += translate ` added ${permissionsListFromNumber(change.overwrite)}`;
       } else if (change.change === "remove") {
-        newField.value += this.i10010n() ` removed ${permissionsListFromNumber(change.overwrite)}`;
+        newField.value += translate ` removed ${permissionsListFromNumber(change.overwrite)}`;
       }
       else {
         let before = change.from;
@@ -964,76 +974,78 @@ class moderationV2 {
 
         if (before.allow !== after.allow) {
           if (before.allow > after.allow) {
-            newField.value += this.i10010n() ` Add allow ${permissionsListFromNumber(before.allow - after.allow)}`;
+            newField.value += translate ` Add allow ${permissionsListFromNumber(before.allow - after.allow)}`;
           } else {
-            newField.value += this.i10010n() ` Remove allow ${permissionsListFromNumber(after.allow - before.allow)}`;
+            newField.value += translate ` Remove allow ${permissionsListFromNumber(after.allow - before.allow)}`;
           }
         }
 
         if (before.deny !== after.deny) {
           if (before.deny > after.deny) {
-            newField.value += this.i10010n() ` Add deny ${permissionsListFromNumber(before.deny - after.deny)}`;
+            newField.value += translate ` Add deny ${permissionsListFromNumber(before.deny - after.deny)}`;
           } else {
-            newField.value += this.i10010n() ` Remove deny ${permissionsListFromNumber(after.deny - before.deny)}`;
+            newField.value += translate ` Remove deny ${permissionsListFromNumber(after.deny - before.deny)}`;
           }
         }
       }
     }
     if (fields.length > 2) {
-      this.sendHookedMessage("channel.updated", {}, { title: this.i10010n() `Channel Updated`, fields }, channel.guild.id);
+      this.sendHookedMessage("channel.updated", {}, { title: translate `Channel Updated`, fields }, channel.guild.id);
     }
   };
 
   userUpdate(user, oldUser) {
-    if (!oldUser) return;
-    let fields = [{
-      title: this.i10010n() `User`,
-      value: user.mention,
-      short: true,
-    }];
-    let embed = { title: this.i10010n() `Member Updated`, fields };
-    if (oldUser.username !== user.username) {
-      fields.push({
-        title: this.i10010n() `Username`,
-        value: this.i10010n() `${utils.clean(oldUser.username)} to ${utils.clean(user.username)}`,
-        short: true,
-      });
-    }
-    if (oldUser.discriminator !== user.discriminator) {
-      fields.push({
-        title: this.i10010n() `Discriminator`,
-        value: this.i10010n() `${oldUser.discriminator} to ${user.discriminator}`,
-        short: true,
-      });
-    }
-    if (oldUser.avatar !== user.avatar) {
-      let oldURL;
-      if (oldUser.avatar != null) {
-        oldURL = `https://cdn.discordapp.com/avatars/${user.id}/${oldUser.avatar}.${oldUser.avatar.startsWith("_a") ? "gif" : "png"}?size=128`;
-      }
-      fields.push({
-        title: this.i10010n() `Avatar`,
-        value: this.i10010n() `${oldURL || "Default"} to ${user.avatarURL}`,
-        short: true,
-      });
-      embed.image_url = user.avatarURL;
-      if (oldURL) {
-        embed.thumb_url = oldURL;
-      }
-    }
-    if (fields.length < 2) return;
     this.client.guilds.forEach(guild => {
       if (guild.members.get(user.id)) {
         if (this.perms.checkUserGuild(user, guild, "msglog.whitelist.user")) return;
+        const translate = this.i10010n(this.pvpcraft.getChannelLanguage("*", guild.id));
+        if (!oldUser) return;
+        let fields = [{
+          title: translate `User`,
+          value: user.mention,
+          short: true,
+        }];
+        let embed = { title: translate `Member Updated`, fields };
+        if (oldUser.username !== user.username) {
+          fields.push({
+                        title: translate `Username`,
+                        value: translate `${utils.clean(oldUser.username)} to ${utils.clean(user.username)}`,
+                        short: true,
+                      });
+        }
+        if (oldUser.discriminator !== user.discriminator) {
+          fields.push({
+                        title: translate `Discriminator`,
+                        value: translate `${oldUser.discriminator} to ${user.discriminator}`,
+                        short: true,
+                      });
+        }
+        if (oldUser.avatar !== user.avatar) {
+          let oldURL;
+          if (oldUser.avatar != null) {
+            oldURL = `https://cdn.discordapp.com/avatars/${user.id}/${oldUser.avatar}.${oldUser.avatar.startsWith("_a") ? "gif" : "png"}?size=128`;
+          }
+          fields.push({
+                        title: translate `Avatar`,
+                        value: translate `${oldURL || "Default"} to ${user.avatarURL}`,
+                        short: true,
+                      });
+          embed.image_url = user.avatarURL;
+          if (oldURL) {
+            embed.thumb_url = oldURL;
+          }
+        }
+        if (fields.length < 2) return;
         this.sendHookedMessage("user", { user }, embed, guild.id);
       }
     });
   };
 
   roleCreated(guild, role) {
+    const translate = this.i10010n(this.pvpcraft.getChannelLanguage("*", guild.id));
     this.sendHookedMessage("role.created", {}, {
-      title: this.i10010n() `Role Created`, fields: [{
-        title: this.i10010n() `Role`,
+      title:  `Role Created`, fields: [{
+        title: translate `Role`,
         value: role.mention,
         short: true,
       }],
@@ -1041,17 +1053,18 @@ class moderationV2 {
   }
 
   roleDeleted(guild, role) {
+    const translate = this.i10010n(this.pvpcraft.getChannelLanguage("*", guild.id));
     this.sendHookedMessage("role.deleted", {}, {
-      title: this.i10010n() `Role Deleted`, fields: [{
-        title: this.i10010n() `Role`,
+      title: translate `Role Deleted`, fields: [{
+        title: translate `Role`,
         value: role.mention,
         short: true,
       }, {
-        title: this.i10010n() `Name`,
+        title: translate `Name`,
         value: role.name,
         short: true,
       }, {
-        title: this.i10010n() `Created`,
+        title: translate `Created`,
         value: utils.idToUTCString(role.id),
         short: true,
       }],
@@ -1059,12 +1072,13 @@ class moderationV2 {
   }
 
   roleUpdated(guild, role, oldRole) {
+    const translate = this.i10010n(this.pvpcraft.getChannelLanguage("*", guild.id));
     let fields = [{
-      title: this.i10010n() `Role`,
+      title: translate `Role`,
       value: role.mention,
       short: true,
     }, {
-      title: this.i10010n() `Created`,
+      title: translate `Created`,
       value: utils.idToUTCString(role.id),
       short: true,
     }];
@@ -1072,41 +1086,41 @@ class moderationV2 {
     let newPerms = arrayOfTrues(role.permissions.json).toString();
     if (oldPerms !== newPerms) {
       fields.push({
-        title: this.i10010n() `Permissions`,
-        value: this.i10010n() `${oldPerms} to ${newPerms}`,
+        title: translate `Permissions`,
+        value: translate `${oldPerms} to ${newPerms}`,
         short: true,
       });
     }
     if (oldRole.name !== role.name) {
       fields.push({
-        title: this.i10010n() `Name Changed`,
-        value: this.i10010n() `${utils.clean(oldRole.name)} to ${utils.clean(role.name)}`,
+        title: translate `Name Changed`,
+        value: translate `${utils.clean(oldRole.name)} to ${utils.clean(role.name)}`,
         short: true,
       });
     }
     if (oldRole.position !== role.position) {
       fields.push({
-        title: this.i10010n() `Position Changed`,
-        value: this.i10010n() `${oldRole.position} to ${role.position}`,
+        title: translate `Position Changed`,
+        value: translate `${oldRole.position} to ${role.position}`,
         short: true,
       });
     }
     if (oldRole.hoist !== role.hoist) {
       fields.push({
-        title: this.i10010n() `Display separately`,
-        value: this.i10010n() `${oldRole.hoist} to ${role.hoist}`,
+        title: translate `Display separately`,
+        value: translate `${oldRole.hoist} to ${role.hoist}`,
         short: true,
       });
     }
     if (oldRole.color !== role.color) {
       fields.push({
-        title: this.i10010n() `Color`,
-        value: this.i10010n() `${oldRole.color} to ${role.color}`,
+        title: translate `Color`,
+        value: translate `${oldRole.color} to ${role.color}`,
         short: true,
       });
     }
     if (fields.length < 3) return;
-    this.sendHookedMessage("role.updated", {}, { title: this.i10010n() `Role Updated`, fields }, guild.id)
+    this.sendHookedMessage("role.updated", {}, { title: translate `Role Updated`, fields }, guild.id)
   };
 
   /**
@@ -1118,10 +1132,11 @@ class moderationV2 {
    * @param {Error | null} error
    */
   async memberBanned(server, user, instigator, reason, error) {
+    const translate = this.i10010n(this.pvpcraft.getChannelLanguage("*", server.id));
     const node = instigator ? "moderation.action.ban" : "member.banned";
 
     const fields = [{
-      title: this.i10010n() `User`,
+      title: translate `User`,
       value: typeof user === "string" ? `<@${user}>` : user.mention,
       short: true,
     }];
@@ -1136,7 +1151,7 @@ class moderationV2 {
 
     if (instigator) {
       fields.push({
-        title: this.i10010n() `Responsible Moderator`,
+        title: translate `Responsible Moderator`,
         value: instigator.mention,
         short: true,
       })
@@ -1144,7 +1159,7 @@ class moderationV2 {
 
     if (reason) {
       fields.push({
-        title: this.i10010n() `Reason`,
+        title: translate `Reason`,
         value: utils.clean(reason),
         short: true,
       })
@@ -1152,14 +1167,14 @@ class moderationV2 {
 
     if (error) {
       fields.push({
-        title: this.i10010n() `Failed due to`,
+        title: translate `Failed due to`,
         value: utils.clean(error.toString()).slice(0, 250),
         short: true,
       })
     }
 
     this.sendHookedMessage(node, { user }, {
-      title: this.i10010n() `User Banned`,
+      title: translate `User Banned`,
       fields,
     }, server.id);
   };
@@ -1173,10 +1188,11 @@ class moderationV2 {
    * @param {Error | null} error
    */
   async memberMuted(server, user, instigator, reason, error) {
+    const translate = this.i10010n(this.pvpcraft.getChannelLanguage("*", server.id));
     const node = instigator ? "moderation.action.mute" : "member.mute";
 
     const fields = [{
-      title: this.i10010n() `User`,
+      title: translate `User`,
       value: typeof user === "string" ? `<@${user}>` : user.mention,
       short: true,
     }];
@@ -1191,7 +1207,7 @@ class moderationV2 {
 
     if (instigator) {
       fields.push({
-        title: this.i10010n() `Responsible Moderator`,
+        title: translate `Responsible Moderator`,
         value: instigator.mention,
         short: true,
       })
@@ -1199,7 +1215,7 @@ class moderationV2 {
 
     if (reason) {
       fields.push({
-        title: this.i10010n() `Reason`,
+        title: translate `Reason`,
         value: utils.clean(reason),
         short: true,
       })
@@ -1207,14 +1223,14 @@ class moderationV2 {
 
     if (error) {
       fields.push({
-        title: this.i10010n() `Failed due to`,
+        title: translate `Failed due to`,
         value: utils.clean(error.toString()).slice(0, 250),
         short: true,
       })
     }
 
     this.sendHookedMessage(node, { user }, {
-      title: this.i10010n() `User Muted`,
+      title: translate `User Muted`,
       fields,
     }, server.id);
   };
@@ -1228,15 +1244,16 @@ class moderationV2 {
    * @param {Error | null} error
    */
   memberUnbanned(server, user, instigator, reason, error) {
+    const translate = this.i10010n(this.pvpcraft.getChannelLanguage("*", server.id));
     let fields = [{
-      title: this.i10010n() `User`,
+      title: translate `User`,
       value: typeof user === "string" ? `<@${user}>` : user.mention,
       short: true,
     }];
 
     if (instigator) {
       fields.push({
-        title: this.i10010n() `Responsible Moderator`,
+        title: translate `Responsible Moderator`,
         value: instigator.mention,
         short: true,
       })
@@ -1244,7 +1261,7 @@ class moderationV2 {
 
     if (reason) {
       fields.push({
-        title: this.i10010n() `Reason`,
+        title: translate `Reason`,
         value: utils.clean(reason),
         short: true,
       })
@@ -1252,22 +1269,23 @@ class moderationV2 {
 
     if (error) {
       fields.push({
-        title: this.i10010n() `Failed due to`,
+        title: translate `Failed due to`,
         value: utils.clean(error.toString()).slice(0, 250),
         short: true,
       })
     }
 
     this.sendHookedMessage(instigator ? "moderation.action.unban" : "member.unbanned", { user }, {
-      title: this.i10010n() `User Unbanned`,
+      title: translate `User Unbanned`,
       fields,
     }, server.id);
   };
 
   memberAdded(server, user) {
+    const translate = this.i10010n(this.pvpcraft.getChannelLanguage("*", server.id));
     this.sendHookedMessage("member.added", { user }, {
-      title: this.i10010n() `User Joined`, fields: [{
-        title: this.i10010n() `User`,
+      title: translate `User Joined`, fields: [{
+        title: translate `User`,
         value: user.mention,
         short: true,
       }],
@@ -1283,15 +1301,16 @@ class moderationV2 {
    * @param {Error | null} error
    */
   memberRemoved(server, user, instigator, reason, error) {
+    const translate = this.i10010n(this.pvpcraft.getChannelLanguage("*", server.id));
     let fields = [{
-      title: this.i10010n() `User`,
+      title: translate `User`,
       value: typeof user === "string" ? `<@${user}>` : user.mention,
       short: true,
     }];
 
     if (typeof user !== "string") {
       fields.push({
-        title: this.i10010n() `Username`,
+        title: translate `Username`,
         value: user.username,
         short: true,
       })
@@ -1299,7 +1318,7 @@ class moderationV2 {
 
     if (instigator) {
       fields.push({
-        title: this.i10010n() `Responsible Moderator`,
+        title: translate `Responsible Moderator`,
         value: instigator.mention,
         short: true,
       })
@@ -1307,7 +1326,7 @@ class moderationV2 {
 
     if (reason) {
       fields.push({
-        title: this.i10010n() `Reason`,
+        title: translate `Reason`,
         value: utils.clean(reason),
         short: true,
       })
@@ -1315,45 +1334,46 @@ class moderationV2 {
 
     if (error) {
       fields.push({
-        title: this.i10010n() `Failed due to`,
+        title: translate `Failed due to`,
         value: utils.clean(error.toString()).slice(0, 250),
         short: true,
       })
     }
 
     this.sendHookedMessage(instigator ? "moderation.action.kick" : "member.removed", { user }, {
-      title: this.i10010n() `User Left or was Kicked`,
+      title: translate `User Left or was Kicked`,
       fields,
     }, server.id);
   }
 
   memberUpdated(guild, member, oldMember) {
+    const translate = this.i10010n(this.pvpcraft.getChannelLanguage("*", guild.id));
     if (this.perms.checkUserGuild(member, guild, "msglog.whitelist.member.updated")) return;
     if (!oldMember) return;
     let fields = [{
-      title: this.i10010n() `User`,
+      title: translate `User`,
       value: member.mention,
       short: true,
     }];
     if (oldMember.nick != member.nick) {
       fields.push({
-        title: this.i10010n() `Nick`,
-        value: this.i10010n() `${utils.clean(oldMember.nick)} to ${utils.clean(member.nick)}`,
+        title: translate `Nick`,
+        value: translate `${utils.clean(oldMember.nick)} to ${utils.clean(member.nick)}`,
         short: true,
       });
     }
     if (oldMember.voiceState) { // eris does not currently supply previous voice states. This will probably be added in the future.
       if (oldMember.voiceState.mute != member.voiceState.mute) {
         fields.push({
-          title: this.i10010n() `Muted`,
-          value: this.i10010n() `${oldMember.voiceState.mute} to ${member.voiceState.mute}`,
+          title: translate `Muted`,
+          value: translate `${oldMember.voiceState.mute} to ${member.voiceState.mute}`,
           short: true,
         });
       }
       if (oldMember.voiceState.deaf != member.voiceState.deaf) {
         fields.push({
-          title: this.i10010n() `Death`,
-          value: this.i10010n() `${oldMember.voiceState.deaf} to ${member.voiceState.deaf}`,
+          title: translate `Death`,
+          value: translate `${oldMember.voiceState.deaf} to ${member.voiceState.deaf}`,
           short: true,
         });
       }
@@ -1361,7 +1381,7 @@ class moderationV2 {
     if (oldMember.roles.length < member.roles.length) {
       let newRole = findNewRoles(member.roles, oldMember.roles);
       fields.push({
-        title: this.i10010n() `Role Added`,
+        title: translate `Role Added`,
         value: `<@&${newRole}>`,
         short: true,
       });
@@ -1369,24 +1389,25 @@ class moderationV2 {
     else if (oldMember.roles.length > member.roles.length) {
       let oldRole = findNewRoles(oldMember.roles, member.roles);
       fields.push({
-        title: this.i10010n() `Role Removed`,
+        title: translate `Role Removed`,
         value: `<@&${oldRole}>`,
         short: true,
       });
     }
     if (fields.length < 2) return;
-    this.sendHookedMessage("member.updated", { user: member }, { title: this.i10010n() `Member Updated`, fields }, guild.id);
+    this.sendHookedMessage("member.updated", { user: member }, { title: translate `Member Updated`, fields }, guild.id);
   };
 
   voiceJoin(member, newChannel) {
     if (this.perms.checkUserChannel(member, newChannel, "msglog.whitelist.voice.join")) return;
+    const translate = this.i10010n(this.pvpcraft.getChannelLanguage(newChannel.id));
     this.sendHookedMessage("voice.join", { user: member }, {
-      title: this.i10010n() `Voice Join`, fields: [{
-        title: this.i10010n() `User`,
+      title: translate `Voice Join`, fields: [{
+        title: translate `User`,
         value: member.mention,
         short: true,
       }, {
-        title: this.i10010n() `Channel`,
+        title: translate `Channel`,
         value: newChannel.mention,
         short: true,
       }],
@@ -1395,17 +1416,18 @@ class moderationV2 {
 
   voiceSwitch(member, newChannel, oldChannel) {
     if (this.perms.checkUserChannel(member, newChannel, "msglog.whitelist.voice.switch")) return;
+    const translate = this.i10010n(this.pvpcraft.getChannelLanguage(oldChannel.id));
     this.sendHookedMessage("voice.switch", { user: member }, {
-      title: this.i10010n() `Voice Switch`, fields: [{
-        title: this.i10010n() `User`,
+      title: translate `Voice Switch`, fields: [{
+        title: translate `User`,
         value: member.mention,
         short: true,
       }, {
-        title: this.i10010n() `Old Channel`,
+        title: translate `Old Channel`,
         value: oldChannel.mention,
         short: true,
       }, {
-        title: this.i10010n() `New Channel`,
+        title: translate `New Channel`,
         value: newChannel.mention,
         short: true,
       }],
@@ -1414,13 +1436,14 @@ class moderationV2 {
 
   voiceLeave(member, oldChannel) {
     if (this.perms.checkUserChannel(member, oldChannel, "msglog.whitelist.voice.leave")) return;
+    const translate = this.i10010n(this.pvpcraft.getChannelLanguage(oldChannel.id));
     this.sendHookedMessage("voice.leave", { user: member }, {
-      title: this.i10010n() `Voice Leave`, fields: [{
-        title: this.i10010n() `User`,
+      title: translate `Voice Leave`, fields: [{
+        title: translate `User`,
         value: member.mention,
         short: true,
       }, {
-        title: this.i10010n() `Channel`,
+        title: translate `Channel`,
         value: oldChannel.mention,
         short: true,
       }],
