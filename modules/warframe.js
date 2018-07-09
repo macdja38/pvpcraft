@@ -36,12 +36,14 @@ class Warframe {
    * @param {MessageSender} e.messageSender Instantiated message sender
    * @param {SlowSender} e.slowSender Instantiated slow sender
    * @param {PvPClient} e.pvpClient PvPCraft client library instance
+   * @param {PvPCraft} e.pvpcraft PvPCraft instance
    * @param {Function} e.i10010n internationalization function
    */
   constructor(e) {
     // this.dbEvents = new DBEventState(e);
     //noinspection JSUnresolvedVariable
     this.client = e.client;
+    this.pvpcraft = e.pvpcraft;
     //noinspection JSUnresolvedVariable
     this.config = e.configDB;
     //noinspection JSUnresolvedVariable
@@ -218,7 +220,7 @@ class Warframe {
    */
   checkMisc(msg) {
     if (msg.content.toLowerCase().indexOf("soon") === 0 && msg.content.indexOf(":tm:") < 0 && this.perms.check(msg, "warframe.misc.soon")) {
-      msg.channel.createMessage(this.i10010n() `Soon:tm:`).catch(this.perms.getAutoDeny(msg));
+      msg.channel.createMessage(this.i10010n(this.pvpcraft.getChannelLanguage(msg.channel.id)) `Soon:tm:`).catch(this.perms.getAutoDeny(msg));
       return true;
     }
     return false;
@@ -250,7 +252,7 @@ class Warframe {
       channels: ["*"],
       execute: command => {
         return this.getPlatformDependantWorldState(command).then((state) => {
-          command.createMessageAutoDeny(this.i10010n() `\`\`\`haskell
+          command.createMessageAutoDeny(command.translate `\`\`\`haskell
 Darvo is selling ${parseState.getName(state.DailyDeals[0].StoreItem)} for ${state.DailyDeals[0].SalePrice}p (${state.DailyDeals[0].Discount}% off, ${state.DailyDeals[0].AmountTotal - state.DailyDeals[0].AmountSold}/${state.DailyDeals[0].AmountTotal} left, refreshing in ${parseState.toTimeDifference(state, state.DailyDeals[0].Expiry)})
 \`\`\``);
         });
@@ -284,9 +286,9 @@ Darvo is selling ${parseState.getName(state.DailyDeals[0].StoreItem)} for ${stat
               }
             }
             if (coloredRolesList !== "") {
-              command.createMessageAutoDeny(this.i10010n() `Available alerts include \`\`\`xl\n${coloredRolesList}\`\`\``)
+              command.createMessageAutoDeny(command.translate `Available alerts include \`\`\`xl\n${coloredRolesList}\`\`\``)
             } else {
-              command.replyAutoDeny(this.i10010n() `No alerts are being tracked.`)
+              command.replyAutoDeny(command.translate `No alerts are being tracked.`)
             }
             return true;
           },
@@ -298,19 +300,19 @@ Darvo is selling ${parseState.getName(state.DailyDeals[0].StoreItem)} for ${stat
           execute: command => {
             let roles = this.config.get("warframeAlerts", { items: {} }, { server: command.channel.guild.id }).items;
             if (!command.args[0] || !roles[command.args[0]]) {
-              command.replyAutoDeny(this.i10010n() `Please supply an item to join using \`${command.prefix}alert join \<rank\>\`, for a list of items use \`${command.prefix}alert list\``);
+              command.replyAutoDeny(command.translate `Please supply an item to join using \`${command.prefix}alert join \<rank\>\`, for a list of items use \`${command.prefix}alert list\``);
               return true;
             }
             let rankToJoin = command.args[0].toLowerCase();
             let role = command.channel.guild.roles.get(roles[rankToJoin]);
             if (role) {
               command.channel.guild.addMemberRole(command.author.id, role.id).catch((error) => {
-                command.replyAutoDeny(this.i10010n() `Error ${error} promoting ${utils.removeBlocks(command.author.username)} try redefining your rank and making sure the bot has enough permissions.`)
+                command.replyAutoDeny(command.translate `Error ${error} promoting ${utils.removeBlocks(command.author.username)} try redefining your rank and making sure the bot has enough permissions.`)
               }).then(() => {
-                command.replyAutoDeny(this.i10010n() `:thumbsup::skin-tone-2:`);
+                command.replyAutoDeny(command.translate `:thumbsup::skin-tone-2:`);
               })
             } else {
-              command.replyAutoDeny(this.i10010n() `Role could not be found, have an administrator use \`${command.prefix}tracking --add <item>\` to add it.`);
+              command.replyAutoDeny(command.translate `Role could not be found, have an administrator use \`${command.prefix}tracking --add <item>\` to add it.`);
             }
             return true;
           },
@@ -322,18 +324,18 @@ Darvo is selling ${parseState.getName(state.DailyDeals[0].StoreItem)} for ${stat
           execute: command => {
             let roles = this.config.get("warframeAlerts", { items: {} }, { server: command.channel.guild.id }).items;
             if (!command.args[0] || !roles[command.args[0]]) {
-              command.replyAutoDeny(this.i10010n() `Please supply a rank to leave using \`${command.prefix}alerts leave \<rank\>\`, for a list of items use \`${command.prefix}alerts list\``);
+              command.replyAutoDeny(command.translate `Please supply a rank to leave using \`${command.prefix}alerts leave \<rank\>\`, for a list of items use \`${command.prefix}alerts list\``);
               return true;
             }
             let role = command.channel.guild.roles.get(roles[command.args[0]]);
             if (role) {
               command.channel.guild.removeMemberRole(command.author.id, role.id).catch((error) => {
-                command.replyAutoDeny(this.i10010n() `Error ${error} demoting ${utils.removeBlocks(command.author.username)} try redefining your rank and making sure the bot has enough permissions.`)
+                command.replyAutoDeny(command.translate `Error ${error} demoting ${utils.removeBlocks(command.author.username)} try redefining your rank and making sure the bot has enough permissions.`)
               }).then(() => {
-                command.replyAutoDeny(this.i10010n() `:thumbsup::skin-tone-2:`);
+                command.replyAutoDeny(command.translate `:thumbsup::skin-tone-2:`);
               })
             } else {
-              command.reply(this.i10010n() `Role could not be found, have an administrator use \`${command.prefix}alerts add <item>\` to add it.`);
+              command.reply(command.translate `Role could not be found, have an administrator use \`${command.prefix}alerts add <item>\` to add it.`);
               return true;
             }
             return true;
@@ -357,7 +359,7 @@ Darvo is selling ${parseState.getName(state.DailyDeals[0].StoreItem)} for ${stat
               if (Object.keys(this.worldState.getEnabledStates()).includes(command.options.platform)) {
                 config.platform = command.options.platform;
               } else {
-                return command.replyAutoDeny(this.i10010n() `Invalid platform provided, please try one of the following ${Object.keys(this.worldState.getEnabledStates()).join(", ")}`)
+                return command.replyAutoDeny(command.translate `Invalid platform provided, please try one of the following ${Object.keys(this.worldState.getEnabledStates()).join(", ")}`)
               }
             }
             config.tracking = command.command === "enable";
@@ -371,7 +373,7 @@ Darvo is selling ${parseState.getName(state.DailyDeals[0].StoreItem)} for ${stat
             }
             this.config.set("warframeAlerts", config, { server: command.channel.guild.id });
             this.rebuildAlerts();
-            command.replyAutoDeny(this.i10010n() `:thumbsup::skin-tone-2:`);
+            command.replyAutoDeny(command.translate `:thumbsup::skin-tone-2:`);
             return true;
           },
         },
@@ -395,7 +397,7 @@ Darvo is selling ${parseState.getName(state.DailyDeals[0].StoreItem)} for ${stat
                 config.items = {};
               }
               if (config.items.hasOwnProperty(command.args[0].toLowerCase())) {
-                command.createMessageAutoDeny(this.i10010n() `${command.author.mention}, Resource is already being tracked, use \`${command.prefix}alert join ${utils.clean(command.args[0])}\` to join it.`);
+                command.createMessageAutoDeny(command.translate `${command.author.mention}, Resource is already being tracked, use \`${command.prefix}alert join ${utils.clean(command.args[0])}\` to join it.`);
                 return;
               }
               let options = {
@@ -406,19 +408,19 @@ Darvo is selling ${parseState.getName(state.DailyDeals[0].StoreItem)} for ${stat
               command.channel.guild.createRole(options).then((role) => {
                 config.items[role.name] = role.id;
                 this.config.set("warframeAlerts", config, { server: command.channel.guild.id });
-                command.replyAutoDeny(this.i10010n() `Created role ${utils.clean(role.name)} with id ${role.id}`);
+                command.replyAutoDeny(command.translate `Created role ${utils.clean(role.name)} with id ${role.id}`);
               }).catch((error) => {
                 if (error.code === 50013) {
-                  command.replyAutoDeny(this.i10010n() `Error, insufficient permissions, please give me manage roles.`);
+                  command.replyAutoDeny(command.translate `Error, insufficient permissions, please give me manage roles.`);
                 }
                 else {
-                  command.replyAutoDeny(this.i10010n() `Unexpected error \`${error}\` please report the issue https://invite.pvpcraft.ca/`);
+                  command.replyAutoDeny(command.translate `Unexpected error \`${error}\` please report the issue https://invite.pvpcraft.ca/`);
                   console.dir(error, { depth: 2, color: true });
                 }
               });
               return true;
             }
-            command.replyAutoDeny(this.i10010n() `invalid option's please specify the name of a resource to track to change tracking options`);
+            command.replyAutoDeny(command.translate `invalid option's please specify the name of a resource to track to change tracking options`);
             return true;
           },
         },
@@ -442,7 +444,7 @@ Darvo is selling ${parseState.getName(state.DailyDeals[0].StoreItem)} for ${stat
                 config.items = {};
               }
               if (!config.items.hasOwnProperty(command.args[0])) {
-                command.reply(this.i10010n() `Resource is not being tracked, use \`${command.prefix}alert add ${utils.clean(command.args[0])}\` to add it.`);
+                command.reply(command.translate `Resource is not being tracked, use \`${command.prefix}alert add ${utils.clean(command.args[0])}\` to add it.`);
                 return true;
               }
               let roleName = command.args[0].toLowerCase();
@@ -451,14 +453,14 @@ Darvo is selling ${parseState.getName(state.DailyDeals[0].StoreItem)} for ${stat
                 command.channel.guild.deleteRole(role.id).then(() => {
                   delete config.items[command.args[0]];
                   this.config.set("warframeAlerts", config, { server: command.channel.guild.id, conflict: "replace" });
-                  command.replyAutoDeny(this.i10010n() `Deleted role ${utils.clean(command.args[0])} with id \`${role.id}\``);
+                  command.replyAutoDeny(command.translate `Deleted role ${utils.clean(command.args[0])} with id \`${role.id}\``);
                 }).catch((error) => {
                   if (error) {
                     if (error.status === 403) {
-                      command.replyAutoDeny(this.i10010n() `Error, insufficient permissions, please give me manage roles.`);
+                      command.replyAutoDeny(command.translate `Error, insufficient permissions, please give me manage roles.`);
                     }
                     else {
-                      command.replyAutoDeny(this.i10010n() `Unexpected error please report the issue https://pvpcraft.ca/pvpbot`);
+                      command.replyAutoDeny(command.translate `Unexpected error please report the issue https://pvpcraft.ca/pvpbot`);
                       console.log(error);
                       console.log(error.stack);
                     }
@@ -468,11 +470,11 @@ Darvo is selling ${parseState.getName(state.DailyDeals[0].StoreItem)} for ${stat
               } else {
                 delete config.items[command.args[0]];
                 this.config.set("warframeAlerts", config, { server: command.channel.guild.id, conflict: "replace" });
-                command.replyAutoDeny(this.i10010n() `Role not found, removed ${utils.clean(command.args[0])} from list.`);
+                command.replyAutoDeny(command.translate `Role not found, removed ${utils.clean(command.args[0])} from list.`);
                 return true;
               }
             }
-            command.replyAutoDeny(this.i10010n() `Invalid option's please specify the name of a resource to track to change tracking options`);
+            command.replyAutoDeny(command.translate `Invalid option's please specify the name of a resource to track to change tracking options`);
             return true;
           },
         },
@@ -484,7 +486,7 @@ Darvo is selling ${parseState.getName(state.DailyDeals[0].StoreItem)} for ${stat
       execute: command => {
         return this.getPlatformDependantWorldState(command).then((state) => {
           if (!state.VoidTraders || !state.VoidTraders[0]) {
-            command.createMessageAutoDeny(this.i10010n() `Baro has disappeared from the universe.`);
+            command.createMessageAutoDeny(command.translate `Baro has disappeared from the universe.`);
             return true;
           }
           if (state.VoidTraders[0].Manifest) {
@@ -496,15 +498,15 @@ Darvo is selling ${parseState.getName(state.DailyDeals[0].StoreItem)} for ${stat
             }
             rep += "```";
 
-            command.createMessageAutoDeny(this.i10010n() `\`\`\`haskell\nBaro leaving ${state.VoidTraders[0].Node} in ${
+            command.createMessageAutoDeny(command.translate `\`\`\`haskell\nBaro leaving ${state.VoidTraders[0].Node} in ${
               utils.secondsToTime(state.VoidTraders[0].Expiry.$date.$numberLong / 1000 - state.Time)
             }\n${
-              state.VoidTraders[0].Manifest.map(item => this.i10010n() `item: ${parseState.getName(item.ItemType)} - price: ${item.PrimePrice} ducats ${item.RegularPrice}cr\n`)
-            }\`\`\``)
+              state.VoidTraders[0].Manifest.map(item => command.translate `item: ${parseState.getName(item.ItemType)} - price: ${item.PrimePrice} ducats ${item.RegularPrice}cr\n`)
+            }\`\`\``);
             command.createMessageAutoDeny(rep);
           }
           else {
-            command.createMessageAutoDeny(this.i10010n() `\`\`\`haskell\nBaro appearing at ${state.VoidTraders[0].Node} in ${
+            command.createMessageAutoDeny(command.translate `\`\`\`haskell\nBaro appearing at ${state.VoidTraders[0].Node} in ${
               parseState.toTimeDifference(state, state.VoidTraders[0].Activation)
             }\n\`\`\``);
           }
@@ -521,12 +523,12 @@ Darvo is selling ${parseState.getName(state.DailyDeals[0].StoreItem)} for ${stat
           return true;
         }
         if (command.args[0].toLowerCase() === "help") {
-          command.reply(this.i10010n() `\`${command.prefix}${command.command} <jv | lor> <username>\``);
+          command.reply(command.translate `\`${command.prefix}${command.command} <jv | lor> <username>\``);
           return true;
         }
         if (command.args.length < 2) {
           command.createMessageAutoDeny(
-            this.i10010n() `​http://wf.christx.tw/search.php?id=${utils.clean(command.args[0])}`);
+            command.translate `​http://wf.christx.tw/search.php?id=${utils.clean(command.args[0])}`);
           return true;
         }
         let place = command.args[0].toLowerCase();
@@ -552,9 +554,9 @@ Darvo is selling ${parseState.getName(state.DailyDeals[0].StoreItem)} for ${stat
               if (node) {
                 let nodeFaction = parseState.getFaction(node.faction);
                 let nodeMission = parseState.getMissionType(node.mission_type);
-                string += this.i10010n() `\`\`\`xl\n${parseState.getTierName(mission.Modifier).name} (${mission.Modifier.slice(4)}) rift active on ${parseState.getNodeName(mission.Node)} (${nodeFaction} ${nodeMission}) for ${parseState.toTimeDifference(state, mission.Expiry)}\n\`\`\``;
+                string += command.translate `\`\`\`xl\n${parseState.getTierName(mission.Modifier).name} (${mission.Modifier.slice(4)}) rift active on ${parseState.getNodeName(mission.Node)} (${nodeFaction} ${nodeMission}) for ${parseState.toTimeDifference(state, mission.Expiry)}\n\`\`\``;
               } else {
-                string += this.i10010n() `\`\`\`xl\n${parseState.getTierName(mission.Modifier).name} (${mission.Modifier.slice(4)}) rift active for ${utils.secondsToTime(mission.Expiry.sec - state.Time)}\n\`\`\``;
+                string += command.translate `\`\`\`xl\n${parseState.getTierName(mission.Modifier).name} (${mission.Modifier.slice(4)}) rift active for ${utils.secondsToTime(mission.Expiry.sec - state.Time)}\n\`\`\``;
               }
             }
             command.createMessageAutoDeny(string);
@@ -568,7 +570,7 @@ Darvo is selling ${parseState.getName(state.DailyDeals[0].StoreItem)} for ${stat
       execute: command => {
         //use wikia's api to search for the item.
         if (command.args.length === 0) {
-          command.createMessageAutoDeny(this.i10010n() `Please provide something to search for!`);
+          command.createMessageAutoDeny(command.translate `Please provide something to search for!`);
           return true;
         }
         request.post("http://warframe.wikia.com/api/v1/Search/List", {
@@ -578,7 +580,7 @@ Darvo is selling ${parseState.getName(state.DailyDeals[0].StoreItem)} for ${stat
           },
         }, (err, response, body) => {
           if (err || response.statusCode === 404) {
-            command.createMessageAutoDeny(this.i10010n() `Could not find **${utils.clean(command.args.join(' '))}**`);
+            command.createMessageAutoDeny(command.translate `Could not find **${utils.clean(command.args.join(' '))}**`);
           } else if (response.statusCode !== 200) {
             console.error(' returned HTTP status ' + response.statusCode);
           } else {
@@ -602,15 +604,15 @@ Darvo is selling ${parseState.getName(state.DailyDeals[0].StoreItem)} for ${stat
             let fields = sortie.Variants.map(mission => {
               return {
                 name: `  ${parseState.getNodeName(mission.node)} `,
-                value: this.i10010n() `  ${parseState.getMissionType(mission.missionType)} with ${parseState.getSortieModifier(mission.modifierType)} ‎`,
+                value: command.translate `  ${parseState.getMissionType(mission.missionType)} with ${parseState.getSortieModifier(mission.modifierType)} ‎`,
                 inline: true,
               };
             });
             let embed = {
-              title: this.i10010n() `${(sortie.Boss || "").split("_").pop()} Sortie`,
+              title: command.translate `${(sortie.Boss || "").split("_").pop()} Sortie`,
               timestamp: parseState.toISOTime(sortie.Expiry),
               footer: {
-                text: this.i10010n() `Expires in ${parseState.toTimeDifference(state, sortie.Expiry)} which is on `,
+                text: command.translate `Expires in ${parseState.toTimeDifference(state, sortie.Expiry)} which is on `,
               },
               fields,
             };
@@ -624,7 +626,7 @@ Darvo is selling ${parseState.getName(state.DailyDeals[0].StoreItem)} for ${stat
       permissionCheck: this.perms.genCheckCommand("warframe.farm"),
       channels: ["*"],
       execute: command => {
-        command.createMessageAutoDeny(this.i10010n() `You can probably find that resource here: \<https://steamcommunity.com/sharedfiles/filedetails/?id=181630751\>`);
+        command.createMessageAutoDeny(command.translate `You can probably find that resource here: \<https://steamcommunity.com/sharedfiles/filedetails/?id=181630751\>`);
         return true;
       },
     }, {
@@ -632,7 +634,7 @@ Darvo is selling ${parseState.getName(state.DailyDeals[0].StoreItem)} for ${stat
       permissionCheck: this.perms.genCheckCommand("warframe.damage"),
       channels: ["*"],
       execute: command => {
-        command.createMessageAutoDeny(this.i10010n() `\`\`\`haskell\nDamage 2.0: https://pvpcraft.ca/wfd2.png Thanks for image Telkhines\n\`\`\``);
+        command.createMessageAutoDeny(command.translate `\`\`\`haskell\nDamage 2.0: https://pvpcraft.ca/wfd2.png Thanks for image Telkhines\n\`\`\``);
         return true;
       },
     }, {
@@ -643,13 +645,13 @@ Darvo is selling ${parseState.getName(state.DailyDeals[0].StoreItem)} for ${stat
         return this.getPlatformDependantWorldState(command).then((state) => {
           const events = state.Events.map(e =>
             event.Messages[0].Message.toLowerCase().indexOf("acces") > -1
-            ? this.i10010n() `${event.Messages[0].Message.toUpperCase()} since ${utils.secondsToTime(state.Time - event.Date.sec)} ago`
+            ? command.translate `${event.Messages[0].Message.toUpperCase()} since ${utils.secondsToTime(state.Time - event.Date.sec)} ago`
             : undefined
           );
           if (events) {
-            command.createMessageAutoDeny(this.i10010n() `\`\`\`haskell\n${events}\`\`\``)
+            command.createMessageAutoDeny(command.translate `\`\`\`haskell\n${events}\`\`\``)
           } else {
-            this.client.createMessage(this.i10010n() `No prime access could be found`);
+            this.client.createMessage(command.translate `No prime access could be found`);
           }
         });
       },
@@ -661,7 +663,7 @@ Darvo is selling ${parseState.getName(state.DailyDeals[0].StoreItem)} for ${stat
         return this.getPlatformDependantWorldState(command).then((state) => {
           let fields = [];
           let embed = {
-            title: this.i10010n() `Warframe updates`,
+            title: command.translate `Warframe updates`,
             fields,
           };
           let checks = ["update", "hotfix"];
@@ -669,8 +671,8 @@ Darvo is selling ${parseState.getName(state.DailyDeals[0].StoreItem)} for ${stat
             for (let check of checks) {
               if (event.Messages[0].Message.toLowerCase().indexOf(check) > -1) {
                 fields.push({
-                  value: this.i10010n() `[${event.Messages[0].Message.toLowerCase()}](${event.Prop}) Since ${parseState.toTimeDifferenceInPast(state, event.Date)} ago.`,
-                  name: this.i10010n() `\u00A0\u200A\u000B\u3000\uFEFF\u2004\u2000\u200E`,
+                  value: command.translate `[${event.Messages[0].Message.toLowerCase()}](${event.Prop}) Since ${parseState.toTimeDifferenceInPast(state, event.Date)} ago.`,
+                  name: command.translate `\u00A0\u200A\u000B\u3000\uFEFF\u2004\u2000\u200E`,
                   inline: false,
                 });
                 checks.slice(check);
@@ -688,7 +690,7 @@ Darvo is selling ${parseState.getName(state.DailyDeals[0].StoreItem)} for ${stat
       channels: ["*"],
       execute: command => {
         if (command.args.length < 1 || command.args.length === 2 || command.args.length > 3) {
-          command.createMessageAutoDeny(this.i10010n() `\`\`\`haskell\npossible uses include:\n${
+          command.createMessageAutoDeny(command.translate `\`\`\`haskell\npossible uses include:\n${
             command.prefix}armor (Base Armor) (Base Level) (Current Level) calculate armor and stats.\n${
             command.prefix}armor (Current Armor)\n\`\`\``);
           return true;
@@ -698,13 +700,13 @@ Darvo is selling ${parseState.getName(state.DailyDeals[0].StoreItem)} for ${stat
           ? parseInt(command.args[0]) * (1 + (Math.pow((parseInt(command.args[2]) - parseInt(command.args[1])), 1.75) / 200))
           : parseInt(command.args[0]);
         if (command.args.length === 3 && (parseInt(command.args[2]) - parseInt(command.args[1])) < 0) {
-          command.createMessageAutoDeny(this.i10010n() `\`\`\`haskell\nPlease check your input values\n\`\`\``);
+          command.createMessageAutoDeny(command.translate `\`\`\`haskell\nPlease check your input values\n\`\`\``);
           return true;
         }
         command.createMessageAutoDeny(
           "```haskell"
-          + (command.args.length === 3 ? this.i10010n() `at level ${command.args[2]} your enemy would have ${armor} Armor\n` : "")
-          + this.i10010n() `${armor / (armor + 300) * 100}% damage reduction\n\`\`\``
+          + (command.args.length === 3 ? command.translate `at level ${command.args[2]} your enemy would have ${armor} Armor\n` : "")
+          + command.translate `${armor / (armor + 300) * 100}% damage reduction\n\`\`\``
         );
         return true;
 

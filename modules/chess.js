@@ -131,6 +131,7 @@ class chess {
    */
   constructor(e) {
     this.client = e.client;
+    this.pvpcraft = e.pvpcraft;
     this.raven = e.raven;
     this.i10010n = e.i10010n;
     this.r = e.r;
@@ -181,12 +182,12 @@ class chess {
       channels: ["*"],
       execute: (command) => {
         if (this.games.hasOwnProperty(command.channel.id)) {
-          command.replyAutoDeny(this.i10010n() `Sorry, game already in progress`);
+          command.replyAutoDeny(command.translate `Sorry, game already in progress`);
           return true;
         }
         this.games[command.channel.id] = chessClient.create();
         this.turns[command.channel.id] = "white";
-        command.replyAutoDeny(this.i10010n() `Game started`);
+        command.replyAutoDeny(command.translate `Game started`);
         //r.table(table).insert({})
       },
     }, {
@@ -197,11 +198,11 @@ class chess {
       usage: "move <move in [algebraic chess notation](https://truckersection.com/guide-to-algebraic-chess-notation/)>",
       execute: (command) => {
         if (!this.games.hasOwnProperty(command.channel.id)) {
-          command.replyAutoDeny(this.i10010n() `Sorry, no game in progress`);
+          command.replyAutoDeny(command.translate `Sorry, no game in progress`);
           return true;
         }
         if (command.args.length < 1) {
-          command.replyAutoDeny(this.i10010n() `usage \`${command.prefix}move <move in Algebraic Chess Notation>\``);
+          command.replyAutoDeny(command.translate `usage \`${command.prefix}move <move in Algebraic Chess Notation>\``);
           return true;
         }
         try {
@@ -238,12 +239,12 @@ class chess {
       channels: ["*"],
       execute: (command) => {
         if (!this.games.hasOwnProperty(command.channel.id)) {
-          command.replyAutoDeny(this.i10010n() `Sorry, game is not in progress`);
+          command.replyAutoDeny(command.translate `Sorry, game is not in progress`);
           return true;
         }
         delete this.games[command.channel.id];
         delete this.turns[command.channel.id];
-        return command.replyAutoDeny(this.i10010n() `Game ended`);
+        return command.replyAutoDeny(command.translate `Game ended`);
       },
     }];
   }

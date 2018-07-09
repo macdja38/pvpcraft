@@ -99,20 +99,20 @@ class utilities {
             let comaUserNameCodes = [...member.username].map(char => char.charCodeAt(0)).join(", ");
             command.createMessageAutoDeny({
               embed: {
-                title: this.i10010n() `User Info for ${utils.clean(member.username)}`,
-                description: this.i10010n() `Char Codes: ${comaUserNameCodes}\n` +
-                ((member.nick) ? this.i10010n() `Nick: ${utils.clean(member.nick)}\n` : "") +
+                title: command.translate `User Info for ${utils.clean(member.username)}`,
+                description: command.translate `Char Codes: ${comaUserNameCodes}\n` +
+                ((member.nick) ? command.translate `Nick: ${utils.clean(member.nick)}\n` : "") +
                 `Id: ${member.id}\n` +
-                this.i10010n() `Descrim: ${member.discriminator}\n` +
-                this.i10010n() `Created: ${new Date(member.createdAt).toUTCString()}\n` +
-                this.i10010n() `Joined: ${new Date(member.joinedAt).toUTCString()}\n` +
-                this.i10010n() `Avatar URL: ${member.avatarURL}\n`,
+                command.translate `Descrim: ${member.discriminator}\n` +
+                command.translate `Created: ${new Date(member.createdAt).toUTCString()}\n` +
+                command.translate `Joined: ${new Date(member.joinedAt).toUTCString()}\n` +
+                command.translate `Avatar URL: ${member.avatarURL}\n`,
                 thumbnail: {url: member.avatarURL},
               },
             });
           }
           else {
-            string += this.i10010n() `Could not find **${utils.clean(arg)}**.
+            string += command.translate `Could not find **${utils.clean(arg)}**.
 `;
           }
         }
@@ -147,13 +147,13 @@ class utilities {
       execute: command => {
         command.createMessageAutoDeny({
           embed: {
-            title: this.i10010n() `Status info`,
-            description: this.i10010n() `\`\`\`xl\nShard: ${process.env.id}/${process.env.shards}\n` +
-            this.i10010n() `CPU: ${os.loadavg()[0] / numCPUs * 100}%\n` +
-            this.i10010n() `LoadAverage ${os.loadavg()}\n` +
-            this.i10010n() `Memory usage: ${process.memoryUsage().heapTotal / 1000000}MB\n` +
+            title: command.translate `Status info`,
+            description: command.translate `\`\`\`xl\nShard: ${process.env.id}/${process.env.shards}\n` +
+            command.translate `CPU: ${os.loadavg()[0] / numCPUs * 100}%\n` +
+            command.translate `LoadAverage ${os.loadavg()}\n` +
+            command.translate `Memory usage: ${process.memoryUsage().heapTotal / 1000000}MB\n` +
             `RSS: ${process.memoryUsage().rss / 1000000}MB\n\`\`\`` +
-            this.i10010n() `Version: [current](https://github.com/macdja38/pvpcraft/commit/${this.git.commit}), [outdated by](https://github.com/macdja38/pvpcraft/compare/${this.git.commit}...${this.git.branch})`,
+            command.translate `Version: [current](https://github.com/macdja38/pvpcraft/commit/${this.git.commit}), [outdated by](https://github.com/macdja38/pvpcraft/compare/${this.git.commit}...${this.git.branch})`,
             thumbnail: {url: this.client.user.avatarURL},
           },
         });

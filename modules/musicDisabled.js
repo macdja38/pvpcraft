@@ -36,7 +36,7 @@ class music {
       permissionCheck: (command) => this.perms.check(command, `music.${command.command}`),
       channels: ["guild"],
       execute: command => {
-        return command.replyAutoDeny(this.i10010n() `Sorry music is currently disabled at the moment, please join https://join.pvpcraft.ca and check the #announcements chat for info on why and status updates`);
+        return command.replyAutoDeny(command.translate `Sorry music is currently disabled at the moment, please join https://join.pvpcraft.ca and check the #announcements chat for info on why and status updates`);
       },
     }];
   }

@@ -149,31 +149,31 @@ class minecraft {
         mcping(address, port, (err, res) => {
           if (err) {
             console.error(err);
-            command.createMessageAutoDeny(this.i10010n() `\`\`\`xl\n${err}\`\`\``)
+            command.createMessageAutoDeny(command.translate `\`\`\`xl\n${err}\`\`\``)
           }
           else {
             let description = res.description;
             command.createMessage({
               embed: {
-                title: this.i10010n() `Server info of ${utils.clean(`${address}:${port}`)}`,
+                title: command.translate `Server info of ${utils.clean(`${address}:${port}`)}`,
                 fields: [{
-                  name: this.i10010n() `Ping`,
-                  value: this.i10010n() `${now() - t1}ms`,
+                  name: command.translate `Ping`,
+                  value: command.translate `${now() - t1}ms`,
                   inline: true,
                 }, {
-                  name: this.i10010n() `Version`,
+                  name: command.translate `Version`,
                   value: `${res.version.name}`,
                   inline: true,
                 }, {
-                  name: this.i10010n() `Protocol`,
+                  name: command.translate `Protocol`,
                   value: `${res.version.protocol}`,
                   inline: true,
                 }, {
-                  name: this.i10010n() `Players`,
+                  name: command.translate `Players`,
                   value: `${res.players.online}/${res.players.max}`,
                   inline: true,
                 }, {
-                  name: this.i10010n() `Description`,
+                  name: command.translate `Description`,
                   value: description.text === '' ? description.extra.map(e => e.text).join("") : description.text,
                   inline: true,
                 }],
@@ -189,13 +189,13 @@ class minecraft {
       channels: ["*"],
       execute: command => {
         if (command.args.length < 1) {
-          command.reply(this.i10010n() `usage \`${command.prefix}mcavatar <minecraft username>\``);
+          command.reply(command.translate `usage \`${command.prefix}mcavatar <minecraft username>\``);
           return true;
         }
         command.createMessageAutoDeny({
           embed: {
-            title: this.i10010n() `Avatar of ${utils.clean(command.args[0])}`,
-            thumbnail: {url: this.i10010n() `https://mcapi.ca/avatar/2d/${command.args[0]}/100/${((command.flags.includes("b")) ? "false" : "true")}`},
+            title: command.translate `Avatar of ${utils.clean(command.args[0])}`,
+            thumbnail: {url: command.translate `https://mcapi.ca/avatar/2d/${command.args[0]}/100/${((command.flags.includes("b")) ? "false" : "true")}`},
           },
         });
         return true;
@@ -206,13 +206,13 @@ class minecraft {
       channels: ["*"],
       execute: command => {
         if (command.args.length < 1) {
-          command.reply(this.i10010n() `usage \`${command.prefix}mcskin <minecraft username>\``);
+          command.reply(command.translate `usage \`${command.prefix}mcskin <minecraft username>\``);
           return true;
         }
         command.createMessageAutoDeny({
           embed: {
-            title: this.i10010n() `Skin of ${utils.clean(command.args[0])}`,
-            thumbnail: {url: this.i10010n() `https://visage.surgeplay.com/full/404/${command.args[0]}.png`},
+            title: command.translate `Skin of ${utils.clean(command.args[0])}`,
+            thumbnail: {url: command.translate `https://visage.surgeplay.com/full/404/${command.args[0]}.png`},
           },
         });
         return true;
@@ -224,9 +224,9 @@ class minecraft {
       execute: command => {
         return utils.mediaWikiSearch("http://minecraft.gamepedia.com/api.php", command.args.join(" ")).then(result => {
           if (result.length < 4 || result[3].length < 1) {
-            return command.replyAutoDeny(this.i10010n() `Not enough results.`)
+            return command.replyAutoDeny(command.translate `Not enough results.`)
           } else {
-            return command.replyAutoDeny(this.i10010n() `${result[3][0]}${result.length > 1 ? `\n\n**Also see**:\n${result[3].slice(1, Math.min(result.length, 3)).map(r => `<${r}>`).join("\n")}` : ""}`);
+            return command.replyAutoDeny(command.translate `${result[3][0]}${result.length > 1 ? `\n\n**Also see**:\n${result[3].slice(1, Math.min(result.length, 3)).map(r => `<${r}>`).join("\n")}` : ""}`);
           }
         })
       },
@@ -237,10 +237,10 @@ class minecraft {
       usage: "mc",
       execute: command => {
         if (!(command.options.hasOwnProperty("username") && command.options.hasOwnProperty("password"))) {
-          return command.replyAutoDeny(this.i10010n() `Please supply a username and password via \`--username <username>\` and \`--password <password>\``)
+          return command.replyAutoDeny(command.translate `Please supply a username and password via \`--username <username>\` and \`--password <password>\``)
         }
         if (!command.options.hasOwnProperty("host")) {
-          return command.replyAutoDeny(this.i10010n() `Please supply a host address via \`--host <host>\``);
+          return command.replyAutoDeny(command.translate `Please supply a host address via \`--host <host>\``);
         }
         const options = {
           https: command.options.https === "true",
@@ -253,10 +253,10 @@ class minecraft {
         return mcapi.createRequest().add("server.version").dispatch(options).then((result) => {
           if (result.length > 0 && result[0].result === "success") {
             return this.configDB.set("mcauth", options, {server: command.channel.guild.id}).then(() => {
-              return command.replyAutoDeny(this.i10010n() `Connection successfully made, saving configuration to database`);
+              return command.replyAutoDeny(command.translate `Connection successfully made, saving configuration to database`);
             });
           } else {
-            return command.replyAutoDeny(this.i10010n() `Connection un-successful, result is `, result)
+            return command.replyAutoDeny(command.translate `Connection un-successful, result is `, result)
           }
         })
       },
@@ -268,7 +268,7 @@ class minecraft {
       execute: async command => {
         const options = await this.configDB.get("mcauth", false, {server: command.channel.guild.id});
         if (!options || !options.hasOwnProperty("host")) {
-          return command.replyAutoDeny(this.i10010n() `Please use ${command.prefix}mcauth to configure connection.`)
+          return command.replyAutoDeny(command.translate `Please use ${command.prefix}mcauth to configure connection.`)
         }
         return mcapi.createRequest()
           .add("chat.with_name", [command.args.join(" ").replace(/^\/*/g, ""), `discord:${command.member.nick || command.member.username}`])
@@ -282,7 +282,7 @@ class minecraft {
       execute: async command => {
         const options = await this.configDB.get("mcauth", false, {server: command.channel.guild.id});
         if (!options || !options.hasOwnProperty("host")) {
-          return command.replyAutoDeny(this.i10010n() `Please use ${command.prefix}mcauth to configure connection.`)
+          return command.replyAutoDeny(command.translate `Please use ${command.prefix}mcauth to configure connection.`)
         }
         let number = command.args.length > 0 ? parseInt(command.args[0]) : 5;
         return mcapi.createRequest()
@@ -291,7 +291,7 @@ class minecraft {
           .then((result) => {
             if (result[0].result === "success") {
               let messages = result[0].success;
-              return command.replyAutoDeny(this.i10010n() `\n${messages.map(message => `${utils.clean(message.player)}:${utils.clean(message.message)}`).join("\n")}`);
+              return command.replyAutoDeny(command.translate `\n${messages.map(message => `${utils.clean(message.player)}:${utils.clean(message.message)}`).join("\n")}`);
             } else {
               let error = result;
               try {
@@ -311,7 +311,7 @@ class minecraft {
         const currentConfig = this.configDB.get("mcauth", {}, {server: command.channel.guild.id});
         currentConfig.chat = command.channel.id;
         this.configDB.set("mcauth", currentConfig, {server: command.channel.guild.id});
-        command.replyAutoDeny(this.i10010n() `Config updated, please wait up to 24h for config to take effect.`)
+        command.replyAutoDeny(command.translate `Config updated, please wait up to 24h for config to take effect.`)
       },
     }, {
       triggers: ["mcbindconsole"],
@@ -322,7 +322,7 @@ class minecraft {
         const currentConfig = this.configDB.get("mcauth", {}, {server: command.channel.guild.id});
         currentConfig.console = command.channel.id;
         this.configDB.set("mcauth", currentConfig, {server: command.channel.guild.id});
-        command.replyAutoDeny(this.i10010n() `Config updated, please wait up to 24h for config to take effect.`)
+        command.replyAutoDeny(command.translate `Config updated, please wait up to 24h for config to take effect.`)
       },
     }];
   }

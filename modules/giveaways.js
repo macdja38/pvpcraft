@@ -80,7 +80,7 @@ class giveaways {
             data.entries = [];
           }
           this.entries.set(null, data, {server: command.channel.guild.id});
-          command.replyAutoDeny(this.i10010n() `Giveaways ${data.enable ? "enabled" : "disabled"} in channel <#${data.channel}>`);
+          command.replyAutoDeny(command.translate `Giveaways ${data.enable ? "enabled" : "disabled"} in channel <#${data.channel}>`);
         }
         return true;
       },
@@ -90,11 +90,11 @@ class giveaways {
       channels: ["guild"],
       execute: command => {
         if (!this.entries.get("channel", false, {server: command.channel.guild.id})) {
-          command.replyAutoDeny(this.i10010n() `Sorry but there is no record of a giveaway ever existing.`);
+          command.replyAutoDeny(command.translate `Sorry but there is no record of a giveaway ever existing.`);
           return true;
         }
         this.entries.set("entries", [], {server: command.channel.guild.id});
-        command.replyAutoDeny(this.i10010n() `Entries cleared`);
+        command.replyAutoDeny(command.translate `Entries cleared`);
       },
     }, {
       triggers: ["gcount"],
@@ -102,11 +102,11 @@ class giveaways {
       channels: ["guild"],
       execute: command => {
         if (!this.entries.get("channel", false, {server: command.channel.guild.id})) {
-          command.replyAutoDeny(this.i10010n() `Sorry but there is no record of a giveaway ever existing.`);
+          command.replyAutoDeny(command.translate `Sorry but there is no record of a giveaway ever existing.`);
           return true;
         }
         this.entries.count("entries", {server: command.channel.guild.id}).then((entries) => {
-          command.replyAutoDeny(this.i10010n() `${entries} entries so far.`);
+          command.replyAutoDeny(command.translate `${entries} entries so far.`);
         });
       },
     }, {
@@ -115,7 +115,7 @@ class giveaways {
       channels: ["guild"],
       execute: command => {
         if (!this.entries.get("channel", false, {server: command.channel.guild.id})) {
-          command.replyAutoDeny(this.i10010n() `Sorry but there is no record of a giveaway ever existing.`);
+          command.replyAutoDeny(command.translate `Sorry but there is no record of a giveaway ever existing.`);
           return true;
         }
         let winnersCount = 1;
@@ -131,9 +131,9 @@ class giveaways {
               const winnerUser = command.channel.guild.members.get(winnerId);
               return winnerUser ? winnerUser.mention : `<@${winnerId}>`;
             }).join(", ");
-            command.replyAutoDeny(this.i10010n() `Congrats to ${winner} for winning!`);
+            command.replyAutoDeny(command.translate `Congrats to ${winner} for winning!`);
           } else {
-            command.replyAutoDeny(this.i10010n() `No winner could be decided, make sure at least 1 person has entered.`);
+            command.replyAutoDeny(command.translate `No winner could be decided, make sure at least 1 person has entered.`);
           }
         });
       },
@@ -149,15 +149,15 @@ class giveaways {
           }).then((result) => {
             console.log(result);
             if (result.replaced === 1) {
-              this._slowSender.sendMessage(command.channel, this.i10010n() `${command.author.mention}, You have entered.`);
+              this._slowSender.sendMessage(command.channel, command.translate `${command.author.mention}, You have entered.`);
             } else if (result.unchanged === 1) {
-              this._slowSender.sendMessage(command.channel, this.i10010n() `${command.author.mention}, Sorry but you can only enter once.`);
+              this._slowSender.sendMessage(command.channel, command.translate `${command.author.mention}, Sorry but you can only enter once.`);
             } else {
-              this._slowSender.sendMessage(command.channel, this.i10010n() `${command.author.mention}, Error processing entry.`);
+              this._slowSender.sendMessage(command.channel, command.translate `${command.author.mention}, Error processing entry.`);
             }
           });
         } else {
-          this._slowSender.sendMessage(command.channel, this.i10010n() `${command.author.mention}, Sorry but there are no giveaways open at this time.`);
+          this._slowSender.sendMessage(command.channel, command.translate `${command.author.mention}, Sorry but there are no giveaways open at this time.`);
         }
         return true;
       },

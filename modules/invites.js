@@ -22,11 +22,13 @@ class invites {
    * @param {MessageSender} e.messageSender Instantiated message sender
    * @param {SlowSender} e.slowSender Instantiated slow sender
    * @param {PvPClient} e.pvpClient PvPCraft client library instance
+   * @param {PvPCraft} e.pvpcraft PvPCraft instance
    * @param {Function} e.i10010n internationalization function
    */
   constructor(e) {
     // save the client as this.client for later use.
     this.client = e.client;
+    this.pvpcraft = e.pvpcraft;
     // save the bug reporting thing raven for later use.
     this.raven = e.raven;
     this.perms = e.perms;
@@ -109,12 +111,12 @@ class invites {
           const nextRole = rolesUserShouldNotHave.length > 0 ? rolesUserShouldNotHave[0] : false;
 
           return Promise.all(addedRolesPromises)
-            .then(addedRoles => command.replyAutoDeny(this.i10010n() `You have ${inviteCount} invite${inviteCount !== 1 ? "s" : ""}` +
-              (highestRole ? this.i10010n() `\nCongratulations on reaching ${utils.clean(highestRole.name)}` : "") +
-              (nextRole ? this.i10010n() `\n${nextRole.invites - inviteCount} invite${nextRole.invites - inviteCount !== 1 ? "s" : ""} left to become ${utils.clean(nextRole.name)}`: "")));
+            .then(addedRoles => command.replyAutoDeny(command.translate `You have ${inviteCount} invite${inviteCount !== 1 ? "s" : ""}` +
+              (highestRole ? command.translate `\nCongratulations on reaching ${utils.clean(highestRole.name)}` : "") +
+              (nextRole ? command.translate `\n${nextRole.invites - inviteCount} invite${nextRole.invites - inviteCount !== 1 ? "s" : ""} left to become ${utils.clean(nextRole.name)}`: "")));
         }).catch(error => {
           if (error.code == EE.DISCORD_RESPONSE_MISSING_PERMISSIONS) {
-            command.replyAutoDeny(this.i10010n() `Bot does not have sufficient permissions to check guild invites.`)
+            command.replyAutoDeny(command.translate `Bot does not have sufficient permissions to check guild invites.`)
           }
           throw error;
         });
@@ -129,12 +131,13 @@ class invites {
    */
   checkMisc(msg) {
     if (!msg.channel.guild) return false;
+    const translate = this.i10010n(this.pvpcraft.getChannelLanguage(msg.channel.id));
     let deleteChannels = this.config.get("deleteNonCommands", [], {server: msg.channel.guild.id});
     if (deleteChannels.includes(msg.channel.id)) {
-      msg.channel.createMessage(this.i10010n() `<@${msg.member.id}> Sorry but this channel is restricted to commands only. What you entered was not seen as a valid command or you do not have permission to use it. If this is an error please contact a moderator.`).then(botMsg => {
+      msg.channel.createMessage(translate `<@${msg.member.id}> Sorry but this channel is restricted to commands only. What you entered was not seen as a valid command or you do not have permission to use it. If this is an error please contact a moderator.`).then(botMsg => {
         setTimeout(() => botMsg.delete(), 10000);
       });
-      return msg.delete(this.i10010n() `used a command in a non command channel`);
+      return msg.delete(translate `used a command in a non command channel`);
     }
     return false;
   }

@@ -51,23 +51,23 @@ class search {
    */
   executeSearch(command) {
     if (command.args.length < 1) {
-      command.replyAutoDeny(this.i10010n() `Please supply something to search for.`);
+      command.replyAutoDeny(command.translate `Please supply something to search for.`);
       return true;
     }
     let search = command.args.join(" ");
     google(search, (err, response) => {
-      if (err || !response || !response.links) command.reply(this.i10010n() `Your search resulted in an error`);
-      else if (response.links.length < 1) command.reply(this.i10010n() `No results found`);
+      if (err || !response || !response.links) command.reply(command.translate `Your search resulted in an error`);
+      else if (response.links.length < 1) command.reply(command.translate `No results found`);
       else {
         if (response.links[0].link === null) {
           for (let i = 1; i < response.links.length; i++) {
             if (response.links[i].link !== null) {
-              command.createMessageAutoDeny(this.i10010n() `Found ${utils.clean(response.links[i].link)})`);
+              command.createMessageAutoDeny(command.translate `Found ${utils.clean(response.links[i].link)})`);
               return;
             }
           }
         } else {
-          command.createMessageAutoDeny(this.i10010n() `Found ${utils.clean(response.links[0].link)}`);
+          command.createMessageAutoDeny(command.translate `Found ${utils.clean(response.links[0].link)}`);
         }
       }
     });

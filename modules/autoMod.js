@@ -25,6 +25,7 @@ class template {
    * @param {MessageSender} e.messageSender Instantiated message sender
    * @param {SlowSender} e.slowSender Instantiated slow sender
    * @param {PvPClient} e.pvpClient PvPCraft client library instance
+   * @param {PvPCraft} e.pvpcraft PvPCraft instance
    * @param {Function} e.i10010n internationalization function
    */
   constructor(e) {
@@ -32,6 +33,7 @@ class template {
     this.raven = e.raven;
     this.pvpClient = e.pvpClient;
     this.i10010n = e.i10010n;
+    this.pvpcraft = e.pvpcraft;
   }
 
   /**
@@ -45,7 +47,7 @@ class template {
     if (!this.pvpClient.get(`${msg.channel.guild.id}.automod.invites.autodelete`, {fallBack: false})) return false;
     if (perms.check(msg, "moderation.whitelist.invites") && (inviteRegex.test(msg.content) || inviteRegex2.test(msg.content))) {
       msg.author.getDMChannel().then(channel =>
-        channel.createMessage(this.i10010n() `Hello, I've removed an invite link you posted in channel ${
+        channel.createMessage(this.i10010n(this.pvpcraft.getChannelLanguage(channel.id)) `Hello, I've removed an invite link you posted in channel ${
           msg.channel.mention} on ${msg.channel.guild.name} as Invite filtering is enabled and you do not have the whitelist permission, please contact the moderation team if you believe this is in error.`)
       );
       utils.handleErisRejection(msg.delete());
