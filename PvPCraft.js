@@ -91,6 +91,8 @@ class PvPCraft {
     });
 
     this.getChannelLanguage = this.getChannelLanguage.bind(this);
+    this.translate = (channelID, guildID) =>
+      this.i10010n(this.getChannelLanguage(channelID, guildID));
 
     Promise.resolve()
       .then(this.loadAnalytics.bind(this))
@@ -231,7 +233,7 @@ class PvPCraft {
   }
 
   readyMessageSender() {
-    this.messageSender = new MessageSender({client: this.client, i10010n: this.i10010n, getChannelLanguage: this.getChannelLanguage});
+    this.messageSender = new MessageSender({client: this.client, translate: this.translate});
   }
 
   readySlowSender() {
@@ -478,7 +480,7 @@ class PvPCraft {
     return new Promise((resolve) => {
       this.configDB = new ConfigsDB(this.r, "servers", this.client);
       this.permsDB = new ConfigsDB(this.r, "permissions", this.client);
-      this.perms = new Permissions(this.permsDB, this.analytics, this.i10010n, this.getChannelLanguage);
+      this.perms = new Permissions(this.permsDB, this.analytics, this.translate);
       Promise.all([this.configDB.reload(), this.permsDB.reload()]).then(() => {
         resolve(true);
       }).catch(console.error);
