@@ -877,7 +877,7 @@ class PvPCraft {
 
   getChannelLanguage(channelID, guildID) {
     if (!guildID) {
-      guildID = this.pvpClient.channelGuildMap[channelID];
+      guildID = this.client.channelGuildMap[channelID];
     }
     const languages = this.configDB.get("languages", null, {server: guildID});
     if (languages.hasOwnProperty(channelID)) {
