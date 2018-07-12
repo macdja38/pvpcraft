@@ -253,7 +253,11 @@ class PvPCraft {
   }
 
   readyI10010n() {
-    this.i10010n = i10010n.init({db: {}});
+    this.i10010n = i10010n.init({
+      db: require("./config/translations.db"),
+      logger: () => {},
+      addTemplateData: () => {},
+    });
   }
 
   readyPvPClient() {
@@ -725,7 +729,7 @@ class PvPCraft {
           extra,
         });
       }
-      utils.handleErisRejection(msg.channel.createMessage(this.i10010n(this.getChannelLanguage(msg.channel.id)) `${msg.author.mention}, Sorry about that an unknown problem occurred processing your command, an error report has been logged and we are looking into the problem.`));
+      utils.handleErisRejection(msg.channel.createMessage(this.translate(msg.channel.id) `${msg.author.mention}, Sorry about that an unknown problem occurred processing your command, an error report has been logged and we are looking into the problem.`));
     }
 
     for (let ware in this.middlewareList) {
@@ -845,7 +849,7 @@ class PvPCraft {
           if (ravenError) {
             console.error("Error reporting error to sentry:\n", ravenError, "Error sentry was trying to report:\n", ravenError);
           } else {
-            utils.handleErisRejection(msg.channel.createMessage(this.i10010n(this.getChannelLanguage(msg.channel.id)) `Sorry, there was an error processing your command. The error is \`\`\`${error
+            utils.handleErisRejection(msg.channel.createMessage(this.translate(msg.channel.id) `Sorry, there was an error processing your command. The error is \`\`\`${error
               }\`\`\` reference code \`${id}\``));
           }
           if (process.env.dev === "true") {
