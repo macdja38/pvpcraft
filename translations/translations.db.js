@@ -44,7 +44,7 @@ module.exports = {
     "de": define `Nachricht gelöscht`,
   },
   [ID `Voice Leave`]: {
-    "de": define `Benutzer verlässt kanal`,
+    "de": define `Benutzer verlässt Kanal`,
   },
   [ID `Voice Join`]: {
     "de": define `Benutzer tritt Kanal bei`,
@@ -52,7 +52,7 @@ module.exports = {
 
   // music
   [ID `Bound successfully use ${"prefix"}destroy to unbind it.`]: {
-    "de": define `Bound erfolgreich verwenden \`${0}destroy\`, um es zu lösen.`,
+    "de": define `Bindded erfolgreich \`${0}destroy\`, um es zu lösen.`,
   },
   [ID `Disconnecting from voice chat and unbinding from text chat.`]: {
     "de": define `Vom Voice-Chat und Text-Chat trennen.`,
@@ -71,28 +71,28 @@ in einem Sprachkanal befinden, stellen Sie die Verbindung wieder her.`,
     "de": define `Bitte geben Sie ein Youtube-Video, einen Suchbegriff oder eine Playlist an!\n${0}play <Video, Suchbegriff, Playlist>`,
   },
   [ID `Please have someone with the permission node \`music.init\` run ${"prefix"}init `]: {
-    "de": define `Bitte haben Sie jemanden mit dem Berechtigungsknoten \`music.init\` run ${0}init`,
+    "de": define `Bitte lassen Sie jemanden mit dem Berechtigungsknoten \`music.init\` ${0}init ausführen`,
   },
   [ID `Connection is not ready`]: {
     "de": define `Die Verbindung ist nicht bereit`,
   },
   [ID `Not a valid song index, please supply a number.`]: {
-    "de": define `Kein gültiger Songindex, bitte gib eine Nummer an.`,
+    "de": define `Kein gültiger Songindex, bitte geben Sie eine Nummer an.`,
   },
   [ID `Not enough songs to skip, queue a song using \`${"command"}play <youtube url of video or playlist>\`.`]: {
-    "de": define `Nicht genügend Titel zum Überspringen, einen Titel mit \`{0}play <youtube URL>\` eine stellen.`,
+    "de": define `Nicht genügend Lieder zum Überspringen, ein Lied mit \`{0}play <youtube URL>\` einstellen.`,
   },
   [ID `Removing ${"songinfo"} from the queue.`]: {
-    "de": define `Entfernen von ${0} aus der Warteschlange.`,
+    "de": define `Entfernen sie ${0} aus die Queue.`,
   },
   [ID `Not currently playing a song.`]: {
-    "de": define `Momentan kein Lied abzuspielen`,
+    "de": define `Momentan kein Lied abspielen`,
   },
   [ID `${"votes"}/${"max votes"} votes needed to skip ${"song name"}`]: {
     "de": define `${0}/${1} Stimmen benötigt, um ${2} zu überspringen.`,
   },
   [ID `Sorry, you may only vote to skip once per song.`]: {
-    "de": define `Sorry, du kannst nur einmal pro Song überspringen.`,
+    "de": define `Sorry, Sie können nur einmal pro Song wählen.`,
   },
   [ID `Paused Playback use ${"prefix"}resume to resume it.`]: {
     "de": define `Pausierte Wiedergabe Verwenden Sie \`${0}resume\` um fortzufahren.`,
