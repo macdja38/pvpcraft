@@ -90,6 +90,7 @@ class PvPCraft {
       // this.rejectReadyPromise = reject;
     });
 
+    this.captureMissingTranslation = this.captureMissingTranslation.bind(this);
     this.getChannelLanguage = this.getChannelLanguage.bind(this);
     this.translate = (channelID, guildID) =>
       this.i10010n(this.getChannelLanguage(channelID, guildID));
@@ -255,7 +256,7 @@ class PvPCraft {
   readyI10010n() {
     this.i10010n = i10010n.init({
       db: require("./config/translations.db"),
-      logger: () => {},
+      logger: this.captureMissingTranslation,
       addTemplateData: () => {},
     });
   }
@@ -545,6 +546,39 @@ class PvPCraft {
         resolve(true);
       }
     })
+  }
+
+  captureMissingTranslation(errorType, data, message) {
+    const errTypes = i10010n.ErrorTypes;
+    let level;
+
+    switch (errorType) {
+      case errTypes.MISSING_TEMPLATE_DATA:
+        level = "warning";
+        break;
+      case errTypes.MISSING_LOCALE_DATA:
+        level = "info";
+        break;
+      case errTypes.USER_FUNCTION_FAILED:
+      case errTypes.MISSING_DB:
+      case errTypes.MISSING_LOCALE:
+      default:
+        level = "error";
+        break;
+    }
+
+    this.raven.captureMessage(
+      errorType,
+      {
+        level,
+        tags: {
+          locale: data.locale,
+          user_function: data.user_function,
+          template: (data.template || []).join(",").replace(/\s/g, "-"),
+        },
+        extra: Object.assign({ message }, data)
+      }
+    );
   }
 
   shutDown() {
