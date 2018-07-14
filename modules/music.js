@@ -214,7 +214,7 @@ Please try another voice channel or contact a mod/admin if you believe this is i
           this.init(id, command,this.perms, command.flags.includes("d"));
         }
         else {
-          command.createMessageAutoDeny(command.translate `${command.member.mention}, You must be in a voice channel this command. If you are currently in a voice channel please rejoin it.`);
+          command.replyAutoDeny(command.translate `You must be in a voice channel to use this command. If you are currently in a voice channel please rejoin it.`);
         }
         return true;
       },
@@ -246,11 +246,11 @@ Please try another voice channel or contact a mod/admin if you believe this is i
       execute: async command => {
         const id = command.channel.guild.id;
         if (!command.member.voiceState.channelID) {
-          command.replyAutoDeny(command.translate `You must be in the current voice channel to queue a song. If you are already in the voice channel please leave and rejoin or toggle your mute.`);
+          command.replyAutoDeny(command.translate `You must be in a voice channel to use this command. If you are currently in a voice channel please rejoin it.`);
           return true;
         }
         if (command.args.length < 1) {
-          command.replyAutoDeny(command.translate `Please specify a youtube video, search term, or playlist!\nplay <video, search term, playlist>`);
+          command.replyAutoDeny(command.translate `Please specify a youtube video, search term, or playlist!\n\`${command.prefix}play <video, search term, playlist>\``);
           return true;
         }
 
@@ -258,7 +258,7 @@ Please try another voice channel or contact a mod/admin if you believe this is i
           if (this.perms.check(command, "music.init")) {
             await this.init(id, command, this.perms)
           } else {
-            command.replyAutoDeny(command.translate `Please have someone with the permission node \`music.init\` run ${command.prefix}init`);
+            command.replyAutoDeny(command.translate `Please have someone with the permission node \`music.init\` run ${command.prefix}init.`);
             return true;
           }
         }
@@ -297,12 +297,12 @@ Please try another voice channel or contact a mod/admin if you believe this is i
             return command.replyAutoDeny(command.translate `Not a valid song index, please supply a number.`);
           }
           if (index + 1 >= length) {
-            command.replyAutoDeny(command.translate `Not enough songs to skip, queue a song using //play <youtube url of video or playlist>`);
+            command.replyAutoDeny(command.translate `Not enough songs to skip, queue a song using \`${command.prefix}play\` <youtube url of video or playlist>.`);
             return true;
           }
           let isForced = (command.flags.includes('f') && this.perms.check(command, "music.forceskip"));
           if (isForced) {
-            return command.replyAutoDeny(command.translate `Removing ${videoUtils.prettyPrint(await this.skipSongGetInfo(id, index))} From the queue`);
+            return command.replyAutoDeny(command.translate `Removing ${videoUtils.prettyPrint(await this.skipSongGetInfo(id, index))} from the queue.`);
           } else {
             let promise;
             if (index < 0) {
@@ -326,7 +326,7 @@ Please try another voice channel or contact a mod/admin if you believe this is i
               if (typeof result === "number") {
                 let maxVotes = Math.floor((this.boundChannels[id].voice.voiceMembers.size / 3)) + 1;
                 if (result >= maxVotes) {
-                  command.replyAutoDeny(command.translate `Removing ${videoUtils.prettyPrint(await this.skipSongGetInfo(id, index))} From the queue`);
+                  command.replyAutoDeny(command.translate `Removing ${videoUtils.prettyPrint(await this.skipSongGetInfo(id, index))} from the queue.`);
                 } else {
                   let info;
                   if (index < 0) {
@@ -357,7 +357,7 @@ Please try another voice channel or contact a mod/admin if you believe this is i
             command.replyAutoDeny(command.translate `Cannot pause unless something is being played`);
           }
         } else {
-          command.createMessageAutoDeny(command.translate `Sorry, Bot is not currently in a voice channel use ${command.prefix}init while in a voice channel to bind it.`);
+          command.createMessageAutoDeny(command.translate `Not currently playing a song.`);
         }
         return true;
       },
@@ -375,7 +375,7 @@ Please try another voice channel or contact a mod/admin if you believe this is i
             command.replyAutoDeny(command.translate `Cannot resume unless something is paused.`)
           }
         } else {
-          command.createMessageAutoDeny(command.translate `Sorry, Bot is not currently in a voice channel use ${command.prefix}init while in a voice channel to bind it.`);
+          command.createMessageAutoDeny(command.translate `Not currently playing a song.`);
         }
         return true;
       },
@@ -394,7 +394,7 @@ Please try another voice channel or contact a mod/admin if you believe this is i
             return true;
           })
         } else {
-          command.createMessageAutoDeny(command.translate `Sorry, Bot is not currently in a voice channel use ${command.prefix}init while in a voice channel to bind it.`)
+          command.createMessageAutoDeny(command.translate `Not currently playing a song.`);
         }
         return true;
       },
@@ -423,10 +423,10 @@ Please try another voice channel or contact a mod/admin if you believe this is i
           if (this.boundChannels[id].currentVideoInfo) {
             command.createMessageAutoDeny(command.translate `Currently ${this.boundChannels[id].prettyTime()} into ${videoUtils.prettyPrint(this.boundChannels[id].currentVideoInfo)}`);
           } else {
-            command.createMessageAutoDeny(command.translate `Sorry, no song's found in playlist. use ${command.prefix}play <youtube vid or playlist> to add one.`)
+            command.createMessageAutoDeny(command.translate `Not currently playing a song.`)
           }
         } else {
-          command.createMessageAutoDeny(command.translate `Sorry, Bot is not currently in a voice channel use ${command.prefix}init while in a voice channel to bind it.`)
+          command.createMessageAutoDeny(command.translate `Not currently playing a song.`)
         }
         return true;
       },
@@ -440,10 +440,10 @@ Please try another voice channel or contact a mod/admin if you believe this is i
           if (this.boundChannels[id].currentVideoInfo) {
             command.createMessageAutoDeny(command.translate `The link to ${videoUtils.prettyPrint(this.boundChannels[id].currentVideoInfo)} is ${this.boundChannels[id].currentVideo.link}`);
           } else {
-            command.createMessageAutoDeny(command.translate `Sorry, no song's found in playlist. use ${command.prefix}play <youtube vid or playlist> to add one.`)
+            command.createMessageAutoDeny(command.translate `Not currently playing a song.`)
           }
         } else {
-          command.createMessageAutoDeny(command.translate `Sorry, Bot is not currently in a voice channel use ${command.prefix}init while in a voice channel to bind it.`)
+          command.createMessageAutoDeny(command.translate `Not currently playing a song.`)
         }
         return true;
       },
@@ -454,7 +454,7 @@ Please try another voice channel or contact a mod/admin if you believe this is i
       execute: command => {
         const id = command.channel.guild.id;
         if (!this.boundChannels.hasOwnProperty(id) || !this.boundChannels[id].hasOwnProperty("connection")) {
-          command.createMessageAutoDeny(command.translate `Sorry, Bot is not currently in a voice channel use ${command.prefix} init while in a voice channel to bind it.`);
+          command.createMessageAutoDeny(command.translate `Not currently playing a song.`);
           return true;
         }
         let boundChannel = this.boundChannels[id];
@@ -546,7 +546,7 @@ Please try another voice channel or contact a mod/admin if you believe this is i
     if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection")) {
       return false;
     }
-    command.createMessageAutoDeny(command.translate `Sorry, Bot is not currently in a voice channel use ${command.prefix}init while in a voice channel to bind it.`);
+    command.createMessageAutoDeny(command.translate `Not currently playing a song.`);
     return true;
   }
 
@@ -560,7 +560,7 @@ Please try another voice channel or contact a mod/admin if you believe this is i
     if (this.boundChannels.hasOwnProperty(id) && this.boundChannels[id].hasOwnProperty("connection") && this.boundChannels[id].connection.playing) {
       return false;
     }
-    command.createMessageAutoDeny(command.translate `Sorry, Bot is not currently playing a song.`);
+    command.createMessageAutoDeny(command.translate `Not currently playing a song.`);
     return true;
   }
 
@@ -579,7 +579,7 @@ Please try another voice channel or contact a mod/admin if you believe this is i
         return true
       }
     }
-    command.createMessageAutoDeny(command.translate `Sorry but you must be in a voice channel to use this command.`);
+    command.createMessageAutoDeny(command.translate `You must be in a voice channel to use this command. If you are currently in a voice channel please rejoin it.`);
     return true;
   }
 }

@@ -255,8 +255,9 @@ class PvPCraft {
 
   readyI10010n() {
     this.i10010n = i10010n.init({
-      db: require("./config/translations.db"),
+      db: require("./translations/translations.db"),
       logger: this.captureMissingTranslation,
+      defaultLocal: "en",
       addTemplateData: () => {},
     });
   }
