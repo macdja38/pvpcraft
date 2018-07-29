@@ -25,8 +25,17 @@ module.exports = {
   [ID `Member`]: {
     "de": define `Mitglied`,
   },
+  [ID `Role`]: {
+    "de": define `Rolle`,
+  },
   [ID `Channel`]: {
     "de": define `Kanal`,
+  },
+  [ID `Status`]: {
+    "de": define `Status`,
+  },
+  [ID `Created`]: {
+    "de": define `Erstellt`,
   },
   [ID `Avatar`]: {
     "de": define `Benutzerbild`,
@@ -43,12 +52,31 @@ module.exports = {
   [ID `Message Deleted`]: {
     "de": define `Nachricht gelöscht`,
   },
+  [ID `Role Created`]: {
+    "de": define `Rolle erstellen`,
+  },
+  [ID `Role Updated`]: {
+    "de": define `Rolle aktualisieren`,
+  },
+  [ID `Role Deleted`]: {
+    "de": define `Rolle gelöscht`,
+  },
   [ID `Voice Leave`]: {
     "de": define `Benutzer verlässt Kanal`,
   },
   [ID `Voice Join`]: {
     "de": define `Benutzer tritt Kanal bei`,
   },
+  [ID `Presence Updated`]: {
+    "de": define `Anwesenheit aktualisiert`,
+  },
+  [ID `User Joined`]: {
+    "de": define `Benutzer ist beigetreten`,
+  },
+  [ID `User Left or was Kicked`]: {
+    "de": define `User Left oder wurde Kicked`,
+  },
+
 
   // music
   [ID `Bound successfully use ${"prefix"}destroy to unbind it.`]: {
