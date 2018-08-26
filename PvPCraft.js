@@ -53,7 +53,7 @@ const Analytics = require("./lib/Analytics");
 const now = require("performance-now");
 const Command = require("./lib/Command");
 const utils = require("./lib/utils");
-const colors = require("colors");
+const chalk = require("chalk");
 const request = require("request");
 const SlowSender = require("./lib/SlowSender");
 const Feeds = require("./lib/feeds");
@@ -374,7 +374,7 @@ class PvPCraft {
         if (middleware.ware) {
           try {
             if (middleware.ware.onGuildCreate) {
-              console.log("Notifying a middleware a server was created!".green);
+              console.log(chalk.green("Notifying a middleware a server was created!"));
               middleware.ware.onGuildCreate(server);
             }
           } catch (error) {
@@ -386,7 +386,7 @@ class PvPCraft {
         if (module.module) {
           try {
             if (module.module.onGuildCreate) {
-              console.log("Notifying a module a server was created!".green);
+              console.log(chalk.green("Notifying a module a server was created!"));
               module.module.onGuildCreate(server);
             }
           } catch (error) {
@@ -406,7 +406,7 @@ class PvPCraft {
       if (middleware.ware) {
         try {
           if (middleware.ware.onGuildDelete) {
-            console.log(`Notifying a middleware a server was Deleted! shard ${process.env.id}`.green);
+            console.log(chalk.green(`Notifying a middleware a server was Deleted! shard ${process.env.id}`));
             middleware.ware.onGuildDelete(server);
           }
         } catch (error) {
@@ -422,7 +422,7 @@ class PvPCraft {
       if (module.module) {
         try {
           if (module.module.onGuildDelete) {
-            console.log(`Notifying a module a server was Deleted! shard ${process.env.id}`.green);
+            console.log(chalk.green(`Notifying a module a server was Deleted! shard ${process.env.id}`));
             module.module.onGuildDelete(server);
           }
         } catch (error) {
@@ -530,7 +530,7 @@ class PvPCraft {
             });
 
             this.raven.on("logged", function (e) {
-              console.log("Error reported to sentry!: ".green + e);
+              console.log(chalk.green("Error reported to sentry!: ") + e);
             });
 
             this.raven.on("error", function (e) {
@@ -590,7 +590,7 @@ class PvPCraft {
     for (let middleware of this.middlewareList) {
       if (middleware.module) {
         if (middleware.module.onDisconnect) {
-          console.log("Trying to Remove Listeners!".green);
+          console.log(chalk.green("Trying to Remove Listeners!"));
           middleware.module.onDisconnect();
         }
       }
@@ -598,7 +598,7 @@ class PvPCraft {
     for (let module of this.moduleList) {
       if (module.module) {
         if (module.module.onDisconnect) {
-          console.log("Trying to Remove Listeners!".green);
+          console.log(chalk.green("Trying to Remove Listeners!"));
           module.module.onDisconnect();
         }
       }
@@ -630,7 +630,7 @@ class PvPCraft {
       if (oldModuleAndWareList.hasOwnProperty(module)) {
         try {
           if (oldModuleAndWareList[module].module && oldModuleAndWareList[module].module.onDisconnect) {
-            console.log(`Removing Listeners for ${module}`.green);
+            console.log(chalk.green(`Removing Listeners for ${module}`));
             oldModuleAndWareList[module].module.onDisconnect();
           }
           delete oldModuleAndWareList[module];
