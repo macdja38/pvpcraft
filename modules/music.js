@@ -297,7 +297,7 @@ Please try another voice channel or contact a mod/admin if you believe this is i
             return command.replyAutoDeny(command.translate `Not a valid song index, please supply a number.`);
           }
           if (index + 1 >= length) {
-            command.replyAutoDeny(command.translate `Not enough songs to skip, queue a song using \`${command.prefix}play\` <youtube url of video or playlist>.`);
+            command.replyAutoDeny(command.translate `Not enough songs to skip, queue a song using \`${command.prefix}play <youtube url of video or playlist>\`.`);
             return true;
           }
           let isForced = (command.flags.includes('f') && this.perms.check(command, "music.forceskip"));

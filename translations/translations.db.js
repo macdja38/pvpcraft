@@ -34,6 +34,27 @@ module.exports = {
   [ID `Member`]: {
     "de": define `Mitglied`,
   },
+  [ID `Discriminator`]: {
+    "de": define `Diskriminator`,
+  },
+  [ID `User Overwrite`]: {
+    "de": define `Benutzer überschreiben`,
+  },
+  [ID `Role Overwrite`]: {
+    "de": define `Rolle überschreiben`,
+  },
+  [ID ` added ${"permissionList"}`]: {
+    "de": define ` hinzugefügt ${0}`,
+  },
+  [ID ` removed ${"permissionList"}`]: {
+    "de": define ` entfernt ${0}`,
+  },
+  [ID ` Add allow ${"permissionList"}`]: {
+    "de": define ` hinzufügen zulassen ${0}`,
+  },
+  [ID ` Remove allow ${"permissionList"}`]: {
+    "de": define ` entfernen zulassen ${0}`,
+  },
   [ID `Role`]: {
     "de": define `Rolle`,
   },
@@ -49,8 +70,20 @@ module.exports = {
   [ID `New Channel`]: {
     "de": define `Neuer Kanal`,
   },
+  [ID `Name Changed`]: {
+    "de": define `Name geändert`,
+  },
+  [ID `Name`]: {
+    "de": define `Name`,
+  },
   [ID `Channel Updated`]: {
     "de": define `Kanal aktualisiert`,
+  },
+  [ID `Channel Created`]: {
+    "de": define `Kanal erstellt`,
+  },
+  [ID `Permissions`]: {
+    "de": define `Berechtigungen`,
   },
   [ID `Topic changed`]: {
     "de": define `Thema geändert`,
@@ -85,6 +118,12 @@ module.exports = {
   [ID `Cached`]: {
     "de": define `Im Cache gespeichert`,
   },
+  [ID `Not Cached`]: {
+    "de": define `Nicht zwischengespeichert`,
+  },
+  [ID `Attachment`]: {
+    "de": define `Befestigung`,
+  },
   [ID `Role Created`]: {
     "de": define `Rolle erstellen`,
   },
@@ -93,6 +132,12 @@ module.exports = {
   },
   [ID `Role Deleted`]: {
     "de": define `Rolle gelöscht`,
+  },
+  [ID `Role Added`]: {
+    "de": define `Rolle hinzugefügt`,
+  },
+  [ID `Role Removed`]: {
+    "de": define `Rolle entfernt`,
   },
   [ID `Voice Leave`]: {
     "de": define `Benutzer verlässt Kanal`,
