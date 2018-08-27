@@ -52,6 +52,9 @@ module.exports = {
   [ID ` Add allow ${"permissionList"}`]: {
     "de": define ` hinzufügen zulassen ${0}`,
   },
+  [ID ` Add deny ${"permissionList"}`]: {
+    "de": define ` hinzufügen ablehnen ${0}`,
+  },
   [ID ` Remove allow ${"permissionList"}`]: {
     "de": define ` entfernen zulassen ${0}`,
   },
@@ -81,6 +84,9 @@ module.exports = {
   },
   [ID `Channel Created`]: {
     "de": define `Kanal erstellt`,
+  },
+  [ID `Channel Deleted`]: {
+    "de": define `Kanal gelöscht`,
   },
   [ID `Position Changed`]: {
     "de": define `Position geändert`,
@@ -157,6 +163,15 @@ module.exports = {
   [ID `User Joined`]: {
     "de": define `Benutzer ist beigetreten`,
   },
+  [ID `User Banned`]: {
+    "de": define `Benutzer gesperrt`,
+  },
+  [ID `User Unbanned`]: {
+    "de": define `Benutzer wieder erlaubt`,
+  },
+  [ID `Responsible Moderator`]: {
+    "de": define `Verantwortlicher Moderator`,
+  },
   [ID `User Left or was Kicked`]: {
     "de": define `User Left oder wurde Kicked`,
   },
@@ -168,6 +183,12 @@ module.exports = {
   },
   [ID `Disconnecting from voice chat and unbinding from text chat.`]: {
     "de": define `Vom Voice-Chat und Text-Chat trennen.`,
+  },
+  [ID `Sorry while fetching that I encountered the error: ${"error"}.`]: {
+    "de": define `Entschuldigung beim Abrufen, dass ich den Fehler gefunden habe: ${0}`,
+  },
+  [ID `Leaving voice channel due to inactivity.`]: {
+    "de": define `Sprachkanal wegen Inaktivität verlassen.`,
   },
   [ID `Binding to **${"voice channel"}** and **${"text channel"}**`]: {
     "de": define `Bindend an **${0}** und **${1}**.`,
