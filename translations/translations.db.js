@@ -61,6 +61,9 @@ module.exports = {
   [ID `Role`]: {
     "de": define `Rolle`,
   },
+  [ID `Display separately`]: {
+  "de": define `Separat anzeigen`,
+  },
   [ID `Color`]: {
     "de": define `Farbe`,
   },
@@ -166,6 +169,9 @@ module.exports = {
   [ID `User Banned`]: {
     "de": define `Benutzer gesperrt`,
   },
+  [ID `Reason`]: {
+    "de": define `Grund`,
+  },
   [ID `User Unbanned`]: {
     "de": define `Benutzer wieder erlaubt`,
   },
@@ -262,9 +268,25 @@ in einem Sprachkanal befinden, stellen Sie die Verbindung wieder her.`,
   },
 
 
-  //
+  // Core
   [ID `Sorry, there was an error processing your command. The error is \`\`\`${"error"}\`\`\` reference code \`${"code"}\`"`]: {
     "de": define `Entschuldigung, bei der Verarbeitung Ihres Befehls ist ein Fehler aufgetreten. Der Fehler ist \`\`\`${0}\`\`\` Referenczcode \`${1}\``,
   },
 
+  // Rate Limits
+  [ID `WOAH THERE. WAY TOO SPICY\nYou have exceeded the rate limit.`]: {
+    "de": define `WOAH THERE. WAY TOO SPICY\nSie haben das Ratenlimit überschritten`,
+  },
+
+  // Permissions
+  [ID `${"action"}ing node \`\`\`xl\n${"node"}\n\`\`\`${"action"}ing permission node ${"node"} in ${"channel"} for ${"user"}`]: {
+    "de": define `${0}ing node \`\`\`xl\n${1}\n\`\`\`${2}ing permission node ${3} in ${4} for ${5}`,
+  },
+  [ID `all channels`]: {
+    "de": define `alle Kanäle`,
+  },
+  [ID `everyone`]: {
+    "de": define `jeder`,
+  },
+  
 };
