@@ -14,7 +14,13 @@ module.exports = {
     "de": define `Datum`,
   },
   [ID `${"from"} to ${"to"}`]: {
-    "de": define `${0} to ${1}`,
+    "de": define `${0} zu ${1}`,
+  },
+  [ID `${"from"} **to** ${"to"}`]: {
+    "de": define `${0} **zu** ${1}`,
+  },
+  [ID `**Uncached** to ${"to"}`]: {
+    "de": define `**Uncached** zu ${0}`,
   },
   [ID `User`]: {
     "de": define `Benutzer`,
@@ -30,6 +36,12 @@ module.exports = {
   },
   [ID `Channel`]: {
     "de": define `Kanal`,
+  },
+  [ID `Channel Updated`]: {
+    "de": define `Kanal aktualisiert`,
+  },
+  [ID `Topic Changed`]: {
+    "de": define `Thema geändert`,
   },
   [ID `Status`]: {
     "de": define `Status`,
