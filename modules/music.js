@@ -207,7 +207,7 @@ Please try another voice channel or contact a mod/admin if you believe this is i
       execute: command => {
         const id = command.channel.guild.id;
         if (this.boundChannels.hasOwnProperty(id)) {
-          command.replyAutoDeny(i10010n`Sorry already in use in this server. Use ${command.prefix}destroy to erase that connection.`);
+          command.replyAutoDeny(this.i10010n`Sorry already in use in this server. Use ${command.prefix}destroy to erase that connection.`);
           return true;
         }
         if (command.member.voiceState.channelID) {
