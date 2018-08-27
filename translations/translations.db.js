@@ -97,7 +97,7 @@ module.exports = {
   [ID `Permissions`]: {
     "de": define `Berechtigungen`,
   },
-  [ID `Topic changed`]: {
+  [ID `Topic Changed`]: {
     "de": define `Thema geändert`,
   },
   [ID `Status`]: {

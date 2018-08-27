@@ -935,16 +935,16 @@ class moderationV2 {
       value: utils.idToUTCString(channel.id),
       short: true,
     }];
-    if (oldChannel.name != channel.name) {
+    if (oldChannel.name !== channel.name) {
       fields.push({
-        title: translate `Name changed`,
+        title: translate `Name Changed`,
         value: translate `${utils.removeBlocks(oldChannel.name)} **to** ${utils.removeBlocks(channel.name)}`,
         short: true,
       })
     }
-    if (oldChannel.topic != channel.topic) {
+    if (oldChannel.topic !== channel.topic) {
       fields.push({
-        title: translate `Topic changed`,
+        title: translate `Topic Changed`,
         value: translate `${utils.removeBlocks(oldChannel.topic)} **to** ${utils.removeBlocks(channel.topic)}`,
         short: true,
       });
