@@ -143,7 +143,7 @@ class rank {
             let roles = this.config.get("roles", {}, {server: command.channel.guild.id});
             let coloredRolesList = "";
             for (let role in roles) {
-              if (roles.hasOwnProperty(role) && role != "joinrole") {
+              if (roles.hasOwnProperty(role) && role !== "joinrole") {
                 if (this.perms.check(command, `rank.join.${role}`)) {
                   coloredRolesList += `+${role}\n`;
                 } else {
@@ -151,7 +151,7 @@ class rank {
                 }
               }
             }
-            if (coloredRolesList != "") {
+            if (coloredRolesList !== "") {
               command.createMessageAutoDeny(command.translate `Roles you can join are highlighted in green\`\`\`diff\n${coloredRolesList}\`\`\``)
                 .then(this.possiblyDelete(command.msg));
             } else {
@@ -172,7 +172,7 @@ class rank {
               return true;
             }
             let rankToJoin = command.args[0].toLowerCase();
-            if (rankToJoin[0] == "+" || rankToJoin[0] == "-") {
+            if (rankToJoin[0] === "+" || rankToJoin[0] === "-") {
               rankToJoin = rankToJoin.substring(1);
             }
             let roles = this.config.get("roles", rankToJoin, {server: command.channel.guild.id});
