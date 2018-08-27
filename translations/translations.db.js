@@ -28,6 +28,9 @@ module.exports = {
   [ID `Username`]: {
     "de": define `Nutzername`,
   },
+  [ID `Nick`]: {
+    "de": define `Spitzname`,
+  },
   [ID `Member`]: {
     "de": define `Mitglied`,
   },
@@ -37,10 +40,16 @@ module.exports = {
   [ID `Channel`]: {
     "de": define `Kanal`,
   },
+  [ID `Old Channel`]: {
+    "de": define `Alter Kanal`,
+  },
+  [ID `New Channel`]: {
+    "de": define `Neuer Kanal`,
+  },
   [ID `Channel Updated`]: {
     "de": define `Kanal aktualisiert`,
   },
-  [ID `Topic Changed`]: {
+  [ID `Topic changed`]: {
     "de": define `Thema geändert`,
   },
   [ID `Status`]: {
@@ -64,6 +73,15 @@ module.exports = {
   [ID `Message Deleted`]: {
     "de": define `Nachricht gelöscht`,
   },
+  [ID `Bulk Delete`]: {
+    "de": define `Massenlöschung`,
+  },
+  [ID `Total Messages`]: {
+    "de": define `Gesamtzahl der Nachrichten`,
+  },
+  [ID `Cached`]: {
+    "de": define `Im Cache gespeichert`,
+  },
   [ID `Role Created`]: {
     "de": define `Rolle erstellen`,
   },
@@ -78,6 +96,9 @@ module.exports = {
   },
   [ID `Voice Join`]: {
     "de": define `Benutzer tritt Kanal bei`,
+  },
+  [ID `Voice Switch`]: {
+    "de": define `Sprachschalter`,
   },
   [ID `Presence Updated`]: {
     "de": define `Anwesenheit aktualisiert`,
