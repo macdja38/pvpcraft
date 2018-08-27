@@ -37,6 +37,9 @@ module.exports = {
   [ID `Role`]: {
     "de": define `Rolle`,
   },
+  [ID `Color`]: {
+    "de": define `Farbe`,
+  },
   [ID `Channel`]: {
     "de": define `Kanal`,
   },
