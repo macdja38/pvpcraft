@@ -82,6 +82,9 @@ module.exports = {
   [ID `Channel Created`]: {
     "de": define `Kanal erstellt`,
   },
+  [ID `Position Changed`]: {
+    "de": define `Position geändert`,
+  },
   [ID `Permissions`]: {
     "de": define `Berechtigungen`,
   },
