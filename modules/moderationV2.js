@@ -51,6 +51,7 @@ const colorMap = {
   "member.banned": "#7F0000",
   "member.unbanned": "#7FBE00",
   "user": "#117F00",
+  "presence" : "#487f2f",
   "channel.created": "#BEFF00",
   "channel.updated": "#BE7F00",
   "channel.deleted": "#BE0000",
@@ -112,6 +113,7 @@ class moderationV2 {
     this.memberUnbanned = this.tryAndLog(this.memberUnbanned);
     this.memberBanned = this.tryAndLog(this.memberBanned);
     this.userUpdate = this.tryAndLog(this.userUpdate);
+    this.presence = this.presence.bind(this);
     this.voiceJoin = this.tryAndLog(this.voiceJoin);
     this.voiceSwitch = this.tryAndLog(this.voiceSwitch);
     this.voiceLeave = this.tryAndLog(this.voiceLeave);
@@ -134,6 +136,7 @@ class moderationV2 {
     this.client.on("guildBanRemove", this.memberUnbanned);
     this.client.on("guildBanAdd", this.memberBanned);
     this.client.on("userUpdate", this.userUpdate);
+    this.client.on("presenceUpdate", this.presence);
     this.client.on("voiceChannelJoin", this.voiceJoin);
     this.client.on("voiceChannelSwitch", this.voiceSwitch);
     this.client.on("voiceChannelLeave", this.voiceLeave);
@@ -633,6 +636,7 @@ class moderationV2 {
    * @param {string} eventName
    * @param {Object?} options
    * @param {Object?} options.user
+   * @param {string} [options.overrideRoot] override the moderation. root.
    * @param {string?} options.username username that will override the bot's username when posting webhook
    * @param {string?} options.icon_url icon that will override the bot's icon when posting webhook
    * @param {Object} attachment
@@ -672,7 +676,8 @@ class moderationV2 {
         fallbackMessage += `   **${utils.clean(field.title)}**: ${utils.clean(field.value)}`
       }))
     }
-    this.feeds.find(`moderation.${eventName}`, serverId).forEach((channel) => {
+    const feedNode = options.overrideRoot ? `${options.overrideRoot}.${eventName}` : `moderation.${eventName}`;
+    this.feeds.find(feedNode, serverId).forEach((channel) => {
       if (channel.indexOf("http") < 0) {
         let guild = this.client.guilds.get(serverId);
         if (guild) {
@@ -1037,6 +1042,38 @@ class moderationV2 {
         }
         if (fields.length < 2) return;
         this.sendHookedMessage("user", { user }, embed, guild.id);
+      }
+    });
+  };
+
+  presence(user, oldPresence) {
+    this.client.guilds.forEach(guild => {
+      if (guild.members.get(user.id)) {
+        if (this.perms.checkUserGuild(user, guild, "msglog.whitelist.presence")) return;
+        const translate = this.i10010n(this.pvpcraft.getChannelLanguage("*", guild.id));
+        if (!oldPresence) return;
+        let fields = [{
+          title: translate `User`,
+          value: user.mention,
+          short: true,
+        }];
+        let embed = { title: translate `Presence Updated`, fields };
+        if (oldPresence.status !== user.status) {
+          fields.push({
+            title: translate `Status`,
+            value: translate `${utils.clean(oldPresence.status)} to ${utils.clean(user.status)}`,
+            short: true,
+          });
+        }
+        /* if (JSON.stringify(oldPresence.game) !== JSON.stringify(user.game)) {
+          fields.push({
+            title: translate `Game`,
+            value: translate `${JSON.stringify(oldPresence.game)} to ${JSON.stringify(user.game)}`,
+            short: true,
+          });
+        }*/
+        if (fields.length < 2) return;
+        this.sendHookedMessage("presence", { user, overrideRoot: "user" }, embed, guild.id);
       }
     });
   };
