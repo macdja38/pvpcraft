@@ -86,7 +86,7 @@ class feedManager {
           channels: ["guild"],
           execute: command => {
             let data = this._feeds.list(command.channel.guild.id);
-            if (data.hasOwnProperty("feeds")) {
+            if (data && data.hasOwnProperty("feeds")) {
               console.log(data.feeds);
               command.createMessageAutoDeny(`\`\`\`json\n${JSON.stringify(data.feeds, null, 2)}\n\`\`\``);
             } else {
