@@ -27,8 +27,8 @@
     "node-fetch": "^2.2.0",
     "performance-now": "^2.1.0",
     "pokedex-promise-v2": "^3.1.1",
-    "pvpclient": "~1.0.1",
-    "raven": "^2.6.3",
+    "pvpclient": "^1.0.2",
+    "raven": "^2.6.4",
     "request": "^2.88.0",
     "request-promise-native": "^1.0.5",
     "rethinkdbdash": "^2.3.31",
@@ -36,12 +36,12 @@
     "superagent": "^3.8.3",
     "universal-analytics": "^0.4.17",
     "youtube-dl": "^1.12.2",
-    "ytdl-core": "^0.24.0"
+    "ytdl-core": "^0.26.1"
   },
   "devDependencies": {
     "docma": "^2.1.0",
-    "eslint": "^5.4.0",
-    "jest-cli": "^23.5.0",
+    "eslint": "^5.7.0",
+    "jest-cli": "^23.6.0",
     "jsdoc": "^3.5.5",
     "jsdoc-strip-async-await": "^0.1.0"
   },
