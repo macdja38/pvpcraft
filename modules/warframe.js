@@ -573,7 +573,7 @@ Darvo is selling ${parseState.getName(state.DailyDeals[0].StoreItem)} for ${stat
           command.createMessageAutoDeny(command.translate `Please provide something to search for!`);
           return true;
         }
-        request.post("http://warframe.wikia.com/api/v1/Search/List", {
+        request.post("https://warframe.fandom.com/api/v1/Search/List", {
           form: {
             query: command.args.join(' '),
             limit: 1,
