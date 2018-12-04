@@ -12,6 +12,14 @@ if (key === "key") {
   key = null;
 }
 
+function getApiKey() {
+  let keys = require('../config/auth.json').youtubeApiKeys;
+  if (!keys || keys.length === 0) {
+    return key;
+  }
+  return keys[Math.floor(Math.random() * keys.length)]
+}
+
 let videoUtils = require("../lib/videoUtils");
 
 /**
@@ -47,7 +55,7 @@ class music {
     this.perms = e.perms;
     this._slowSender = new SlowSender(e);
     this.r = e.r;
-    this.musicDB = new MusicDB(this.r, {key});
+    this.musicDB = new MusicDB(this.r, {key: getApiKey()});
     this.leaveChecker = false;
     this.boundChannels = [];
     this.i10010n = e.i10010n;
@@ -69,7 +77,7 @@ class music {
             client: this.client,
             voiceChannel: voice,
             textChannel: text,
-            apiKey: key,
+            apiKey: getApiKey(),
             raven: this.raven,
             musicDB: this.musicDB,
             slowSender: this._slowSender,
@@ -112,7 +120,7 @@ Please try another voice channel or contact a mod/admin if you believe this is i
         client: this.client,
         voiceChannel,
         textChannel: command.channel,
-        apiKey: key,
+        apiKey: getApiKey(),
         raven: this.raven,
         musicDB: this.musicDB,
         slowSender: this._slowSender,
