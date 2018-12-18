@@ -246,7 +246,7 @@ class PvPCraft {
   }
 
   readyTaskQueue() {
-    this.taskQueue = new TaskQueue({r: this.r, client: this.client, restClient: this.restClient});
+    this.taskQueue = new TaskQueue({r: this.r, client: this.client, restClient: this.restClient, raven: this.raven});
   }
 
   resolveWhenReady() {
