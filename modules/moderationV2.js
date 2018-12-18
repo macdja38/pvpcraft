@@ -51,7 +51,7 @@ const colorMap = {
   "member.banned": "#7F0000",
   "member.unbanned": "#7FBE00",
   "user": "#117F00",
-  "presence" : "#487f2f",
+  "presence": "#487f2f",
   "channel.created": "#BEFF00",
   "channel.updated": "#BE7F00",
   "channel.deleted": "#BE0000",
@@ -191,7 +191,7 @@ class moderationV2 {
     } else if (command.args.length > 0) {
       if (msg.mentions.length > 0 && msg.mentions[0].id !== this.client.user.id) {
         user = msg.mentions[0];
-      } else if(msg.mentions.length > 1) {
+      } else if (msg.mentions.length > 1) {
         user = msg.mentions[1];
       } else {
         if (!isNaN(parseInt(command.args[0]))) {
@@ -363,8 +363,17 @@ class moderationV2 {
                 reason: command.options.reason,
               },
             };
-            this.taskQueue.schedule(task, `in ${command.options.unmute}`);
-            command.replyAutoDeny(command.translate `${member.mention} muted till ${command.options.unmute}${command.options.reason ? ` with reason \`${utils.clean(command.options.reason)}\`` : ""}.`);
+            try {
+              const endDate = this.taskQueue.estimateEndDateFromString(command.options.unmute);
+              this.taskQueue.schedule(task, endDate);
+              command.replyAutoDeny(command.translate `${member.mention} muted till ${endDate.toUTCString()}${command.options.reason ? ` with reason \`${utils.clean(command.options.reason)}\`` : ""}.`);
+            } catch (error) {
+              if (error.message.startsWith('Cannot parse time of ')) {
+                command.replyAutoDeny(`Unmute not scheduled because date could not be parsed, try \`3 hours\` or \`3 days\` for example. Note that the user was muted, to set a timeout run \`${command.prefix}mute\` with a valid date`);
+              } else {
+                throw error;
+              }
+            }
           } else {
             command.replyAutoDeny(command.translate `${member.mention} muted forever${command.options.reason ? ` with reason \`${utils.clean(command.options.reason)}\`` : ""}.`);
           }
@@ -481,8 +490,7 @@ class moderationV2 {
               }
             }, 5000);
             clearInterval(status);
-          }
-          else {
+          } else {
             if (!errorMessage) {
               updateStatus(this.getStatus(totalPurged, totalFetched, length, oldMessagesFound, command));
             }
@@ -972,8 +980,7 @@ class moderationV2 {
         newField.value += translate ` added ${permissionsListFromNumber(change.overwrite)}`;
       } else if (change.change === "remove") {
         newField.value += translate ` removed ${permissionsListFromNumber(change.overwrite)}`;
-      }
-      else {
+      } else {
         let before = change.from;
         let after = change.to;
 
@@ -1013,17 +1020,17 @@ class moderationV2 {
         let embed = { title: translate `Member Updated`, fields };
         if (oldUser.username !== user.username) {
           fields.push({
-                        title: translate `Username`,
-                        value: translate `${utils.clean(oldUser.username)} to ${utils.clean(user.username)}`,
-                        short: true,
-                      });
+            title: translate `Username`,
+            value: translate `${utils.clean(oldUser.username)} to ${utils.clean(user.username)}`,
+            short: true,
+          });
         }
         if (oldUser.discriminator !== user.discriminator) {
           fields.push({
-                        title: translate `Discriminator`,
-                        value: translate `${oldUser.discriminator} to ${user.discriminator}`,
-                        short: true,
-                      });
+            title: translate `Discriminator`,
+            value: translate `${oldUser.discriminator} to ${user.discriminator}`,
+            short: true,
+          });
         }
         if (oldUser.avatar !== user.avatar) {
           let oldURL;
@@ -1031,10 +1038,10 @@ class moderationV2 {
             oldURL = `https://cdn.discordapp.com/avatars/${user.id}/${oldUser.avatar}.${oldUser.avatar.startsWith("_a") ? "gif" : "png"}?size=128`;
           }
           fields.push({
-                        title: translate `Avatar`,
-                        value: translate `${oldURL || "Default"} to ${user.avatarURL}`,
-                        short: true,
-                      });
+            title: translate `Avatar`,
+            value: translate `${oldURL || "Default"} to ${user.avatarURL}`,
+            short: true,
+          });
           embed.image_url = user.avatarURL;
           if (oldURL) {
             embed.thumb_url = oldURL;
@@ -1081,7 +1088,7 @@ class moderationV2 {
   roleCreated(guild, role) {
     const translate = this.i10010n(this.pvpcraft.getChannelLanguage("*", guild.id));
     this.sendHookedMessage("role.created", {}, {
-      title:  `Role Created`, fields: [{
+      title: `Role Created`, fields: [{
         title: translate `Role`,
         value: role.mention,
         short: true,
@@ -1422,8 +1429,7 @@ class moderationV2 {
         value: `<@&${newRole}>`,
         short: true,
       });
-    }
-    else if (oldMember.roles.length > member.roles.length) {
+    } else if (oldMember.roles.length > member.roles.length) {
       let oldRole = findNewRoles(oldMember.roles, member.roles);
       fields.push({
         title: translate `Role Removed`,
