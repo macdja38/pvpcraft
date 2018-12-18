@@ -15,7 +15,7 @@
     "cli-table2": "^0.2.0",
     "deepmerge": "^1.5.2",
     "ebml": "^2.2.4",
-    "eris": "git://github.com/macdja38/eris.git#dev",
+    "eris": "git+https://github.com/macdja38/eris.git#follow-redirect",
     "eris-errors": "^1.0.1",
     "eventemitter3": "^3.1.0",
     "git-rev": "^0.2.1",
