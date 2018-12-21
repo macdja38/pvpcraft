@@ -921,10 +921,10 @@ class PvPCraft {
       guildID = this.client.channelGuildMap[channelID];
     }
     const languages = this.configDB.get("languages", null, {server: guildID});
-    if (languages.hasOwnProperty(channelID)) {
+    if (languages && Object.prototype.hasOwnProperty.call(languages, channelID)) {
       return languages[channelID];
     }
-    if (languages.hasOwnProperty("*")) {
+    if (languages && Object.prototype.hasOwnProperty.call(languages,"*")) {
       return languages["*"];
     }
     return "en";
