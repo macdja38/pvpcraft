@@ -40,6 +40,9 @@ module.exports = {
   [ID `User Overwrite`]: {
     "de": define `Benutzer überschreiben`,
   },
+  [ID `User Muted`]: {
+    "de": define `Benutzer stummgeschaltet`,
+  },
   [ID `Role Overwrite`]: {
     "de": define `Rolle überschreiben`,
   },
