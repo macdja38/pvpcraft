@@ -332,19 +332,17 @@ class moderationV2 {
         const member = command.targetUser;
 
         if (!member) {
-          command.replyAutoDeny(command.translate `Please target a user by adding --user <user mention or name>`);
-          return true;
+          return command.replyAutoDeny(command.translate `Please target a user by adding --user <user mention or name>`);
         }
 
         // check to see if user has ban immunity
         if (this.perms.checkUserChannel(member, command.msg.channel, `moderation.immunity.mute`)) {
-          command.replyAutoDeny(command.translate `This user has the mute immunity permission \`moderation.immunity.mute\`, you may not mute them.`);
-          return true;
+          return command.replyAutoDeny(command.translate `This user has the mute immunity permission \`moderation.immunity.mute\`, you may not mute them.`);
         }
 
         let muteRoleID = this.configDB.get("muteRole", false, { server: command.channel.guild.id });
         if (!muteRoleID) {
-          command.replyAutoDeny(command.translate `mute role not defined, try using ${command.prefix}setupmute to set it up.`)
+          return command.replyAutoDeny(command.translate `mute role not defined, try using ${command.prefix}setupmute to set it up.`)
         }
         console.log(muteRoleID);
         let newRoles = member.roles.slice(0);
@@ -366,16 +364,16 @@ class moderationV2 {
             try {
               const endDate = this.taskQueue.estimateEndDateFromString(command.options.unmute);
               this.taskQueue.schedule(task, endDate);
-              command.replyAutoDeny(command.translate `${member.mention} muted till ${endDate.toUTCString()}${command.options.reason ? ` with reason \`${utils.clean(command.options.reason)}\`` : ""}.`);
+              return command.replyAutoDeny(command.translate `${member.mention} muted till ${endDate.toUTCString()}${command.options.reason ? ` with reason \`${utils.clean(command.options.reason)}\`` : ""}.`);
             } catch (error) {
               if (error.message.startsWith('Cannot parse time of ')) {
-                command.replyAutoDeny(`Unmute not scheduled because date could not be parsed, try \`3 hours\` or \`3 days\` for example. Note that the user was muted, to set a timeout run \`${command.prefix}mute\` with a valid date`);
+                return command.replyAutoDeny(`Unmute not scheduled because date could not be parsed, try \`3 hours\` or \`3 days\` for example. Note that the user was muted, to set a timeout run \`${command.prefix}mute\` with a valid date`);
               } else {
                 throw error;
               }
             }
           } else {
-            command.replyAutoDeny(command.translate `${member.mention} muted forever${command.options.reason ? ` with reason \`${utils.clean(command.options.reason)}\`` : ""}.`);
+            return command.replyAutoDeny(command.translate `${member.mention} muted forever${command.options.reason ? ` with reason \`${utils.clean(command.options.reason)}\`` : ""}.`);
           }
         });
       },
