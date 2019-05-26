@@ -493,10 +493,10 @@ Please try another voice channel or contact a mod/admin if you believe this is i
       triggers: ["shuffle"],
       permissionCheck: this.perms.genCheckCommand("music.shuffle"),
       channels: ["guild"],
-      execute: command => {
+      execute: async command => {
         const id = command.channel.guild.id;
         if (this.possiblySendNotConnected(command)) return true;
-        command.createMessageAutoDeny(this.boundChannels[id].shuffle());
+        command.createMessageAutoDeny(await this.boundChannels[id].shuffle());
         return true;
       },
     }, {
