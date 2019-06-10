@@ -15,9 +15,9 @@
     "cli-table2": "^0.2.0",
     "deepmerge": "^1.5.2",
     "ebml": "^3.0.0",
-    "eris": "git+https://github.com/macdja38/eris.git#follow-redirect",
+    "eris": "git+https://github.com/macdja38/eris.git#follow-redirect-updated",
     "eris-errors": "^1.0.1",
-    "eventemitter3": "^3.1.0",
+    "eventemitter3": "^3.1.2",
     "git-rev": "^0.2.1",
     "google": "^2.0.0",
     "google-images": "^2.0.0",
@@ -25,7 +25,7 @@
     "longjohn": "^0.2.12",
     "mc-ping-updated": "^0.1.0",
     "minecraft-jsonapi": "0.0.3",
-    "node-fetch": "^2.3.0",
+    "node-fetch": "^2.6.0",
     "performance-now": "^2.1.0",
     "pokedex-promise-v2": "^3.1.1",
     "pvpclient": "^1.1.5",
@@ -34,16 +34,16 @@
     "request-promise-native": "^1.0.7",
     "rethinkdbdash": "^2.3.31",
     "stream-resume": "0.0.6",
-    "superagent": "^3.8.3",
+    "superagent": "^5.0.6",
     "universal-analytics": "^0.4.20",
-    "youtube-dl": "^1.13.1",
-    "ytdl-core": "^0.29.1"
+    "youtube-dl": "^2.0.0",
+    "ytdl-core": "^0.29.2"
   },
   "devDependencies": {
     "docma": "^2.1.0",
     "eslint": "^5.16.0",
-    "jest-cli": "^24.7.1",
-    "jsdoc": "^3.5.5",
+    "jest-cli": "^24.8.0",
+    "jsdoc": "^3.6.2",
     "jsdoc-strip-async-await": "^0.1.0"
   },
   "engines": {

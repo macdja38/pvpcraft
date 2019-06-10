@@ -9,6 +9,7 @@
  Object.freeze(module.wrap);
  */
 "use strict";
+require('util').inspect.defaultOptions.depth = 2;
 const cluster = require("cluster");
 const blocked = require("blocked");
 const git = require("git-rev");
