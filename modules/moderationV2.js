@@ -1326,11 +1326,22 @@ class moderationV2 {
   memberAdded(server, user) {
     const translate = this.i10010n(this.pvpcraft.getChannelLanguage("*", server.id));
     this.sendHookedMessage("member.added", { user }, {
-      title: translate `User Joined`, fields: [{
-        title: translate `User`,
-        value: user.mention,
-        short: true,
-      }],
+      title: translate `User Joined`, fields: [
+        {
+          title: translate `User`,
+          value: user.mention,
+          short: true,
+        },
+        {
+          title: translate `ID`,
+          value: user.id,
+          short: true,
+        },
+        {
+          title: translate `Created`,
+          value: (new Date(user.createdAt)).toLocaleString(),
+          short: true,
+        }],
     }, server.id);
   };
 
