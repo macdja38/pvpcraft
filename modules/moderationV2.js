@@ -1348,35 +1348,37 @@ class moderationV2 {
   /**
    *
    * @param {Guild} server
-   * @param {User | string} user
+   * @param {{id: string, user: User} | Member} user
    * @param {User | null} instigator
    * @param {string | null} reason
    * @param {Error | null} error
    */
   memberRemoved(server, user, instigator, reason, error) {
     const translate = this.i10010n(this.pvpcraft.getChannelLanguage("*", server.id));
-    
-    let mention;
-    if (typeof user === "string") {
-      mention = `<@${user}>`;
-    } else if (user.hasOwnProperty('mention')) {
-      mention = user.mention;
-    } else {
-      mention = `<@${user.id}>`;
-    }
 
     let fields = [{
       title: translate `User`,
-      value: mention,
+      value: `<@${user.id}>`,
+      short: true,
+    }, {
+      title: translate `Age`,
+      value: utils.idToUTCString(user.id),
       short: true,
     }];
 
-    if (typeof user !== "string" && user.username) {
-      fields.push({
-        title: translate `Username`,
-        value: user.username,
-        short: true,
-      })
+    if (typeof user !== "string") {
+      let username = user.username;
+      if (!username && user.user && user.user.username) {
+        username = user.user.username;
+      }
+
+      if (username) {
+        fields.push({
+          title: translate `Username`,
+          value: username,
+          short: true,
+        })
+      }
     }
 
     if (instigator) {
