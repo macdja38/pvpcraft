@@ -1355,13 +1355,23 @@ class moderationV2 {
    */
   memberRemoved(server, user, instigator, reason, error) {
     const translate = this.i10010n(this.pvpcraft.getChannelLanguage("*", server.id));
+    
+    let mention;
+    if (typeof user === "string") {
+      mention = `<@${user}>`;
+    } else if (user.hasOwnProperty('mention')) {
+      mention = user.mention;
+    } else {
+      mention = `<@${user.id}>`;
+    }
+
     let fields = [{
       title: translate `User`,
-      value: typeof user === "string" ? `<@${user}>` : user.mention,
+      value: mention,
       short: true,
     }];
 
-    if (typeof user !== "string") {
+    if (typeof user !== "string" && user.username) {
       fields.push({
         title: translate `Username`,
         value: user.username,
