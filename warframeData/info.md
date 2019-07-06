@@ -1,1 +1,1 @@
-Warframe data will be automatically downloaded from VoidGlitch's github into this directory.
+Warframe data repo here.

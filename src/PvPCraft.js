@@ -11,7 +11,6 @@
 "use strict";
 require('util').inspect.defaultOptions.depth = 2;
 const cluster = require("cluster");
-const blocked = require("blocked");
 const git = require("git-rev");
 const ravenClient = require("raven");
 const PvPClient = require("pvpclient");
@@ -61,6 +60,12 @@ const Feeds = require("./lib/feeds");
 const R = require("rethinkdbdash");
 if (process.env.dev === "true") {
   require("longjohn");
+  const blocked = require("blocked-at");
+  blocked((time, stack) => {
+    if (time > 50) {
+      console.log(`Blocked for ${time}ms, operation started here:`, stack);
+    }
+  });
 }
 
 let lastMessage = Date.now();

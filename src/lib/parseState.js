@@ -7,7 +7,7 @@ let WarframeData = require("./WarframeData");
 let languages = new WarframeData({fileName: "Languages"});
 let missionDecks = new WarframeData({fileName: "MissionDecks"});
 let starChart = new WarframeData({fileName: "StarChart"});
-let paths = require('../../Paths.json');
+let paths = require('../../warframeData/Paths');
 const utils = require('./utils');
 
 let ActiveMissionMap = {

@@ -1065,7 +1065,7 @@ class moderationV2 {
         let embed = { title: translate `Presence Updated`, fields };
         if (oldPresence.status !== user.status) {
           fields.push({
-            title: translate `Status`,
+             title: translate `Status`,
             value: translate `${utils.clean(oldPresence.status)} to ${utils.clean(user.status)}`,
             short: true,
           });

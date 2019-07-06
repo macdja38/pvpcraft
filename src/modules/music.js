@@ -7,15 +7,10 @@ const Player = require('../lib/Player.js');
 const MusicDB = require("../lib/MusicDB");
 const SlowSender = require("../lib/SlowSender");
 
-let key = require('../config/auth.json').youtubeApiKey || null;
-if (key === "key") {
-  key = null;
-}
-
-function getApiKey() {
-  let keys = require('../config/auth.json').youtubeApiKeys;
+function getApiKey(auth) {
+  let keys = auth.get('youtubeApiKeys', []);
   if (!keys || keys.length === 0) {
-    return key;
+    return auth.get('youtubeApiKey', null);
   }
   return keys[Math.floor(Math.random() * keys.length)]
 }
@@ -55,7 +50,7 @@ class music {
     this.perms = e.perms;
     this._slowSender = new SlowSender(e);
     this.r = e.r;
-    this.musicDB = new MusicDB(this.r, {key: getApiKey()});
+    this.musicDB = new MusicDB(this.r, {key: getApiKey(e.auth)});
     this.leaveChecker = false;
     this.boundChannels = [];
     this.i10010n = e.i10010n;

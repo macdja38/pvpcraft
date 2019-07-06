@@ -11,7 +11,7 @@ let config = {
     server: Docma.ServerType.GITHUB,
   },
   src: [
-    './lib/*.js',
+    './src/lib/*.js',
     './README.md',
   ],
   dest: './docs',

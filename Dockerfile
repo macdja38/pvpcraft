@@ -2,10 +2,20 @@ FROM node:latest
 
 MAINTAINER Macdja38
 
-RUN echo "deb http://http.debian.net/debian jessie-backports main" >> /etc/apt/sources.list
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && apt-get clean;
 
-RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && apt-get clean && npm install -g pm2 && npm install
+RUN npm install -g pm2
 
-WORKDIR /docker/pvpcraft/pvpcraft/
+RUN mkdir -p /code/
 
-CMD ["pm2-docker", "/docker/pvpcraft/pvpcraft/pm2.json"]
+WORKDIR /code/
+
+ADD ./package.json /code/
+
+ADD ./package-lock.json /code
+
+RUN npm install
+
+ADD src /code/src
+
+CMD ["pm2-docker", "/code/pm2.json"]

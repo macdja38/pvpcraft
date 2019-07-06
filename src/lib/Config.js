@@ -14,8 +14,8 @@ class Config {
    */
   constructor(name) {
     this.name = name;
-    this.filename = path.join(__dirname, `../config/${name}.json`);
-    this.exampleFilename = path.join(__dirname, `../config/example/${name}.example.json`);
+    this.filename = path.join(__dirname, `../../config/${name}.json`);
+    this.exampleFilename = path.join(__dirname, `../../config/example/${name}.example.json`);
     console.log("opening:" + this.filename);
     this.reload();
   }
