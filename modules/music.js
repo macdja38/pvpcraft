@@ -55,7 +55,7 @@ class music {
     this.perms = e.perms;
     this._slowSender = new SlowSender(e);
     this.r = e.r;
-    this.musicDB = new MusicDB(this.r, {key: getApiKey()});
+    this.musicDB = new MusicDB(this.r, {apiKey: getApiKey(), raven: e.raven});
     this.leaveChecker = false;
     this.boundChannels = [];
     this.i10010n = e.i10010n;
