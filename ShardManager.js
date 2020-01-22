@@ -97,7 +97,7 @@ module.exports = class ShardManager {
 
     cluster.on('exit', (deadWorker, code, signal) => {
       if (this.raven) {
-        this.raven.captureMessage(`worker died with code ${code} and signal ${signal}`);
+        this.raven.captureMessage(`worker died with code ${code} and signal ${signal}`, { extra: { shardId: this.workers.indexOf(deadWorker + this.startShard)}});
       }
       console.log(`worker ${deadWorker.process.pid} died with code ${code} and signal ${signal}`);
       this.restartQueue.push(deadWorker);
