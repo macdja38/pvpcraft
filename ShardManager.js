@@ -96,10 +96,11 @@ module.exports = class ShardManager {
     }, 1000);
 
     cluster.on('exit', (deadWorker, code, signal) => {
+      const shardId = this.workers.indexOf(deadWorker + this.startShard);
       if (this.raven) {
-        this.raven.captureMessage(`worker died with code ${code} and signal ${signal}`, { extra: { shardId: this.workers.indexOf(deadWorker + this.startShard)}});
+        this.raven.captureMessage(`worker died with code ${code} and signal ${signal}`, { extra: { shardId }});
       }
-      console.log(`worker ${deadWorker.process.pid} died with code ${code} and signal ${signal}`);
+      console.log(`worker ${deadWorker.process.pid} died with code ${code} and signal ${signal}. Shard: ${shardId}`);
       this.restartQueue.push(deadWorker);
     });
 
