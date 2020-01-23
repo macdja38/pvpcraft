@@ -27,7 +27,7 @@ module.exports = class ShardManager {
       let sentryEnv = this.fileConfig.get("sentryEnv", "");
 
       if (this.fileAuth.get("sentryURL", "") !== "") {
-        console.log("Sentry Started".yellow);
+        console.log("SHARD MASTER: Sentry Started");
         git.long((commit) => {
           git.branch((branch) => {
             let ravenConfig = {
@@ -44,16 +44,16 @@ module.exports = class ShardManager {
             this.raven = new Raven.Client(this.fileAuth.data.sentryURL, ravenConfig);
 
             this.raven.install(() => {
-              console.log("This is thy sheath; there rust, and let me die.");
+              console.log("SHARD MASTER: This is thy sheath; there rust, and let me die.");
               process.exit(1);
             });
 
             this.raven.on("logged", (e) => {
-              console.log("Error reported to sentry!: ".green + e);
+              console.log("SHARD MASTER: Error reported to sentry from Shard Master!: " + e);
             });
 
             this.raven.on("error", (e) => {
-              console.error("Could not report event to sentry:", e.reason);
+              console.error("SHARD MASTER: Could not report event to sentry from Shard Master:", e.reason);
             });
             resolve(true);
           })
@@ -72,12 +72,12 @@ module.exports = class ShardManager {
     this.workers = [];
     this.args = [];
     this.args.push(...process.argv.slice(2));
-    console.log(`This is the master, starting ${this.shards} shards`.green);
+    console.log(`SHARD MASTER: This is the master, starting ${this.shards} shards`);
     for (let i = this.startShard; i < (this.startShard + this.localShards); i++) {
-      console.log(`Scheduling shard ${i}`);
+      console.log(`SHARD MASTER: Scheduling shard ${i}`);
       setTimeout(() => {
         cluster.setupMaster({args: this.args});
-        console.log(`Starting worker ${i} with settings`.green, cluster.settings);
+        console.log(`SHARD_MASTER: Starting worker ${i} with settings`.green, cluster.settings);
         this.workers.push(cluster.fork({id: i, shards: this.shards}));
         this.lastRestart = Date.now();
       }, 7500 * (i - this.startShard));
@@ -91,7 +91,7 @@ module.exports = class ShardManager {
         id = this.workers.indexOf(target);
         cluster.setupMaster({args: this.args});
         this.workers[id] = cluster.fork({id: id + this.startShard, shards: this.shards});
-        console.log(`worker ${this.workers[id].process.pid} born with settings`, cluster.settings);
+        console.log(`SHARD MASTER: worker ${this.workers[id].process.pid} born with settings`, cluster.settings);
       }
     }, 1000);
 
@@ -100,7 +100,7 @@ module.exports = class ShardManager {
       if (this.raven) {
         this.raven.captureMessage(`worker died with code ${code} and signal ${signal}`, { extra: { shardId }});
       }
-      console.log(`worker ${deadWorker.process.pid} died with code ${code} and signal ${signal}. Shard: ${shardId}`);
+      console.log(`SHARD MASTER: worker ${deadWorker.process.pid} died with code ${code} and signal ${signal}. Shard: ${shardId}`);
       this.restartQueue.push(deadWorker);
     });
 
@@ -115,18 +115,18 @@ module.exports = class ShardManager {
               if (message.global) {
                 this.workers.forEach((w, i) => {
                   setTimeout(() => {
-                    console.log(`Killing worker ${w.id}`.red);
+                    console.log(`SHARD MASTER: Killing worker ${w.id}`);
                     w.kill();
                   }, i * 10000);
                 });
               } else {
-                console.log(`Killing worker ${worker.id}`.red);
+                console.log(`SHARD MASTER: Killing worker ${worker.id}`);
                 worker.kill();
               }
               break;
             case "logrestarts": {
-              console.log("this.workers", this.workers);
-              console.log("Restart Queue", this.restartQueue);
+              console.log("SHARD MASTER: this.workers", this.workers);
+              console.log("SHARD MASTER: Restart Queue", this.restartQueue);
               break;
             }
           }
