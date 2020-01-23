@@ -77,7 +77,7 @@ module.exports = class ShardManager {
       console.log(`SHARD MASTER: Scheduling shard ${i}`);
       setTimeout(() => {
         cluster.setupMaster({args: this.args});
-        console.log(`SHARD_MASTER: Starting worker ${i} with settings`.green, cluster.settings);
+        console.log(`SHARD_MASTER: Starting worker ${i} with settings`, cluster.settings);
         this.workers.push(cluster.fork({id: i, shards: this.shards}));
         this.lastRestart = Date.now();
       }, 7500 * (i - this.startShard));
