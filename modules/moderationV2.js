@@ -14,6 +14,22 @@ const moderationMethodNameMap = {
   kick: "memberRemoved",
 };
 
+const presenceUpdateEmojis = {
+  IDLE: "🌙",
+  DND: "⛔",
+  ONLINE: "🟢",
+  OFFLINE: "🔳",
+};
+
+function emojifyPresenceStatus(presenceStatus) {
+  const upperCasePresence = presenceStatus.toUpperCase();
+  if (presenceUpdateEmojis.hasOwnProperty(upperCasePresence)) {
+    return `${presenceUpdateEmojis[upperCasePresence]} ${presenceStatus}`;
+  } else {
+    return presenceStatus;
+  }
+}
+
 /* let colorMap = {
  "message.deleted": "#FFB600",
  "message.updated": "#FFFF00",
@@ -1066,7 +1082,7 @@ class moderationV2 {
         if (oldPresence.status !== user.status) {
           fields.push({
             title: translate `Status`,
-            value: translate `${utils.clean(oldPresence.status)} to ${utils.clean(user.status)}`,
+            value: translate `${emojifyPresenceStatus(utils.clean(oldPresence.status))} to ${emojifyPresenceStatus(utils.clean(user.status))}`,
             short: true,
           });
         }
