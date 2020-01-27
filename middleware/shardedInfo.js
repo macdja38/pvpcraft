@@ -82,7 +82,10 @@ class shardedInfo {
 
   _updateDB() {
     if (Date.now() - this._lastMessage > this.waitBeforeRestart) {
-      process.exit(532);
+      if (this._raven) {
+        this._raven.captureMessage("SHARDEDINFO: Did not receive messages in " + this.waitBeforeRestart);
+      }
+      setTimeout(() => process.exit(46), 3000); //allow time to report sentry exception before exiting
     }
     if (!this._ready || !this._ready.then || !this.logShardStatus) return;
     this._ready

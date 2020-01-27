@@ -227,9 +227,9 @@ class PvPCraft {
     setInterval(() => {
       if (Date.now() - lastMessage > this.waitBeforeRestart) {
         if (this.raven) {
-          this.raven.captureMessage("Did not recieve messages in " + this.waitBeforeRestart);
+          this.raven.captureMessage("Did not receive messages in " + this.waitBeforeRestart);
         }
-        setTimeout(() => process.exit(533), 3000); //allow time to report sentry exception before exiting
+        setTimeout(() => process.exit(45), 3000); //allow time to report sentry exception before exiting
       }
     }, 10000)
   }
@@ -301,7 +301,7 @@ class PvPCraft {
       this.resolveReadyPromise(true);
       console.log("Got ready");
       if (this.client.guilds.length <= this.fileConfig.get("minDiscords", 1)) {
-        process.exit(258);
+        process.exit(56);
       }
     });
   }
