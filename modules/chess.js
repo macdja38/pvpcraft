@@ -35,6 +35,23 @@ let emotes = {
   "BW": "<:BW:333047424778240022>",
   "RB": "<:RB:333047425197408256>",
   "RW": "<:RW:333047426191589379>",
+
+  "1_": "<:1_:701531822739423364>",
+  "2_": "<:2_:701531833590087742>",
+  "3_": "<:3_:701531843886973041>",
+  "4_": "<:4_:701531852925829228>",
+  "5_": "<:5_:701531861213642804>",
+  "6_": "<:6_:701531868700475536>",
+  "7_": "<:7_:701531876816453712>",
+  "8_": "<:8_:701531883489460335>",
+  "a_": "<:a_:701531891114836020>",
+  "b_": "<:b_:701531899222556747>",
+  "c_": "<:c_:701531907506176041>",
+  "d_": "<:d_:701531915903041636>",
+  "e_": "<:e_:701531925029978234>",
+  "f_": "<:f_:701531934475419739>",
+  "g_": "<:g_:701531942994313226>",
+  "h_": "<:h_:701531950262779985>",
 };
 
 /**
@@ -95,6 +112,10 @@ function pieceToEmote(piece) {
   }
 }
 
+function buildBottomLegend() {
+  return ["a", "b", "c", "d", "e", "f", "g", "h"].map(letter => `${letter}_`).map(letter => emotes[letter]).join("");
+}
+
 /**
  * Turns a chess board from the chess library into a signified representation using discord emotes for pieces
  * @param {{squares: Array<Object>}} board
@@ -105,9 +126,9 @@ function stringifyBoard(board) {
   const rows = squaresTo2DArray(squares)
     .map(r => r.map(pieceToEmote))
     .map(r => r.join(""))
-    .map((r, i) => `${r} ${i + 1}`)
+    .map((r, i) => `${r} ${i === 0 ? ` 1` : i + 1}`)
     .reverse();
-  rows.push("  a     b     c     d     e     f     g     h");
+  rows.push(buildBottomLegend());
   return rows.join("\n");
 }
 
@@ -143,7 +164,7 @@ class chess {
       .do((databaseExists) => {
         return this.r.branch(
           databaseExists,
-          {dbs_created: 0},
+          { dbs_created: 0 },
           this.r
             .tableCreate(table, {})
             .do(() => this.r.table(table).indexCreate("channel1"))
@@ -167,6 +188,27 @@ class chess {
     };
   }
 
+  sendBoardStatus(command) {
+    let status = this.games[command.channel.id].getStatus();
+
+    let attachment = {
+      description: stringifyBoard(status.board),
+    };
+    attachment.footer = { text: `Currently up ${this.turns[command.channel.id]}` };
+    if (status.isCheckmate) {
+      attachment.footer.text += " | Checkmate";
+    } else if (status.isCheck) {
+      attachment.footer.text += " | Check";
+    }
+    if (status.isRepetition) {
+      attachment.footer.text += " | Repetition";
+    }
+    if (status.isStalemate) {
+      attachment.footer.text += " | Stalemate";
+    }
+    return command.createMessageAutoDeny({ embed: attachment });
+  }
+
   /**
    * Get's the commands for the module
    * @returns {Array<{triggers: Array<string> permissionCheck: function channels: Array<string> execute: function}>}
@@ -180,14 +222,14 @@ class chess {
       description: "Start a chess game.",
       usage: "start",
       channels: ["*"],
-      execute: (command) => {
+      execute: async (command) => {
         if (this.games.hasOwnProperty(command.channel.id)) {
-          command.replyAutoDeny(command.translate `Sorry, game already in progress`);
-          return true;
+          return command.replyAutoDeny(command.translate`Sorry, game already in progress`);
         }
         this.games[command.channel.id] = chessClient.create();
         this.turns[command.channel.id] = "white";
-        command.replyAutoDeny(command.translate `Game started`);
+        await command.replyAutoDeny(command.translate`Game started`);
+        return this.sendBoardStatus(command);
         //r.table(table).insert({})
       },
     }, {
@@ -198,11 +240,11 @@ class chess {
       usage: "move <move in [algebraic chess notation](https://truckersection.com/guide-to-algebraic-chess-notation/)>",
       execute: (command) => {
         if (!this.games.hasOwnProperty(command.channel.id)) {
-          command.replyAutoDeny(command.translate `Sorry, no game in progress`);
+          command.replyAutoDeny(command.translate`Sorry, no game in progress`);
           return true;
         }
         if (command.args.length < 1) {
-          command.replyAutoDeny(command.translate `usage \`${command.prefix}move <move in Algebraic Chess Notation>\``);
+          command.replyAutoDeny(command.translate`usage \`${command.prefix}move <move in Algebraic Chess Notation>\``);
           return true;
         }
         try {
@@ -213,23 +255,7 @@ class chess {
           return true;
         }
         this.turns[command.channel.id] = this.turns[command.channel.id] === "white" ? "black" : "white";
-        let status = this.games[command.channel.id].getStatus();
-        let attachment = {
-          description: stringifyBoard(status.board),
-        };
-        attachment.footer = {text: `Currently up ${this.turns[command.channel.id]}`};
-        if (status.isCheckmate) {
-          attachment.footer.text += " | Checkmate";
-        } else if (status.isCheck) {
-          attachment.footer.text += " | Check";
-        }
-        if (status.isRepetition) {
-          attachment.footer.text += " | Repetition";
-        }
-        if (status.isStalemate) {
-          attachment.footer.text += " | Stalemate";
-        }
-        return command.createMessageAutoDeny({embed: attachment});
+        return this.sendBoardStatus(command);
       },
     }, {
       triggers: ["end"],
@@ -239,12 +265,12 @@ class chess {
       channels: ["*"],
       execute: (command) => {
         if (!this.games.hasOwnProperty(command.channel.id)) {
-          command.replyAutoDeny(command.translate `Sorry, game is not in progress`);
+          command.replyAutoDeny(command.translate`Sorry, game is not in progress`);
           return true;
         }
         delete this.games[command.channel.id];
         delete this.turns[command.channel.id];
-        return command.replyAutoDeny(command.translate `Game ended`);
+        return command.replyAutoDeny(command.translate`Game ended`);
       },
     }];
   }
