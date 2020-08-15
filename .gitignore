@@ -39,3 +39,6 @@ coverage
 
 # warframeData
 warframeData/*.json
+
+# Build Folder
+build
