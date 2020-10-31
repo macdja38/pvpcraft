@@ -1,7 +1,6 @@
 /**
  * Created by macdja38 on 2016-06-21.
  */
-
 "use strict";
 
 import Eris from "eris";
@@ -160,6 +159,9 @@ class ConfigDB extends BaseDB {
         this.data[options.server][key] = value;
       }
     } else {
+      if (!this.data.hasOwnProperty("*")) {
+        this.data["*"] = {};
+      }
       // @ts-ignore
       this.data["*"][key] = value;
     }

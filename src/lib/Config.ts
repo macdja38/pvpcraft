@@ -93,7 +93,7 @@ class Config {
    * see ConfigDB for production ready per discord configs
    */
   set(key: string, def: any, options: { server?: string } = {}) {
-    if (options.server && options.hasOwnProperty("server")) {
+    if (options.hasOwnProperty("server") && options.server !== undefined) {
       if (!this.data.hasOwnProperty(options.server)) {
         this.data[options.server] = {[key]: def};
       } else {
