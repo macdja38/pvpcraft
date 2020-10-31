@@ -73,7 +73,7 @@ class taskQueue {
   }
 
   estimateEndDateFromString(string: string) {
-    const date = chrono.parseDate(`in ${string}`, Date.now(), { forwardDate: true });
+    const date = chrono.parseDate(`in ${string}`, new Date(), { forwardDate: true });
     if (date) {
       return date;
     } else {
