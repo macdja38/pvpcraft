@@ -55,7 +55,6 @@ const now = require("performance-now");
 import Command from "./lib/Command";
 import utils from "./lib/utils";
 const chalk = require("chalk");
-const request = require("request");
 const SlowSender = require("./lib/SlowSender");
 const Feeds = require("./lib/feeds");
 const R = require("rethinkdbdash");

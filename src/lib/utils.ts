@@ -6,7 +6,7 @@
 
 import { Member, User } from "eris";
 
-const request = require("request-promise-native");
+import fetch from "node-fetch";
 
 /**
  * A collection of utility methods tailored for discord and used throughout pvpcraft
@@ -253,7 +253,7 @@ class Utils {
    * @returns {Request}
    */
   static mediaWikiSearch(api: string, searchTerm: string) {
-    return request.get(`${api}?action=opensearch&search=${encodeURIComponent(searchTerm)}`).then((result: string) => JSON.parse(result));
+    return fetch(`${api}?action=opensearch&search=${encodeURIComponent(searchTerm)}`).then((result) => result.json());
   }
 
   /**

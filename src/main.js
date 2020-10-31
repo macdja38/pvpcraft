@@ -9,9 +9,9 @@
 const cluster = require('cluster');
 const inspector = require("inspector");
 
-import Configs from "./lib/Config";
-const fileConfig = new Configs("config");
-const fileAuth = new Configs("auth");
+import Config from "./lib/Config";
+const fileConfig = new Config("config");
+const fileAuth = new Config("auth");
 
 const bindIP = fileConfig.get("inspector-bind-ip", false);
 

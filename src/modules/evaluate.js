@@ -5,7 +5,7 @@
 
 let colors = require('colors');
 
-let request = require('request-promise-native');
+let fetch = require('node-fetch');
 
 let now = require("performance-now");
 
@@ -21,6 +21,7 @@ try {
 //noinspection JSUnusedLocalSymbols
 let Eris = require('eris');
 import utils from "../lib/utils";
+
 let util = require('util');
 
 class evaluate {
@@ -109,38 +110,39 @@ class evaluate {
         }
         switch (command.args[0].toLowerCase()) {
           case "reconnect": {
-            command.reply(command.translate `Initiating reconnect.`);
-            let packed = packer({op: 7});
-            this.client.shards.random().ws.onmessage({data: packed});
+            command.reply(command.translate`Initiating reconnect.`);
+            let packed = packer({ op: 7 });
+            this.client.shards.random().ws.onmessage({ data: packed });
             break;
           }
           case "resume": {
-            command.reply(command.translate `Initiating resume sequence`);
-            this.client.shards.random().ws.onclose({code: 1006, reason: "testing", wasClean: true});
+            command.reply(command.translate`Initiating resume sequence`);
+            this.client.shards.random().ws.onclose({ code: 1006, reason: "testing", wasClean: true });
             break;
           }
         }
       },
     }, {
       triggers: ["setavatar"],
-      permissionCheck: command => this.fileConfig.get("permissions", {"permissions": {admins: []}}).admins.includes(command.author.id),
+      permissionCheck: command => this.fileConfig.get("permissions", { "permissions": { admins: [] } }).admins.includes(command.author.id),
       channels: ["*"],
       execute: command => {
-        return request({
+        return fetch(command.args[0], {
           method: 'GET',
-          url: command.args[0],
           encoding: null,
-        }).then((image) => {
-          this.client.editSelf({avatar: `data:image/png;base64,${image.toString("base64")}`}).then(() => {
-            command.reply(command.translate `Changed avatar.`);
+        })
+          .then(response => response.body())
+          .then((image) => {
+            this.client.editSelf({ avatar: `data:image/png;base64,${image.toString("base64")}` }).then(() => {
+              command.reply(command.translate`Changed avatar.`);
+            }).catch((err) => {
+              command.reply(command.translate`Failed setting avatar.${err}`);
+              return true;
+            });
           }).catch((err) => {
-            command.reply(command.translate `Failed setting avatar.${err}`);
+            command.reply(command.translate`Failed to get a valid image.${err}`);
             return true;
           });
-        }).catch((err) => {
-          command.reply(command.translate `Failed to get a valid image.${err}`);
-          return true;
-        });
       },
     }];
   }
@@ -183,26 +185,26 @@ class evaluate {
       evaluated = eval(code);
       t1 = now();
       let embedText = "```xl\n" +
-        command.translate `\n- - - - - - evaluates-to- - - - - - -\n` +
+        command.translate`\n- - - - - - evaluates-to- - - - - - -\n` +
         utils.clean(this._shortenTo(this._convertToObject(evaluated), 1800)) +
         "\n- - - - - - - - - - - - - - - - - - -\n" +
-        command.translate `In ${t1 - t0} milliseconds!\n\`\`\``;
+        command.translate`In ${t1 - t0} milliseconds!\n\`\`\``;
       if (evaluated && evaluated.catch) evaluated.catch(() => {
       }).then(() => {
         t2Resolve(now());
       });
       command.createMessage({
         content: msg.content,
-        embed: {description: embedText, color: 0x00FF00},
+        embed: { description: embedText, color: 0x00FF00 },
       }).then(async (initialMessage) => {
         let resolvedTime2 = await t2;
         try {
           let result = await evaluated;
           embedText = embedText.substring(0, embedText.length - 4);
-          embedText += command.translate `\n- - - - -Promise resolves to- - - - -\n`;
+          embedText += command.translate`\n- - - - -Promise resolves to- - - - -\n`;
           embedText += utils.clean(this._shortenTo(this._convertToObject(result), 1800));
           embedText += "\n- - - - - - - - - - - - - - - - - - -\n";
-          embedText += command.translate `In ${resolvedTime2 - t0} milliseconds!\n\`\`\``;
+          embedText += command.translate`In ${resolvedTime2 - t0} milliseconds!\n\`\`\``;
           this.client.editMessage(msg.channel.id, initialMessage.id, {
             content: msg.content,
             embed: {
@@ -218,10 +220,10 @@ class evaluate {
             error = "null"
           }
           embedText = embedText.substring(0, embedText.length - 4);
-          embedText += command.translate `\n- - - - - Promise throws- - - - - - -\n`;
+          embedText += command.translate`\n- - - - - Promise throws- - - - - - -\n`;
           embedText += utils.clean(this._shortenTo(error.toString(), 1800));
           embedText += "\n- - - - - - - - - - - - - - - - - - -\n";
-          embedText += command.translate `In ${resolvedTime2 - t0} milliseconds!\n\`\`\``;
+          embedText += command.translate`In ${resolvedTime2 - t0} milliseconds!\n\`\`\``;
           this.client.editMessage(msg.channel.id, initialMessage.id, {
             content: msg.content,
             embed: {
@@ -232,20 +234,19 @@ class evaluate {
         }
       });
       console.log(evaluated);
-    }
-    catch (error) {
+    } catch (error) {
       t1 = now();
       command.createMessage({
         embed: {
           description: "```xl\n" +
-          command.translate `\n- - - - - - - errors-in - - - - - - -\n` +
-          utils.clean(this._shortenTo(this._convertToObject(error.toString()), 1200)) +
-          (error ?
-            command.translate `\n- - - - - - - stack - - - - - - - - -\n` +
-            this._shortenTo(utils.clean(this.shortenErrorStack(error)), 500)
-            : "") +
-          "\n- - - - - - - - - - - - - - - - - - -\n" +
-          command.translate `In ${t1 - t0} milliseconds!\n\`\`\``,
+            command.translate`\n- - - - - - - errors-in - - - - - - -\n` +
+            utils.clean(this._shortenTo(this._convertToObject(error.toString()), 1200)) +
+            (error ?
+              command.translate`\n- - - - - - - stack - - - - - - - - -\n` +
+              this._shortenTo(utils.clean(this.shortenErrorStack(error)), 500)
+              : "") +
+            "\n- - - - - - - - - - - - - - - - - - -\n" +
+            command.translate`In ${t1 - t0} milliseconds!\n\`\`\``,
           color: 0xFF0000,
         },
       });
@@ -293,7 +294,7 @@ class evaluate {
     if (object.toJSON && typeof object.toJSON) {
       object = object.toJSON();
     }
-    return util.inspect(object, {depth: 2}).replace(new RegExp(this.client.token, "g"), "[ Token ]");
+    return util.inspect(object, { depth: 2 }).replace(new RegExp(this.client.token, "g"), "[ Token ]");
   }
 }
 
