@@ -75,6 +75,7 @@
     "testEnvironment": "node"
   },
   "eslintConfig": {
+    "extends": "eslint:recommended",
     "parserOptions": {
       "ecmaVersion": 2020,
       "sourceType": "module"
@@ -83,7 +84,14 @@
       "complexity": [
         "error",
         20
-      ]
+      ],
+      "no-prototype-builtins": "off",
+      "no-unused-vars": "off",
+      "no-extra-semi": "off"
+    },
+    "env": {
+      "node": true,
+      "es6": true
     }
   }
 }

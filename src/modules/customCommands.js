@@ -70,7 +70,7 @@ class template {
         }
 
         if (commandPart2 === "edit") {
-
+          // TODO: Complete editing
         }
         command.replyAutoDeny("eo");
         return true;

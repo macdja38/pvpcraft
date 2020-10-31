@@ -7,7 +7,7 @@ import utils from "../lib/utils";
 
 let inviteRegex = /discord(?:(?:.{0,7})(?:gg|me)(?:\/)(?:\w{5}|\w{7})(?:\s|\n)|\.me(?:\/\w*)|app\.com\/invite)/i;
 let inviteRegex2 = /(?:discord(?:(?:\.|.?dot.?)(?:me|gg)|app(?:\.|.?dot.?)com\/invite)\/([\w]{10,16}|[abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789]{4,8}))/g;
-let inviteRegex3 = /(?:^|\s)discord(?:app\.com\/invite|\.gg)\/(?:[0-9a-z\-]+)(?:$|\s)/i;
+let inviteRegex3 = /(?:^|\s)discord(?:app\.com\/invite|\.gg)\/(?:[0-9a-z-]+)(?:$|\s)/i;
 
 class template {
   /**

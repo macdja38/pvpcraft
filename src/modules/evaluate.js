@@ -214,14 +214,17 @@ class evaluate {
           })
         } catch (error) {
           console.error("eval error", error);
+          let errorMessage
           if (error === undefined) {
-            error = "undefined"
+            errorMessage = "undefined"
           } else if (error === null) {
-            error = "null"
+            errorMessage = "null"
+          } else {
+            errorMessage = error.toString();
           }
           embedText = embedText.substring(0, embedText.length - 4);
           embedText += command.translate`\n- - - - - Promise throws- - - - - - -\n`;
-          embedText += utils.clean(this._shortenTo(error.toString(), 1800));
+          embedText += utils.clean(this._shortenTo(errorMessage, 1800));
           embedText += "\n- - - - - - - - - - - - - - - - - - -\n";
           embedText += command.translate`In ${resolvedTime2 - t0} milliseconds!\n\`\`\``;
           this.client.editMessage(msg.channel.id, initialMessage.id, {

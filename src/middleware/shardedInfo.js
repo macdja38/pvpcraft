@@ -5,13 +5,6 @@
 
 import request from "request";
 
-let Music;
-try {
-  Music = require("../modules/music");
-} catch (error) {
-
-}
-
 import StandardDB from "../lib/StandardDB";
 
 class shardedInfo {
@@ -127,7 +120,7 @@ class shardedInfo {
     if (!this._standardDB.data) return;
     let serverData = [];
     for (let key in this._standardDB.data) {
-      if (this._standardDB.data.hasOwnProperty(key) && parseInt(key) < parseInt(process.env.shards) || 1) {
+      if (this._standardDB.data.hasOwnProperty(key) && parseInt(key) < parseInt(process.env.shards)) {
         serverData[parseInt(key)] = this._standardDB.data[key]
       }
     }
@@ -288,7 +281,7 @@ class shardedInfo {
         }
         let serverData = [];
         for (let key in this._standardDB.data) {
-          if (this._standardDB.data.hasOwnProperty(key) && parseInt(key) < parseInt(process.env.shards) || 1) {
+          if (this._standardDB.data.hasOwnProperty(key) && parseInt(key) < parseInt(process.env.shards)) {
             serverData[parseInt(key)] = this._standardDB.data[key]
           }
         }

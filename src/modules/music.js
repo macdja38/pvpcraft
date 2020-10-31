@@ -168,7 +168,7 @@ Please try another voice channel or contact a mod/admin if you believe this is i
               this.musicDB.unbind(id);
               channel.destroy(true);
             } catch (error) {
-
+              // ignore errors, we need to continue with the rest of the destroys
             }
             delete this.boundChannels[id];
           })
@@ -188,7 +188,7 @@ Please try another voice channel or contact a mod/admin if you believe this is i
       try {
         this.boundChannels[i].destroy(false);
       } catch (err) {
-
+        // ignore errors, it's best to continue with the rest of the destroys
       }
       delete this.boundChannels[i];
     }
@@ -247,7 +247,7 @@ Please try another voice channel or contact a mod/admin if you believe this is i
           this.musicDB.unbind(id);
           this.boundChannels[id].destroy(true);
         } catch (error) {
-
+          console.error(error);
         }
         command.replyAutoDeny(command.translate `Disconnecting from voice chat and unbinding from text chat.`);
         delete this.boundChannels[id];

@@ -297,6 +297,7 @@ class minecraft {
               try {
                 error = JSON.stringify(result, null, "  ");
               } catch (error) {
+                // fall back to non stringified result
               }
               throw error;
             }
