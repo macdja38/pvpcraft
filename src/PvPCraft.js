@@ -16,6 +16,7 @@ const git = require("git-rev");
 const Sentry = require("@sentry/node");
 const PvPClient = require("pvpclient");
 import ConfigsDB from "./lib/ConfigDB";
+
 const Eris = require("eris");
 for (let thing in Eris) {
   if (Eris.hasOwnProperty(thing) && typeof Eris[thing] === "function") {
@@ -48,12 +49,15 @@ for (let thing in Eris) {
 }
 const i10010n = require("i10010n");
 import TaskQueue from "./lib/TaskQueue";
+
 const MessageSender = require("./lib/MessageSender");
 import Permissions from "./lib/Permissions";
+
 const Analytics = require("./lib/Analytics");
 const now = require("performance-now");
 import Command from "./lib/Command";
 import utils from "./lib/utils";
+
 const chalk = require("chalk");
 const SlowSender = require("./lib/SlowSender");
 const Feeds = require("./lib/feeds");
@@ -137,7 +141,7 @@ class PvPCraft {
     setTimeout(() => {
       blocked(ms => {
         const text = `C${process.env.id}/${process.env.shards} blocked for ${ms}ms\nup-time ${process.uptime()}`;
-        let attachment = {text, ts: Date.now() / 1000};
+        let attachment = { text, ts: Date.now() / 1000 };
         attachment.title = "Event loop blocked";
         attachment.color = "#ff0000";
         let hookOptions = {
@@ -155,7 +159,7 @@ class PvPCraft {
             })
           );
         }
-      }, {threshold: 500});
+      }, { threshold: 500 });
     }, 30000);
   }
 
@@ -247,11 +251,11 @@ class PvPCraft {
   }
 
   readyMessageSender() {
-    this.messageSender = new MessageSender({client: this.client, translate: this.translate});
+    this.messageSender = new MessageSender({ client: this.client, translate: this.translate });
   }
 
   readySlowSender() {
-    this.slowSender = new SlowSender({client: this.client, config: this.fileConfig});
+    this.slowSender = new SlowSender({ client: this.client, config: this.fileConfig });
   }
 
   readyRethinkDB() {
@@ -259,7 +263,7 @@ class PvPCraft {
   }
 
   readyTaskQueue() {
-    this.taskQueue = new TaskQueue({r: this.r, client: this.client, restClient: this.restClient, raven: this.raven});
+    this.taskQueue = new TaskQueue({ r: this.r, client: this.client, restClient: this.restClient, raven: this.raven });
   }
 
   resolveWhenReady() {
@@ -271,7 +275,8 @@ class PvPCraft {
       db: require("./translations/translations.db"),
       logger: this.captureMissingTranslation,
       defaultLocale: "en",
-      addTemplateData: () => {},
+      addTemplateData: () => {
+      },
     });
   }
 
@@ -311,7 +316,7 @@ class PvPCraft {
   }
 
   readyFeeds() {
-    this.feeds = new Feeds({client: this.client, r: this.r, configDB: this.configDB});
+    this.feeds = new Feeds({ client: this.client, r: this.r, configDB: this.configDB });
   }
 
   registerReadyListener() {
@@ -353,9 +358,9 @@ class PvPCraft {
     }
     if (this.raven) {
       if (error) {
-        this.raven.captureException(error, {extra: {type: type, id}, level: "info"});
+        this.raven.captureException(error, { extra: { type: type, id }, level: "info" });
       } else {
-        this.raven.captureMessage(type + " Triggered", {level: "info"})
+        this.raven.captureMessage(type + " Triggered", { level: "info" })
       }
     }
     console.log(type, errorOrId, IDOrNull);
@@ -371,7 +376,7 @@ class PvPCraft {
 
   onDisconnect() {
     if (this.raven) {
-      this.raven.captureMessage("Disconnected", {level: "info"})
+      this.raven.captureMessage("Disconnected", { level: "info" })
     }
     console.log("Disconnect event called".red);
     for (let i in this.moduleList) {
@@ -520,7 +525,7 @@ class PvPCraft {
         console.log("Sentry Started".yellow);
         git.long((commit) => {
           git.branch((branch) => {
-            this.git = {commit, branch};
+            this.git = { commit, branch };
             let sentryConfig = {
               release: commit + "-" + branch,
               debug: true,
@@ -532,7 +537,7 @@ class PvPCraft {
             Sentry.init(sentryConfig);
             this.raven = Sentry
 
-            Sentry.configureScope(function(scope) {
+            Sentry.configureScope(function (scope) {
               scope.setTag("shardId", process.env.id);
               resolve(true);
             });
@@ -625,7 +630,7 @@ class PvPCraft {
       console.log("Eris Logged out");
       process.exit(0);
     });
-    this.client.disconnect({reconnect: false});
+    this.client.disconnect({ reconnect: false });
     setTimeout(() => {
       console.log("Bye");
       process.exit(0);
@@ -633,7 +638,7 @@ class PvPCraft {
   }
 
   reload() {
-    this.prefix = this.configDB.get("prefix", ["!!", "//", "/"], {server: "*"});
+    this.prefix = this.configDB.get("prefix", ["!!", "//", "/"], { server: "*" });
     this.id = this.client.user.id;
     console.log("Default prefix", this.prefix);
     this.name = this.client.user.username;
@@ -668,9 +673,8 @@ class PvPCraft {
         try {
           let mod = new (require(modules[module]))(moduleVariables);
           if (mod.onReady) mod.onReady();
-          this.moduleList.push({"commands": mod.getCommands ? mod.getCommands() : [], "module": mod});
-        }
-        catch (error) {
+          this.moduleList.push({ "commands": mod.getCommands ? mod.getCommands() : [], "module": mod });
+        } catch (error) {
           console.error(error);
         }
       }
@@ -680,7 +684,7 @@ class PvPCraft {
         try {
           let ware = new (require(middlewares[middleware]))(moduleVariables);
           if (ware.onReady) ware.onReady();
-          this.middlewareList.push({"commands": ware.getCommands ? ware.getCommands() : [], "ware": ware});
+          this.middlewareList.push({ "commands": ware.getCommands ? ware.getCommands() : [], "ware": ware });
         } catch (error) {
           console.error(error);
         }
@@ -720,7 +724,7 @@ class PvPCraft {
         }
         let modules = this.fileConfig.get("modules");
         delete require.cache[require.resolve(modules[command.args[0]])];
-        utils.handleErisRejection(command.reply(command.translate `Reloading ${command.args[0]}`));
+        utils.handleErisRejection(command.reply(command.translate`Reloading ${command.args[0]}`));
         console.log("Reloading ".yellow + command.args[0].yellow);
         let Mod = require(modules[command.args[0]]);
         let mod = new Mod(this.getModuleVariables());
@@ -728,11 +732,12 @@ class PvPCraft {
         this.moduleList[module].module = mod;
         this.moduleList[module].commands = Mod.getCommands();
         console.log("Reloded ".yellow + command.args[0].yellow);
-        utils.handleErisRejection(command.reply(command.translate `Reloded ${command.args[0]}`));
+        utils.handleErisRejection(command.reply(command.translate`Reloded ${command.args[0]}`));
       }
     }
   }
 
+  // eslint-disable-next-line complexity
   async onMessage(msg) {
     if (msg.author && msg.author.id === this.id) return;
     lastMessage = Date.now();
@@ -740,7 +745,7 @@ class PvPCraft {
 
     // handle per server prefixes.
     if (msg.channel.guild) {
-      prefixes = this.configDB.get("prefix", this.prefix, {server: msg.channel.guild.id});
+      prefixes = this.configDB.get("prefix", this.prefix, { server: msg.channel.guild.id });
     } else {
       prefixes = this.prefix;
     }
@@ -778,7 +783,7 @@ class PvPCraft {
           extra,
         });
       }
-      utils.handleErisRejection(msg.channel.createMessage(this.translate(msg.channel.id) `${msg.author.mention}, Sorry about that an unknown problem occurred processing your command, an error report has been logged and we are looking into the problem.`));
+      utils.handleErisRejection(msg.channel.createMessage(this.translate(msg.channel.id)`${msg.author.mention}, Sorry about that an unknown problem occurred processing your command, an error report has been logged and we are looking into the problem.`));
     }
 
     for (let ware in this.middlewareList) {
@@ -895,8 +900,8 @@ class PvPCraft {
           user: (msg.hasOwnProperty("author") && msg.author.toJSON) ? msg.author.toJSON() : msg.author,
           extra,
         });
-        utils.handleErisRejection(msg.channel.createMessage(this.translate(msg.channel.id) `Sorry, there was an error processing your command. The error is \`\`\`${error
-            }\`\`\` reference code \`${id}\``));
+        utils.handleErisRejection(msg.channel.createMessage(this.translate(msg.channel.id)`Sorry, there was an error processing your command. The error is \`\`\`${error
+        }\`\`\` reference code \`${id}\``));
         if (process.env.dev === "true") {
           console.error(error);
         }
@@ -929,11 +934,11 @@ class PvPCraft {
     if (!guildID) {
       guildID = this.client.channelGuildMap[channelID];
     }
-    const languages = this.configDB.get("languages", null, {server: guildID});
+    const languages = this.configDB.get("languages", null, { server: guildID });
     if (languages && Object.prototype.hasOwnProperty.call(languages, channelID)) {
       return languages[channelID];
     }
-    if (languages && Object.prototype.hasOwnProperty.call(languages,"*")) {
+    if (languages && Object.prototype.hasOwnProperty.call(languages, "*")) {
       return languages["*"];
     }
     return "en";

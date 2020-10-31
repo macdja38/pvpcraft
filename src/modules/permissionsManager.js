@@ -76,6 +76,7 @@ class permissionsManager {
       triggers: ["perms", "perm", "pex"],
       permissionCheck: () => true,
       channels: ["guild"],
+      // eslint-disable-next-line complexity
       execute: command => {
         //if no command is supplied supply help url
         if (command.args.length === 0) {

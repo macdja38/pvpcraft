@@ -388,6 +388,7 @@ class Player extends EventEmitter {
     }
   }
 
+  // eslint-disable-next-line complexity
   async playNext(from, possibleError) {
     this._maybeLog("PlayNext called from", from, possibleError, "time played",
       utils.secondsToTime((this.paused ? this.pauseTime - this.startTime : Date.now() - this.startTime) / 1000));
