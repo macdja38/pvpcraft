@@ -133,7 +133,7 @@ class Command {
   public role: any;
   public targetRole?: Role;
   public targetUser?: User | Member;
-  public targetChannel?: Eris.TextChannel | Eris.VoiceChannel | Eris.CategoryChannel;
+  public targetChannel?: Eris.Channel;
 
   /**
    *
@@ -298,7 +298,7 @@ class Command {
     }
 
     if (commandOptions.channel && isGuildTextChannel(message.channel)) {
-      let channel;
+      let channel: Eris.Channel | undefined;
       if (commandOptions.channel) {
         const commandOptionsMatch = commandOptions.channel.match(/<#(\d+)>/);
         if (commandOptionsMatch) {
