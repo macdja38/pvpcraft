@@ -57,7 +57,7 @@ class pokemon {
       channels: ["*"],
       execute: command => {
         let pokemon_name = command.args[0];
-        if (!pokemon_name || !/^[^<@#\\\/>]*$/g.test(pokemon_name)) {
+        if (!pokemon_name || !/^[^<@#\\/>]*$/g.test(pokemon_name)) {
           command.replyAutoDeny(command.translate `Sorry invalid input`);
         }
         Promise.resolve(pokedex.getPokemonByName(pokemon_name.toLowerCase())).then((response) => {
@@ -98,7 +98,7 @@ class pokemon {
       channels: ["*"],
       execute: command => {
         let pokemon_name = command.args[0];
-        if (pokemon_name && /^[^<@#\\\/>]*$/g.test(pokemon_name)) {
+        if (pokemon_name && /^[^<@#\\/>]*$/g.test(pokemon_name)) {
           Promise.resolve(pokedex.getPokemonByName(pokemon_name.toLowerCase())).then((response) => {
             command.createMessageAutoDeny(
               {
@@ -129,7 +129,7 @@ class pokemon {
       channels: ["*"],
       execute: command => {
         let pokemon_name = command.args[0];
-        if (pokemon_name && /^[^<@#\\\/>]*$/g.test(pokemon_name)) {
+        if (pokemon_name && /^[^<@#\\/>]*$/g.test(pokemon_name)) {
           Promise.resolve(pokedex.getPokemonByName(pokemon_name.toLowerCase())).then((response) => {
             command.createMessageAutoDeny(
               {
@@ -166,7 +166,7 @@ class pokemon {
       channels: ["*"],
       execute: command => {
         let pokemon_name = command.args[0];
-        if (pokemon_name && /^[^<@#\\\/>]*$/g.test(pokemon_name)) {
+        if (pokemon_name && /^[^<@#\\/>]*$/g.test(pokemon_name)) {
           Promise.resolve(pokedex.getPokemonByName(pokemon_name.toLowerCase()))
             .then((response) => {
               command.createMessageAutoDeny(
