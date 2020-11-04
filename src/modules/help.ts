@@ -1,16 +1,22 @@
 /**
  * Created by macdja38 on 2016-05-12.
  */
+
 "use strict";
 
-class help {
+import { ModuleOptions } from "../types/lib";
+import Eris from "eris";
+import { Module, ModuleCommand, ModuleConstructor } from "./moduleDefinition";
+
+const help: ModuleConstructor = class help implements Module {
+  private i10010n: any;
+
   /**
    * Instantiates the module
    * @constructor
    * @param {Object} e
    * @param {Eris} e.client Eris client
    * @param {Config} e.config File based config
-   * @param {Raven?} e.raven Raven error logging system
    * @param {Config} e.auth File based config for keys and tokens and authorisation data
    * @param {ConfigDB} e.configDB database based config system, specifically for per guild settings
    * @param {R} e.r Rethinkdb r
@@ -21,9 +27,7 @@ class help {
    * @param {PvPClient} e.pvpClient PvPCraft client library instance
    * @param {Function} e.i10010n internationalization function
    */
-  constructor(e) {
-    this.client = e.client;
-    this.raven = e.raven;
+  constructor(e: ModuleOptions) {
     this.i10010n = e.i10010n;
   }
 
@@ -47,14 +51,13 @@ class help {
    * Returns an array of commands that can be called by the command handler
    * @returns {[{triggers: [string], permissionCheck: function, channels: [string], execute: function}]}
    */
-  getCommands() {
+  getCommands(): ModuleCommand[] {
     return [{
       triggers: ["help", "commands", "command"],
       permissionCheck: command => true,
       channels: ["*"],
       execute: command => {
-        command.reply(command.translate `Help can be found at https://bot.pvpcraft.ca/docs`);
-        return true;
+        return command.reply(command.translate `Help can be found at https://bot.pvpcraft.ca/docs`);
       },
     }];
   }

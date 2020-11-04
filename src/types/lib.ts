@@ -18,5 +18,6 @@ export type ModuleOptions = {
   pvpClient: any;
   pvpcraft: any;
   i10010n: any;
+  git: any;
   getChannelLanguage: (channelId: string, guildId?: string) => translateType
 }

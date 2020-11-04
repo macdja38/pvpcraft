@@ -1,1 +1,1 @@
-export type translateType = (template: TemplateStringsArray, ...args: string[]) => string;
+export type translateType = (template: TemplateStringsArray, ...args: (string | number | undefined | null | boolean)[]) => string;

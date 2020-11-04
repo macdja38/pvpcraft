@@ -1,15 +1,27 @@
 /**
  * Created by macdja38 on 2016-04-25.
  */
+
 "use strict";
 
 import utils from "../lib/utils";
+import { Module, ModuleCommand, ModuleConstructor } from "./moduleDefinition";
+import { ModuleOptions } from "../types/lib";
+import Config from "../lib/Config";
+import Permissions from "../lib/Permissions";
+import Eris from "eris";
 const now = require('performance-now');
 
 const os = require('os');
 const numCPUs = os.cpus().length;
 
-class utilities {
+const utilities: ModuleConstructor = class utilities implements Module {
+  private git: any;
+  private perms: Permissions;
+  private client: Eris.Client;
+  private config: Config;
+  private i10010n: any;
+
   /**
    * Instantiates the module
    * @constructor
@@ -27,7 +39,7 @@ class utilities {
    * @param {PvPClient} e.pvpClient PvPCraft client library instance
    * @param {Function} e.i10010n internationalization function
    */
-  constructor(e) {
+  constructor(e: ModuleOptions) {
     this.git = e.git;
     this.perms = e.perms;
     this.client = e.client;
@@ -54,7 +66,7 @@ class utilities {
    * Returns an array of commands that can be called by the command handler
    * @returns {[{triggers: [string], permissionCheck: function, channels: [string], execute: function}]}
    */
-  getCommands() {
+  getCommands(): ModuleCommand[] {
     return [{
       triggers: ["serverinfo", "server"],
       permissionCheck: this.perms.genCheckCommand("utils.serverinfo"),
@@ -68,7 +80,7 @@ class utilities {
             title: `Server Info for ${utils.clean(command.channel.guild.name)}`,
             description: `Id: ${guild.id}\n` +
             `Created: ${new Date(guild.createdAt).toUTCString()}\n` +
-            `Owner: ${utils.clean(owner.username)}\n` +
+            `Owner: ${utils.clean(owner?.username || guild.ownerID)}\n` +
             `Humans: ${(guild.members.size - botCount)} Bots: ${botCount}\n` +
             `Voice Region: ${guild.region}\n` +
             `Roles: ${utils.clean(guild.roles.map(r => r.name).join(", "))}\n` +
@@ -90,8 +102,16 @@ class utilities {
           targets.push("<@" + command.author.id + ">");
         }
         for (let arg of targets) {
-          if (/(?:<@|<@!)\d+>/.test(arg)) {
-            member = command.channel.guild.members.get(arg.match(/(?:<@|<@!)(\d+)>/)[1]);
+          const targetID = (() => {
+            const match = arg.match(/(?:<@|<@!)(\d+)>/);
+            if (match) {
+              return match[1];
+            }
+            return null;
+          })();
+
+          if (targetID) {
+            member = command.channel.guild.members.get(targetID);
           } else {
             member = command.channel.guild.members.find(m => m.username === arg)
           }
@@ -127,6 +147,9 @@ class utilities {
         let t1 = now();
         command.createMessageAutoDeny("Testing Ping").then((message) => {
           let t2 = now();
+          if (!message) {
+            throw new Error("Failed to send first message to test ping");
+          }
           utils.handleErisRejection(this.client.editMessage(message.channel.id, message.id, "Ping is `" + (t2 - t1) + "`ms!"));
         });
         return true;

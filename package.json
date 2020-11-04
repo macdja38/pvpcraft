@@ -49,7 +49,7 @@
     "universal-analytics": "^0.4.23",
     "uuid": "^8.3.1",
     "youtube-dl": "^3.0.2",
-    "ytdl-core": "^1.0.0"
+    "ytdl-core": "^2.1.7"
   },
   "devDependencies": {
     "@emtypes/rethinkdbdash": "0.0.1",
@@ -61,13 +61,13 @@
     "@types/youtube-dl": "^3.0.0",
     "docma": "^2.1.0",
     "eslint": "^7.12.1",
-    "jest-cli": "^24.9.0",
+    "jest-cli": "^26.6.2",
     "jsdoc": "^3.6.6",
     "jsdoc-strip-async-await": "^0.1.0",
     "nodemon": "^2.0.4",
     "rimraf": "^3.0.2",
     "ts-node": "^9.0.0",
-    "typescript": "^3.9.5"
+    "typescript": "^4.0.5"
   },
   "engines": {
     "node": ">=12"

@@ -1,9 +1,15 @@
 /**
  * Created by macdja38 on 2016-04-25.
  */
+
 "use strict";
 
 import utils from "../lib/utils";
+import { Module, ModuleCommand, ModuleConstructor } from "./moduleDefinition";
+import { ModuleOptions } from "../types/lib";
+import Permissions from "../lib/Permissions";
+import Eris from "eris";
+import Command from "../lib/Command";
 
 let google = require("google");
 
@@ -11,14 +17,17 @@ let request = require("request");
 
 let cheerio = require("cheerio");
 
-class search {
+const search: ModuleConstructor = class search implements Module {
+  private client: Eris.Client;
+  private perms: Permissions;
+  private i10010n: any;
+
   /**
    * Instantiates the module
    * @constructor
    * @param {Object} e
    * @param {Eris} e.client Eris client
    * @param {Config} e.config File based config
-   * @param {Raven?} e.raven Raven error logging system
    * @param {Config} e.auth File based config for keys and tokens and authorisation data
    * @param {ConfigDB} e.configDB database based config system, specifically for per guild settings
    * @param {R} e.r Rethinkdb r
@@ -29,14 +38,13 @@ class search {
    * @param {PvPClient} e.pvpClient PvPCraft client library instance
    * @param {Function} e.i10010n internationalization function
    */
-  constructor(e) {
+  constructor(e: ModuleOptions) {
     this.client = e.client;
-    this.raven = e.raven;
     this.perms = e.perms;
     this.i10010n = e.i10010n;
   }
 
-  getCommands() {
+  getCommands(): ModuleCommand[] {
     return [{
       triggers: ["g", "google"],
       permissionCheck: this.perms.genCheckCommand("search.google"),
@@ -49,13 +57,13 @@ class search {
    * Searches google
    * @param {Command} command
    */
-  executeSearch(command) {
+  executeSearch(command: Command) {
     if (command.args.length < 1) {
       command.replyAutoDeny(command.translate `Please supply something to search for.`);
       return true;
     }
     let search = command.args.join(" ");
-    google(search, (err, response) => {
+    google(search, (err: Error, response: any) => {
       if (err || !response || !response.links) command.reply(command.translate `Your search resulted in an error`);
       else if (response.links.length < 1) command.reply(command.translate `No results found`);
       else {
@@ -75,10 +83,10 @@ class search {
   }
 }
 
-function search_gus(query) {
+function search_gus(query: string) {
   return request.get(`https://www.google.com/search?ie=ISO-8859-1&hl=en&source=hp&q=${query}&btnG=Google+Search&gbv=1`)
-    .then(body => cheerio.load(body))
-    .then(($) => {
+    .then((body: string) => cheerio.load(body))
+    .then(($: any) => {
       const element = $('body p a').first();
       if (!element) return false;
       let href = element.attr('href');
