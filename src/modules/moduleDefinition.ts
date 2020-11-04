@@ -1,18 +1,28 @@
 import { ModuleOptions } from "../types/lib";
-import Command from "../lib/Command";
+import Command, { GuildCommand } from "../lib/Command";
 import { Message } from "eris";
 
 export interface ModuleConstructor {
   new(e: ModuleOptions): Module;
 }
 
-export type ModuleCommand = {
+export type ModuleCommandAnywhere = {
   triggers: string[];
   permissionCheck: (any: any) => any;
-  channels: string[];
-  execute: (command: Command) => Promise<any> | boolean
+  channels: "*" | ["*"];
+  execute: (command: GuildCommand) => Promise<any> | boolean
   subCommands?: ModuleCommand[]
 }
+
+export type ModuleCommandGuild = {
+  triggers: string[];
+  permissionCheck: (any: any) => any;
+  channels: "guild" | ["guild"];
+  execute: (command: GuildCommand) => Promise<any> | boolean
+  subCommands?: ModuleCommandGuild[]
+}
+
+export type ModuleCommand = ModuleCommandAnywhere | ModuleCommandGuild;
 
 export interface Module {
   /**

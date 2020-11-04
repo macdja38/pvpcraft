@@ -265,7 +265,7 @@ const rank: ModuleConstructor = class rank implements Module {
   }
 
   possiblyDelete(triggerMessage: Message) {
-    return (msg: Message) => {
+    return (msg: Message | null) => {
       if (msg == null) return;
       if (!isGuildChannel(msg.channel)) return;
       let serverId = msg.channel.guild.id;

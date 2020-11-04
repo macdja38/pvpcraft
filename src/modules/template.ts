@@ -9,7 +9,7 @@ import { ModuleOptions } from "../types/lib";
 import Permissions from "../lib/Permissions";
 import Eris, { Message } from "eris";
 import Command from "../lib/Command";
-import { Module, ModuleConstructor } from "./moduleDefinition";
+import { Module, ModuleCommand, ModuleConstructor } from "./moduleDefinition";
 
 const template: ModuleConstructor = class template implements Module {
   private perms: Permissions;
@@ -42,7 +42,7 @@ const template: ModuleConstructor = class template implements Module {
    * Returns an array of commands that can be called by the command handler
    * @returns {[{triggers: [string], permissionCheck: function, channels: [string], execute: function}]}
    */
-  getCommands() {
+  getCommands(): ModuleCommand[] {
     return [{
       triggers: ["ao"],
       permissionCheck: this.perms.genCheckCommand("template.ao"),

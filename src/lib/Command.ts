@@ -128,7 +128,7 @@ class Command {
   public readonly author: User;
   public readonly perms: any;
   public readonly translate: translateType;
-  public channel: Channel;
+  public channel: Eris.Channel;
   public user?: User;
   public role: any;
   public targetRole?: Role;
@@ -344,7 +344,7 @@ class Command {
    * @returns {Promise<Message>}
    * @private
    */
-  _reply(content: MessageContent, file?: MessageFile) {
+  _reply(content: MessageContent, file?: Parameters<TextableChannel["createMessage"]>[1]) {
     if (typeof content === "string") {
       content = `${this.msg.author.mention} ${content}`;
     } else {
@@ -364,7 +364,7 @@ class Command {
    * @param {Command~MessageOptions} [options] A {@link #Command~MessageOptions|options} object
    * @returns {Promise<Message>}
    */
-  reply(content: MessageContent, file?: MessageFile) {
+  reply(content: MessageContent, file?: Parameters<TextableChannel["createMessage"]>[1]) {
     return this.capturePromiseRejection(this._reply(content, file), content);
   }
 
@@ -377,7 +377,7 @@ class Command {
    * @param {Command~MessageOptions} [options] A {@link #Command~MessageOptions|options} object
    * @returns {Promise<Message>}
    */
-  replyAutoDeny(content: MessageContent, file?: MessageFile) {
+  replyAutoDeny(content: MessageContent, file?: Parameters<TextableChannel["createMessage"]>[1]) {
     return this.capturePromiseRejection(this._reply(content, file).catch(this.autoDenyPermission), content);
   }
 
@@ -389,7 +389,7 @@ class Command {
    * @param {Command~MessageOptions} [options] A {@link #Command~MessageOptions|options} object
    * @returns {Promise<Message>}
    */
-  createMessage(content: MessageContent, file?: MessageFile) {
+  createMessage(content: MessageContent, file?: Parameters<TextableChannel["createMessage"]>[1]) {
     return this.capturePromiseRejection(this.msg.channel.createMessage(content, file), content);
   }
 
@@ -401,11 +401,11 @@ class Command {
    * @param {Command~MessageOptions} [options] A {@link #Command~MessageOptions|options} object
    * @returns {Promise<Message>}
    */
-  createMessageAutoDeny(content: MessageContent, file?: MessageFile) {
+  createMessageAutoDeny(content: MessageContent, file?: Parameters<TextableChannel["createMessage"]>[1]) {
     return this.capturePromiseRejection(this.msg.channel.createMessage(content, file).catch(this.autoDenyPermission), content);
   }
 
-  autoDenyPermission(error: ErisError) {
+  autoDenyPermission(error: ErisError): null {
     // @ts-ignore
     if (error.code == null) {
       throw error;
@@ -426,6 +426,7 @@ Please use /perms list on that server to see the new configuration.`),
     } else {
       throw error;
     }
+    return null;
   }
 
   /**
@@ -434,7 +435,7 @@ Please use /perms list on that server to see the new configuration.`),
    * @param {Object} [context] Context to be added to the error rejection
    * @returns {*}
    */
-  capturePromiseRejection(promise: Promise<any>, context: any) {
+  capturePromiseRejection<T>(promise: Promise<T>, context: any): Promise<T> {
     promise.catch(this.captureException.bind(this, context));
     return promise;
   }
@@ -469,6 +470,11 @@ Please use /perms list on that server to see the new configuration.`),
       extra,
     })
   }
+}
+
+export interface GuildCommand extends Command {
+  channel: Eris.GuildChannel;
+  member: Eris.Member;
 }
 
 export default Command;

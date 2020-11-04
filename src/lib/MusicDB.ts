@@ -7,6 +7,7 @@ import BaseDB from "./BaseDB";
 import Sentry from "@sentry/node";
 import { Info } from "youtube-dl";
 import { Response } from "request";
+
 const request = require("request");
 const youtubeDl = require("youtube-dl");
 const ytdl = require("ytdl-core");
@@ -32,6 +33,7 @@ class MusicDB extends BaseDB {
   private videoCache: string;
   private discordFMCache: string;
   private regionCode: string;
+
   /**
    * Music database and utils
    * @param {R} r
@@ -74,7 +76,7 @@ class MusicDB extends BaseDB {
 
   _maybeFilterByUserID(rethinkDBQuery: any, possibleID: string) {
     if (possibleID) {
-      return rethinkDBQuery.filter({user_id: possibleID});
+      return rethinkDBQuery.filter({ user_id: possibleID });
     } else {
       return rethinkDBQuery;
     }
@@ -97,7 +99,7 @@ class MusicDB extends BaseDB {
    * @param {Array<string>} guilds
    */
   getBoundChannels(guilds: string[]) {
-    return this.r.table(this.table).getAll(...guilds, {index: "id"}).hasFields("text_id", "voice_id").filter((doc: any) => {
+    return this.r.table(this.table).getAll(...guilds, { index: "id" }).hasFields("text_id", "voice_id").filter((doc: any) => {
       return doc("queue").default([]).count().gt(0)
     }).run();
   }
@@ -136,10 +138,10 @@ class MusicDB extends BaseDB {
     return this.r.table(this.table).get(id).update({
       queue: this.r.row("queue").default([]).changeAt(index,
         this.r.row("queue").nth(index).do(function (song: any) {
-          return song.merge({votes: song("votes").default([]).setInsert(userId)})
+          return song.merge({ votes: song("votes").default([]).setInsert(userId) })
         }),
       ),
-    }, {nonAtomic: true, returnChanges: true})
+    }, { nonAtomic: true, returnChanges: true })
       .do((doc: any) => {
         return this.r.branch(doc("changes").count().gt(0), doc("changes").nth(0)("new_val")("queue").nth(index)("votes").count(), false)
       }).run();
@@ -163,7 +165,7 @@ class MusicDB extends BaseDB {
       text_id,
       voice,
       voice_id,
-    }, {conflict: "update"}).run();
+    }, { conflict: "update" }).run();
   }
 
   /**
@@ -189,7 +191,7 @@ class MusicDB extends BaseDB {
         }),
       });
     } else {
-      return this.r.table(this.table).get(id).update({queue: []});
+      return this.r.table(this.table).get(id).update({ queue: [] });
     }
   }
 
@@ -204,7 +206,7 @@ class MusicDB extends BaseDB {
         queue:
           this.r.row("queue")
             .default([])
-            .sample(this.r.row("queue").count())
+            .sample(this.r.row("queue").count()),
       }, { nonAtomic: true }).run();
   }
 
@@ -217,7 +219,7 @@ class MusicDB extends BaseDB {
   spliceVideo(id: string, index = 0) {
     return this.r.table(this.table).get(id).update({
       queue: this.r.row("queue").default([]).deleteAt(index),
-    }, {returnChanges: true}).run().then((thing: any) => {
+    }, { returnChanges: true }).run().then((thing: any) => {
       return thing.changes[0].old_val.queue[index];
     });
   }
@@ -242,15 +244,15 @@ class MusicDB extends BaseDB {
    */
   async getNextVideosCachedInfoAndVideo(id: string, count = 1, starting = 0): Promise<{ song: any; info: any }[]> {
     let queue = await this.getNextVideos(id, count, starting);
-    let songList = await Promise.all(queue.map((song: any) => this.getCachingInfoLink(song.link, {allowOutdated: true})));
-    return queue.map((song: any, i: number) => ({song: song, info: songList[i]}));
+    let songList = await Promise.all(queue.map((song: any) => this.getCachingInfoLink(song.link, { allowOutdated: true })));
+    return queue.map((song: any, i: number) => ({ song: song, info: songList[i] }));
   }
 
   saveVid(linkHash: string, link: string, video: any) {
     video.id = linkHash;
     video.link = link;
     video.timeFetched = Date.now();
-    return this.r.table(this.videoCache).insert(video, {conflict: "replace"}).run();
+    return this.r.table(this.videoCache).insert(video, { conflict: "replace" }).run();
   }
 
   getVid(hash: string) {
@@ -262,7 +264,7 @@ class MusicDB extends BaseDB {
       id: string,
       result: result,
       timeFetched: Date.now(),
-    }, {conflict: "replace"}).run();
+    }, { conflict: "replace" }).run();
   }
 
   getSearch(string: string) {
@@ -270,7 +272,7 @@ class MusicDB extends BaseDB {
   }
 
   saveDiscordFMPlaylist(id: string, playlist: any) {
-    return this.r.table(this.discordFMCache).insert({id, playlist}, {conflict: "replace"}).run();
+    return this.r.table(this.discordFMCache).insert({ id, playlist }, { conflict: "replace" }).run();
   }
 
   getDiscordFMPlaylist(id: string) {
@@ -289,7 +291,7 @@ class MusicDB extends BaseDB {
     return new Promise((resolve, reject) => {
       let requestUrl = "https://www.googleapis.com/youtube/v3/search" +
         `?part=snippet&q=${string}&key=${this.apiKey}&regionCode=${this.regionCode}`;
-      request({method: "GET", uri: requestUrl, gzip: true}, (error: Error, response: Response) => {
+      request({ method: "GET", uri: requestUrl, gzip: true }, (error: Error, response: Response) => {
         if (error) reject(error);
         resolve(JSON.parse(response.body));
       })

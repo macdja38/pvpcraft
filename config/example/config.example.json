@@ -39,7 +39,7 @@
     "pokemon": "./modules/pokemon.js",
     "music": "./modules/music.js",
     "welcome": "./modules/welcome.js",
-    "rank": "./modules/rank.js",
+    "rank": "./modules/rank",
     "clusterRestart": "./modules/clusterRestart",
     "cleverBot": "./modules/cleverBot.js"
   },
