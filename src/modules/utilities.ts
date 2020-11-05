@@ -5,7 +5,7 @@
 "use strict";
 
 import utils from "../lib/utils";
-import { Module, ModuleCommand, ModuleConstructor } from "./moduleDefinition";
+import { Module, ModuleCommand, ModuleConstructor } from "../types/moduleDefinition";
 import { ModuleOptions } from "../types/lib";
 import Config from "../lib/Config";
 import Permissions from "../lib/Permissions";

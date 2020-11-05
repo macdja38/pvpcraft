@@ -5,7 +5,7 @@
 "use strict";
 
 import utils from "../lib/utils";
-import { Module, ModuleCommand, ModuleConstructor } from "./moduleDefinition";
+import { Module, ModuleCommand, ModuleConstructor } from "../types/moduleDefinition";
 import { ModuleOptions } from "../types/lib";
 import ConfigDB from "../lib/ConfigDB";
 import Eris, { Guild, Member, Message } from "eris";

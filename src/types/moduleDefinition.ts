@@ -10,6 +10,7 @@ export type ModuleCommandAnywhere = {
   triggers: string[];
   permissionCheck: (any: any) => any;
   channels: "*" | ["*"];
+  usage?: string;
   execute: (command: GuildCommand) => Promise<any> | boolean
   subCommands?: ModuleCommand[]
 }
@@ -18,6 +19,7 @@ export type ModuleCommandGuild = {
   triggers: string[];
   permissionCheck: (any: any) => any;
   channels: "guild" | ["guild"];
+  usage?: string;
   execute: (command: GuildCommand) => Promise<any> | boolean
   subCommands?: ModuleCommandGuild[]
 }
@@ -48,4 +50,8 @@ export interface Module {
    * permissionCheck: Function, channels: Array<string>, execute: Function}>}}
    */
   getContent?(): { name: string; description: string; key: string; permNode: string; commands: ModuleCommand[] }
+}
+
+export interface Middleware extends Module {
+
 }

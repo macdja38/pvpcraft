@@ -5,7 +5,7 @@
 "use strict";
 
 import utils from "../lib/utils";
-import { Module, ModuleCommand, ModuleConstructor } from "./moduleDefinition";
+import { Module, ModuleCommand, ModuleConstructor } from "../types/moduleDefinition";
 import { ModuleOptions } from "../types/lib";
 import Permissions from "../lib/Permissions";
 import Eris from "eris";
