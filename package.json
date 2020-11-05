@@ -3,7 +3,7 @@
   "scripts": {
     "start:dev": "nodemon",
     "build": "rimraf ./build && tsc",
-    "start": "npm run build && node build/main.js",
+    "start": "npm run build && node -r source-map-support/register build/main.js",
     "doc": "node docma.js",
     "lint": "eslint src"
   },
@@ -47,6 +47,7 @@
     "pvpclient": "^1.1.5",
     "request": "^2.88.2",
     "rethinkdbdash": "^2.3.31",
+    "source-map-support": "^0.5.19",
     "stream-resume": "0.0.6",
     "superagent": "^6.1.0",
     "universal-analytics": "^0.4.23",
