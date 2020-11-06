@@ -668,12 +668,24 @@ class PvPCraft {
 
     let moduleVariables = this.getModuleVariables();
 
+    function verifyTriggers(commands) {
+      for (let command of commands) {
+        for (let trigger of command.triggers) {
+          if (trigger.toLowerCase() !== trigger) {
+            throw new Error(`Trigger \`${trigger}\` must be entirely lowercase.`)
+          }
+        }
+      }
+    }
+
     for (let module in modules) {
       if (modules.hasOwnProperty(module)) {
         try {
           let mod = new (require(modules[module]))(moduleVariables);
           if (mod.onReady) mod.onReady();
-          this.moduleList.push({ "commands": mod.getCommands ? mod.getCommands() : [], "module": mod });
+          const commands = mod.getCommands ? mod.getCommands() : [];
+          verifyTriggers(commands);
+          this.moduleList.push({ commands, "module": mod });
         } catch (error) {
           console.error(error);
         }
@@ -684,7 +696,9 @@ class PvPCraft {
         try {
           let ware = new (require(middlewares[middleware]))(moduleVariables);
           if (ware.onReady) ware.onReady();
-          this.middlewareList.push({ "commands": ware.getCommands ? ware.getCommands() : [], "ware": ware });
+          const commands = ware.getCommands ? ware.getCommands() : [];
+          verifyTriggers(commands);
+          this.middlewareList.push({ commands, "ware": ware });
         } catch (error) {
           console.error(error);
         }
