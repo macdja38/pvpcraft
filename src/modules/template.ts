@@ -9,7 +9,7 @@ import { ModuleOptions } from "../types/lib";
 import Permissions from "../lib/Permissions";
 import Eris, { Message } from "eris";
 import Command from "../lib/Command";
-import { Module, ModuleCommand, ModuleConstructor } from "./moduleDefinition";
+import { Module, ModuleCommand, ModuleConstructor } from "../types/moduleDefinition";
 
 const template: ModuleConstructor = class template implements Module {
   private perms: Permissions;
