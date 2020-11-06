@@ -44,11 +44,11 @@ import Sentry from "@sentry/node"
  * @typedef {Object} Command~MessageOptions
  */
 
-const utils = require('./utils');
+import utils from "./utils";
 const regargs = /^((?:.|\n)*?)(?= -\w| (?:--|—)\w|$)/;
 const regAll = /(?:\s(?:--|—)(?=\S)(\w+)\s((?:.|\n)*?)|\s-(?=\w)(?!-)((?:.|\n)*?))(?= -\w| (?:--|—)\w|$)/g;
 
-const EE = require("eris-errors");
+import EE from "eris-errors";
 
 const DEFAULTS = {
   allowMention: false,
@@ -173,6 +173,11 @@ class Command {
     newCommand.user = this.user;
     newCommand.channel = this.channel;
     newCommand.role = this.role;
+
+    newCommand.targetUser = this.targetUser;
+    newCommand.targetChannel = this.targetChannel;
+    newCommand.targetRole = this.targetRole;
+
     return newCommand;
   }
 
