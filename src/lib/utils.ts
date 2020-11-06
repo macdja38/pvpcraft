@@ -8,6 +8,8 @@ import { Member, User } from "eris";
 
 import fetch from "node-fetch";
 
+type MediaWikiSearchResult = [string, string[], string[], string[]]
+
 /**
  * A collection of utility methods tailored for discord and used throughout pvpcraft
  * @type Utils
@@ -252,8 +254,8 @@ class Utils {
    * @param {string} searchTerm
    * @returns {Request}
    */
-  static mediaWikiSearch(api: string, searchTerm: string) {
-    return fetch(`${api}?action=opensearch&search=${encodeURIComponent(searchTerm)}`).then((result) => result.json());
+  static mediaWikiSearch(api: string, searchTerm: string): Promise<MediaWikiSearchResult> {
+    return fetch(`${api}?action=opensearch&search=${encodeURIComponent(searchTerm)}`).then((result) => result.json() as Promise<MediaWikiSearchResult>);
   }
 
   /**
