@@ -18,7 +18,6 @@ type ConfigOptions = {
  * @class ConfigDB
  */
 class ConfigDB extends BaseDB {
-  private table: string;
   private client: Eris.Client;
   data: { [keyof: string]: any };
   private _cursor: any | null;
@@ -31,9 +30,8 @@ class ConfigDB extends BaseDB {
    * @param {Eris} client Eris Client
    */
   constructor(r: any, table: string, client: Eris.Client) {
-    super(r);
+    super(r, table);
     this.r = r;
-    this.table = table;
     this.client = client;
     this.data = {};
     this._cursor = null;

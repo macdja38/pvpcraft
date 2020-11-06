@@ -21,13 +21,14 @@ let normalisationMap = {
   title: ["title"],
 };
 
+const QUEUE_TABLE_NAME = "queue";
+
 /**
  * Stores and retrieves music related information
  * @class
  */
 class MusicDB extends BaseDB {
   private apiKey: string;
-  private table: string;
   private rtable: any;
   private searchCache: string;
   private videoCache: string;
@@ -40,15 +41,14 @@ class MusicDB extends BaseDB {
    * @param {string} [apiKey] youtube api key without this music queueing will be disabled
    */
   constructor(r: any, apiKey: string) {
-    super(r);
+    super(r, QUEUE_TABLE_NAME);
     this.regionCode = "CA"
     this.apiKey = apiKey;
-    this.table = "queue";
     this.rtable = this.r.table(this.table);
     this.searchCache = "searchCache";
     this.videoCache = "videoCache";
     this.discordFMCache = "discordFMCache";
-    this.ensureTable("queue", {});
+    this.ensureTable(this.table, {});
     this.ensureTable(this.searchCache);
     this.ensureTable(this.videoCache);
     this.ensureTable(this.discordFMCache);

@@ -13,7 +13,6 @@ import BaseDB from "./BaseDB";
  */
 class StandardDB extends BaseDB {
   private _ids: string[];
-  private table: string;
   private data: { [keyof: string]: any};
   private _cursor?: any;
 
@@ -25,10 +24,9 @@ class StandardDB extends BaseDB {
    * @param {string[]} ids of configs to load
    */
   constructor(r: any, table: string, ids: string[]) {
-    super(r);
+    super(r, table);
     this.r = r;
     this._ids = ids;
-    this.table = table;
     this.data = {};
     this._cursor = null;
   }

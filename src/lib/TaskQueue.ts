@@ -16,6 +16,8 @@ interface Task {
   meta: any;
 }
 
+const TASK_QUEUE_TABLE_NAME = "taskQueue"
+
 class taskQueue {
   private client: Eris.Client;
   private restClient: Eris.Client;
@@ -24,8 +26,8 @@ class taskQueue {
   constructor({ r, client, restClient }: { r: any, client: Eris.Client; restClient: Eris.Client }) {
     this.client = client;
     this.restClient = restClient;
-    this.db = new BaseDB(r);
-    this.db.ensureTable("taskQueue");
+    this.db = new BaseDB(r, TASK_QUEUE_TABLE_NAME);
+    this.db.ensureTable(TASK_QUEUE_TABLE_NAME);
     this.processQueue = this.processQueue.bind(this);
     this.runExpiredTasks = this.runExpiredTasks.bind(this);
     this.removeQueueEntry = this.removeQueueEntry.bind(this);
@@ -37,7 +39,7 @@ class taskQueue {
   }
 
   runExpiredTasks() {
-    this.db.r.table("taskQueue").filter((r: any) => r("expireTime").le(this.db.r.now())).then(this.processQueue);
+    this.db.r.table(TASK_QUEUE_TABLE_NAME).filter((r: any) => r("expireTime").le(this.db.r.now())).then(this.processQueue);
   }
 
   processQueue(queue: Task[]) {
@@ -56,7 +58,7 @@ class taskQueue {
     if (retries > maxRetries) {
       return this.removeQueueEntry(task);
     } else {
-      return this.db.r.table("taskQueue").get(task.id).update({ retries: retries + 1 }).run();
+      return this.db.r.table(TASK_QUEUE_TABLE_NAME).get(task.id).update({ retries: retries + 1 }).run();
     }
   }
 
@@ -69,7 +71,7 @@ class taskQueue {
   }
 
   removeQueueEntry({ id }: Task) {
-    this.db.r.table("taskQueue").get(id).delete().run();
+    this.db.r.table(TASK_QUEUE_TABLE_NAME).get(id).delete().run();
   }
 
   estimateEndDateFromString(string: string) {
@@ -88,7 +90,7 @@ class taskQueue {
       time = time.getTime() / 1000;
     }
     let datedTask = Object.assign({ expireTime: this.db.r.epochTime(time) }, task);
-    this.db.r.table("taskQueue").insert(datedTask).run();
+    this.db.r.table(TASK_QUEUE_TABLE_NAME).insert(datedTask).run();
   }
 
   async unmute(meta: any) {

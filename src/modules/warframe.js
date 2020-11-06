@@ -54,7 +54,7 @@ class Warframe {
     this.r = e.r;
     this.alerts = [];
     this.rebuildAlerts = this.rebuildAlerts.bind(this);
-    this.alertsDB = new BaseDB(this.r);
+    this.alertsDB = new BaseDB(this.r, "worldState");
     this.dbReady = this.alertsDB.ensureTable("worldState");
     this.i10010n = e.i10010n;
   }
