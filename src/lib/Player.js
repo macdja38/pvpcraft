@@ -294,7 +294,7 @@ class Player extends EventEmitter {
   getQuality() {
     console.log(this.currentVideo);
     console.log(this.currentVideoInfo);
-    let sourceInfo = videoUtils.getURL(this.currentVideoInfo);
+    let sourceInfo = videoUtils.getStreamingURL(this.currentVideoInfo);
     console.log(sourceInfo);
     return `Quality:
     Bitrate: ${sourceInfo.bitrate}
@@ -429,7 +429,7 @@ class Player extends EventEmitter {
       let source;
       let fetchError;
       try {
-        source = videoUtils.getURL(this.currentVideoInfo);
+        source = videoUtils.getStreamingURL(this.currentVideoInfo);
       } catch (error) {
         fetchError = error;
       }

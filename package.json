@@ -48,7 +48,7 @@
     "universal-analytics": "^0.4.23",
     "uuid": "^8.3.1",
     "youtube-dl": "^3.0.2",
-    "ytdl-core": "^2.1.7"
+    "ytdl-core": "^4.0.3"
   },
   "devDependencies": {
     "@emtypes/rethinkdbdash": "0.0.1",
@@ -59,6 +59,7 @@
     "@types/node-fetch": "^2.5.7",
     "@types/request": "^2.48.5",
     "@types/rethinkdb": "^2.3.16",
+    "@types/rethinkdbdash": "git+https://github.com/typed-typings/rethinkdbdash.git",
     "@types/universal-analytics": "^0.4.4",
     "@types/ws": "^7.2.9",
     "@types/youtube-dl": "^3.0.0",

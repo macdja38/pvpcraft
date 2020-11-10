@@ -3,7 +3,7 @@
  */
 "use strict";
 
-import Sentry from "@sentry/node";
+import * as Sentry from "@sentry/node";
 
 /**
  * The object that describes a video object stored in pvpcraft
@@ -77,7 +77,8 @@ import utils from "./utils";
 
 // formats in order of preference when streaming them
 // starting numbers are itag values for youtube https://en.wikipedia.org/wiki/YouTube#Quality_and_formats
-let idealFormatIds = ["250", "251", "249", "171", "140", "141", "127", "128", "82", "83", "100", "84", "85", "5", "18", "43", "22", "36", "17", "http_mp3_128_url"];
+let idealStreamingFormats = ["250", "251", "249", "171", "140", "141", "127", "128", "82", "83", "100", "84", "85", "5", "18", "43", "22", "36", "17", "http_mp3_128_url"];
+let idealPlexFormats = ["251", "140", "250", "249"];
 
 /**
  * Class containing methods designed for manipulating the info received from youtube-dl and ytdl-core results.
@@ -162,12 +163,7 @@ class VideoUtils {
     return info.view_count;
   }
 
-  /**
-   * Get's a streamable URL from a track
-   * @param {VideoUtils~VideoInfo} info {@link #VideoUtils~VideoInfo|Video Info}
-   * @returns {Object | null}
-   */
-  static getURL(info: VideoInfo): { sourceURL: string; encoding: string; container: string; bitrate: number; url: string; } | null {
+  static getURL(idealFormatIds: string[], info: VideoInfo): { sourceURL: string; encoding: string; container: string; bitrate: number; url: string; } | null {
     let streamableSource: { sourceURL: string; encoding: string; container: string; bitrate: number; url: string; };
     let formats = info.formats;
     if (!info.hasOwnProperty("formats")) {
@@ -291,6 +287,19 @@ class VideoUtils {
     });
     return null;
   }
+
+  static getPlexURL(info: VideoInfo): { sourceURL: string; encoding: string; container: string; bitrate: number; url: string; } | null {
+    return this.getURL(["140"], info);
+  }
+
+  /**
+   * Get's a streamable URL from a track
+   * @param {VideoUtils~VideoInfo} info {@link #VideoUtils~VideoInfo|Video Info}
+   * @returns {Object | null}
+   */
+  static getStreamingURL(info: VideoInfo): { sourceURL: string; encoding: string; container: string; bitrate: number; url: string; } | null {
+    return this.getURL(idealStreamingFormats, info);
+  }
 }
 
 /**
@@ -330,7 +339,7 @@ function getBitrate(format: VideoFormat) {
  * @private
  */
 function getFormatId(format: VideoFormat) {
-  return format.itag || format.format_id;
+  return `${format.itag || format.format_id}`;
 }
 
 /**
@@ -368,4 +377,5 @@ function toObj<T>(arr: T[]): { [keyof: string]: T } {
   }, {});
 }
 
+export default VideoUtils;
 module.exports = VideoUtils;

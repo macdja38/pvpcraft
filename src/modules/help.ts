@@ -7,6 +7,7 @@
 import { ModuleOptions } from "../types/lib";
 import Eris from "eris";
 import { Module, ModuleCommand, ModuleConstructor } from "../types/moduleDefinition";
+import Command from "../lib/Command";
 
 const help: ModuleConstructor = class help implements Module {
   private i10010n: any;
@@ -56,7 +57,7 @@ const help: ModuleConstructor = class help implements Module {
       triggers: ["help", "commands", "command"],
       permissionCheck: command => true,
       channels: ["*"],
-      execute: command => {
+      execute: (command: Command) => {
         return command.reply(command.translate `Help can be found at https://bot.pvpcraft.ca/docs`);
       },
     }];

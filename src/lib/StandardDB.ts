@@ -32,6 +32,7 @@ class StandardDB extends BaseDB {
   }
 
   follow() {
+    // @ts-ignore
     this.r.table(this.table).getAll(...this._ids).changes().run().then((cursor: any) => {
       if (this._cursor) this._cursor.close();
       this._cursor = cursor;
@@ -56,6 +57,7 @@ class StandardDB extends BaseDB {
         this.ensureTable(this.table).then(() => {
           console.log(`Connected to db ${this.table} on shard ${process.env.id}`.blue);
           console.log(this._ids);
+          // @ts-ignore
           return this.r.table(this.table).getAll(...this._ids).run().then((data: any[]) => {
             data.forEach((thing) => {
               this.data[thing.id] = thing;
@@ -102,6 +104,7 @@ class StandardDB extends BaseDB {
 
     return this.r.table(this.table).insert({
       "id": options.server,
+      // @ts-ignore
       entries: this.r.table(this.table).get(options.server)(key).setInsert(value)
     }, {"conflict": options.conflict}).run();
   }
@@ -138,6 +141,7 @@ class StandardDB extends BaseDB {
     if (!options.hasOwnProperty("server")) {
       options.server = "*";
     }
+    // @ts-ignore
     return this.r.table(this.table).get(options.server)(key).count().run();
   }
 
@@ -153,6 +157,7 @@ class StandardDB extends BaseDB {
     if (!options.hasOwnProperty("server")) {
       options.server = "*";
     }
+    // @ts-ignore
     return this.r.table(this.table).get(options.server)(key).sample(count).run();
   }
 

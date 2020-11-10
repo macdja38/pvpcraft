@@ -24,9 +24,9 @@ declare module "mcping-js" {
   };
 
   export class MinecraftServer {
-    constructor(server: string, port: number = 25565)
+    constructor(server: string, port: number = 25565);
 
-    ping(timeout: number, protocolVersion: number, callback: (error: Error, response: MinecraftPingResponse) => void)
+    ping(timeout: number, protocolVersion: number, callback: (error: Error, response: MinecraftPingResponse) => void);
   }
 
   export default {

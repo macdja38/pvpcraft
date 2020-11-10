@@ -44,4 +44,4 @@ class Analytics {
   }
 }
 
-module.exports = Analytics;
+export default Analytics;

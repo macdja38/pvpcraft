@@ -11,6 +11,7 @@ import Eris from "eris";
 import ConfigDB from "../lib/ConfigDB";
 import Permissions from "../lib/Permissions";
 import * as Sentry from "@sentry/node";
+import { GuildCommand } from "../lib/Command";
 
 const welcome: ModuleConstructor = class welcome implements Module {
   private client: Eris.Client;
@@ -122,7 +123,7 @@ const welcome: ModuleConstructor = class welcome implements Module {
       triggers: ["setwelcome"],
       permissionCheck: this.perms.genCheckCommand("admin.welcome.set"),
       channels: ["guild"],
-      execute: (command) => {
+      execute: (command: GuildCommand) => {
         let settings = this.config.get("welcome", {}, {server: command.channel.guild.id});
         if (command.args.length > 0 && command.args[0].toLowerCase() === "false") {
           this.config.set("welcome", {}, {server: command.channel.guild.id, conflict: "replace"});

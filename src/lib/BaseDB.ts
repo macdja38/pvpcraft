@@ -1,11 +1,11 @@
 /**
  * Created by macdja38 on 2016-11-26.
  */
-
 "use strict";
 
 import chalk from "chalk";
 import Eris from "eris";
+import R from "rethinkdbdash";
 
 import * as Sentry from "@sentry/node";
 
@@ -16,7 +16,7 @@ import * as Sentry from "@sentry/node";
  */
 class BaseDB {
   protected readonly table: string;
-  r: any;
+  r: R.Client;
   /**
    * Base database constructor, includes saving r to this.r
    * @param table The table to read / write from
@@ -37,11 +37,12 @@ class BaseDB {
     console.log(chalk.blue(`Ensuring the table ${tableName} exists.`));
     return this.r.tableList()
       .contains(tableName)
+      // @ts-ignore
       .branch(true, this.r.tableCreate(tableName, tableOptions))
       .run();
   }
 
-  keepGuildTasksUpdated(client: Eris.Client, query: (ids: string[]) => any, guildIDExtractor: (record: any) => string, update: (guild: Eris.Guild, config: any) => () => void): Promise<() => {}> {
+  keepGuildTasksUpdated(client: Eris.Client, query: (ids: string[]) => ReturnType<ReturnType<R.ReqlClient["table"]>["getAll"]>, guildIDExtractor: (record: any) => string, update: (guild: Eris.Guild, config: any) => () => void): Promise<() => {}> {
     // TODO: Support guilds joined by manually fetching them, and then restarting the query without the includeInitial parameter.
 
     const cancels: { [key: string]: () => void } = {};

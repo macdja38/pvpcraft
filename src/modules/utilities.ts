@@ -10,6 +10,7 @@ import { ModuleOptions } from "../types/lib";
 import Config from "../lib/Config";
 import Permissions from "../lib/Permissions";
 import Eris from "eris";
+import Command, { GuildCommand } from "../lib/Command";
 const now = require('performance-now');
 
 const os = require('os');
@@ -71,7 +72,7 @@ const utilities: ModuleConstructor = class utilities implements Module {
       triggers: ["serverinfo", "server"],
       permissionCheck: this.perms.genCheckCommand("utils.serverinfo"),
       channels: ["guild"],
-      execute: command => {
+      execute: (command: GuildCommand) => {
         let guild = command.channel.guild;
         let botCount = guild.members.filter(m => m.bot).length;
         let owner = guild.members.get(guild.ownerID);
@@ -94,7 +95,7 @@ const utilities: ModuleConstructor = class utilities implements Module {
       triggers: ["userinfo", "user"],
       permissionCheck: this.perms.genCheckCommand("utils.userinfo"),
       channels: ["guild"],
-      execute: command => {
+      execute: (command: GuildCommand) => {
         let string = "";
         let member;
         let targets = command.args;
@@ -143,7 +144,7 @@ const utilities: ModuleConstructor = class utilities implements Module {
       triggers: ["ping"],
       permissionCheck: this.perms.genCheckCommand("utils.ping"),
       channels: ["*"],
-      execute: command => {
+      execute: (command: Command) => {
         let t1 = now();
         command.createMessageAutoDeny("Testing Ping").then((message) => {
           let t2 = now();
@@ -158,7 +159,7 @@ const utilities: ModuleConstructor = class utilities implements Module {
       triggers: ["lmgtfy"],
       permissionCheck: this.perms.genCheckCommand("utils.lmgtfy"),
       channels: ["*"],
-      execute: command => {
+      execute: (command: Command) => {
         // http://lmgtfy.com/?q=How+to+hug
         command.createMessageAutoDeny(`http://lmgtfy.com/?q=${command.args.join("+")}`);
         return true;
@@ -167,7 +168,7 @@ const utilities: ModuleConstructor = class utilities implements Module {
       triggers: ["status"],
       permissionCheck: this.perms.genCheckCommand("utils.status"),
       channels: ["*"],
-      execute: command => {
+      execute: (command: Command) => {
         command.createMessageAutoDeny({
           embed: {
             title: command.translate `Status info`,

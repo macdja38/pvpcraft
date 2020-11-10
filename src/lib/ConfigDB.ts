@@ -4,8 +4,10 @@
 "use strict";
 
 import Eris from "eris";
-import BaseDB from "./BaseDB";
 import chalk from "chalk";
+import R from "rethinkdbdash";
+
+import BaseDB from "./BaseDB";
 
 type ConfigOptions = {
   server?: string;
@@ -29,7 +31,7 @@ class ConfigDB extends BaseDB {
    * @param {string} table the configs are stored in
    * @param {Eris} client Eris Client
    */
-  constructor(r: any, table: string, client: Eris.Client) {
+  constructor(r: R.Client, table: string, client: Eris.Client) {
     super(r, table);
     this.r = r;
     this.client = client;
@@ -56,12 +58,12 @@ class ConfigDB extends BaseDB {
    * @private
    */
   follow() {
-    this.r.table(this.table).getAll(...ConfigDB._addStar(this.client.guilds.map(s => s.id))).changes().run().then((cursor: any) => {
+    this.r.table(this.table).getAll(...ConfigDB._addStar(this.client.guilds.map(s => s.id))).changes().run().then((cursor) => {
       if (this._cursor) {
         this._cursor.close();
       }
       this._cursor = cursor;
-      cursor.each((err: Error, thing: any) => {
+      cursor.each((err: Error | null | undefined, thing: any) => {
         if (thing && thing.new_val) {
           this.data[thing.new_val.id] = thing.new_val;
         } else {
@@ -129,13 +131,15 @@ class ConfigDB extends BaseDB {
     if (!options.hasOwnProperty("server")) {
       options.server = "*";
     }
+    const server: string = options.server as string;
+
     if (!options.hasOwnProperty("conflict")) {
       options.conflict = "update";
     }
 
     return this.r.table(this.table).insert({
       "id": options.server,
-      entries: this.r.table(this.table).get(options.server)(key).setInsert(value),
+      entries: this.r.table(this.table).get(server)(key).setInsert(value),
     }, { "conflict": options.conflict }).run();
   }
 
@@ -198,7 +202,7 @@ class ConfigDB extends BaseDB {
    * @param {string} [options.server="*"] server id to check record for.
    * @returns {Promise<number>}
    */
-  count(key: string, options: { server: string } = { server: "*" }) {
+  count(key: string, options: { server: string } = { server: "*" }): Promise<number> {
     options.server = options.server || "*";
     return this.r.table(this.table).get(options.server)(key).count().run();
   }
@@ -211,7 +215,8 @@ class ConfigDB extends BaseDB {
    * @param {string} [options.server="*"] server to get records from
    * @returns {Promise<Array<string>>}
    */
-  getRandom(key: string, count: number, options: { server: string } = { server: "*" }) {
+  getRandom(key: string, count: number, options: { server: string } = { server: "*" }): Promise<string[]> {
+    // @ts-ignore
     return this.r.table(this.table).get(options.server)(key).sample(count).run();
   }
 
@@ -223,7 +228,7 @@ class ConfigDB extends BaseDB {
    * @param {string} [options.server="*"] Id of the guild to get data for
    * @return {*} that will be resolved to the config key
    */
-  get(key: string, def: any, options?: { server?: string }) {
+  get(key: string, def: any = null, options?: { server?: string }) {
     if (options && options.hasOwnProperty("server") && options.server !== undefined) {
       let serverData, globalData;
       if (this.data.hasOwnProperty(options.server)) {
@@ -261,9 +266,8 @@ class ConfigDB extends BaseDB {
    * @returns {Array<string>}
    * @private
    */
-  static _addStar(array: string[]) {
-    array.push("*");
-    return array;
+  static _addStar(array: string[]): ["*", ...string[]] {
+    return [ "*", ...array ];
   }
 }
 

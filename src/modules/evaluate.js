@@ -9,7 +9,7 @@ let fetch = require('node-fetch');
 
 let now = require("performance-now");
 
-let SlowSender = require('../lib/SlowSender');
+import SlowSender from "../lib/SlowSender";
 
 let packer;
 try {

@@ -5,7 +5,7 @@ declare module "minecraft-jsonapi" {
     https: boolean;
     username: string;
     password: string;
-  }
+  };
 
   export type MinecraftJSONApiResponse = {
     result: "success" | "error";
@@ -17,19 +17,19 @@ declare module "minecraft-jsonapi" {
       message: string;
       code: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
     }
-  }[]
+  }[];
 
-  function add(name: string, args: string[]): MinecraftJSONapi
+  function add(name: string, args: string[]): MinecraftJSONapi;
 
-  function dispatch(options: MinecraftJSSONApiOptions): Promise<MinecraftJSONApiResponse>
+  function dispatch(options: MinecraftJSSONApiOptions): Promise<MinecraftJSONApiResponse>;
 
-  function follow(options: MinecraftJSSONApiOptions, callback: (object: object) => void): WebSocket
+  function follow(options: MinecraftJSSONApiOptions, callback: (object: Record<string, unknown>) => void): WebSocket;
 
   export type MinecraftJSONApi = {
     add;
     follow;
     dispatch;
-  }
+  };
 
-  export function createRequest(): MinecraftJSONApi
+  export function createRequest(): MinecraftJSONApi;
 }

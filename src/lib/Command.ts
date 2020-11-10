@@ -37,7 +37,7 @@ import Permissions from "./Permissions";
 import { isGuildChannel } from "../types/utils";
 import { ErisError } from "../types/eris";
 import { translateType } from "../types/translate";
-import Sentry from "@sentry/node"
+import * as Sentry from "@sentry/node"
 
 /**
  * A Message Options object

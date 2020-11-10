@@ -3,9 +3,15 @@
  */
 "use strict";
 
-let Eris = require("eris");
+import Eris from "eris";
+import * as Sentry from "@sentry/node";
 
 class MessageSender {
+  private _client: Eris.Client;
+  private translate: any;
+  private hookSender: NodeJS.Timeout;
+  private _queuedMessages: Map<string | Eris.TextChannel, { channel: Eris.TextChannel, text: string, options: { attachments: any[]}, }[]>;
+
   /**
    * Webhook sender which can be used to bulk together messages, designed for use with Webhooks but sends text as a fallback
    * @constructor
@@ -13,9 +19,9 @@ class MessageSender {
    * @param {Eris} e.client
    * @param {Function} e.translate
    */
-  constructor(e) {
+  constructor(e: { client: Eris.Client, translate: any }) {
     this._client = e.client;
-    this._queuedMessages = {};
+    this._queuedMessages = new Map();
     this.translate = e.translate;
 
     //noinspection JSUnusedGlobalSymbols
@@ -26,9 +32,10 @@ class MessageSender {
    * empties the current queue
    */
   emptyQueue() {
-    for (let channelId in this._queuedMessages) {
-      if (!this._queuedMessages.hasOwnProperty(channelId)) continue;
-      let queue = this._queuedMessages[channelId];
+    const queuedMessages = this._queuedMessages;
+    this._queuedMessages = new Map();
+
+    for (let [channelId, queue] of queuedMessages) {
       let first = queue[0];
 
       let webhookOptions = Object.assign({}, first.options);
@@ -37,22 +44,22 @@ class MessageSender {
       calledOptions.options.attachments = queue.map(i => i.options.attachments[0]);
 
       this._getWebhook(calledOptions.channel).then(webhook => {
+        // @ts-ignore
         return this._client.executeSlackWebhook(webhook.id, webhook.token, calledOptions.options);
       }).catch((e) => {
         console.log(e);
         if (!(calledOptions.channel instanceof Eris.GuildChannel)) return;
-        let texts;
-        if (queue.length > 1) {
-          texts = queue.slice(1).reduce((prev, cur) => `${prev.text}\n${cur.text}`, calledOptions).match(/^.{1,1900}/g);
-        } else {
-          texts = calledOptions.text.match(/^.{1,1900}/g);
+        let texts = queue.map(option => option.text).join("\n").match(/(?:.|\n){1,1900}/g);
+        if (!texts) {
+          Sentry.captureMessage("Unable to fallback to text for message sending");
+          return;
         }
         texts.forEach((string) => {
-          calledOptions.channel.createMessage(this.translate(calledOptions.channel.id) `${string}\nPlease give the bot \"Manage Webhooks\" to enable non fallback functionality`).catch(() => {});
+          calledOptions.channel.createMessage(this.translate(calledOptions.channel.id)`${string}\nPlease give the bot \"Manage Webhooks\" to enable non fallback functionality`).catch(() => {
+          });
         });
       })
     }
-    this._queuedMessages = {};
   }
 
   /**
@@ -61,11 +68,10 @@ class MessageSender {
    * @param {string} text to send with the message
    * @param {Object} options including title and other content
    */
-  sendQueuedMessage(channel, text, options) {
-    if (!this._queuedMessages.hasOwnProperty(channel.id || channel)) {
-      this._queuedMessages[channel.id || channel] = [];
-    }
-    this._queuedMessages[channel.id || channel].push({channel, text, options});
+  sendQueuedMessage(channel: Eris.TextChannel, text: string, options: any) {
+    const queue = this._queuedMessages.get(channel.id || channel) || []
+    queue.push({channel, text, options})
+    this._queuedMessages.set(channel.id || channel, queue);
   }
 
   /**
@@ -74,8 +80,9 @@ class MessageSender {
    * @param {string} text text to send in that channel if sending a webhook is not possible
    * @param {Object} options
    */
-  sendMessage(channel, text, options) {
+  sendMessage(channel: Eris.TextChannel, text: string, options: any) {
     this._getWebhook(channel).then(webhook => {
+      // @ts-ignore
       return this._client.sendWebhookMessage(webhook, text, options);
     }).catch(() => {
       this._client.createMessage(channel.id, text).catch(error => console.error(error));
@@ -92,9 +99,12 @@ class MessageSender {
    * @fails {Promise<"Insufficient permissions to create a webhook">}
    * @private
    */
-  async _getWebhook(channel) {
-    if (/https:\/\/(?:ptb.|canary\.)?discordapp\.com\/api\/webhooks\/(\d+)\/(.+)/.test(channel)) {
+  async _getWebhook(channel: Eris.TextChannel | string) {
+    if (typeof channel === "string") {
       let matches = channel.match(/https:\/\/(?:ptb.|canary\.)?discordapp\.com\/api\/webhooks\/(\d+)\/(.+)/i);
+      if (!matches) {
+        throw new Error("Invalid Webhook");
+      }
       return {id: matches[1], token: matches[2]};
     }
     if (!channel.permissionsOf(this._client.user.id).has("manageWebhooks")) {
@@ -104,8 +114,8 @@ class MessageSender {
     if (existingHooks && existingHooks.length > 0) {
       return existingHooks[0];
     }
-    return channel.createWebhook({name: this._client.user.username, avatar: this._client.user.avatar});
+    return channel.createWebhook({name: this._client.user.username, avatar: this._client.user.avatarURL});
   }
 }
 
-module.exports = MessageSender;
+export default MessageSender;

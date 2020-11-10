@@ -3,7 +3,7 @@
  */
 "use strict";
 
-const SlowSender = require('../lib/SlowSender');
+import SlowSender from "../lib/SlowSender";
 
 import ConfigDB from "../lib/ConfigDB";
 

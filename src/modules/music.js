@@ -4,11 +4,11 @@
 "use strict";
 
 const Player = require('../lib/Player.js');
-import Sentry from "@sentry/node";
+import * as Sentry from "@sentry/node";
 import MusicDB from "../lib/MusicDB";
 import fs from "fs";
 import path from "path";
-const SlowSender = require("../lib/SlowSender");
+import SlowSender from "../lib/SlowSender";
 
 function getAuth() {
   return JSON.parse(fs.readFileSync(path.join(__dirname, '../../config/auth.json'), { encoding: "utf8" }));

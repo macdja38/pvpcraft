@@ -3,20 +3,25 @@
  */
 "use strict";
 
-import utils from "./utils";
+import Config from "./Config";
+import Eris from "eris";
+import MessageSender from "./MessageSender";
 
 class SlowSender {
+  private msgChannels: { [key: string]: string[] };
+  private client: Eris.Client;
+  private interval: number;
+  private batchSend?: NodeJS.Timeout;
+
   /**
    * Slow sender, combines messages before sending, used within the giveaways module
    * @param {Object} e
    * @param {Eris} e.client
-   * @param {MessageSender} e.messageSender instantiated MessageSender
    * @param {Config} e.config
    */
-  constructor(e) {
+  constructor(e: { client: Eris.Client, config: Config }) {
     this.msgChannels = {};
     this.client = e.client;
-    this.messageSender = e.messageSender;
     this.interval = e.config.get("logInterval", 5000)
   }
 
@@ -50,7 +55,9 @@ class SlowSender {
   }
 
   onDisconnect() {
-    clearInterval(this.batchSend);
+    if (this.batchSend) {
+      clearInterval(this.batchSend);
+    }
     this.msgChannels = {};
   }
 
@@ -59,18 +66,19 @@ class SlowSender {
    * @param {Channel} channel
    * @param {string} text
    */
-  sendMessage(channel, text) {
-    if (typeof(channel) === "object") {
-      channel = channel.id;
-    }
-    if (!this.msgChannels.hasOwnProperty(channel)) {
-      this.msgChannels[channel] = [];
+  sendMessage(channel: Eris.TextChannel | string, text: string) {
+    const channelID = typeof(channel) === "object" ? channel.id : channel;
+    if (!this.msgChannels.hasOwnProperty(channelID)) {
+      this.msgChannels[channelID] = [];
     }
     let texts = text.match(/[^]{1,2000}/g);
+    if (!texts) {
+      throw new Error("Unable to send empty message");
+    }
     texts.forEach((string) => {
-      this.msgChannels[channel].push(string);
+      this.msgChannels[channelID].push(string);
     });
   }
 }
 
-module.exports = SlowSender;
+export default SlowSender;

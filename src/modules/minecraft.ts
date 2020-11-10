@@ -14,6 +14,7 @@ import Permissions from "../lib/Permissions";
 import Eris, { GuildChannel, TextChannel } from "eris";
 import ConfigDB from "../lib/ConfigDB";
 import WebSocket from "ws";
+import Command, { GuildCommand } from "../lib/Command";
 
 type MCAuth = {
   chat?: string;
@@ -167,7 +168,7 @@ export const minecraft: ModuleConstructor = class minecraft implements Module {
       triggers: ["mcping"],
       permissionCheck: this.perms.genCheckCommand("minecraft.mcping"),
       channels: ["*"],
-      execute: command => {
+      execute: (command: Command) => {
         let combined = command.args.join(".").match(/(.*?):(.*)/);
         let address: string;
         let port: number;
@@ -221,7 +222,7 @@ export const minecraft: ModuleConstructor = class minecraft implements Module {
       triggers: ["mcavatar"],
       permissionCheck: this.perms.genCheckCommand("minecraft.mcavatar"),
       channels: ["*"],
-      execute: command => {
+      execute: (command: Command) => {
         if (command.args.length < 1) {
           command.reply(command.translate`usage \`${command.prefix}mcavatar <minecraft username>\``);
           return true;
@@ -238,7 +239,7 @@ export const minecraft: ModuleConstructor = class minecraft implements Module {
       triggers: ["mcskin"],
       permissionCheck: this.perms.genCheckCommand("minecraft.mcskin"),
       channels: ["*"],
-      execute: command => {
+      execute: (command: Command) => {
         if (command.args.length < 1) {
           command.reply(command.translate`usage \`${command.prefix}mcskin <minecraft username>\``);
           return true;
@@ -255,7 +256,7 @@ export const minecraft: ModuleConstructor = class minecraft implements Module {
       triggers: ["mcwiki"],
       permissionCheck: this.perms.genCheckCommand("minecraft.mcwiki"),
       channels: ["*"],
-      execute: command => {
+      execute: (command: Command) => {
         return utils.mediaWikiSearch("http://minecraft.gamepedia.com/api.php", command.args.join(" ")).then(result => {
           if (result.length < 4 || result[3].length < 1) {
             return command.replyAutoDeny(command.translate`Not enough results.`)
@@ -269,7 +270,7 @@ export const minecraft: ModuleConstructor = class minecraft implements Module {
       permissionCheck: this.perms.genCheckCommand("admin.minecraft.mcauth"),
       channels: ["guild"],
       usage: "mc",
-      execute: command => {
+      execute: (command: GuildCommand) => {
         if (!(command.options.hasOwnProperty("username") && command.options.hasOwnProperty("password"))) {
           return command.replyAutoDeny(command.translate`Please supply a username and password via \`--username <username>\` and \`--password <password>\``)
         }
@@ -299,7 +300,7 @@ export const minecraft: ModuleConstructor = class minecraft implements Module {
       permissionCheck: this.perms.genCheckCommand("minecraft.mcsay"),
       channels: ["guild"],
       usage: "mc",
-      execute: async command => {
+      execute: async (command: GuildCommand) => {
         const options = await this.configDB.get("mcauth", false, { server: command.channel.guild.id });
         if (!options || !options.hasOwnProperty("host")) {
           return command.replyAutoDeny(command.translate`Please use ${command.prefix}mcauth to configure connection.`)
@@ -313,7 +314,7 @@ export const minecraft: ModuleConstructor = class minecraft implements Module {
       permissionCheck: this.perms.genCheckCommand("minecraft.mcchat"),
       channels: ["guild"],
       usage: "mc",
-      execute: async command => {
+      execute: async (command: GuildCommand) => {
         const options = await this.configDB.get("mcauth", false, { server: command.channel.guild.id });
         if (!options || !options.hasOwnProperty("host")) {
           return command.replyAutoDeny(command.translate`Please use ${command.prefix}mcauth to configure connection.`)
@@ -342,7 +343,7 @@ export const minecraft: ModuleConstructor = class minecraft implements Module {
       permissionCheck: this.perms.genCheckCommand("admin.minecraft.bindchat"),
       channels: ["guild"],
       usage: "mc",
-      execute: async command => {
+      execute: async (command: GuildCommand) => {
         const currentConfig = this.configDB.get("mcauth", {}, { server: command.channel.guild.id });
         currentConfig.chat = command.channel.id;
         this.configDB.set("mcauth", currentConfig, { server: command.channel.guild.id });
@@ -353,7 +354,7 @@ export const minecraft: ModuleConstructor = class minecraft implements Module {
       permissionCheck: this.perms.genCheckCommand("admin.minecraft.bindconsole"),
       channels: ["guild"],
       usage: "mc",
-      execute: async command => {
+      execute: async (command: GuildCommand) => {
         const currentConfig = this.configDB.get("mcauth", {}, { server: command.channel.guild.id });
         currentConfig.console = command.channel.id;
         this.configDB.set("mcauth", currentConfig, { server: command.channel.guild.id });

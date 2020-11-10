@@ -4,7 +4,7 @@
 
 "use strict";
 import BaseDB from "./BaseDB";
-import Sentry from "@sentry/node";
+import * as Sentry from "@sentry/node";
 import { Info } from "youtube-dl";
 import { Response } from "request";
 
@@ -60,6 +60,7 @@ class MusicDB extends BaseDB {
    * @returns {*}
    */
   getAll(...args: string[]) {
+    // @ts-ignore
     return this.r.table(this.table).getAll(...args);
   }
 
@@ -99,6 +100,7 @@ class MusicDB extends BaseDB {
    * @param {Array<string>} guilds
    */
   getBoundChannels(guilds: string[]) {
+    // @ts-ignore
     return this.r.table(this.table).getAll(...guilds, { index: "id" }).hasFields("text_id", "voice_id").filter((doc: any) => {
       return doc("queue").default([]).count().gt(0)
     }).run();
@@ -114,6 +116,7 @@ class MusicDB extends BaseDB {
    */
   addSong(id: string, ...song: { link: string, user_id: string, user_name: string }[]) {
     return this.r.table(this.table).get(id).update({
+      // @ts-ignore
       queue: this.r.row("queue").default([]).append(...song),
     }).run();
   }
@@ -123,7 +126,7 @@ class MusicDB extends BaseDB {
    * @param {string} id
    * @returns {Promise<number>}
    */
-  queueLength(id: string): number {
+  queueLength(id: string): Promise<number> {
     return this.r.table(this.table).get(id)("queue").default([]).count().run();
   }
 
@@ -137,6 +140,7 @@ class MusicDB extends BaseDB {
   addVote(id: string, index: number, userId: string) {
     return this.r.table(this.table).get(id).update({
       queue: this.r.row("queue").default([]).changeAt(index,
+        // @ts-ignore
         this.r.row("queue").nth(index).do(function (song: any) {
           return song.merge({ votes: song("votes").default([]).setInsert(userId) })
         }),
@@ -186,6 +190,7 @@ class MusicDB extends BaseDB {
   clearQueue(id: string, options: { user_id?: string } = {}) {
     if (options.user_id) {
       return this.r.table(this.table).get(id).update({
+        // @ts-ignore
         queue: this.r.row("queue").default([]).filter((song: any) => {
           return song("user_id").eq(options.user_id).not();
         }),
@@ -206,6 +211,7 @@ class MusicDB extends BaseDB {
         queue:
           this.r.row("queue")
             .default([])
+            // @ts-ignore
             .sample(this.r.row("queue").count()),
       }, { nonAtomic: true }).run();
   }
@@ -232,6 +238,7 @@ class MusicDB extends BaseDB {
    * @returns {*}
    */
   getNextVideos(id: string, count = 1, starting = 0) {
+    // @ts-ignore
     return this.r.table(this.table).get(id)("queue").default([]).slice(starting, starting + count).run();
   }
 
@@ -255,7 +262,7 @@ class MusicDB extends BaseDB {
     return this.r.table(this.videoCache).insert(video, { conflict: "replace" }).run();
   }
 
-  getVid(hash: string) {
+  getVid(hash: string): any {
     return this.r.table(this.videoCache).get(hash).run();
   }
 
@@ -322,7 +329,7 @@ class MusicDB extends BaseDB {
     let cachedInfo = await this.getVid(hashedLink);
     console.log("resolving ", hashedLink);
     if (cachedInfo && (options.allowOutdated || cachedInfo.hasOwnProperty("timeFetched") && typeof cachedInfo.timeFetched === "number" && Date.now() - cachedInfo.timeFetched < 4 * 60 * 60 * 1000)) return cachedInfo;
-    let info = this.normaliseVidInfo(await this.getInfoFromVid(link));
+    let info = MusicDB.normaliseVidInfo(await MusicDB.getInfoFromVid(link));
     console.log("Cache outdated. Fetched new info");
     this.saveVid(hashedLink, link, info);
     return info;
@@ -333,7 +340,7 @@ class MusicDB extends BaseDB {
    * @param info
    * @returns {Object}
    */
-  normaliseVidInfo(info: any) {
+  static normaliseVidInfo(info: any) {
     if (isNaN(info.length_seconds)) {
       info.length_seconds = 0;
     }
@@ -345,9 +352,9 @@ class MusicDB extends BaseDB {
    * @param args
    * @returns {Object}
    */
-  getInfoFromVid(...args: [string]) {
+  static getInfoFromVid(...args: [string]) {
     if (args[0].indexOf("youtu") > -1) {
-      return this.fetchWithYtdl(...args).catch((err) => {
+      return MusicDB.fetchWithYtdl(...args).catch((err: Error) => {
         let errString = err.toString().toLowerCase();
         if (errString.includes("your country") || errString.includes("copyright") || errString.includes("music premium")) throw err;
         Sentry.captureException(err, {
@@ -357,34 +364,28 @@ class MusicDB extends BaseDB {
         });
         if (errString.includes("status code: 429")) throw err;
         console.error("Error fetching with ytdl, trying youtubeDL", err, "\n\n\n", errString); //TODO: remove before production
-        return this.fetchWithYoutubeDl(...args).catch(() => {
+        return MusicDB.fetchWithYoutubeDl(...args).catch(() => {
           throw err; // the youtubeDL errors are far harder for users to understand, so we toss the ytdl-core errors at them when available.
         });
       });
     } else {
-      return this.fetchWithYoutubeDl(...args);
+      return MusicDB.fetchWithYoutubeDl(...args);
     }
   }
 
-  fetchWithYtdl(link: string) {
-    return new Promise((resolve, reject) => {
-      ytdl.getInfo(link, [], (err: Error, info: any) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(this.normaliseInfo(info));
-        }
-      })
+  static fetchWithYtdl(link: string) {
+    return ytdl.getInfo(link, []).then((info: Record<string, unknown>) => {
+      return MusicDB.normaliseInfo(info);
     });
   }
 
-  fetchWithYoutubeDl(link: string) {
+  static fetchWithYoutubeDl(link: string) {
     return new Promise((resolve, reject) => {
       youtubeDl.getInfo(link, [], { maxBuffer: 1000 * 1024 }, (err: Error, info: Info) => {
         if (err) {
           reject(err);
         } else {
-          resolve(this.normaliseInfo(info));
+          resolve(MusicDB.normaliseInfo(info as unknown as Record<string, unknown>));
         }
       });
     })
@@ -394,22 +395,26 @@ class MusicDB extends BaseDB {
    * normalise a ytdl or youtube-dl info object
    * @param {Object} info
    */
-  normaliseInfo(info: any) {
+  static normaliseInfo<T extends Record<string, unknown>>(info: T): { [p: string]: any } {
+    const infoCloned = JSON.parse(JSON.stringify(info)) as Record<string, unknown>;
+    if (infoCloned.hasOwnProperty("videoDetails")) {
+      Object.assign(infoCloned, infoCloned.videoDetails);
+    }
     let normalisedInfo: { [keyof: string]: any } = {};
     for (let [key, value] of Object.entries(normalisationMap)) {
       for (let possiblePropName of value) {
-        if (info[possiblePropName] != null) {
-          normalisedInfo[key] = info[possiblePropName];
+        if (infoCloned[possiblePropName] != null) {
+          normalisedInfo[key] = infoCloned[possiblePropName];
           break;
         }
       }
     }
-    if (info.lengthSeconds != null) {
-      normalisedInfo.length_seconds = info.lengthSeconds;
-    } else if (info.length_seconds != null) {
-      normalisedInfo.length_seconds = info.length_seconds;
-    } else if (info.duration != null) {
-      normalisedInfo.length_seconds = MusicDB._timeToSeconds(info.duration);
+    if (infoCloned.lengthSeconds != null) {
+      normalisedInfo.length_seconds = infoCloned.lengthSeconds;
+    } else if (infoCloned.length_seconds != null) {
+      normalisedInfo.length_seconds = infoCloned.length_seconds;
+    } else if (infoCloned.duration != null && typeof infoCloned.duration === "string") {
+      normalisedInfo.length_seconds = MusicDB._timeToSeconds(infoCloned.duration);
     }
     return normalisedInfo;
   }
@@ -431,4 +436,5 @@ class MusicDB extends BaseDB {
   }
 }
 
+export default MusicDB;
 module.exports = MusicDB;

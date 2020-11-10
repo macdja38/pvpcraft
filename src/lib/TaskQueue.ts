@@ -1,7 +1,7 @@
 import BaseDB from "./BaseDB";
 import { ModuleOptions } from "../types/lib";
 import * as Eris from "eris";
-import Sentry from "@sentry/node";
+import * as Sentry from "@sentry/node";
 import chrono from "chrono-node";
 import utils from "./utils";
 
@@ -18,7 +18,7 @@ interface Task {
 
 const TASK_QUEUE_TABLE_NAME = "taskQueue"
 
-class taskQueue {
+class TaskQueue {
   private client: Eris.Client;
   private restClient: Eris.Client;
   private db: BaseDB;
@@ -39,15 +39,19 @@ class taskQueue {
   }
 
   runExpiredTasks() {
-    this.db.r.table(TASK_QUEUE_TABLE_NAME).filter((r: any) => r("expireTime").le(this.db.r.now())).then(this.processQueue);
+    // @ts-ignore
+    this.db.r.table(TASK_QUEUE_TABLE_NAME).filter((r: any) => r("expireTime").le(this.db.r.now())).run().then(this.processQueue);
   }
 
   processQueue(queue: Task[]) {
     queue.forEach(this.processTask);
   }
 
-  processTask(task: Task) {
-    return this.executeTask(task).then(() => this.removeQueueEntry(task)).catch((error: Error) => this.incrementRetries(task, error));
+  processTask(task: Task): Promise<void> {
+    return this.executeTask(task).then(() => this.removeQueueEntry(task)).catch(async (error) => {
+      await this.incrementRetries(task, error)
+      return;
+    });
   }
 
   incrementRetries(task: Task, error?: Error) {
@@ -83,11 +87,16 @@ class taskQueue {
     }
   }
 
-  schedule(task: Task, time: string | Date | number) {
-    if (typeof time === "string") {
-      time = this.estimateEndDateFromString(time);
-    } else if (time instanceof Date) {
-      time = time.getTime() / 1000;
+  schedule(task: Task, timeInput: string | Date | number) {
+    let time: number;
+    if (typeof timeInput === "string") {
+      time = this.estimateEndDateFromString(timeInput).getTime() / 1000;
+    } else if (timeInput instanceof Date) {
+      time = timeInput.getTime() / 1000;
+    } else if (typeof timeInput === "number") {
+      time = timeInput;
+    } else {
+      throw new Error("Invalid type of time.");
     }
     let datedTask = Object.assign({ expireTime: this.db.r.epochTime(time) }, task);
     this.db.r.table(TASK_QUEUE_TABLE_NAME).insert(datedTask).run();
@@ -109,4 +118,4 @@ class taskQueue {
   }
 }
 
-export default taskQueue;
+export default TaskQueue;
