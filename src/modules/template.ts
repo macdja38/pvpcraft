@@ -21,7 +21,6 @@ const template: ModuleConstructor = class template implements Module {
    * @param {Object} e
    * @param {Eris} e.client Eris client
    * @param {Config} e.config File based config
-   * @param {Raven?} e.raven Raven error logging system
    * @param {Config} e.auth File based config for keys and tokens and authorisation data
    * @param {ConfigDB} e.configDB database based config system, specifically for per guild settings
    * @param {R} e.r Rethinkdb r
@@ -32,9 +31,7 @@ const template: ModuleConstructor = class template implements Module {
    * @param {PvPClient} e.pvpClient PvPCraft client library instance
    */
   constructor(e: ModuleOptions) {
-    // save the client as this.client for later use.
     this.client = e.client;
-    // save the bug reporting thing raven for later use.
     this.perms = e.perms;
   }
 

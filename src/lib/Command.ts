@@ -124,7 +124,7 @@ class Command {
   public readonly options: { [keyof: string]: string };
   public readonly flags: string[];
   public readonly msg: Message;
-  public readonly member: Member | undefined;
+  public readonly member: Member | undefined | null;
   public readonly author: User;
   public readonly perms: any;
   public readonly translate: translateType;

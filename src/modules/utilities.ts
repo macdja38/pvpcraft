@@ -76,18 +76,24 @@ const utilities: ModuleConstructor = class utilities implements Module {
         let guild = command.channel.guild;
         let botCount = guild.members.filter(m => m.bot).length;
         let owner = guild.members.get(guild.ownerID);
-        command.createMessageAutoDeny({
-          embed: {
-            title: `Server Info for ${utils.clean(command.channel.guild.name)}`,
-            description: `Id: ${guild.id}\n` +
+
+        const embed: Eris.EmbedOptions = {
+          title: `Server Info for ${utils.clean(command.channel.guild.name)}`,
+          description: `Id: ${guild.id}\n` +
             `Created: ${new Date(guild.createdAt).toUTCString()}\n` +
             `Owner: ${utils.clean(owner?.username || guild.ownerID)}\n` +
             `Humans: ${(guild.members.size - botCount)} Bots: ${botCount}\n` +
             `Voice Region: ${guild.region}\n` +
             `Roles: ${utils.clean(guild.roles.map(r => r.name).join(", "))}\n` +
             `Icon URL: ${guild.iconURL}`,
-            thumbnail: {url: guild.iconURL},
-          },
+        }
+
+        if (guild.iconURL) {
+          embed.thumbnail = {url: guild.iconURL};
+        }
+
+        command.createMessageAutoDeny({
+          embed,
         });
         return true;
       },
