@@ -373,13 +373,13 @@ class PvPCraft {
     let id = this.client.user.id;
     let mention = "<@" + id + ">";
     let name = this.client.user.username;
-    console.log(`Loading modules for Shard ${process.env.id} / ${process.env.shards}`.cyan);
-    console.log(`-------------------`.magenta);
-    console.log(`Ready as ${name}`.magenta);
-    console.log(`Mention ${mention}`.magenta);
-    console.log(`On ${this.client.guilds.size} Servers`.magenta);
-    console.log(`Shard ${process.env.id} / ${process.env.shards}`.magenta);
-    console.log(`-------------------`.magenta);
+    console.log(chalk.cyan(`Loading modules for Shard ${process.env.id} / ${process.env.shards}`));
+    console.log(chalk.magenta(`-------------------`));
+    console.log(chalk.magenta(`Ready as ${name}`));
+    console.log(chalk.magenta(`Mention ${mention}`));
+    console.log(chalk.magenta(`On ${this.client.guilds.size} Servers`));
+    console.log(chalk.magenta(`Shard ${process.env.id} / ${process.env.shards}`));
+    console.log(chalk.magenta(`-------------------`));
   }
 
   readyFeeds() {
@@ -442,7 +442,7 @@ class PvPCraft {
 
   onDisconnect() {
     Sentry.captureMessage("Disconnected", { level: Severity.Info })
-    console.log("Disconnect event called".red);
+    console.log(chalk.red("Disconnect event called"));
     for (let i in this.moduleList) {
       if (this.moduleList.hasOwnProperty(i)) {
         if (this.moduleList[i].module.onDisconnect) {
@@ -589,7 +589,7 @@ class PvPCraft {
       let sentryEnv = this.fileConfig.get("sentryEnv", "");
 
       if (this.fileAuth.get("sentryURL", "") !== "") {
-        console.log("Sentry Started".yellow);
+        console.log(chalk.yellow("Sentry Started"));
         git.long((commit) => {
           git.branch((branch) => {
             this.git = { commit, branch };
@@ -811,13 +811,13 @@ class PvPCraft {
         let modules = this.fileConfig.get("modules", {});
         delete require.cache[require.resolve(modules[command.args[0]])];
         utils.handleErisRejection(command.reply(command.translate`Reloading ${command.args[0]}`));
-        console.log("Reloading ".yellow + command.args[0].yellow);
+        console.log(chalk.yellow(`Reloading ${command.args[0]}`));
         let Mod = require(modules[command.args[0]]);
         let mod = new Mod(this.getModuleVariables());
         if (mod.onReady) mod.onReady();
         this.moduleList[module].module = mod;
         this.moduleList[module].commands = Mod.getCommands();
-        console.log("Reloded ".yellow + command.args[0].yellow);
+        console.log(chalk.yellow(`Reloaded ${command.args[0]}`));
         utils.handleErisRejection(command.reply(command.translate`Reloded ${command.args[0]}`));
       }
     }
