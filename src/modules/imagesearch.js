@@ -50,4 +50,4 @@ class image {
     }
 }
 
-module.exports = search;
+module.exports = image;
