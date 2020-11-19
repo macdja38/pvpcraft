@@ -34,13 +34,13 @@ class Utils {
     let divisor_for_seconds = divisor_for_minutes % 60;
     let seconds = Math.ceil(divisor_for_seconds);
     if (days > 0) {
-      return days + " Day" + s(days) + " and " + hours + " Hour" + s(hours);
+      return days + " Day" + s(days) + (hours ? ` and ${hours} Hour${s(hours)}` : "");
     }
     else if (hours > 0) {
-      return hours + " Hour" + s(hours) + " and " + minutes + " Minute" + s(minutes);
+      return hours + " Hour" + s(hours) + (minutes ? ` and ${minutes} Minute${s(minutes)}` : "");
     }
     else if (minutes > 0) {
-      return minutes + " Minute" + s(minutes) + " and " + seconds + " Second" + s(seconds);
+      return minutes + " Minute" + s(minutes) + (seconds ? ` and ${seconds} Second${s(seconds)}` : "");
     }
     else {
       return seconds + " Second" + s(seconds);
@@ -114,13 +114,13 @@ class Utils {
     let divisor_for_seconds = divisor_for_minutes % 60;
     let seconds = Math.ceil(divisor_for_seconds);
     if (days > 0) {
-      return days + "d, " + hours + "h" ;
+      return `${days}d` + (hours ? `, ${hours}h` : "");
     }
     else if (hours > 0) {
-      return hours + "h, " + minutes + "m" ;
+      return `${hours}h` + (minutes ? `, ${minutes}m` : "");
     }
     else if (minutes > 0) {
-      return minutes + "m, " + seconds + "s" ;
+      return `${minutes}m` + (seconds ? `, ${seconds}s` : "");
     }
     else {
       return seconds + "s" ;
@@ -334,7 +334,7 @@ class Utils {
  * @private
  */
 function s(v: number) {
-  return (v > 1) ? "s" : "";
+  return (v > 1 || v === 0) ? "s" : "";
 }
 
 export default Utils;

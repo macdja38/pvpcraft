@@ -30,6 +30,7 @@
     "git-rev": "^0.2.1",
     "google": "^2.0.0",
     "google-images": "^2.0.0",
+    "googleapis": "^65.0.0",
     "graphql": "^14.7.0",
     "graphql-relay": "^0.6.0",
     "i10010n": "^0.4.3",
