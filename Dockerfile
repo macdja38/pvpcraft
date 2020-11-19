@@ -1,11 +1,21 @@
 FROM node:latest
 
-MAINTAINER Macdja38
+MAINTAINER macdja38
 
-RUN echo "deb http://http.debian.net/debian jessie-backports main" >> /etc/apt/sources.list
+RUN apt-get update && apt-get install -y ffmpeg build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev && apt-get clean;
 
-RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && apt-get clean && npm install -g pm2 && npm install
+RUN npm install -g pm2
+
+RUN mkdir -p /docker/pvpcraft/pvpcraft
 
 WORKDIR /docker/pvpcraft/pvpcraft/
 
-CMD ["pm2-docker", "/docker/pvpcraft/pvpcraft/pm2.json"]
+ADD package*.json /docker/pvpcraft/pvpcraft/
+
+RUN npm install
+
+ADD . /docker/pvpcraft/pvpcraft/
+
+RUN npm run build
+
+CMD ["pm2-docker", "pm2.json"]
