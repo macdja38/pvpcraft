@@ -175,7 +175,7 @@ class PvPCraft {
       .then(this.readySlowSender.bind(this))
       .then(this.resolveWhenReady.bind(this))
       .then((args) => {
-        const channel = this.client.getChannel("710028790742515743");
+        /* const channel = this.client.getChannel("710028790742515743");
 
         if (!(channel instanceof Eris.TextChannel)) {
           throw new Error("Not a text channel");
@@ -188,6 +188,7 @@ class PvPCraft {
         this.messageSender.sendQueuedMessage(channel, "test test5 test", { attachments: [] });
         this.messageSender.sendQueuedMessage(channel, "test test6 test", { attachments: [] });
         this.messageSender.sendQueuedMessage(channel, "test test7 test", { attachments: [] });
+        */
 
         return args
       })
