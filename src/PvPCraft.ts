@@ -946,7 +946,7 @@ class PvPCraft {
           }] : [];
 
 
-          if (this.handleCommand(msg, userCommand.subCommand(), moduleWrappers, middlewareWrappers)) {
+          if (await this.handleCommand(msg, userCommand.subCommand(), moduleWrappers, middlewareWrappers)) {
             return true;
           }
         }
