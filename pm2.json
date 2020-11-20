@@ -2,7 +2,8 @@
   "apps": [
     {
       "name": "pvpcraft",
-      "script": "main.js",
+      "script": "build/main.js",
+      "source_map_support": true,
       "args": "--color",
       "out_file": "/dev/null",
       "error_file": "/dev/null"
