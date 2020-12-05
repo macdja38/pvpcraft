@@ -2,19 +2,30 @@
 A modular version of PvPBot with permissions, modules, access control, and many, many more features
 
 ## setup
+If you want to run 
 The bot requires 1 file not yet here: Paths.json. It can be found at [pvpcraft.ca/Paths.json](https://pvpcraft.ca/Paths.json) (place it one folder above project root).
 For web, [github.com/macdja38/pvpsite](https://github.com/macdja38/pvpsite) must be setup, and URLs must be configured in this project's `config/config.json`.
 
 ## installation instructions
-Requires **node.js** v12 or greater, the ability to build native module's using [node-gyp](https://github.com/nodejs/node-gyp#installation), and [git](https://git-scm.com/). RethinkDB is required for the master branch. **pm2** is optional, but it's highly recommended.
+Requires **node.js** v14 or greater, the ability to build native module's using [node-gyp](https://github.com/nodejs/node-gyp#installation), and [git](https://git-scm.com/). RethinkDB is required for the master branch. **pm2** is optional, but it's highly recommended.
+
+Nodemon is required to run in dev mode.
+ - `npm install -g nodemon`
+ - `npm install -g ts-node`
 
 #### In your command line of choice, enter:
  - `git clone https://github.com/macdja38/pvpcraft.git` to download the project,
  - `cd pvpcraft` to open the new project directory made by git,
  - `npm install` to install it's dependencies,
+ 
+ - `npm run start:dev`
+
+**OR**
+ - `npm run build`
  - `pm2 start pm2.json` to start the bot if you have pm2
- **OR**
- - `node main.js` if you don't
+
+**OR**
+ - `node build/main.js` if you don't
  
  #### Note:
  - The bot will restart for the first 3-ish times you run it
