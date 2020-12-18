@@ -9,7 +9,7 @@ import { Module, ModuleCommand, ModuleConstructor } from "../types/moduleDefinit
 import { ModuleOptions } from "../types/lib";
 import Permissions from "../lib/Permissions";
 import Eris from "eris";
-import Command from "../lib/Command";
+import Command from "../lib/Command/Command";
 
 let google = require("google");
 

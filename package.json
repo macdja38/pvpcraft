@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@sentry/node": "^5.27.3",
+    "@types/deep-equal": "^1.0.1",
     "apollo-server": "^2.19.0",
     "apollo-server-koa": "^2.19.0",
     "better-cleverbot-io": "^1.0.2",
@@ -23,7 +24,7 @@
     "deep-equal": "^2.0.4",
     "deepmerge": "^1.5.2",
     "ebml": "^3.0.0",
-    "eris": "git+https://github.com/macdja38/eris.git#follow-redirect-updated",
+    "eris": "github:Khaaz/eris#v8",
     "eris-errors": "^1.0.1",
     "esm": "^3.2.25",
     "eventemitter3": "^4.0.7",

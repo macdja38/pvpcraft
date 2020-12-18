@@ -6,7 +6,7 @@ import StandardDB from "../lib/StandardDB";
 
 // @ts-ignore
 import chessClient from "chess";
-import Command from "../lib/Command";
+import Command from "../lib/Command/Command";
 import { EmbedOptions, MessageContent } from "eris";
 import Config from "../lib/Config";
 import * as Eris from "eris";

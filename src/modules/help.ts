@@ -7,7 +7,7 @@
 import { ModuleOptions } from "../types/lib";
 import Eris from "eris";
 import { Module, ModuleCommand, ModuleConstructor } from "../types/moduleDefinition";
-import Command from "../lib/Command";
+import Command from "../lib/Command/Command";
 
 const help: ModuleConstructor = class help implements Module {
   private i10010n: any;

@@ -1,10 +1,15 @@
 import { ModuleOptions } from "../types/lib";
-import Command, { GuildCommand } from "../lib/Command";
+import Command, { GuildCommand } from "../lib/Command/Command";
 import Eris, { Message } from "eris";
 import Permissions from "../lib/Permissions";
+import { SlashCommand } from "../lib/Command/PvPCraftCommandHelper";
 
 export interface ModuleConstructor {
   new(e: ModuleOptions): Module;
+}
+
+export interface v2ModuleConstructor {
+  new(e: ModuleOptions): v2Module;
 }
 
 export type ModuleCommandAnywhere = {
@@ -62,6 +67,12 @@ export interface Module {
    * permissionCheck: Function, channels: Array<string>, execute: Function}>}}
    */
   getContent?(): { name: string; description: string; key: string; permNode: string; commands: ModuleCommand[] }
+}
+
+export interface v2Module extends Omit<Module, "getCommands" | "getContent"> {
+  getCommands(): SlashCommand[];
+
+  getContent?(): { name: string; description: string; key: string, permNode: string; commands: SlashCommand[] }
 }
 
 export interface Middleware extends Module {

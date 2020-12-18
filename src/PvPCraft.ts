@@ -1,7 +1,4 @@
 /**
- * Created by macdja38 on 2017-02-21.
- */
-/**
  * Created by macdja38 on 2016-04-17.
  */
 /* var module = require("module");
@@ -24,15 +21,25 @@ import MessageSender from "./lib/MessageSender";
 import Permissions from "./lib/Permissions";
 
 import Analytics from "./lib/Analytics";
-import Command from "./lib/Command";
+import Command from "./lib/Command/Command";
 import utils from "./lib/utils";
 
 import chalk from "chalk";
 import SlowSender from "./lib/SlowSender";
 import Feeds from "./lib/feeds";
 import R from "rethinkdbdash";
-import { Middleware, Module, ModuleCommand } from "./types/moduleDefinition";
+import { Middleware, Module, ModuleCommand, v2Module } from "./types/moduleDefinition";
 import { translateType } from "./types/translate";
+import fetch, { Headers } from "node-fetch";
+import { DiscordCommandHelper } from "./lib/Command/DiscordCommandHelper";
+import { PvPCraftCommandHelper, PvPInteractiveCommand, SlashCommand } from "./lib/Command/PvPCraftCommandHelper";
+import {
+  ApplicationCommandInteractionDataOption,
+  CommandOption,
+  CommandRoot,
+  Interaction,
+} from "./lib/Command/CommandTypes";
+import { toJSON } from "./lib/toJSON";
 
 require("util").inspect.defaultOptions.depth = 2;
 const cluster = require("cluster");
@@ -44,37 +51,7 @@ for (let thing in Eris) {
   // @ts-ignore
   if (Eris.hasOwnProperty(thing) && typeof Eris[thing] === "function") {
     // @ts-ignore
-    Eris[thing].prototype.toJSON = function toJSON() {
-      let copy = {};
-      keyLoop: for (let key in this) {
-        if (this.hasOwnProperty(key) && !key.startsWith("_")) {
-          for (let erisProp in Eris) {
-            if (Eris.hasOwnProperty(erisProp)) {
-              // @ts-ignore
-              if (typeof Eris[erisProp] === "function" && this[key] instanceof Eris[erisProp]) {
-                // @ts-ignore
-                copy[key] = `[ Eris ${erisProp} ]`;
-                continue keyLoop;
-              }
-            }
-          }
-          if (!this[key]) {
-            // @ts-ignore
-            copy[key] = this[key];
-          } else if (this[key] instanceof Set) {
-            // @ts-ignore
-            copy[key] = "[ Set ]"
-          } else if (this[key] instanceof Map) {
-            // @ts-ignore
-            copy[key] = "[ Map ]"
-          } else {
-            // @ts-ignore
-            copy[key] = this[key];
-          }
-        }
-      }
-      return copy;
-    }
+    Eris[thing].prototype.toJSON = toJSON;
   }
 }
 
@@ -99,7 +76,7 @@ process.on('SIGABRT', (...args) => {
 });
 
 type ModuleWrapper = { commands: ModuleCommand[], module: Module };
-
+type v2ModuleWrapper = { commands: SlashCommand[], module: v2Module };
 type MiddlewareWrapper = { commands: ModuleCommand[], ware: Middleware };
 
 /**
@@ -112,6 +89,7 @@ class PvPCraft {
   private fileAuth: Config;
   private prefix: string[];
   moduleList: ModuleWrapper[];
+  v2ModuleList: v2ModuleWrapper[];
   middlewareList: MiddlewareWrapper[];
   private shardId: number;
   private shardCount: number;
@@ -146,6 +124,7 @@ class PvPCraft {
     this.fileAuth = fileAuth;
     this.prefix = [];
     this.moduleList = [];
+    this.v2ModuleList = [];
     this.middlewareList = [];
     this.shardId = parseInt(process.env.id || "0", 10);
     this.shardCount = parseInt(process.env.shards || "1", 10);
@@ -410,6 +389,7 @@ class PvPCraft {
     this.client.on("unavailableGuildCreate", this.onGuildCreate.bind(this));
     this.client.on("guildCreate", this.onGuildCreate.bind(this));
     this.client.on("messageCreate", this.onMessage.bind(this));
+    this.client.on("rawWS", this.onRawWS.bind(this));
     this.client.on("error", this.onError.bind(this));
     this.client.on("shardDisconnect", this.onDisconnect.bind(this));
     this.client.on("shardReady", this.reload.bind(this));
@@ -538,7 +518,7 @@ class PvPCraft {
       allowedMentions: {
         everyone: true,
         roles: true,
-        users: true
+        users: true,
       },
       firstShardID: this.shardId,
       lastShardID: this.shardId,
@@ -551,7 +531,7 @@ class PvPCraft {
       allowedMentions: {
         everyone: true,
         roles: true,
-        users: true
+        users: true,
       },
       restMode: true,
       defaultImageFormat: "png",
@@ -737,6 +717,7 @@ class PvPCraft {
 
     let middlewares = this.fileConfig.get("middleware", {});
     let modules = this.fileConfig.get("modules", {});
+    let v2modules = this.fileConfig.get("v2Modules", []) as string[];
 
     let moduleVariables = this.getModuleVariables();
 
@@ -750,29 +731,69 @@ class PvPCraft {
       }
     }
 
-    for (let module in modules) {
-      if (modules.hasOwnProperty(module)) {
-        try {
-          let mod = new (require(modules[module]))(moduleVariables);
-          if (mod.onReady) mod.onReady();
-          const commands = mod.getCommands ? mod.getCommands() : [];
-          verifyTriggers(commands);
-          this.moduleList.push({ commands, "module": mod });
-        } catch (error) {
-          console.error(error);
-        }
+    for (let module of Object.keys(modules)) {
+      try {
+        let mod = new (require(modules[module]))(moduleVariables);
+        if (mod.onReady) mod.onReady();
+        const commands = mod.getCommands ? mod.getCommands() : [];
+        verifyTriggers(commands);
+        this.moduleList.push({ commands, "module": mod });
+      } catch (error) {
+        console.error(error);
       }
     }
-    for (let middleware in middlewares) {
-      if (middlewares.hasOwnProperty(middleware)) {
-        try {
-          let ware = new (require(middlewares[middleware]))(moduleVariables);
-          if (ware.onReady) ware.onReady();
-          const commands = ware.getCommands ? ware.getCommands() : [];
-          verifyTriggers(commands);
-          this.middlewareList.push({ commands, "ware": ware });
-        } catch (error) {
-          console.error(error);
+
+    for (let module of v2modules) {
+      try {
+        let mod = new (require(`./v2Modules/${module}`))(moduleVariables);
+        if (mod.onReady) mod.onReady();
+        const commands = mod.getCommands ? mod.getCommands() : [];
+        this.v2ModuleList.push({ commands, "module": mod });
+      } catch (error) {
+        console.error(error);
+      }
+
+      this.syncCommandsToDiscordGuild("97069403178278912", this.v2ModuleList)
+    }
+
+    for (let middleware of Object.keys(middlewares)) {
+      try {
+        let ware = new (require(middlewares[middleware]))(moduleVariables);
+        if (ware.onReady) ware.onReady();
+        const commands = ware.getCommands ? ware.getCommands() : [];
+        verifyTriggers(commands);
+        this.middlewareList.push({ commands, "ware": ware });
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  }
+
+  async syncCommandsToDiscordGuild(guildID: string, moduleList: v2ModuleWrapper[]) {
+    const commandHelper = new DiscordCommandHelper(this.client, this.fileConfig.get("clientID", this.client.user.id));
+
+    const fetchedCommands: CommandRoot[] = await commandHelper.fetchGuildCommands(guildID)
+
+    console.log("FETCHED_COMMANDS", fetchedCommands);
+
+    const fetchedCommandMap = fetchedCommands.reduce((acc: Record<string, CommandRoot>, command: CommandRoot) => {
+      acc[command.name] = command;
+      return acc;
+    }, {})
+
+    for (let module of moduleList) {
+      for (let command of module.commands) {
+        const commandOnGuild = fetchedCommandMap[command.name]
+        const discordifyedCommand = PvPCraftCommandHelper.commandToDiscordCommands(command);
+
+        console.log(`======= ANALYSING COMMAND ${command.name} ========`)
+        // .log("ON SERVER", JSON.stringify(commandOnGuild, null, 2));
+        // console.log("FROM CODE", JSON.stringify(discordifyedCommand, null, 2));
+
+        // equal check broken cause optional params are not sent by discord.
+        if (!PvPCraftCommandHelper.equal(commandOnGuild, discordifyedCommand)) {
+          console.log("NOT EQUAL");
+          commandHelper.createGuildCommand(guildID, discordifyedCommand);
         }
       }
     }
@@ -822,6 +843,96 @@ class PvPCraft {
         utils.handleErisRejection(command.reply(command.translate`Reloded ${command.args[0]}`));
       }
     }
+  }
+
+  async onRawWS(packet: any) {
+    if (packet.t && packet.t === "INTERACTION_CREATE") {
+      const data = packet.d as Interaction;
+
+      if (data.type === 1) {
+        console.log("Got an Interaction Ping?");
+      }
+
+      if (data.type === 2) {
+        console.log(data);
+
+        const command = PvPCraftCommandHelper.interactionCommandFromDiscordInteraction(this.client, data, this.translate, this.getChannelLanguage);
+        if (command) {
+          this.onCommand(command as unknown as PvPInteractiveCommand);
+        }
+      }
+    }
+  }
+
+  async onCommand(command: PvPInteractiveCommand) {
+    console.log(command.id, JSON.stringify(command.data));
+
+    /* command.respond(4, {
+      content: "```diff\n+bot-wrangler-6000\n+dj\n+dj-3\n```",
+    }).then(res => res.json()).then((data) => {
+      console.log(data);
+      if (data.errors) {
+        console.log(data.errors._errors);
+      }
+    }).catch(console.error) */
+
+    for (let module of this.v2ModuleList) {
+      for (let moduleCommand of module.commands) {
+        if (moduleCommand.name !== command.name) continue;
+        this.handleCommandInteractionWithModuleCommand(command, moduleCommand, module.module, command.data);
+      }
+    }
+    // let result = await this.handleCommand(msg, command, this.moduleList, this.middlewareList);
+    // if (result) return result;
+  }
+
+  async handleCommandInteractionWithModuleCommand(command: PvPInteractiveCommand, commandHandler: SlashCommand, module: v2Module, options: ApplicationCommandInteractionDataOption<any>) {
+    if ("subCommands" in commandHandler) {
+
+      for (let subCommand of commandHandler.subCommands) {
+        // @ts-ignore
+        let nestedOptions = options.options.find((option: ApplicationCommandInteractionDataOption<any>) => option.name === subCommand.name)
+
+        if (nestedOptions) {
+          if (subCommand.name !== nestedOptions.name) continue;
+
+          if (await this.handleCommandInteractionWithModuleCommand(command, subCommand, module, nestedOptions as unknown as ApplicationCommandInteractionDataOption<any>)) {
+            return true;
+          }
+        }
+      }
+    } else {
+      // Permissions
+      if ("permissionCheck" in commandHandler && commandHandler.permissionCheck) {
+        if (!commandHandler.permissionCheck(command)) {
+          return command.respond(4, "Sorry, you don't have permission to use that here. If you're an admin you can use /perms to change that.");
+        }
+      }
+
+      if ("permission" in commandHandler && commandHandler.permission) {
+        if (!this.perms.check(command, commandHandler.permission)) {
+          return command.respond(4, "Sorry, you don't have permission to use that here.\n"
+            + `You're missing the permission node ${commandHandler.permission}.\n`
+            + `An admin can give that out with \`/perms set Allow ${commandHandler.permission}\``
+            + "If they want to give it to a specific user / channel / role or a combination they can use the optional arguments to narrow who receives permission.");
+        }
+      }
+
+      // options extracting
+      let optionsMap = options.hasOwnProperty("options") ? PvPInteractiveCommand.optionsArrayToObject(command, commandHandler, options.options as unknown as ApplicationCommandInteractionDataOption<any>[]) : {};
+
+      command.opts = optionsMap;
+
+      console.log(optionsMap);
+
+      // execution
+      if (!this.checkChannelAllowed(command.channel, commandHandler.channels)) return false;
+      const result = await this._v2CommandWrapper(module, commandHandler, command, () => {
+        return commandHandler.execute(command)
+      });
+      if (result) return true;
+    }
+    return false;
   }
 
 // eslint-disable-next-line complexity
@@ -993,14 +1104,46 @@ class PvPCraft {
         // @ts-ignore
         extra.guild = msg.channel.guild;
       }
-      if (process.env.dev === "true") {
-        console.error(error);
-      }
       const id = Sentry.captureException(error, {
         user: (msg.hasOwnProperty("author") && msg.author.toJSON) ? msg.author.toJSON() : msg.author,
         extra,
       });
       utils.handleErisRejection(msg.channel.createMessage(this.translate(msg.channel.id)`Sorry, there was an error processing your command. The error is \`\`\`${error
+      }\`\`\` reference code \`${id}\``));
+      if (process.env.dev === "true") {
+        console.error(`Captured an exception in a command and logged to sentry: ${id}`, error);
+      }
+      return true;
+    }
+    return returnValue;
+  }
+
+  /**
+   * Wraps the command to capture any exceptions thrown asynchronously or synchronously with sentry
+   * @param mod error is originating from
+   * @param command that triggered the error
+   * @param msg containing offending command
+   * @param callCommandFunction function to call and capture errors from
+   */
+  async _v2CommandWrapper(module: v2Module, commandHandler: SlashCommand, command: PvPInteractiveCommand, callCommandFunction: () => Promise<any> | any) {
+    let returnValue;
+    try {
+      returnValue = await callCommandFunction();
+    } catch (error) {
+      let extra = {
+        mod: module,
+        channel: command.channel,
+        guild: command.guild,
+        command: command && command.toJSON ? command.toJSON() : command,
+      };
+      if (process.env.dev === "true") {
+        console.error(error);
+      }
+      const id = Sentry.captureException(error, {
+        user: command.member.toJSON ? command.member.toJSON() : command.member,
+        extra,
+      });
+      utils.handleErisRejection(command.respond(this.translate(command.channel.id)`Sorry, there was an error processing your command. The error is \`\`\`${error
       }\`\`\` reference code \`${id}\``));
       if (process.env.dev === "true") {
         console.error(error);

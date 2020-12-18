@@ -33,10 +33,10 @@ import Eris, {
   User,
 } from "eris";
 import { MessageOptions } from "child_process";
-import Permissions from "./Permissions";
-import { isGuildChannel } from "../types/utils";
-import { ErisError } from "../types/eris";
-import { translateType } from "../types/translate";
+import Permissions from ".././Permissions";
+import { isGuildChannel } from "../../types/utils";
+import { ErisError } from "../../types/eris";
+import { translateType } from "../../types/translate";
 import * as Sentry from "@sentry/node"
 
 /**
@@ -44,7 +44,7 @@ import * as Sentry from "@sentry/node"
  * @typedef {Object} Command~MessageOptions
  */
 
-import utils from "./utils";
+import utils from ".././utils";
 const regargs = /^((?:.|\n)*?)(?= -\w| (?:--|—)\w|$)/;
 const regAll = /(?:\s(?:--|—)(?=\S)(\w+)\s((?:.|\n)*?)|\s-(?=\w)(?!-)((?:.|\n)*?))(?= -\w| (?:--|—)\w|$)/g;
 

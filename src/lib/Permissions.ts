@@ -5,7 +5,7 @@
 "use strict";
 
 import ConfigDB from "./ConfigDB";
-import {
+import Eris, {
   Channel,
   Collection,
   Guild,
@@ -19,10 +19,11 @@ import {
   User,
 } from "eris";
 import { ErisError } from "../types/eris";
-import Command from "./Command";
+import Command from "./Command/Command";
 import { isGuildChannel } from "../types/utils";
 import chalk from "chalk";
 import { translateType } from "../types/translate";
+import { PvPInteractiveCommand } from "./Command/PvPCraftCommandHelper";
 
 const util = require('util');
 const colors = require('colors');
@@ -129,13 +130,21 @@ Please use /perms list on that server to see the new configuration.`),
    * @param {string} [options.type="boolean"] the type of value to look for, this defaults to boolean but any result of `typeof variable` should be valid
    * @returns {boolean|*} returns boolean by default, if options.type is specified it will return false if not found, or a value with the type specified.
    */
-  check(msg: Message | Command, node: string, options: { type?: string } = {}) {
-    this._analytics.record(msg.author, node);
+  check(msg: Message | Command | PvPInteractiveCommand, node: string, options: { type?: string } = {}) {
+    let author: Eris.User | Eris.Member;
+
+    if ("respond" in msg) {
+      author = msg.member;
+    } else {
+      author = msg.author;
+    }
+
+    this._analytics.record(author, node);
     let nodeArray;
     if (isGuildChannel(msg.channel) && msg.member) {
-      nodeArray = [msg.channel.guild.id, msg.channel.id, getOrderedGroups(msg.channel.guild.roles, msg.member.roles, msg.author.id)].concat(node.split("."));
+      nodeArray = [msg.channel.guild.id, msg.channel.id, getOrderedGroups(msg.channel.guild.roles, msg.member.roles, author.id)].concat(node.split("."));
     } else {
-      nodeArray = ["global", "global", "u" + msg.author.id].concat(node.split("."));
+      nodeArray = ["global", "global", "u" + author.id].concat(node.split("."));
     }
     if (this.perms.data) {
       let i;

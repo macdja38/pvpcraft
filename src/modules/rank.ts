@@ -10,7 +10,7 @@ import { ModuleOptions } from "../types/lib";
 import ConfigDB from "../lib/ConfigDB";
 import Eris, { Guild, Member, Message } from "eris";
 import Permissions from "../lib/Permissions";
-import Command from "../lib/Command";
+import Command from "../lib/Command/Command";
 import { isGuildChannel } from "../types/utils";
 
 const rank: ModuleConstructor = class rank implements Module {
