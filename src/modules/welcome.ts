@@ -11,7 +11,7 @@ import Eris from "eris";
 import ConfigDB from "../lib/ConfigDB";
 import Permissions from "../lib/Permissions";
 import * as Sentry from "@sentry/node";
-import { GuildCommand } from "../lib/Command";
+import { GuildCommand } from "../lib/Command/Command";
 
 const welcome: ModuleConstructor = class welcome implements Module {
   private client: Eris.Client;

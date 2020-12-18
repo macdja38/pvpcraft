@@ -14,7 +14,7 @@ import Permissions from "../lib/Permissions";
 import Eris, { GuildChannel, TextChannel } from "eris";
 import ConfigDB from "../lib/ConfigDB";
 import WebSocket from "ws";
-import Command, { GuildCommand } from "../lib/Command";
+import Command, { GuildCommand } from "../lib/Command/Command";
 
 type MCAuth = {
   chat?: string;

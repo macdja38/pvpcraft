@@ -4,7 +4,7 @@
 
 "use strict";
 
-import { Member, User } from "eris";
+import Eris, { Member, User } from "eris";
 
 import fetch from "node-fetch";
 

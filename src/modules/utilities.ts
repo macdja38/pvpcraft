@@ -10,7 +10,7 @@ import { ModuleOptions } from "../types/lib";
 import Config from "../lib/Config";
 import Permissions from "../lib/Permissions";
 import Eris from "eris";
-import Command, { GuildCommand } from "../lib/Command";
+import Command, { GuildCommand } from "../lib/Command/Command";
 const now = require('performance-now');
 
 const os = require('os');
