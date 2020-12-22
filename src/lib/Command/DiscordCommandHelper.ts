@@ -32,7 +32,7 @@ export class DiscordCommandHelper {
     return this.client.requestHandler.request("POST", APPLICATION_GUILD_COMMANDS(this.clientID, guildID), true, commandData);
   }
 
-  createCommand(guildID: string, commandData: Record<string, unknown>) {
+  createCommand(commandData: Record<string, unknown>) {
     // @ts-ignore
     return this.client.requestHandler.request("POST", APPLICATION_COMMANDS(this.clientID), true, commandData);
   }
@@ -42,7 +42,7 @@ export class DiscordCommandHelper {
     return this.client.requestHandler.request("DELETE", APPLICATION_GUILD_COMMAND(this.clientID, guildID, commandID), true);
   }
 
-  deleteCommand(guildID: string, commandID: string) {
+  deleteCommand(commandID: string) {
     // @ts-ignore
     return this.client.requestHandler.request("DELETE", APPLICATION_COMMAND(this.clientID, commandID), true);
   }

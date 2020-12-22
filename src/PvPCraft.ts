@@ -805,6 +805,36 @@ class PvPCraft {
     }
   }
 
+  async syncCommandsToDiscord(moduleList: v2ModuleWrapper[]) {
+    const commandHelper = new DiscordCommandHelper(this.client, this.fileConfig.get("clientID", this.client.user.id));
+
+    const fetchedCommands: CommandRoot[] = await commandHelper.fetchCommands()
+
+    console.log("FETCHED_GLOBAL_COMMANDS", fetchedCommands);
+
+    const fetchedCommandMap = fetchedCommands.reduce((acc: Record<string, CommandRoot>, command: CommandRoot) => {
+      acc[command.name] = command;
+      return acc;
+    }, {})
+
+    for (let module of moduleList) {
+      for (let command of module.commands) {
+        const commandOnGuild = fetchedCommandMap[command.name]
+        const discordifyedCommand = PvPCraftCommandHelper.commandToDiscordCommands(command);
+
+        console.log(`======= ANALYSING COMMAND ${command.name} ========`)
+        // .log("ON SERVER", JSON.stringify(commandOnGuild, null, 2));
+        // console.log("FROM CODE", JSON.stringify(discordifyedCommand, null, 2));
+
+        // equal check broken cause optional params are not sent by discord.
+        if (!commandOnGuild || !PvPCraftCommandHelper.equal(commandOnGuild, discordifyedCommand)) {
+          console.log("NOT EQUAL");
+          commandHelper.createCommand(discordifyedCommand);
+        }
+      }
+    }
+  }
+
   getModuleVariables() {
     return {
       client: this.client,
