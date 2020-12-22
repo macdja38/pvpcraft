@@ -516,7 +516,7 @@ class PvPCraft {
       throw new Error("Please supply a token in the config/auth.json file.")
     }
     this.client = new Eris.Client(token, {
-      getAllUsers: true,
+      // getAllUsers: true,
       autoreconnect: true,
       // @ts-ignore
       intents: 0b111111011111111,
@@ -529,6 +529,7 @@ class PvPCraft {
       firstShardID: this.shardId,
       lastShardID: this.shardId,
       maxShards: this.shardCount,
+      restMode: true,
       defaultImageFormat: "png",
     });
     this.restClient = new Eris.Client(`Bot ${token}`, {
@@ -961,7 +962,7 @@ class PvPCraft {
       }
 
       // options extracting
-      let optionsMap = options.hasOwnProperty("options") ? PvPInteractiveCommand.optionsArrayToObject(command, commandHandler, options.options as unknown as ApplicationCommandInteractionDataOption<any>[]) : {};
+      let optionsMap = options.hasOwnProperty("options") ? await PvPInteractiveCommand.optionsArrayToObject(command, commandHandler, options.options as unknown as ApplicationCommandInteractionDataOption<any>[]) : {};
 
       command.opts = optionsMap;
 

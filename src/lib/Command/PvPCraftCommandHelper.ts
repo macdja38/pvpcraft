@@ -154,28 +154,30 @@ export class PvPInteractiveCommand {
     return this.client.requestHandler.request("POST", `/interactions/${this.id}/${this.token}/callback`, false, { type, data: response }, files);
   }
 
-  static optionsArrayToObject(command: PvPInteractiveCommand, commandHandler: SlashCommandCommand, options: ApplicationCommandInteractionDataOption<any>[]) {
-    return options.reduce((acc: Record<string, unknown>, option: ApplicationCommandInteractionDataOption<any>) => {
+  static async optionsArrayToObject(command: PvPInteractiveCommand, commandHandler: SlashCommandCommand, options: ApplicationCommandInteractionDataOption<any>[]) {
+    return options.reduce(async (acc: Promise<Record<string, unknown>>, option: ApplicationCommandInteractionDataOption<any>) => {
+      const resolvedAcc = await acc;
+
       const handlerOption = commandHandler.options.find((handlerOption => handlerOption.name === option.name));
 
       if (!handlerOption) {
         Sentry.captureMessage(`Could not find a handler option ${option.name}`);
-        return acc;
+        return resolvedAcc;
       }
       const rawVal = option.value as unknown as string | boolean | number;
 
       switch (handlerOption.type) {
         case APPLICATION_COMMAND_TYPES.INTEGER:
-          acc[option.name] = rawVal;
+          resolvedAcc[option.name] = rawVal;
           break;
         case APPLICATION_COMMAND_TYPES.STRING:
-          acc[option.name] = rawVal;
+          resolvedAcc[option.name] = rawVal;
           break;
         case APPLICATION_COMMAND_TYPES.ROLE: {
           const role = command.guild.roles.get(rawVal as string);
 
           if (role) {
-            acc[option.name] = role;
+            resolvedAcc[option.name] = role;
           } else {
             Sentry.captureMessage("Could not find a role mentioned in a command")
           }
@@ -183,13 +185,13 @@ export class PvPInteractiveCommand {
           break;
         }
         case APPLICATION_COMMAND_TYPES.BOOLEAN:
-          acc[option.name] = rawVal;
+          resolvedAcc[option.name] = rawVal;
           break;
         case APPLICATION_COMMAND_TYPES.CHANNEL: {
           const channel = command.guild.channels.get(rawVal as string);
 
           if (channel) {
-            acc[option.name] = channel;
+            resolvedAcc[option.name] = channel;
           } else {
             Sentry.captureMessage("Could not find a channel mentioned in a command")
           }
@@ -200,8 +202,12 @@ export class PvPInteractiveCommand {
           const member = command.guild.members.get(rawVal as string);
 
           if (member) {
-            acc[option.name] = member;
+            resolvedAcc[option.name] = member;
           } else {
+            const member = await command.client.getRESTGuildMember(command.guild.id, rawVal as string);
+            if (member) {
+              resolvedAcc[option.name] = member;
+            }
             Sentry.captureMessage("Could not find a member mentioned in a command")
           }
 
@@ -211,10 +217,9 @@ export class PvPInteractiveCommand {
           // @ts-ignore
           Sentry.captureMessage(`Unknown argument supplied: ${handlerOption.type}`)
       }
-      option.value
 
-      return acc;
-    }, {})
+      return resolvedAcc;
+    }, Promise.resolve({}))
   }
 }
 
@@ -266,6 +271,8 @@ export class PvPCraftCommandHelper {
             }
             throw new Error("invalid type")
           })
+    } else {
+      options = command.options;
     }
 
     return {
