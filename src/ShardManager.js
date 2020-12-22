@@ -1,9 +1,11 @@
+import chalk from "chalk";
+
 /**
  * Created by macdja38 on 2017-02-21.
  */
 
 const cluster = require("cluster");
-const Raven = require("raven");
+const Sentry = require("@sentry/node");
 const git = require("git-rev");
 
 //noinspection JSUnusedLocalSymbols
@@ -16,13 +18,13 @@ module.exports = class ShardManager {
   constructor(config, auth) {
     this.fileConfig = config;
     this.fileAuth = auth;
-    this.initRaven().catch(error => {
+    this.initSentry().catch(error => {
       console.log(error);
       throw error;
     }).then(this.initShardManager.bind(this))
   }
 
-  initRaven() {
+  initSentry() {
     return new Promise((resolve) => {
       let sentryEnv = this.fileConfig.get("sentryEnv", "");
 
@@ -30,31 +32,32 @@ module.exports = class ShardManager {
         console.log("SHARD MASTER: Sentry Started");
         git.long((commit) => {
           git.branch((branch) => {
-            let ravenConfig = {
+            let sentryConfig = {
               release: commit + "-" + branch,
-              transport: new Raven.transports.HTTPSTransport({rejectUnauthorized: false}),
-              tags: {
-                shardId: process.env.id,
-              },
-              autoBreadcrumbs: true,
+              debug: true,
+              dsn: this.fileAuth.get("sentryURL", undefined),
             };
             if (sentryEnv) {
-              ravenConfig.environment = sentryEnv
+              sentryConfig.environment = sentryEnv
             }
-            this.raven = new Raven.Client(this.fileAuth.data.sentryURL, ravenConfig);
 
-            this.raven.install(() => {
-              console.log("SHARD MASTER: This is thy sheath; there rust, and let me die.");
-              process.exit(1);
+            Sentry.init(sentryConfig);
+
+            Sentry.configureScope(function (scope) {
+              if (process.env.id) {
+                scope.setTag("shardId", process.env.id);
+              }
+              resolve(true);
             });
 
-            this.raven.on("logged", (e) => {
-              console.log("SHARD MASTER: Error reported to sentry from Shard Master!: " + e);
+            Sentry.addGlobalEventProcessor(function (event, hint) {
+              console.log(chalk.green(`SHARD MASTER: Error reported to sentry!: ${event.event_id}`));
+              if (process.env.dev == "true") {
+                console.log(event);
+              }
+              return event;
             });
 
-            this.raven.on("error", (e) => {
-              console.error("SHARD MASTER: Could not report event to sentry from Shard Master:", e.reason);
-            });
             resolve(true);
           })
         });
@@ -97,9 +100,7 @@ module.exports = class ShardManager {
 
     cluster.on('exit', (deadWorker, code, signal) => {
       const shardId = this.workers.indexOf(deadWorker)  + this.startShard;
-      if (this.raven) {
-        this.raven.captureMessage(`worker died with code ${code} and signal ${signal}`, { extra: { shardId }});
-      }
+      Sentry.captureMessage(`SHARD MASTER: worker died with code ${code} and signal ${signal}`, { extra: { shardId }});
       console.log(`SHARD MASTER: worker ${deadWorker.process.pid} died with code ${code} and signal ${signal}. Shard: ${shardId}`);
       this.restartQueue.push(deadWorker);
     });
