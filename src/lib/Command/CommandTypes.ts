@@ -51,7 +51,7 @@ export type CommandOption = CommandOptionParameter | CommandOptionSubcommandGrou
 export type CommandRoot = CommandOptionBase & {
   id?: string;
   application_id?: string;
-  options: (CommandOptionSubcommandGroup | CommandOptionSubcommand)[] | CommandOptionParameter[]
+  options: (CommandOptionSubcommandGroup | CommandOptionSubcommand)[] | readonly CommandOptionParameter[]
 }
 
 export type Pull<T extends readonly CommandOption[], K extends string> = Extract<T[number], { name: K; type: any }>["type"]
