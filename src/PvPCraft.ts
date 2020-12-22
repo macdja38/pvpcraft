@@ -519,7 +519,7 @@ class PvPCraft {
       getAllUsers: true,
       autoreconnect: true,
       // @ts-ignore
-      intents: 0b111111110111111,
+      intents: 0b111111011111111,
       compress: true,
       allowedMentions: {
         everyone: true,
