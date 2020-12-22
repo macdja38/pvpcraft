@@ -1,16 +1,16 @@
 import Eris from "eris";
 import { GuildCommand } from "./Command";
 
-export const APPLICATION_COMMAND_TYPES = Object.freeze({
-  SUB_COMMAND: 1 as 1,
-  SUB_COMMAND_GROUP: 2 as 2,
-  STRING: 3 as 3,
-  INTEGER: 4 as 4,
-  BOOLEAN: 5 as 5,
-  USER: 6 as 6,
-  CHANNEL: 7 as 7,
-  ROLE: 8 as 8,
-});
+export const APPLICATION_COMMAND_TYPES = {
+  SUB_COMMAND: 1,
+  SUB_COMMAND_GROUP: 2,
+  STRING: 3,
+  INTEGER: 4,
+  BOOLEAN: 5,
+  USER: 6,
+  CHANNEL: 7,
+  ROLE: 8,
+} as const;
 
 type ACT = typeof APPLICATION_COMMAND_TYPES;
 
@@ -54,15 +54,17 @@ export type CommandRoot = CommandOptionBase & {
   options: (CommandOptionSubcommandGroup | CommandOptionSubcommand)[] | CommandOptionParameter[]
 }
 
-export type Pull<T extends CommandOption[], K extends string> = Extract<T[number], { name: K; type: any }>["type"]
+export type Pull<T extends readonly CommandOption[], K extends string> = Extract<T[number], { name: K; type: any }>["type"]
+export type IsRequired<T extends readonly CommandOption[], K extends string> = Extract<T[number], { name: K; required: any}>["required"]
+export type PossiblyOptional<T extends readonly CommandOption[], K extends string, V extends any> = IsRequired<T, K> extends true ? V : V | undefined
 
-export type Optionify<T extends CommandOption[]> = {
-  [K in T[number]["name"]]: Pull<T, K> extends typeof APPLICATION_COMMAND_TYPES.ROLE ? Eris.Role :
-    Pull<T, K> extends typeof APPLICATION_COMMAND_TYPES.CHANNEL ? Eris.Channel :
-      Pull<T, K> extends typeof APPLICATION_COMMAND_TYPES.USER ? Eris.Member :
-        Pull<T, K> extends typeof APPLICATION_COMMAND_TYPES.STRING ? string :
-          Pull<T, K> extends typeof APPLICATION_COMMAND_TYPES.INTEGER ? number :
-            Pull<T, K> extends typeof APPLICATION_COMMAND_TYPES.BOOLEAN ? boolean : unknown
+export type Optionify<T extends readonly CommandOption[]> = {
+  [K in T[number]["name"]]: Pull<T, K> extends ACT["ROLE"] ? PossiblyOptional<T, K, Eris.Role> :
+    Pull<T, K> extends ACT["CHANNEL"] ? PossiblyOptional<T, K, Eris.Channel> :
+      Pull<T, K> extends ACT["USER"] ? PossiblyOptional<T, K, Eris.Member> :
+        Pull<T, K> extends ACT["STRING"] ? PossiblyOptional<T, K, string> :
+          Pull<T, K> extends ACT["INTEGER"] ? PossiblyOptional<T, K, number> :
+            Pull<T, K> extends ACT["BOOLEAN"] ? PossiblyOptional<T, K, boolean> : undefined
 }
 
 export type ModuleCommandGuild = {
