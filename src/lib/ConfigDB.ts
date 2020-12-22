@@ -254,6 +254,11 @@ class ConfigDB extends BaseDB {
       }
       return def;
     }
+    if (this.data.hasOwnProperty("*")) {
+      if (this.data["*"].hasOwnProperty(key)) {
+        return this.data["*"][key];
+      }
+    }
     if (this.data.hasOwnProperty(key)) {
       return this.data[key];
     }
