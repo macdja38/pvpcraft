@@ -32,7 +32,13 @@ import { Middleware, Module, ModuleCommand, v2Module } from "./types/moduleDefin
 import { translateType } from "./types/translate";
 import fetch, { Headers } from "node-fetch";
 import { DiscordCommandHelper } from "./lib/Command/DiscordCommandHelper";
-import { PvPCraftCommandHelper, PvPInteractiveCommand, SlashCommand } from "./lib/Command/PvPCraftCommandHelper";
+import {
+  INTERACTION_RESPONSE_TYPE,
+  MESSAGE_FLAGS,
+  PvPCraftCommandHelper,
+  PvPInteractiveCommand,
+  SlashCommand,
+} from "./lib/Command/PvPCraftCommandHelper";
 import {
   ApplicationCommandInteractionDataOption,
   CommandOption,
@@ -791,7 +797,7 @@ class PvPCraft {
         // console.log("FROM CODE", JSON.stringify(discordifyedCommand, null, 2));
 
         // equal check broken cause optional params are not sent by discord.
-        if (!PvPCraftCommandHelper.equal(commandOnGuild, discordifyedCommand)) {
+        if (!commandOnGuild || !PvPCraftCommandHelper.equal(commandOnGuild, discordifyedCommand)) {
           console.log("NOT EQUAL");
           commandHelper.createGuildCommand(guildID, discordifyedCommand);
         }
@@ -856,7 +862,7 @@ class PvPCraft {
       if (data.type === 2) {
         console.log(data);
 
-        const command = PvPCraftCommandHelper.interactionCommandFromDiscordInteraction(this.client, data, this.translate, this.getChannelLanguage);
+        const command = PvPCraftCommandHelper.interactionCommandFromDiscordInteraction(this.client, data, this.configDB, this.translate, this.getChannelLanguage);
         if (command) {
           this.onCommand(command as unknown as PvPInteractiveCommand);
         }
@@ -905,16 +911,22 @@ class PvPCraft {
       // Permissions
       if ("permissionCheck" in commandHandler && commandHandler.permissionCheck) {
         if (!commandHandler.permissionCheck(command)) {
-          return command.respond(4, "Sorry, you don't have permission to use that here. If you're an admin you can use /perms to change that.");
+          return command.respond(INTERACTION_RESPONSE_TYPE.EAT_INPUT_WITH_REPLY, {
+            content: "Sorry, you don't have permission to use that here. If you're an admin you can use /perms to change that.",
+            flags: MESSAGE_FLAGS.EPHEMERAL,
+          });
         }
       }
 
       if ("permission" in commandHandler && commandHandler.permission) {
         if (!this.perms.check(command, commandHandler.permission)) {
-          return command.respond(4, "Sorry, you don't have permission to use that here.\n"
-            + `You're missing the permission node ${commandHandler.permission}.\n`
-            + `An admin can give that out with \`/perms set Allow ${commandHandler.permission}\``
-            + "If they want to give it to a specific user / channel / role or a combination they can use the optional arguments to narrow who receives permission.");
+          return command.respond(INTERACTION_RESPONSE_TYPE.EAT_INPUT_WITH_REPLY, {
+            content: "Sorry, you don't have permission to use that here.\n"
+              + `You're missing the permission node ${commandHandler.permission}.\n`
+              + `An admin can give that out with \`/perms set Allow ${commandHandler.permission}\``
+              + "If they want to give it to a specific user / channel / role or a combination they can use the optional arguments to narrow who receives permission.",
+            flags: MESSAGE_FLAGS.EPHEMERAL,
+          });
         }
       }
 
@@ -1120,9 +1132,9 @@ class PvPCraft {
 
   /**
    * Wraps the command to capture any exceptions thrown asynchronously or synchronously with sentry
-   * @param mod error is originating from
+   * @param module
+   * @param commandHandler
    * @param command that triggered the error
-   * @param msg containing offending command
    * @param callCommandFunction function to call and capture errors from
    */
   async _v2CommandWrapper(module: v2Module, commandHandler: SlashCommand, command: PvPInteractiveCommand, callCommandFunction: () => Promise<any> | any) {
