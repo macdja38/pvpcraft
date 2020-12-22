@@ -144,6 +144,13 @@ class evaluate {
             return true;
           });
       },
+    }, {
+      triggers: ["uploadslashcommands"],
+      permissionCheck: command => this.fileConfig.get("permissions", { "permissions": { admins: [] } }).admins.includes(command.author.id),
+      channels: ["*"],
+      execute: () => {
+        this.pvpcraft.syncCommandsToDiscord(this.pvpcraft.v2ModuleList)
+      },
     }];
   }
 
