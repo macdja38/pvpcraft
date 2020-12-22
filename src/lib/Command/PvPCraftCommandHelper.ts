@@ -11,9 +11,27 @@ import {
   CommandOptionSubcommandGroup, CommandRoot, Interaction, InteractionCommand, Optionify,
 } from "./CommandTypes";
 import equal from "deep-equal";
-import Eris from "eris";
+import Eris, { MessageFile } from "eris";
 import fetch, { Headers } from "node-fetch";
 import { translateType } from "../../types/translate";
+import ConfigDB from "../ConfigDB";
+
+export const MESSAGE_FLAGS = {
+  CROSSPOSTED: 1 << 0,
+  IS_CROSSPOST: 1 << 1,
+  SUPPRESS_EMBEDS: 1 << 2,
+  SOURCE_MESSAGE_DELETED: 1 << 3,
+  URGENT: 1 << 4,
+  EPHEMERAL: 1 << 6,
+};
+
+export const INTERACTION_RESPONSE_TYPE = {
+  PONG: 1 as 1,                 //	ACK a Ping
+  EAT_INPUT_ACK: 2 as 2,        //	ACK a command without sending a message, eating the user's input
+  EAT_INPUT_WITH_REPLY: 3 as 3, //	respond with a message, eating the user's input
+  REPLY: 4 as 4,                // 	respond with a message, showing the user's input
+  ACK: 5 as 5,                  // 	ACK a command without sending a message, showing the user's input
+}
 
 export type SlashCommandBase = {
   name: string;
@@ -25,7 +43,7 @@ export type SlashCommandBase = {
 }
 
 export type SlashCommandCommand = SlashCommandBase & {
-  options: CommandOptionParameter[];
+  options: readonly CommandOptionParameter[];
   execute: (command: PvPInteractiveCommandWithOpts<any>) => Promise<any> | boolean;
 }
 
@@ -66,12 +84,16 @@ export class PvPInteractiveCommand {
   opts: {};
   i1001n: (language: string) => translateType;
   getChannelLanguage: (channelID: string) => string;
+  private configDB: ConfigDB;
+  private client: Eris.Client;
 
 
-  constructor(id: string, name: string, token: string, i10010n: (language: string) => translateType, getChannelLanguage: (channelID: string) => string, guild: Eris.Guild, channel: Eris.Channel, member: Eris.Member, data: any) {
+  constructor(id: string, name: string, token: string, client: Eris.Client, configDB: ConfigDB, i10010n: (language: string) => translateType, getChannelLanguage: (channelID: string) => string, guild: Eris.Guild, channel: Eris.Channel, member: Eris.Member, data: any) {
     this.id = id;
     this.name = name;
     this.token = token;
+    this.client = client;
+    this.configDB = configDB;
     this.i1001n = i10010n;
     this.getChannelLanguage = getChannelLanguage;
     this.translate = i10010n(getChannelLanguage(channel.id));
@@ -83,7 +105,7 @@ export class PvPInteractiveCommand {
   }
 
   clone() {
-    const clone = new PvPInteractiveCommand(this.id, this.name, this.token, this.i1001n, this.getChannelLanguage, this.guild, this.channel, this.member, this.data);
+    const clone = new PvPInteractiveCommand(this.id, this.name, this.token, this.client, this.configDB, this.i1001n, this.getChannelLanguage, this.guild, this.channel, this.member, this.data);
     clone.opts = this.opts;
     return clone;
   }
@@ -100,29 +122,39 @@ export class PvPInteractiveCommand {
     }
   }
 
-  respond(typeOrResponse: 2 | 3 | 4 | 5 | Eris.WebhookPayload | string, responseOrOptional?: Eris.WebhookPayload | string) {
+  respond(typeOrResponse: 2 | 3 | 4 | 5 | WebhookPayloadWithFlags | string, responseOrFile?: WebhookPayloadWithFlags | string | Eris.MessageFile | Eris.MessageFile[], file?: Eris.MessageFile | Eris.MessageFile[]) {
     let type: number;
-    let response: Eris.WebhookPayload | string;
+    let response: WebhookPayloadWithFlags | string;
+
+    const ephemeralChannels = this.configDB.get("ephemeralChannels", {}, { server: this.guild.id });
+
+    let ephemeral = false;
+    if (ephemeralChannels.hasOwnProperty(this.channel.id)) {
+      ephemeral = ephemeralChannels[this.channel.id];
+    }
+
+    let files = undefined;
 
     if (typeof typeOrResponse === "number") {
       type = typeOrResponse
-      if (!responseOrOptional) {
+      if (!responseOrFile) {
         throw new Error("Response is required when supplying type as a number");
       }
-      response = wrapResponse(responseOrOptional);
+      response = wrapResponse(responseOrFile as string | WebhookPayloadWithFlags, ephemeral);
+      if (file) {
+        files = file;
+      }
     } else {
-      type = 4;
-      response = wrapResponse(typeOrResponse as Eris.WebhookPayload | string);
+      type = ephemeral ? INTERACTION_RESPONSE_TYPE.EAT_INPUT_WITH_REPLY : INTERACTION_RESPONSE_TYPE.REPLY;
+      response = wrapResponse(typeOrResponse as Eris.WebhookPayload | string, ephemeral);
+      files = responseOrFile as MessageFile | MessageFile[];
     }
 
     console.log("responding with", JSON.stringify({ type, data: response }))
 
-    return fetch(`https://discord.com/api/v8/interactions/${this.id}/${this.token}/callback`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body:
-        JSON.stringify({ type, data: response }),
-    })
+    console.log({ type, data: response }, files);
+    // @ts-ignore
+    return this.client.requestHandler.request("POST", `/interactions/${this.id}/${this.token}/callback`, false, { type, data: response }, files);
   }
 
   static optionsArrayToObject(command: PvPInteractiveCommand, commandHandler: SlashCommandCommand, options: ApplicationCommandInteractionDataOption<any>[]) {
@@ -189,15 +221,28 @@ export class PvPInteractiveCommand {
   }
 }
 
-export type PvPInteractiveCommandWithOpts<T extends CommandOption[]> = PvPInteractiveCommand & {
+export type PvPInteractiveCommandWithOpts<T extends readonly CommandOption[]> = PvPInteractiveCommand & {
   opts: Optionify<T>
 }
 
-function wrapResponse(response: Eris.WebhookPayload | string): Eris.WebhookPayload {
+export type WebhookPayloadWithFlags = Eris.WebhookPayload & { flags?: number }
+
+function wrapResponse(response: WebhookPayloadWithFlags | string, ephemeralDefault: boolean = false): WebhookPayloadWithFlags {
   if (typeof response === "string") {
-    return { content: response }
+    const wrappedResponse: WebhookPayloadWithFlags = { content: response }
+    if (ephemeralDefault) {
+      wrappedResponse.flags = 1 << 6;
+    }
+    return wrappedResponse
   }
-  return response;
+  if (response.hasOwnProperty("flags")) {
+    return response;
+  }
+  const responseClone = JSON.parse(JSON.stringify(response)) as WebhookPayloadWithFlags;
+  if (ephemeralDefault) {
+    responseClone.flags = 1 << 6;
+  }
+  return responseClone;
 }
 
 export class PvPCraftCommandHelper {
@@ -241,7 +286,7 @@ export class PvPCraftCommandHelper {
     return equal(clone1, clone2, { strict: true })
   }
 
-  static interactionCommandFromDiscordInteraction(client: Eris.Client, interaction: InteractionCommand, i10010n: (language: string) => translateType, getChannelLanguage: (channelID: string) => string): PvPInteractiveCommand | void {
+  static interactionCommandFromDiscordInteraction(client: Eris.Client, interaction: InteractionCommand, configDB: ConfigDB, i10010n: (language: string) => translateType, getChannelLanguage: (channelID: string) => string): PvPInteractiveCommand | void {
     const guild = client.guilds.get(interaction.guild_id);
 
     if (!guild) {
@@ -260,6 +305,6 @@ export class PvPCraftCommandHelper {
       return;
     }
 
-    return new PvPInteractiveCommand(interaction.id, interaction.data.name, interaction.token, i10010n, getChannelLanguage, guild, channel, member, interaction.data);
+    return new PvPInteractiveCommand(interaction.id, interaction.data.name, interaction.token, client, configDB, i10010n, getChannelLanguage, guild, channel, member, interaction.data);
   }
 }

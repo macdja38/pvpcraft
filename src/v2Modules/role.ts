@@ -99,7 +99,7 @@ const role: v2ModuleConstructor = class role implements v2Module {
             name: "list",
             description: "adds a role to the list of joinable roles",
             permission: "role.list",
-            channels: "guild" as "guild",
+            channels: "guild" as const,
             options: options,
             execute: (command: PvPInteractiveCommandWithOpts<typeof options>) => {
               let roles = this.config.get("roles", {}, { server: command.guild.id });
@@ -126,7 +126,7 @@ const role: v2ModuleConstructor = class role implements v2Module {
             name: "name" as "name",
             description: "The role to join. /role list for a list",
             type: APPLICATION_COMMAND_TYPES.STRING,
-            required: true,
+            required: true as true,
           }];
 
           return {
@@ -168,7 +168,7 @@ const role: v2ModuleConstructor = class role implements v2Module {
             name: "name" as "name",
             description: "The role to leave. /role list for a list",
             type: APPLICATION_COMMAND_TYPES.STRING,
-            required: true,
+            required: true as true,
           }];
 
           return {
@@ -204,22 +204,22 @@ const role: v2ModuleConstructor = class role implements v2Module {
         })(),
         (() => {
           const options = [{
-            name: "name" as "name",
+            name: "name",
             description: "The name users type to join this role",
             type: APPLICATION_COMMAND_TYPES.STRING,
             required: true,
           }, {
-            name: "role" as "role",
+            name: "role",
             description: "The role to join",
             type: APPLICATION_COMMAND_TYPES.ROLE,
             required: true,
-          }];
+          }] as const;
 
           return {
             name: "add",
             description: "Adds a role to the list of joinable roles",
             permission: "admin.role.add",
-            channels: "guild" as "guild",
+            channels: "guild" as const,
             options: options,
             execute: (command: PvPInteractiveCommandWithOpts<typeof options>) => {
               const roleName = command.opts.name.toLowerCase();
@@ -235,14 +235,14 @@ const role: v2ModuleConstructor = class role implements v2Module {
             name: "name" as "name",
             description: "The name users type to join this role",
             type: APPLICATION_COMMAND_TYPES.STRING,
-            required: true,
+            required: true as true,
           }];
 
           return {
             name: "remove",
             description: "Removes a role to the list of joinable roles",
             permission: "admin.role.remove",
-            channels: "guild" as "guild",
+            channels: "guild" as const,
             options: options,
             execute: (command: PvPInteractiveCommandWithOpts<typeof options>) => {
               let roleToJoin = command.opts.name.toLowerCase();
