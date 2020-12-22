@@ -150,9 +150,6 @@ export class PvPInteractiveCommand {
       files = responseOrFile as MessageFile | MessageFile[];
     }
 
-    console.log("responding with", JSON.stringify({ type, data: response }))
-
-    console.log({ type, data: response }, files);
     // @ts-ignore
     return this.client.requestHandler.request("POST", `/interactions/${this.id}/${this.token}/callback`, false, { type, data: response }, files);
   }
