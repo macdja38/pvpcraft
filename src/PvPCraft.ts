@@ -388,6 +388,7 @@ class PvPCraft {
     this.client.on("shardPreReady", this.logShardUpdate.bind(this, "preReady"));
     this.client.on("shardResume", this.logShardUpdate.bind(this, "Resume"));
     this.client.on("shardReady", this.logShardUpdate.bind(this, "Ready"));
+    this.client.on("error", this.onError.bind(this));
   }
 
   registerPostReadyClientListeners() {
@@ -396,7 +397,6 @@ class PvPCraft {
     this.client.on("guildCreate", this.onGuildCreate.bind(this));
     this.client.on("messageCreate", this.onMessage.bind(this));
     this.client.on("rawWS", this.onRawWS.bind(this));
-    this.client.on("error", this.onError.bind(this));
     this.client.on("shardDisconnect", this.onDisconnect.bind(this));
     this.client.on("shardReady", this.reload.bind(this));
     this.client.on("shardResume", this.reload.bind(this));
@@ -430,12 +430,15 @@ class PvPCraft {
   onDisconnect() {
     Sentry.captureMessage("Disconnected", { level: Severity.Info })
     console.log(chalk.red("Disconnect event called"));
-    for (let i in this.moduleList) {
-      if (this.moduleList.hasOwnProperty(i)) {
-        if (this.moduleList[i].module.onDisconnect) {
-          // @ts-ignore
-          this.moduleList[i].module.onDisconnect();
-        }
+    for (let module of this.moduleList) {
+      if (module.module.onDisconnect) {
+        module.module.onDisconnect();
+      }
+    }
+
+    for (let module of this.v2ModuleList) {
+      if (module.module.onDisconnect) {
+        module.module.onDisconnect();
       }
     }
   }
@@ -469,7 +472,19 @@ class PvPCraft {
             console.error(error);
           }
         }
+      }
 
+      for (let module of this.v2ModuleList) {
+        if (module.module) {
+          try {
+            if (module.module.onGuildCreate) {
+              console.log(chalk.green("Notifying a module a server was created!"));
+              module.module.onGuildCreate(guild);
+            }
+          } catch (error) {
+            console.error(error);
+          }
+        }
       }
     }).catch(console.error)
   }
@@ -491,6 +506,7 @@ class PvPCraft {
         }
       }
     }
+
     for (let module of this.moduleList) {
       if (module.module) {
         try {
@@ -503,7 +519,20 @@ class PvPCraft {
           console.log(error);
         }
       }
+    }
 
+    for (let module of this.v2ModuleList) {
+      if (module.module) {
+        try {
+          if (module.module.onGuildDelete) {
+            console.log(chalk.green(`Notifying a module a server was Deleted! shard ${process.env.id}`));
+            module.module.onGuildDelete(server);
+          }
+        } catch (error) {
+          Sentry.captureException(error);
+          console.log(error);
+        }
+      }
     }
   }
 
@@ -721,6 +750,7 @@ class PvPCraft {
 
     this.middlewareList = [];
     this.moduleList = [];
+    this.v2ModuleList = [];
 
     let middlewares = this.fileConfig.get("middleware", {});
     let modules = this.fileConfig.get("modules", {});
