@@ -97,7 +97,7 @@ const role: v2ModuleConstructor = class role implements v2Module {
 
           return {
             name: "list",
-            description: "adds a role to the list of joinable roles",
+            description: "Lists the roles that can be joined. `/role join` to join.",
             permission: "role.list",
             channels: "guild" as const,
             options: options,
@@ -114,9 +114,9 @@ const role: v2ModuleConstructor = class role implements v2Module {
                 }
               }
               if (coloredRolesList !== "") {
-                return command.respond(command.translate`Roles you can join are highlighted in green\`\`\`diff\n${coloredRolesList}\`\`\``)
+                return command.respond(command.translate`Roles you can join are highlighted in green. To join a role use \`/role join <role>\`\n\`\`\`diff\n${coloredRolesList}\`\`\``);
               } else {
-                return command.respond(command.translate`No roles are setup to be join-able.`)
+                return command.respond(command.translate`No roles are setup to be join-able.`);
               }
             },
           }
@@ -124,7 +124,7 @@ const role: v2ModuleConstructor = class role implements v2Module {
         (() => {
           const options = [{
             name: "name" as "name",
-            description: "The role to join. /role list for a list",
+            description: "The role to join. `/role list` for a list",
             type: APPLICATION_COMMAND_TYPES.STRING,
             required: true as true,
           }];
@@ -179,7 +179,7 @@ const role: v2ModuleConstructor = class role implements v2Module {
             options: options,
             execute: (command: PvPInteractiveCommandWithOpts<typeof options>) => {
               let roleToLeave = command.opts.name.toLowerCase();
-              if (roleToLeave[0] == "+" || roleToLeave[0] == "-") {
+              if (roleToLeave[0] === "+" || roleToLeave[0] === "-") {
                 roleToLeave = roleToLeave.substring(1);
               }
               let roles = this.config.get("roles", {}, { server: command.guild.id });
@@ -217,7 +217,7 @@ const role: v2ModuleConstructor = class role implements v2Module {
 
           return {
             name: "add",
-            description: "Adds a role to the list of joinable roles",
+            description: "Admin command. Adds a role to the list of joinable roles",
             permission: "admin.role.add",
             channels: "guild" as const,
             options: options,
@@ -240,7 +240,7 @@ const role: v2ModuleConstructor = class role implements v2Module {
 
           return {
             name: "remove",
-            description: "Removes a role to the list of joinable roles",
+            description: "Admin Command. Removes a role to the list of joinable roles",
             permission: "admin.role.remove",
             channels: "guild" as const,
             options: options,
