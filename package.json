@@ -29,9 +29,9 @@
     "esm": "^3.2.25",
     "eventemitter3": "^4.0.7",
     "git-rev": "^0.2.1",
-    "google": "^2.0.0",
+    "google": "^2.1.0",
     "google-images": "^2.0.0",
-    "googleapis": "^65.0.0",
+    "googleapis": "^66.0.0",
     "graphql": "^14.7.0",
     "graphql-relay": "^0.6.0",
     "i10010n": "^0.4.3",
@@ -74,7 +74,7 @@
     "rimraf": "^3.0.2",
     "source-map-support": "^0.5.19",
     "ts-node": "^9.0.0",
-    "typescript": "^4.0.5"
+    "typescript": "^4.1.3"
   },
   "engines": {
     "node": ">=12"

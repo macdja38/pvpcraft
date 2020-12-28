@@ -100,7 +100,7 @@ class PvPCraft {
   private shardId: number;
   private shardCount: number;
   private readyPromise: Promise<boolean>;
-  private resolveReadyPromise!: (value?: (PromiseLike<boolean> | boolean)) => void;
+  private resolveReadyPromise!: (value: (PromiseLike<boolean> | boolean)) => void;
   private client!: Eris.Client;
   private pvpClient: any;
   git?: { commit: string, branch: string };
