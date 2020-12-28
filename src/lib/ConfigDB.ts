@@ -78,7 +78,7 @@ class ConfigDB extends BaseDB {
    * @returns {Promise} resolves when all data is loaded.
    */
   reload() {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       try {
         this.ensureTable(this.table).then(() => {
           /*this.r.table(this.table).insert([{id: "*", prefix: "//", "changeThresh": 1}]).run().then((res)=>{

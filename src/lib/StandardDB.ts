@@ -52,7 +52,7 @@ class StandardDB extends BaseDB {
    * Reloads a specific servers records from the db.
    */
   reload() {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       try {
         this.ensureTable(this.table).then(() => {
           console.log(`Connected to db ${this.table} on shard ${process.env.id}`.blue);
