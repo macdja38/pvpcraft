@@ -1,4 +1,5 @@
 import Eris from "eris";
+import { CommandRoot } from "./CommandTypes";
 
 const APPLICATIONS = `/applications`
 const APPLICATION = (clientID: string) => `${APPLICATIONS}/${clientID}`;
@@ -17,33 +18,27 @@ export class DiscordCommandHelper {
     this.client = client;
   }
 
-  fetchGuildCommands(guildID: string) {
-    // @ts-ignore
-    return this.client.requestHandler.request("GET", APPLICATION_GUILD_COMMANDS(this.clientID, guildID), true);
+  fetchGuildCommands(guildID: string): Promise<CommandRoot[]> {
+    return this.client.requestHandler.request("GET", APPLICATION_GUILD_COMMANDS(this.clientID, guildID), true) as unknown as Promise<CommandRoot[]>;
   }
 
-  fetchCommands() {
-    // @ts-ignore
-    return this.client.requestHandler.request("GET", APPLICATION_COMMANDS(this.clientID), true);
+  fetchCommands(): Promise<CommandRoot[]> {
+    return this.client.requestHandler.request("GET", APPLICATION_COMMANDS(this.clientID), true) as unknown as Promise<CommandRoot[]>;
   }
 
   createGuildCommand(guildID: string, commandData: Record<string, unknown>) {
-    // @ts-ignore
     return this.client.requestHandler.request("POST", APPLICATION_GUILD_COMMANDS(this.clientID, guildID), true, commandData);
   }
 
   createCommand(commandData: Record<string, unknown>) {
-    // @ts-ignore
     return this.client.requestHandler.request("POST", APPLICATION_COMMANDS(this.clientID), true, commandData);
   }
 
   deleteGuildCommand(guildID: string, commandID: string) {
-    // @ts-ignore
     return this.client.requestHandler.request("DELETE", APPLICATION_GUILD_COMMAND(this.clientID, guildID, commandID), true);
   }
 
   deleteCommand(commandID: string) {
-    // @ts-ignore
     return this.client.requestHandler.request("DELETE", APPLICATION_COMMAND(this.clientID, commandID), true);
   }
 }
