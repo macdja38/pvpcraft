@@ -1181,7 +1181,7 @@ class PvPCraft {
         user: (msg.hasOwnProperty("author") && msg.author.toJSON) ? msg.author.toJSON() : msg.author,
         extra,
       });
-      utils.handleErisRejection(msg.channel.createMessage(this.translate(msg.channel.id)`Sorry, there was an error processing your command. The error is \`\`\`${error
+      utils.handleErisRejection(msg.channel.createMessage(this.translate(msg.channel.id)`Sorry, there was an error processing your command. The error is \`\`\`${error.toString().slice(0, 1900)
       }\`\`\` reference code \`${id}\``));
       if (process.env.dev === "true") {
         console.log(this.translate(msg.channel.id)`Sorry, there was an error processing your command. The error is \`\`\`${error.toString().slice(0, 1900)
