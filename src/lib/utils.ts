@@ -15,6 +15,11 @@ type MediaWikiSearchResult = [string, string[], string[], string[]]
  * @type Utils
  */
 class Utils {
+  static PERMISSION_OVERWRITE_TYPE = {
+    ROLE: 0,
+    MEMBER: 1,
+  } as const;
+
   /**
    * convert seconds into english time string
    * @param {number} secs
