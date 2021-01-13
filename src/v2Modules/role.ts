@@ -76,7 +76,7 @@ const role: v2ModuleConstructor = class role implements v2Module {
   getContent() {
     return {
       name: "Role commands",
-      description: "Create joinable roles, or assign a role to users when they join",
+      description: "Create joinable roles, or assign a role to users when they join.",
       key: "role",
       permNode: "role",
       commands: this.getCommands(),
@@ -89,7 +89,7 @@ const role: v2ModuleConstructor = class role implements v2Module {
   getCommands(): SlashCommand[] {
     return [{
       name: "role",
-      description: "Allows users to join / leave roles",
+      description: "Allows users to join / leave roles.",
       channels: "guild",
       subCommands: [
         (() => {
@@ -124,14 +124,14 @@ const role: v2ModuleConstructor = class role implements v2Module {
         (() => {
           const options = [{
             name: "name" as "name",
-            description: "The role to join. `/role list` for a list",
+            description: "The role to join. `/role list` for a list.",
             type: APPLICATION_COMMAND_TYPES.STRING,
             required: true as true,
           }];
 
           return {
             name: "join",
-            description: "adds a role to the list of joinable roles",
+            description: "Allows you to join a role.",
             permission: "role.join.use",
             channels: "guild" as "guild",
             options: options,
@@ -166,14 +166,14 @@ const role: v2ModuleConstructor = class role implements v2Module {
         (() => {
           const options = [{
             name: "name" as "name",
-            description: "The role to leave. /role list for a list",
+            description: "The role to leave. /role list for a list.",
             type: APPLICATION_COMMAND_TYPES.STRING,
             required: true as true,
           }];
 
           return {
             name: "leave",
-            description: "adds a role to the list of joinable roles",
+            description: "Allows you to leave a role.",
             permission: "role.leave.use",
             channels: "guild" as "guild",
             options: options,
@@ -217,7 +217,7 @@ const role: v2ModuleConstructor = class role implements v2Module {
 
           return {
             name: "add",
-            description: "Admin command. Adds a role to the list of joinable roles",
+            description: "Admin Command. Adds a role to the list of joinable roles.",
             permission: "admin.role.add",
             channels: "guild" as const,
             options: options,
@@ -233,14 +233,14 @@ const role: v2ModuleConstructor = class role implements v2Module {
         (() => {
           const options = [{
             name: "name" as "name",
-            description: "The name users type to join this role",
+            description: "The name users type to join this role.",
             type: APPLICATION_COMMAND_TYPES.STRING,
             required: true as true,
           }];
 
           return {
             name: "remove",
-            description: "Admin Command. Removes a role to the list of joinable roles",
+            description: "Admin Command. Removes a role to the list of joinable roles.",
             permission: "admin.role.remove",
             channels: "guild" as const,
             options: options,
