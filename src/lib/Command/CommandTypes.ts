@@ -60,7 +60,7 @@ export type PossiblyOptional<T extends readonly CommandOption[], K extends strin
 
 export type Optionify<T extends readonly CommandOption[]> = {
   [K in T[number]["name"]]: Pull<T, K> extends ACT["ROLE"] ? PossiblyOptional<T, K, Eris.Role> :
-    Pull<T, K> extends ACT["CHANNEL"] ? PossiblyOptional<T, K, Eris.Channel> :
+    Pull<T, K> extends ACT["CHANNEL"] ? PossiblyOptional<T, K, Eris.GuildChannel> :
       Pull<T, K> extends ACT["USER"] ? PossiblyOptional<T, K, Eris.Member> :
         Pull<T, K> extends ACT["STRING"] ? PossiblyOptional<T, K, string> :
           Pull<T, K> extends ACT["INTEGER"] ? PossiblyOptional<T, K, number> :
