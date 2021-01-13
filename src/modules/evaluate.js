@@ -149,7 +149,14 @@ class evaluate {
       permissionCheck: command => this.fileConfig.get("permissions", { "permissions": { admins: [] } }).admins.includes(command.author.id),
       channels: ["*"],
       execute: () => {
-        this.pvpcraft.syncCommandsToDiscord(this.pvpcraft.v2ModuleList)
+        return this.pvpcraft.syncCommandsToDiscord(this.pvpcraft.v2ModuleList)
+      },
+    }, {
+      triggers: ["uploadguildslashcommands"],
+      permissionCheck: command => this.fileConfig.get("permissions", { "permissions": { admins: [] } }).admins.includes(command.author.id),
+      channels: "guild",
+      execute: (command) => {
+        return this.pvpcraft.syncCommandsToDiscordGuild(command.channel.guild.id, this.pvpcraft.v2ModuleList)
       },
     }];
   }
