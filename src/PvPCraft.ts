@@ -1184,6 +1184,8 @@ class PvPCraft {
       utils.handleErisRejection(msg.channel.createMessage(this.translate(msg.channel.id)`Sorry, there was an error processing your command. The error is \`\`\`${error
       }\`\`\` reference code \`${id}\``));
       if (process.env.dev === "true") {
+        console.log(this.translate(msg.channel.id)`Sorry, there was an error processing your command. The error is \`\`\`${error.toString().slice(0, 1900)
+        }\`\`\` reference code \`${id}\``);
         console.error(`Captured an exception in a command and logged to sentry: ${id}`, error);
       }
       return true;
