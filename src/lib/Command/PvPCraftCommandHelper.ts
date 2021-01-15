@@ -150,8 +150,11 @@ export class PvPInteractiveCommand {
       files = responseOrFile as MessageFile | MessageFile[];
     }
 
-    // @ts-ignore
-    return this.client.requestHandler.request("POST", `/interactions/${this.id}/${this.token}/callback`, false, { type, data: response }, files);
+    if (files) {
+      throw new Error("Files are not supported by Slash Commands.")
+    }
+
+    return this.client.requestHandler.request("POST", `/interactions/${this.id}/${this.token}/callback`, false, { type, data: response });
   }
 
   static async optionsArrayToObject(command: PvPInteractiveCommand, commandHandler: SlashCommandCommand, options: ApplicationCommandInteractionDataOption<any>[]) {
