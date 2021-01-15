@@ -17,6 +17,7 @@ import * as Sentry from "@sentry/node";
 class BaseDB {
   protected readonly table: string;
   r: R.Client;
+
   /**
    * Base database constructor, includes saving r to this.r
    * @param table The table to read / write from
@@ -33,12 +34,28 @@ class BaseDB {
    * @param {Object} [tableOptions={}] options object to be passed to r.tableCreate
    * @returns {Promise} true if table exists, table if not.
    */
-  ensureTable(tableName: string, tableOptions={}) {
+  ensureTable(tableName: string, tableOptions = {}) {
     console.log(chalk.blue(`Ensuring the table ${tableName} exists.`));
     return this.r.tableList()
       .contains(tableName)
       // @ts-ignore
-      .branch(true, this.r.tableCreate(tableName, tableOptions))
+      .branch(true,
+        this.r.tableCreate(tableName, tableOptions))
+      .run();
+  }
+
+  /**
+   * Ensures an index exists on the table
+   * @param {String} indexName name of the table
+   * @returns {Promise} true if table exists, table if not.
+   */
+  ensureIndex(indexName: string) {
+    console.log(chalk.cyan(`Ensuring the index ${indexName} exists on table ${this.table}.`));
+    return this.r.table(this.table).indexList()
+      .contains(indexName)
+      // @ts-ignore
+      .branch(true,
+        this.r.table(this.table).indexCreate(indexName))
       .run();
   }
 
@@ -47,7 +64,10 @@ class BaseDB {
 
     const cancels: { [key: string]: () => void } = {};
 
-    return query(client.guilds.map(guild => guild.id)).changes({ squash: true, includeInitial: true, }).run().then((cursor: any) => {
+    return query(client.guilds.map(guild => guild.id)).changes({
+      squash: true,
+      includeInitial: true,
+    }).run().then((cursor: any) => {
 
       cursor.each((err: Error, state: any) => {
 
