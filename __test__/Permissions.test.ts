@@ -32,22 +32,23 @@ const exampleConfiguration = {
 };
 
 
-const Permissions = require("../lib/Permissions");
+import Permissions, { testExports } from "../src/lib/Permissions";
 
 test("tests node building code with NaN", () => {
-  expect(Permissions._buildNode(["foo", "bar"], NaN)).toMatchObject({foo: {bar: NaN}});
+  expect(testExports._buildNode(["foo", "bar"], NaN)).toMatchObject({foo: {bar: NaN}});
 });
 
 test("tests node building code with null", () => {
-  expect(Permissions._buildNode(["foo", "bar"], null)).toMatchObject({foo: {bar: null}});
+  expect(testExports._buildNode(["foo", "bar"], false)).toMatchObject({foo: {bar: false}});
 });
 
 test("tests node building code with 0 entry arguments", () => {
-  expect(Permissions._buildNode([], true)).toBe(true);
+  expect(testExports._buildNode([], true)).toBe(true);
 });
 
 test("Test getOrderedGroups with complicated data set", () => {
-  expect(Permissions._getOrderedGroups([
+  // @ts-ignore
+  expect(testExports._getOrderedGroups([
       {id: '333142777921667073', position: 3},
       {id: '333142780471934986', position: 1},
       {id: '333142782350852097', position: 1},
@@ -61,15 +62,15 @@ test("Test getOrderedGroups with complicated data set", () => {
 });
 
 test("Test permissions check", () => {
-  expect(Permissions._searchForNode(exampleConfiguration, ["*", "*", "music", "*"])).toBe(true);
+  expect(testExports._searchForNode(exampleConfiguration, ["*", "*", "music", "*"])).toBe(true);
 });
 
 test("Test permissions skipping numbers", () => {
-  expect(Permissions._searchForNode(exampleConfiguration, ["200168933498683393", "*", "music", "*"])).toBe(true);
+  expect(testExports._searchForNode(exampleConfiguration, ["200168933498683393", "*", "music", "*"])).toBe(true);
 });
 
 test("Test Permissions Recursive addition of node", () => {
-  expect(Permissions._recursiveAdd(exampleConfiguration, ["*", "*", "music", "initInto"], true)).toMatchObject({
+  expect(testExports._recursiveAdd(exampleConfiguration, ["*", "*", "music", "initInto"], true)).toMatchObject({
     "*": {
       "*": {
         "music": {
