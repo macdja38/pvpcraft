@@ -2,7 +2,7 @@
  * Created by macdja38 on 2017-03-20.
  */
 
-const videoUtils = require("../lib/videoUtils");
+import videoUtils from "../src/lib/videoUtils";
 
 let info =
   {
@@ -39,9 +39,11 @@ let info =
   };
 
 test("renders video title from info", () => {
+  // @ts-ignore
   expect(videoUtils.prettyTitle(info)).toBe("videoTitle");
 });
 
 test("renders video author from info", () => {
+  // @ts-ignore
   expect(videoUtils.prettyAuthor(info)).toBe("userName");
 });

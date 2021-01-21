@@ -517,18 +517,14 @@ function searchForNodeInfo(tree: any, node: explodedNode, level: number): { foun
 }
 
 /* test-code */
-// @ts-ignore
-Permissions._searchForNode = searchForNode;
-// @ts-ignore
-Permissions._searchForNodeInfo = searchForNodeInfo;
-// @ts-ignore
-Permissions._searchForNodeOfType = searchForNodeOfType;
-// @ts-ignore
-Permissions._getOrderedGroups = getOrderedGroups;
-// @ts-ignore
-Permissions._buildNode = buildNode;
-// @ts-ignore
-Permissions._recursiveAdd = recursiveAdd;
+export const testExports = {
+  _searchForNode: searchForNode,
+  _searchForNodeInfo: searchForNodeInfo,
+  _searchForNodeOfType: searchForNodeOfType,
+  _getOrderedGroups: getOrderedGroups,
+  _buildNode: buildNode,
+  _recursiveAdd: recursiveAdd,
+}
 /* end-test-code */
 
 export default Permissions;
