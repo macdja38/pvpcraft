@@ -820,7 +820,7 @@ class PvPCraft {
       return acc;
     }, {})
 
-    for (let module of moduleList) {
+    return Promise.all(moduleList.map(module => {
       for (let command of module.commands) {
         const commandOnGuild = fetchedCommandMap[command.name]
         const discordifyedCommand = PvPCraftCommandHelper.commandToDiscordCommands(command);
@@ -832,10 +832,10 @@ class PvPCraft {
         // equal check broken cause optional params are not sent by discord.
         if (!commandOnGuild || !PvPCraftCommandHelper.equal(commandOnGuild, discordifyedCommand)) {
           console.log("NOT EQUAL");
-          commandHelper.createGuildCommand(guildID, discordifyedCommand);
+          return commandHelper.createGuildCommand(guildID, discordifyedCommand).then(() => `Synced ${command.name}`);
         }
       }
-    }
+    }));
   }
 
   async syncCommandsToDiscord(moduleList: v2ModuleWrapper[]) {
@@ -850,7 +850,7 @@ class PvPCraft {
       return acc;
     }, {})
 
-    for (let module of moduleList) {
+    return Promise.all(moduleList.map(module => {
       for (let command of module.commands) {
         const commandOnGuild = fetchedCommandMap[command.name]
         const discordifyedCommand = PvPCraftCommandHelper.commandToDiscordCommands(command);
@@ -862,10 +862,10 @@ class PvPCraft {
         // equal check broken cause optional params are not sent by discord.
         if (!commandOnGuild || !PvPCraftCommandHelper.equal(commandOnGuild, discordifyedCommand)) {
           console.log("NOT EQUAL");
-          commandHelper.createCommand(discordifyedCommand);
+          return commandHelper.createCommand(discordifyedCommand).then(() => `Synced ${command.name}`);
         }
       }
-    }
+    }));
   }
 
   getModuleVariables() {
