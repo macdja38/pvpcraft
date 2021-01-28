@@ -2,13 +2,15 @@ import * as Eris from "eris";
 import Config from "../lib/Config";
 import ConfigDB from "../lib/ConfigDB";
 import Permissions from "../lib/Permissions";
-import { translateType } from "./translate";
+import { translateTypeCreator } from "./translate";
 import Feeds from "../lib/feeds";
 import MessageSender from "../lib/MessageSender";
 import SlowSender from "../lib/SlowSender";
 import PvPCraft from "../PvPCraft";
+import TaskQueue from "../lib/TaskQueue";
 
 export type ModuleOptions = {
+  taskQueue: TaskQueue;
   client: Eris.Client;
   restClient: Eris.Client,
   auth: Config;
@@ -21,7 +23,7 @@ export type ModuleOptions = {
   slowSender: SlowSender;
   pvpClient: any;
   pvpcraft: PvPCraft;
-  i10010n: translateType;
+  i10010n: translateTypeCreator;
   git: { commit: string, branch: string };
-  getChannelLanguage: (channelId: string, guildId?: string) => translateType
+  getChannelLanguage: (channelId: string, guildId?: string) => string
 }

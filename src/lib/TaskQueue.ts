@@ -2,7 +2,7 @@ import BaseDB from "./BaseDB";
 import { ModuleOptions } from "../types/lib";
 import * as Eris from "eris";
 import * as Sentry from "@sentry/node";
-import chrono from "chrono-node";
+import * as chrono from "chrono-node";
 import utils from "./utils";
 
 console.log(chrono);
@@ -10,10 +10,14 @@ console.log(chrono);
 const maxRetries = 3;
 
 interface Task {
-  id: string;
+  id?: string;
   retries?: number;
   action: string;
   meta: any;
+}
+
+interface TaskWithID extends Task {
+  id: string;
 }
 
 const TASK_QUEUE_TABLE_NAME = "taskQueue"
@@ -43,18 +47,18 @@ class TaskQueue {
     this.db.r.table(TASK_QUEUE_TABLE_NAME).filter((r: any) => r("expireTime").le(this.db.r.now())).run().then(this.processQueue);
   }
 
-  processQueue(queue: Task[]) {
+  processQueue(queue: TaskWithID[]) {
     queue.forEach(this.processTask);
   }
 
-  processTask(task: Task): Promise<void> {
+  processTask(task: TaskWithID): Promise<void> {
     return this.executeTask(task).then(() => this.removeQueueEntry(task)).catch(async (error) => {
       await this.incrementRetries(task, error)
       return;
     });
   }
 
-  incrementRetries(task: Task, error?: Error) {
+  incrementRetries(task: TaskWithID, error?: Error) {
     if (error) {
       Sentry.captureException(error, { extra: { task: task } });
     }
@@ -74,7 +78,7 @@ class TaskQueue {
     return Promise.reject("Unknown Task")
   }
 
-  removeQueueEntry({ id }: Task) {
+  removeQueueEntry({ id }: TaskWithID) {
     this.db.r.table(TASK_QUEUE_TABLE_NAME).get(id).delete().run();
   }
 

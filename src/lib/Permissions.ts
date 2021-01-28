@@ -170,7 +170,7 @@ Please use /perms list on that server to see the new configuration.`),
    * @param {string} node permission node to check, for example `"music.*"`
    * @returns {boolean} returns True if the user has the permission, false if not.
    */
-  checkUserChannel(user: User | Member, channel: GuildChannel, node: string): boolean {
+  checkUserChannel(user: { id: string }, channel: GuildChannel, node: string): boolean {
     let nodeArray;
     if (channel.guild) {
       let member = channel.guild.members.get(user.id);

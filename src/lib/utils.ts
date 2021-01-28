@@ -40,37 +40,34 @@ class Utils {
     let seconds = Math.ceil(divisor_for_seconds);
     if (days > 0) {
       return days + " Day" + s(days) + (hours ? ` and ${hours} Hour${s(hours)}` : "");
-    }
-    else if (hours > 0) {
+    } else if (hours > 0) {
       return hours + " Hour" + s(hours) + (minutes ? ` and ${minutes} Minute${s(minutes)}` : "");
-    }
-    else if (minutes > 0) {
+    } else if (minutes > 0) {
       return minutes + " Minute" + s(minutes) + (seconds ? ` and ${seconds} Second${s(seconds)}` : "");
-    }
-    else {
+    } else {
       return seconds + " Second" + s(seconds);
     }
   }
 
-  static resolveAllPromises<T>(array: Promise<T>[], timeout: number) {
+  static resolveAllPromises<T>(array: Promise<T>[], timeout?: number) {
     return new Promise<Promise<T>[]>((resolve, reject) => {
       let remaining = array.length;
       let results: Promise<T>[];
       let timer: NodeJS.Timeout;
 
-      const resolveWithResults = function() {
+      const resolveWithResults = function () {
         if (timeout) {
           clearTimeout(timer);
         }
         resolve(results);
       };
 
-      const promiseCatch = function(error: Error) {
+      const promiseCatch = function (error: Error) {
         remaining -= 1;
         if (remaining === 0) process.nextTick(resolveWithResults);
         throw error;
       };
-      const promiseThen = function(value: any) {
+      const promiseThen = function (value: any) {
         remaining -= 1;
         if (remaining === 0) process.nextTick(resolveWithResults);
         return value;
@@ -120,15 +117,12 @@ class Utils {
     let seconds = Math.ceil(divisor_for_seconds);
     if (days > 0) {
       return `${days}d` + (hours ? `, ${hours}h` : "");
-    }
-    else if (hours > 0) {
+    } else if (hours > 0) {
       return `${hours}h` + (minutes ? `, ${minutes}m` : "");
-    }
-    else if (minutes > 0) {
+    } else if (minutes > 0) {
       return `${minutes}m` + (seconds ? `, ${seconds}s` : "");
-    }
-    else {
-      return seconds + "s" ;
+    } else {
+      return seconds + "s";
     }
   }
 
@@ -159,10 +153,9 @@ class Utils {
    * @returns {string}
    */
   static clean(text: string) {
-    if (typeof(text) === "string") {
+    if (typeof text === "string") {
       return text.replace(/`/g, "`\u200B").replace(/@/g, "@\u200B");
-    }
-    else {
+    } else {
       return text;
     }
   }
@@ -193,10 +186,9 @@ class Utils {
    * @returns {*}
    */
   static removeBlocks(text: string) {
-    if (typeof(text) === "string") {
+    if (typeof text === "string") {
       return text.replace(/`/g, "｀").replace(/@/g, "@\u200B");
-    }
-    else {
+    } else {
       return text;
     }
   }
