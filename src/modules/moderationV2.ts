@@ -125,7 +125,7 @@ const colorMap = {
   "moderation.action.mute": "#BE3F3F", // TODO: Calculate Color
 };
 
-class moderationV2 {
+export class moderationV2 {
   private client: Eris.Client;
   private pvpcraft: PvPCraft;
   private messageSender: MessageSender;
@@ -250,12 +250,12 @@ class moderationV2 {
     }
   }
 
-  moderationAction(msg: Eris.Message<Eris.TextChannel>, command: Command, perms: Permissions, action: "ban" | "kick" | "unban") {
+  async moderationAction(msg: Eris.Message<Eris.TextChannel>, command: Command, perms: Permissions, action: "ban" | "kick" | "unban") {
     // locate user
-    let user: Eris.User | Eris.Member | undefined;
+    let user: Eris.User | undefined;
     let possibleId;
     if (command.targetUser) {
-      user = command.targetUser;
+      user = command.targetUser.user;
     } else if (command.args.length > 0) {
       if (msg.mentions.length > 0 && msg.mentions[0].id !== this.client.user.id) {
         user = msg.mentions[0];
@@ -289,34 +289,82 @@ class moderationV2 {
       return true;
     }
 
-    let args: (string | number)[] = [];
-    if (action === "ban") {
-      args.push(command.options.hasOwnProperty("time") ? command.options.time : 1);
-    }
-
-    let reason = command.options.reason;
-    if (reason) {
-      args.push(reason);
-    }
-    console.log("reason", reason);
-    if (!perms.check(msg, "moderation.reasonless")) {
-      if (!reason) {
-        command.reply(command.translate`Sorry but you do not have permission to ban without providing a reason eg \`${command.prefix}${action} --user @devCodex --reason Annoying\``);
-        return true;
+    let time = 1;
+    if (action === "ban" && command.options.hasOwnProperty("time")) {
+      let time = parseInt(command.options.time, 10);
+      if (isNaN(time)) {
+        return command.reply(command.translate`Ban time must be a valid number.`);
       }
     }
 
+    let reason = command.options.reason;
+    console.log("reason", reason);
+    if (!perms.check(msg, "moderation.reasonless")) {
+      if (!reason) {
+        return command.reply(command.translate`Sorry but you do not have permission to ban without providing a reason eg \`${command.prefix}${action} --user @devCodex --reason Annoying\``);
+      }
+    }
+
+    await this.moderationActionCore(msg.channel.guild, action, user, msg.author, targetUserId, time, reason);
+    return command.reply(command.translate`${user ? user.mention : possibleId} has been ${action}ned!`);
+  }
+
+  moderationActionCore(guild: Eris.Guild, action: "ban" | "unban" | "kick", targetUser: Eris.User | undefined, instigator: Eris.User, targetUserId: string, timeOrReason?: number | string, reasonOrNothing?: string) {
+    let reason: string | null = typeof timeOrReason === "string" ? timeOrReason : (typeof reasonOrNothing === "string" ? reasonOrNothing : null);
+
     // @ts-ignore
-    msg.channel.guild[`${action}Member` as const](targetUserId, ...args)
+    return guild[`${action}Member` as const](targetUserId, timeOrReason, reason)
       .then(() => {
-        // @ts-ignore
-        return this[moderationMethodNameMap[action]](msg.channel.guild, user, msg.author, reason, false);
+        return this[moderationMethodNameMap[action]](guild, targetUser ? targetUser : targetUserId, instigator, reason, null);
       })
       .catch((error: Error) => {
-        // @ts-ignore
-        return this[moderationMethodNameMap[action]](msg.channel.guild, user, msg.author, reason, error)
+        return this[moderationMethodNameMap[action]](guild, targetUser ? targetUser : targetUserId, instigator, reason, error)
       });
-    command.reply(command.translate`${user ? user.mention : possibleId} has been ${action}ned!`);
+  }
+
+  mute(guild: Eris.Guild,  translate: translateType, prefix: string | undefined, member: Eris.Member, instigator: Eris.Member, unmute?: string, reason?: string): string | Promise<string> {
+    // check to see if user has ban immunity
+    if (this.perms.checkUserGuild(member, guild, `moderation.immunity.mute`)) {
+      return translate`This user has the mute immunity permission \`moderation.immunity.mute\`, you may not mute them.`;
+    }
+
+    let muteRoleID = this.configDB.get("muteRole", false, { server: guild.id });
+    if (!muteRoleID) {
+      return translate`mute role not defined, try using ${prefix !== undefined ? prefix : "/"}setupmute to set it up.`
+    }
+    console.log(muteRoleID);
+
+    let newRoles = member.roles.slice(0);
+    newRoles.push(muteRoleID);
+
+    this.memberMuted(guild, member, instigator.user, reason, null);
+
+    return guild.editMember(member.id, { roles: newRoles }, `Member muted by <@${instigator.id}>${reason ? ` with reason: ${utils.clean(reason)}` : ""}`).then(() => {
+      if (unmute) {
+        const task = {
+          action: "unmute",
+          meta: {
+            userID: member.id,
+            guildID: guild.id,
+            roleIDs: [muteRoleID],
+            reason: reason,
+          },
+        };
+        try {
+          const endDate = this.taskQueue.estimateEndDateFromString(unmute);
+          this.taskQueue.schedule(task, endDate);
+          return translate`${member.mention} muted till ${endDate.toUTCString()}${reason ? ` with reason \`${utils.clean(reason)}\`` : ""}.`;
+        } catch (error) {
+          if (error.message.startsWith('Cannot parse time of ')) {
+            return translate`Unmute not scheduled because date could not be parsed, try \`3 hours\` or \`3 days\` for example. Note that the user was muted, to set a timeout run \`${prefix !== undefined ? prefix : "/"}mute\` with a valid date`;
+          } else {
+            throw error;
+          }
+        }
+      } else {
+        return translate`${member.mention} muted forever${reason ? ` with reason \`${utils.clean(reason)}\`` : ""}.`;
+      }
+    });
   }
 
   /**
@@ -401,54 +449,14 @@ class moderationV2 {
       triggers: ["mute"],
       permissionCheck: this.perms.genCheckCommand("moderation.mute"),
       channels: ["guild"],
-      execute: (command: GuildCommand) => {
+      execute: async (command: GuildCommand) => {
         const member = command.targetUser;
 
         if (!member) {
           return command.replyAutoDeny(command.translate`Please target a user by adding --user <user mention or name>`);
         }
 
-        // check to see if user has ban immunity
-        if (this.perms.checkUserChannel(member, command.msg.channel, `moderation.immunity.mute`)) {
-          return command.replyAutoDeny(command.translate`This user has the mute immunity permission \`moderation.immunity.mute\`, you may not mute them.`);
-        }
-
-        let muteRoleID = this.configDB.get("muteRole", false, { server: command.channel.guild.id });
-        if (!muteRoleID) {
-          return command.replyAutoDeny(command.translate`mute role not defined, try using ${command.prefix}setupmute to set it up.`)
-        }
-        console.log(muteRoleID);
-        let newRoles = member.roles.slice(0);
-        newRoles.push(muteRoleID);
-
-        this.memberMuted(command.channel.guild, member, command.member.user, command.options.reason, null);
-
-        return command.channel.guild.editMember(member.id, { roles: newRoles }, `Member muted by <@${command.author.id}>${command.options.reason ? ` with reason: ${utils.clean(command.options.reason)}` : ""}`).then(() => {
-          if (command.options.unmute) {
-            const task = {
-              action: "unmute",
-              meta: {
-                userID: member.id,
-                guildID: command.channel.guild.id,
-                roleIDs: [muteRoleID],
-                reason: command.options.reason,
-              },
-            };
-            try {
-              const endDate = this.taskQueue.estimateEndDateFromString(command.options.unmute);
-              this.taskQueue.schedule(task, endDate);
-              return command.replyAutoDeny(command.translate`${member.mention} muted till ${endDate.toUTCString()}${command.options.reason ? ` with reason \`${utils.clean(command.options.reason)}\`` : ""}.`);
-            } catch (error) {
-              if (error.message.startsWith('Cannot parse time of ')) {
-                return command.replyAutoDeny(`Unmute not scheduled because date could not be parsed, try \`3 hours\` or \`3 days\` for example. Note that the user was muted, to set a timeout run \`${command.prefix}mute\` with a valid date`);
-              } else {
-                throw error;
-              }
-            }
-          } else {
-            return command.replyAutoDeny(command.translate`${member.mention} muted forever${command.options.reason ? ` with reason \`${utils.clean(command.options.reason)}\`` : ""}.`);
-          }
-        });
+        return command.replyAutoDeny(await this.mute(command.channel.guild, command.translate.bind(command), command.prefix, member, command.member, command.options.unmute, command.options.reason));
       },
     }, {
       triggers: ["purge"],
@@ -573,25 +581,6 @@ class moderationV2 {
         setTimeout(updateStatusFunction, 500);
         status = setInterval(updateStatusFunction, 2500);
         return true;
-      },
-    }, {
-      triggers: ["killioscrash"],
-      permissionCheck: this.perms.genCheckCommand("moderation.automations.killioscrash"),
-      channels: ["guild"],
-      execute: (command: GuildCommand) => {
-        if (command.args.length < 1 || !["delete", "mute", "ban", "off"].includes(command.args[0].toLowerCase())) {
-          return command.replyAutoDeny(command.translate`Choose an action \`${command.prefix}killioscrash <delete|mute|ban|off>\` note that if \`setupmute has not been run the user will be banned instead of muted.`)
-        }
-        const lArg = command.args[0].toLowerCase();
-
-        let mode;
-        if (lArg === "off") {
-          mode = false;
-        } else {
-          mode = lArg;
-        }
-        this.configDB.set("killioscrash", mode, { server: command.channel.guild.id });
-        command.replyAutoDeny(command.translate`Action saved, ios users saved.`)
       },
     }];
   }
@@ -1204,7 +1193,7 @@ class moderationV2 {
    * @param {string | null} reason
    * @param {Error | null} error
    */
-  async memberBanned(server: Eris.Guild, user: Eris.User, instigator: Eris.User | null | undefined, reason: string | null | undefined, error: Error | null) {
+  async memberBanned(server: Eris.Guild, user: Eris.User | string, instigator: Eris.User | null | undefined, reason: string | null | undefined, error: Error | null) {
     const translate = this.i10010n(this.pvpcraft.getChannelLanguage("*", server.id));
     const node = instigator ? "moderation.action.ban" : "member.banned";
 
@@ -1248,7 +1237,7 @@ class moderationV2 {
       })
     }
 
-    this.sendHookedMessage(node, { user }, {
+    this.sendHookedMessage(node, { user: typeof user === "string" ? undefined : user }, {
       title: translate`User Banned`,
       fields,
     }, server.id);
@@ -1262,7 +1251,7 @@ class moderationV2 {
    * @param {string | null} reason
    * @param {Error | null} error
    */
-  async memberMuted(server: Eris.Guild, user: Eris.Member, instigator: Eris.User, reason: string | null | undefined, error: Error | null) {
+  async memberMuted(server: Eris.Guild, user: Eris.Member | string, instigator: Eris.User, reason: string | null | undefined, error: Error | null) {
     const translate = this.i10010n(this.pvpcraft.getChannelLanguage("*", server.id));
     const node = "moderation.action.mute";
 
@@ -1296,7 +1285,7 @@ class moderationV2 {
       })
     }
 
-    this.sendHookedMessage(node, { user }, {
+    this.sendHookedMessage(node, { user: typeof user === "string" ? undefined : user }, {
       title: translate`User Muted`,
       fields,
     }, server.id);
@@ -1310,7 +1299,7 @@ class moderationV2 {
    * @param {string | null} reason
    * @param {Error | null} error
    */
-  memberUnbanned(server: Eris.Guild, user: Eris.User, instigator: Eris.User | null, reason: string | null, error: Error) {
+  memberUnbanned(server: Eris.Guild, user: Eris.User | string, instigator: Eris.User | null, reason: string | null, error: Error | null) {
     const translate = this.i10010n(this.pvpcraft.getChannelLanguage("*", server.id));
     let fields: SlackWebhookField[] = [{
       title: translate`User`,
@@ -1342,7 +1331,7 @@ class moderationV2 {
       })
     }
 
-    this.sendHookedMessage(instigator ? "moderation.action.unban" : "member.unbanned", { user }, {
+    this.sendHookedMessage(instigator ? "moderation.action.unban" : "member.unbanned", { user: typeof user === "string" ? undefined : user }, {
       title: translate`User Unbanned`,
       fields,
     }, server.id);
@@ -1378,24 +1367,27 @@ class moderationV2 {
    * @param {string | null} reason
    * @param {Error | null} error
    */
-  memberRemoved(server: Eris.Guild, user: { id: string, username?: string, user: Eris.User } | Eris.Member, instigator: Eris.User | null, reason: string | null, error: Error | null) {
+  memberRemoved(server: Eris.Guild, user: { id: string, username?: string, user: Eris.User } | Eris.Member | Eris.User | string, instigator: Eris.User | null, reason: string | null, error: Error | null) {
     const translate = this.i10010n(this.pvpcraft.getChannelLanguage("*", server.id));
+
+    const userID = typeof user === "string" ? user : user.id;
 
     let fields: SlackWebhookField[] = [{
       title: translate`User`,
-      value: `<@${user.id}>`,
+      value: `<@${userID}>`,
       short: true,
     }, {
       title: translate`Age`,
-      value: utils.idToUTCString(user.id),
+      value: utils.idToUTCString(userID),
       short: true,
     }];
 
+    let maybeActualUser: Eris.User | undefined;
     if (typeof user !== "string") {
-      let username = user.username;
-      if (!username && user.user && user.user.username) {
-        username = user.user.username;
-      }
+      const actualUser = "user" in user ? user.user : user;
+      maybeActualUser = actualUser;
+
+      let username = actualUser.username;
 
       if (username) {
         fields.push({
@@ -1430,7 +1422,7 @@ class moderationV2 {
       })
     }
 
-    this.sendHookedMessage(instigator ? "moderation.action.kick" : "member.removed", { user }, {
+    this.sendHookedMessage(instigator ? "moderation.action.kick" : "member.removed", { user: maybeActualUser }, {
       title: translate`User Left or was Kicked`,
       fields,
     }, server.id);

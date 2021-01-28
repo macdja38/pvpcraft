@@ -27,10 +27,12 @@ export type CommandOptionWithoutChoice = CommandOptionBase & {
 
 export type CommandOptionWithChoice = CommandOptionBase & {
   type: ACT["INTEGER"] | ACT["STRING"]
-  choices?: {
+  choices?: readonly {
     name: string;
     value: string | number;
-  }
+  }[];
+  default?: boolean;
+  required?: boolean;
 }
 
 export type CommandOptionParameter = CommandOptionWithChoice | CommandOptionWithoutChoice;

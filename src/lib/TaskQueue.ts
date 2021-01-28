@@ -5,8 +5,6 @@ import * as Sentry from "@sentry/node";
 import * as chrono from "chrono-node";
 import utils from "./utils";
 
-console.log(chrono);
-
 const maxRetries = 3;
 
 interface Task {
@@ -107,12 +105,13 @@ class TaskQueue {
   }
 
   async unmute(meta: any) {
-    let options: { roles?: string[], mute: boolean } = { mute: false };
+    let options: { roles?: string[], mute?: boolean } = {};
     if (meta.roleIDs) {
       let member;
       try {
         member = await this.restClient.getRESTGuildMember(meta.guildID, meta.userID);
       } catch (error) {
+        Sentry.captureException(error);
         console.error("From this place", error);
         throw error;
       }
