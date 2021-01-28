@@ -45,6 +45,7 @@ import * as Sentry from "@sentry/node"
  */
 
 import utils from ".././utils";
+
 const regargs = /^((?:.|\n)*?)(?= -\w| (?:--|—)\w|$)/;
 const regAll = /(?:\s(?:--|—)(?=\S)(\w+)\s((?:.|\n)*?)|\s-(?=\w)(?!-)((?:.|\n)*?))(?= -\w| (?:--|—)\w|$)/g;
 
@@ -132,7 +133,7 @@ class Command {
   public user?: User;
   public role: any;
   public targetRole?: Role;
-  public targetUser?: User | Member;
+  public targetUser?: Member;
   public targetChannel?: Eris.Channel;
 
   /**
@@ -480,6 +481,7 @@ Please use /perms list on that server to see the new configuration.`),
 export interface GuildCommand extends Command {
   channel: Eris.GuildChannel;
   member: Eris.Member;
+  msg: Eris.Message<TextChannel>;
 }
 
 export default Command;
