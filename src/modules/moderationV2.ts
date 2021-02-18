@@ -322,7 +322,7 @@ export class moderationV2 {
       });
   }
 
-  mute(guild: Eris.Guild,  translate: translateType, prefix: string | undefined, member: Eris.Member, instigator: Eris.Member, unmute?: string, reason?: string): string | Promise<string> {
+  mute(guild: Eris.Guild, translate: translateType, prefix: string | undefined, member: Eris.Member, instigator: Eris.Member, unmute?: string, reason?: string): string | Promise<string> {
     // check to see if user has ban immunity
     if (this.perms.checkUserGuild(member, guild, `moderation.immunity.mute`)) {
       return translate`This user has the mute immunity permission \`moderation.immunity.mute\`, you may not mute them.`;
@@ -331,6 +331,10 @@ export class moderationV2 {
     let muteRoleID = this.configDB.get("muteRole", false, { server: guild.id });
     if (!muteRoleID) {
       return translate`mute role not defined, try using ${prefix !== undefined ? prefix : "/"}setupmute to set it up.`
+    }
+    const muteRole = guild.roles.get(muteRoleID);
+    if (!muteRole) {
+      return translate`It seems the mute role was deleted, try using ${prefix !== undefined ? prefix : "/"}setupmute to set it up again.`
     }
     console.log(muteRoleID);
 
