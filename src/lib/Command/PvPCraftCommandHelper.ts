@@ -52,7 +52,7 @@ export type SlashCommandSubcommandGroup = SlashCommandBase & {
 }
 
 export type SlashCommandSubcommandRoot = SlashCommandBase & {
-  subCommands: SlashCommandCommand[] | SlashCommandSubcommandGroup[];
+  subCommands: (SlashCommandCommand | SlashCommandSubcommandGroup)[];
 }
 
 export type SlashCommand = SlashCommandCommand | SlashCommandSubcommandRoot;
@@ -76,7 +76,7 @@ export class PvPInteractiveCommand {
   public id: string;
   public name: string;
   guild: Eris.Guild;
-  channel: Eris.Channel;
+  channel: Eris.TextableChannel;
   member: Eris.Member;
   data: any
   token: string;
@@ -88,7 +88,7 @@ export class PvPInteractiveCommand {
   private client: Eris.Client;
 
 
-  constructor(id: string, name: string, token: string, client: Eris.Client, configDB: ConfigDB, i10010n: (language: string) => translateType, getChannelLanguage: (channelID: string) => string, guild: Eris.Guild, channel: Eris.Channel, member: Eris.Member, data: any) {
+  constructor(id: string, name: string, token: string, client: Eris.Client, configDB: ConfigDB, i10010n: (language: string) => translateType, getChannelLanguage: (channelID: string) => string, guild: Eris.Guild, channel: Eris.TextableChannel, member: Eris.Member, data: any) {
     this.id = id;
     this.name = name;
     this.token = token;
@@ -209,9 +209,12 @@ export class PvPInteractiveCommand {
           } else {
             const member = await command.client.getRESTGuildMember(command.guild.id, rawVal as string);
             if (member) {
+              Sentry.captureMessage("Had to fall back to rest to get a member mentioned in a command.");
+
               resolvedAcc[option.name] = member;
+            } else {
+              Sentry.captureMessage("Could not find a member mentioned in a command.");
             }
-            Sentry.captureMessage("Could not find a member mentioned in a command")
           }
 
           break;
@@ -255,8 +258,8 @@ export class PvPCraftCommandHelper {
     let options: CommandRoot["options"] = [];
 
     if ("subCommands" in command) {
+      // @ts-ignore
       options = command.subCommands
-        // @ts-ignore
         .map(
           (subCommand: SlashCommandCommand | SlashCommandSubcommandGroup): CommandOption => {
             if ("execute" in subCommand) {
@@ -312,6 +315,6 @@ export class PvPCraftCommandHelper {
       return;
     }
 
-    return new PvPInteractiveCommand(interaction.id, interaction.data.name, interaction.token, client, configDB, i10010n, getChannelLanguage, guild, channel, member, interaction.data);
+    return new PvPInteractiveCommand(interaction.id, interaction.data.name, interaction.token, client, configDB, i10010n, getChannelLanguage, guild, channel as Eris.TextableChannel, member, interaction.data);
   }
 }
