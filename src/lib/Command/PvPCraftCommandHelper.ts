@@ -301,6 +301,11 @@ export class PvPCraftCommandHelper {
 
     if (!guild) {
       console.log("WARN NO GUILD ON COMMAND");
+      const noGuildResponse: WebhookPayloadWithFlags = {
+        content: "Sorry, this command must be used from within a server.",
+      };
+      client.requestHandler.request("POST", `/interactions/${interaction.id}/${interaction.token}/callback`, false, { type: INTERACTION_RESPONSE_TYPE.REPLY, data: noGuildResponse }).catch(error => Sentry.captureException(error));
+      Sentry.captureMessage("Command used in DM");
       return;
     }
 
@@ -312,6 +317,17 @@ export class PvPCraftCommandHelper {
 
     if (!channel) {
       console.log("WARN NO CHANNEL IN GUILD CACHE FOR COMMAND");
+      Sentry.captureMessage("Command used in Guild in a channel we don't know about", {
+        extra: {
+          guildID: guild.id,
+          channelID: interaction.channel_id,
+        }
+      });
+      const noChannelResponse: WebhookPayloadWithFlags = {
+        content: "Sorry, something went wrong executing your command. Please try again in a minute.",
+      };
+      client.requestHandler.request("POST", `/interactions/${interaction.id}/${interaction.token}/callback`, false, { type: INTERACTION_RESPONSE_TYPE.REPLY, data: noChannelResponse }).catch(error => Sentry.captureException(error));
+      Sentry.captureMessage("Command used in DM");
       return;
     }
 
