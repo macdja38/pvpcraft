@@ -347,6 +347,7 @@ export class moderationV2 {
       if (unmute) {
         const task = {
           action: "unmute",
+          guildID: guild.id,
           meta: {
             userID: member.id,
             guildID: guild.id,

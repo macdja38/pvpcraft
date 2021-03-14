@@ -12,7 +12,6 @@ import TaskQueue from "../lib/TaskQueue";
 export type ModuleOptions = {
   taskQueue: TaskQueue;
   client: Eris.Client;
-  restClient: Eris.Client,
   auth: Config;
   config: Config;
   configDB: ConfigDB;

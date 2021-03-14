@@ -9,6 +9,9 @@ import R from "rethinkdbdash";
 
 import * as Sentry from "@sentry/node";
 
+type TableType = ReturnType<BaseDB["r"]["table"]>;
+type TableIndexOperationType = ReturnType<TableType["indexCreate"]>
+
 /**
  * The base of all the classes that interact with a database
  * @class BaseDB
@@ -56,6 +59,16 @@ class BaseDB {
       // @ts-ignore
       .branch(true,
         this.r.table(this.table).indexCreate(indexName))
+      .run();
+  }
+
+  ensureComplexIndex(indexName: string, create: (table: TableType) => TableIndexOperationType) {
+    console.log(chalk.cyan(`Ensuring the COMPLEX index ${indexName} exists on table ${this.table}.`));
+    return this.r.table(this.table).indexList()
+      .contains(indexName)
+      // @ts-ignore
+      .branch(true,
+        create(this.r.table(this.table)))
       .run();
   }
 

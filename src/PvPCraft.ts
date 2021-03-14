@@ -97,7 +97,7 @@ class PvPCraft {
   moduleList: ModuleWrapper[];
   v2ModuleList: v2ModuleWrapper[];
   middlewareList: MiddlewareWrapper[];
-  private shardId: number;
+  private shardID: number;
   private shardCount: number;
   private readyPromise: Promise<boolean>;
   private resolveReadyPromise!: (value: (PromiseLike<boolean> | boolean)) => void;
@@ -109,7 +109,6 @@ class PvPCraft {
   private r: any;
   private messageSender!: MessageSender;
   private slowSender!: SlowSender;
-  private restClient!: Eris.Client;
   private taskQueue!: TaskQueue;
   private i10010n: any;
   private permsDB!: ConfigDB;
@@ -132,7 +131,7 @@ class PvPCraft {
     this.moduleList = [];
     this.v2ModuleList = [];
     this.middlewareList = [];
-    this.shardId = parseInt(process.env.id || "0", 10);
+    this.shardID = parseInt(process.env.id || "0", 10);
     this.shardCount = parseInt(process.env.shards || "1", 10);
     this.readyPromise = new Promise<boolean>((resolve /*, reject */) => {
       this.resolveReadyPromise = resolve;
@@ -316,7 +315,7 @@ class PvPCraft {
   }
 
   readyTaskQueue() {
-    this.taskQueue = new TaskQueue({ r: this.r, client: this.client, restClient: this.restClient });
+    this.taskQueue = new TaskQueue({ r: this.r, client: this.client, shardCount: this.shardCount, shardID: this.shardID });
   }
 
   resolveWhenReady() {
@@ -555,20 +554,9 @@ class PvPCraft {
         roles: true,
         users: true,
       },
-      firstShardID: this.shardId,
-      lastShardID: this.shardId,
+      firstShardID: this.shardID,
+      lastShardID: this.shardID,
       maxShards: this.shardCount,
-      restMode: true,
-      defaultImageFormat: "png",
-    });
-    this.restClient = new Eris.Client(`Bot ${token}`, {
-      autoreconnect: true,
-      compress: true,
-      allowedMentions: {
-        everyone: true,
-        roles: true,
-        users: true,
-      },
       restMode: true,
       defaultImageFormat: "png",
     });
@@ -879,7 +867,6 @@ class PvPCraft {
   getModuleVariables() {
     return {
       client: this.client,
-      restClient: this.restClient,
       config: this.fileConfig,
       raven: Sentry,
       git: this.git,
