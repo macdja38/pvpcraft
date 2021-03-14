@@ -429,6 +429,8 @@ class PvPCraft {
   onDisconnect() {
     Sentry.captureMessage("Disconnected", { level: Severity.Info })
     console.log(chalk.red("Disconnect event called"));
+    this.taskQueue.onDisconnect();
+
     for (let module of this.moduleList) {
       if (module.module.onDisconnect) {
         module.module.onDisconnect();
@@ -717,6 +719,8 @@ class PvPCraft {
     this.id = this.client.user.id;
     console.log("Default prefix", this.prefix);
     this.name = this.client.user.username;
+
+    this.taskQueue.onReady();
 
     let oldModuleAndWareList: (MiddlewareWrapper | ModuleWrapper)[] = this.middlewareList.slice(0);
     oldModuleAndWareList.push(...this.moduleList);

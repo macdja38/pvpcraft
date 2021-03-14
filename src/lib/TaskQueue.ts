@@ -35,6 +35,7 @@ class TaskQueue {
   private db: BaseDB;
   private shardCount: number;
   private shardID: number;
+  private interval?: NodeJS.Timeout;
 
   constructor({ r, client, shardID, shardCount }: { r: any, client: Eris.Client; shardCount: number, shardID: number }) {
     this.client = client;
@@ -48,7 +49,20 @@ class TaskQueue {
     this.removeQueueEntry = this.removeQueueEntry.bind(this);
     this.processTask = this.processTask.bind(this);
     this.incrementRetries = this.incrementRetries.bind(this);
-    setInterval(this.runExpiredTasks, 1000);
+  }
+
+  onReady() {
+    if (this.interval) {
+      clearInterval(this.interval);
+    }
+    this.interval = setInterval(this.runExpiredTasks, 1000);
+  }
+
+  onDisconnect() {
+    if (this.interval) {
+      clearInterval(this.interval);
+      this.interval = undefined;
+    }
   }
 
   runExpiredTasks() {
