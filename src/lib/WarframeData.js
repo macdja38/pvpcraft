@@ -20,7 +20,7 @@ class WarframeData {
   constructor({fileName}) {
     this._fileName = fileName;
     this._filePath = path.join(__dirname, `../warframeData/${this._fileName}.json`);
-    this._fileExampleUrl = `https://raw.githubusercontent.com/VoiDGlitch/WarframeData/master/JSON/${this._fileName}.json`;
+    this._fileExampleUrl = `https://i.pvpcraft.ca/warframe/${this._fileName}.json`;
     this.reload();
   }
 
