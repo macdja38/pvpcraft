@@ -3,20 +3,20 @@
  */
 "use strict";
 
-const parseState = require('../lib/parseState');
+import parseState from "../lib/parseState";
 
 import utils from "../lib/utils";
 
-const WorldState = require("../lib/WorldState");
+import WorldState from "../lib/WorldState";
 
-const BaseDB = require("../lib/BaseDB");
+import BaseDB from "../lib/BaseDB";
 
 let master;
 if (process.env.id == 0 || process.env.dev) {
   master = true;
 }
 
-const request = require('request');
+import request from "request";
 
 // const DBEventState = require('../lib/dbEventState');
 

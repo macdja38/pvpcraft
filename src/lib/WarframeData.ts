@@ -3,45 +3,51 @@
  */
 "use strict";
 
-let fs = require("fs");
-let path = require("path");
-let https = require("https");
+import fs from "fs";
+import path from "path";
+import https from "https";
 
 /**
  * Source for constant (between updates) copies of warframe data, eg languages and other data
  * @class WarframeData
  */
 class WarframeData {
+  private _fileName: string;
+  private _filePath: string;
+  private _fileExampleUrl: string;
+  private _data: any;
+
   /**
    * Instantiates a config object.
    * @param {Object} options
    * @param {string} options.fileName
    */
-  constructor({fileName}) {
+  constructor({ fileName }: { fileName: string }) {
     this._fileName = fileName;
-    this._filePath = path.join(__dirname, `../warframeData/${this._fileName}.json`);
+    this._filePath = path.join(__dirname, `../../warframeData/${this._fileName}.json`);
     this._fileExampleUrl = `https://i.pvpcraft.ca/warframe/${this._fileName}.json`;
     this.reload();
   }
 
   reload() {
-    let rawFile, downloadPromise;
+    let rawFile: string
+    let downloadPromise;
     try {
       rawFile = fs.readFileSync(this._filePath, "utf8")
     } catch (err) {
       if (err.code === "ENOENT") {
         console.error(`Config file ${this._fileName} not found in ${this._filePath} attempting to copy default from ${this._fileExampleUrl} Please download it if it does not exist.`);
         downloadPromise = this.downloadAndWrite();
-        downloadPromise.then(()=> {
+        downloadPromise.then(() => {
           console.error(`Warframe resource file ${this._fileName} was copied to ${this._filePath}.`);
         }).catch((error) => {
           console.error(error);
           throw new Error(`Unable to fetch ${this._fileName} Please add it to the warframeData folder or disable the warframe module.`)
         })
       }
+      return;
     }
 
-    if (downloadPromise) return;
     try {
       this._data = JSON.parse(rawFile);
     } catch (err) {
@@ -69,11 +75,11 @@ class WarframeData {
    * @param {boolean | undefined} options.failThrow
    * @returns {*}
    */
-  get(key, options = {}) {
+  get(key: string, options: { fallBack?: any, failThrow?: boolean } = {}) {
     let failThrow;
     if (options.hasOwnProperty("failThrow")) failThrow = `Error Property ${key} does not exist on ${this._fileName}`;
     let keys = key.split(".");
-    return this._recursiveGet(keys, this._data, {fallback: options.fallBack, failThrow});
+    return this._recursiveGet(keys, this._data, { fallback: options.fallBack, failThrow });
   }
 
   /**
@@ -93,18 +99,18 @@ class WarframeData {
    * @returns {*}
    * @private
    */
-  _recursiveGet(keys, data, {fallback, failThrow}) {
+  _recursiveGet(keys: string[], data: any, { fallback, failThrow }: { fallback?: any, failThrow?: string }): string | any {
     if (keys.length === 0) {
       return data;
     }
     let key = keys.shift();
-    if (typeof data === "object" && data.hasOwnProperty(key)) {
-      return this._recursiveGet(keys, data[key], {fallback, failThrow});
+    if (key && typeof data === "object" && data.hasOwnProperty(key)) {
+      return this._recursiveGet(keys, data[key], { fallback, failThrow });
     } else {
       if (fallback) return fallback;
-      if (failThrow) throw failThrow;
+      if (failThrow) throw new Error(failThrow);
     }
   }
 }
 
-module.exports = WarframeData;
+export default WarframeData;
