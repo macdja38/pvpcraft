@@ -3,8 +3,8 @@
  */
 "use strict";
 
-const BaseDB = require("./BaseDB");
-const cluster = require("cluster");
+import BaseDB from "./BaseDB";
+import cluster from "cluster";
 
 // preview here http://jsonviewer.stack.hu/#http://content.warframe.com/dynamic/worldState.php
 
@@ -13,12 +13,17 @@ if (cluster.worker && cluster.worker.id == 1) {
   master = true;
 }
 
+const WORLDSTATE_TABLE = "worldState";
+
 /**
  * Class designed to hold the current warframe world's state as fetched from the world state api.
  * @class WorldState
  * @extends BaseDB
  */
 class WorldState extends BaseDB {
+  private _states: { ps4: string; pc: string; xb1: string };
+  private interval?: NodeJS.Timeout;
+
   static get availableStates() {
     return {
       "pc": "http://content.warframe.com/dynamic/worldState.php",
@@ -33,9 +38,9 @@ class WorldState extends BaseDB {
    * @param {boolean | number} autoFetch automatically update the state
    * @param {Object} states
    */
-  constructor(r, autoFetch = false, states = WorldState.availableStates) {
-    super(r);
-    this.ensureTable("worldState");
+  constructor(r: any, autoFetch: false | number = false, states = WorldState.availableStates) {
+    super(r, WORLDSTATE_TABLE);
+    this.ensureTable(WORLDSTATE_TABLE);
     this._states = states;
     if (autoFetch) {
       this.fetch = this.fetch.bind(this);
@@ -48,7 +53,7 @@ class WorldState extends BaseDB {
    * @param {String} platform
    * @returns {Promise<Object>}
    */
-  get(platform) {
+  get(platform: string) {
     return this.r.table("worldState").get(platform).run();
   }
 
@@ -64,7 +69,8 @@ class WorldState extends BaseDB {
     return Promise.all(Object.entries(this._states).map(([key, value]) => this.r
       .table("worldState")
       .insert(
-        this.r.http(value, {resultFormat: "json"})
+        // @ts-ignore
+        this.r.http(value, { resultFormat: "json" })
           .merge({id: key}), {conflict: "update"}).run()));
   }
 }

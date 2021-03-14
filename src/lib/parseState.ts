@@ -1,14 +1,16 @@
 /**
  * Created by macdja38 on 2016-04-09.
  */
+
 "use strict";
 
-let WarframeData = require("./WarframeData");
+import WarframeData from "./WarframeData";
 let languages = new WarframeData({fileName: "Languages"});
 let missionDecks = new WarframeData({fileName: "MissionDecks"});
 let starChart = new WarframeData({fileName: "StarChart"});
-let paths = require('../../Paths.json');
+let paths = new WarframeData({fileName: "Paths"});
 import utils from "./utils";
+import Eris from "eris";
 
 let ActiveMissionMap = {
   VoidT1: {
@@ -25,6 +27,8 @@ let ActiveMissionMap = {
   }
 };
 
+type Reward = {ItemType: string, ItemCount: number, ItemInfo?: any};
+
 /**
  * WorldState parser
  */
@@ -36,12 +40,12 @@ class ParseState {
    * @param {Object} state
    * @returns {{embed: {title: string, fields: Array, footer: {text: string}, timestamp: string}, itemString: string}}
    */
-  static buildAlertEmbed(alert, platform, state) {
+  static buildAlertEmbed(alert: any, platform: string, state: any) {
     const title = "Warframe Alert";
-    let rewards = [];
+    let rewards: Reward[] = [];
     let reward = alert.MissionInfo.missionReward;
     if (reward.countedItems) {
-      rewards = reward.countedItems.map(i => {
+      rewards = reward.countedItems.map((i: any) => {
         let possibleInfo = ParseState.getInfo(i.ItemType);
         if (possibleInfo) {
           i.ItemInfo = possibleInfo;
@@ -50,9 +54,9 @@ class ParseState {
       })
     }
     if (reward.items) {
-      rewards.push(...reward.items.map(i => {
-        let thing = {ItemType: i, ItemCount: 1};
-        let possibleInfo = ParseState.getInfo(i);
+      rewards.push(...reward.items.map((path: string) => {
+        let thing: Reward = {ItemType: path, ItemCount: 1 };
+        let possibleInfo = ParseState.getInfo(path);
         if (possibleInfo) {
           thing.ItemInfo = possibleInfo;
         }
@@ -61,7 +65,7 @@ class ParseState {
     }
     let itemString;
     if (rewards) {
-      itemString = rewards.map(i => ParseState.getName(i.ItemType)).join(" ").toLowerCase();
+      itemString = rewards.map((i) => ParseState.getName(i.ItemType)).join(" ").toLowerCase();
     }
     const fields = [
       {name: "Remaining", value: ParseState.toTimeDifference(state, alert.Expiry), inline: true},
@@ -86,7 +90,7 @@ class ParseState {
       }
       fields.push({name: "Credits", value: reward.credits, inline: true})
     }
-    let embed = {
+    let embed: Eris.EmbedOptions = {
       title,
       fields,
       footer: {text: "Expires"},
@@ -114,7 +118,7 @@ class ParseState {
    * Get's the locations a thing can drop from
    * @param {string} part
    */
-  static getLocations(part) {
+  static getLocations(part: string) {
     let data = missionDecks.getData();
     let partsList = [];
     let lvl2Keys = ["Rotation A", "Rotation B", "Rotation C"];
@@ -128,10 +132,11 @@ class ParseState {
    * @param {string} path
    * @returns {string}
    */
-  static getName(path) {
+  static getName(path: string) {
     try {
-      if (!paths.hasOwnProperty(path)) return path;
-      let item = paths[path];
+      const pathsData = paths.getData();
+      if (!pathsData.hasOwnProperty(path)) return path;
+      let item = pathsData[path];
       if (!item.hasOwnProperty("LocalizeTag")) return path;
       let languageString = item.LocalizeTag;
       let localisedString = languages.get(languageString);
@@ -149,7 +154,7 @@ class ParseState {
    * @param {string} path
    * @returns {string}
    */
-  static getLevel(path) {
+  static getLevel(path: string) {
     try {
       let names_path = languages.get(path);
       if (names_path) {
@@ -168,9 +173,10 @@ class ParseState {
    * @param {String} path
    * @returns {Object|Null}
    */
-  static getInfo(path) {
-    if (!paths.hasOwnProperty(path)) return null;
-    return paths[path];
+  static getInfo(path: string) {
+    const pathsData = paths.getData();
+    if (!pathsData.hasOwnProperty(path)) return null;
+    return pathsData[path];
   }
 
   /**
@@ -179,7 +185,7 @@ class ParseState {
    * @param {{$date: {$numberLong: number}}} itemTime time object
    * @returns {string}
    */
-  static toTimeDifference(state, itemTime) {
+  static toTimeDifference(state: { Time: number }, itemTime: {$date: {$numberLong: number}}) {
     return utils.secondsToTime(itemTime.$date.$numberLong / 1000 - state.Time);
   }
 
@@ -189,7 +195,7 @@ class ParseState {
    * @param {{$date: {$numberLong: number}}} itemTime items time object
    * @returns {string}
    */
-  static toTimeDifferenceInPast(state, itemTime) {
+  static toTimeDifferenceInPast(state: { Time: number }, itemTime: {$date: {$numberLong: number}}) {
     return utils.secondsToTime(state.Time - itemTime.$date.$numberLong / 1000);
   }
 
@@ -198,7 +204,7 @@ class ParseState {
    * @param {{$date: {$numberLong: number}}} itemTime items time object
    * @returns {string}
    */
-  static toISOTime(itemTime) {
+  static toISOTime(itemTime: { $date: {$numberLong: string}}) {
     return new Date(parseInt(itemTime.$date.$numberLong)).toISOString()
   }
 
@@ -207,7 +213,7 @@ class ParseState {
    * @param {string} name The solar nodes name eg `SolNode10`
    * @returns {Object} node data
    */
-  static getNode(name) {
+  static getNode(name: string) {
     try {
       return starChart.get(name);
     } catch (error) {
@@ -222,7 +228,7 @@ class ParseState {
    * @param {string} name The solar nodes name eg `SolNode10`
    * @returns {string} node name
    */
-  static getNodeName(name) {
+  static getNodeName(name: string) {
     try {
       let node = starChart.get(name);
       if (!node) return name;
@@ -239,7 +245,8 @@ class ParseState {
    * @param {string} string
    * @returns {string}
    */
-  static getFaction(string) {
+  static getFaction(string: string) {
+    // @ts-ignore
     let FactionName = string.match(/_(\w+)/)[1];
     return FactionName[0] + FactionName.substring(1).toLowerCase();
   }
@@ -249,7 +256,8 @@ class ParseState {
    * @param {string} string
    * @returns {string}
    */
-  static getMissionType(string) {
+  static getMissionType(string: string) {
+    // @ts-ignore
     let FactionName = string.match(/_(\w+)/)[1];
     return ParseState._toTitleCase(FactionName.replace(/_/g, " "));
   }
@@ -259,7 +267,7 @@ class ParseState {
    * @param {string} string
    * @returns {*}
    */
-  static getSortieModifier(string) {
+  static getSortieModifier(string: string) {
     if (string.startsWith("SORTIE_MODIFIER_")) {
       let strippedString = string.substring(16).replace(/_/g, " ");
       return strippedString[0] + strippedString.substring(1).toLowerCase();
@@ -272,7 +280,7 @@ class ParseState {
    * @param {string} i
    * @returns {*}
    */
-  static getTierName(i) {
+  static getTierName(i: "VoidT1" | "VoidT2" | "VoidT3" | "VoidT4") {
     return ActiveMissionMap[i];
   }
 
@@ -282,11 +290,11 @@ class ParseState {
    * @returns {string}
    * @private
    */
-  static _toTitleCase(str) {
+  static _toTitleCase(str: string) {
     return str.replace(/\w\S*/g, function (txt) {
       return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
     });
   }
 }
 
-module.exports = ParseState;
+export default ParseState;
