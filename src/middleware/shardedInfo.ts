@@ -44,7 +44,6 @@ const shardedInfo: MiddlewareConstructor = class shardedInfo implements Middlewa
    * @param {Object} e
    * @param {Eris} e.client Eris client
    * @param {Config} e.config File based config
-   * @param {Raven?} e.raven Raven error logging system
    * @param {Config} e.auth File based config for keys and tokens and authorisation data
    * @param {ConfigDB} e.configDB database based config system, specifically for per guild settings
    * @param {R} e.r Rethinkdb r
@@ -297,6 +296,7 @@ const shardedInfo: MiddlewareConstructor = class shardedInfo implements Middlewa
    * get's called every Command, (unless a previous middleware on the list override it.) can modify message.
    * @param msg
    * @param command
+   * @param perms
    * @returns command || Boolean object (may be modified.)
    */
   changeCommand(msg: Message, command: Command, perms: Permissions): Command | false {
