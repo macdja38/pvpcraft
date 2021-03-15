@@ -82,7 +82,7 @@ class template {
   }
 
   /**
-   * get's called every Command, (unless a previous middleware on the list override it.) can modify message.
+   * Get's called every Command, (unless a previous middleware on the list override it.) can modify message.
    * @param {Message} msg
    * @param {Command} command
    * @returns {Command | boolean}

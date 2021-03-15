@@ -1,8 +1,12 @@
-import { ModuleOptions } from "../types/lib";
+import { ModuleOptions, MiddlewareOptions } from "../types/lib";
 import Command, { GuildCommand } from "../lib/Command/Command";
 import Eris, { Message } from "eris";
 import Permissions from "../lib/Permissions";
 import { SlashCommand } from "../lib/Command/PvPCraftCommandHelper";
+
+export interface MiddlewareConstructor {
+  new(e: MiddlewareOptions): Middleware;
+}
 
 export interface ModuleConstructor {
   new(e: ModuleOptions): Module;
@@ -75,7 +79,9 @@ export interface v2Module extends Omit<Module, "getCommands" | "getContent"> {
   getContent?(): { name: string; description: string; key: string, permNode: string; commands: SlashCommand[] }
 }
 
-export interface Middleware extends Module {
+type MiddlewareBase = Omit<Module, "checkMisc" | "getCommands"> & Partial<Pick<Module, "getCommands">>;
+
+export interface Middleware extends MiddlewareBase {
   /**
    * Get's called every message.
    * @param {Message} msg
@@ -98,5 +104,9 @@ export interface Middleware extends Module {
    * @param perms
    * @returns {Command | boolean}
    */
-  changeCommand?(msg: Message, command: Command | false, perms: Permissions): Command | false
+  changeCommand?(msg: Message, command: Command, perms: Permissions): Command | false
 }
+
+export type ModuleWrapper = { commands: ModuleCommand[], module: Module };
+export type v2ModuleWrapper = { commands: SlashCommand[], module: v2Module };
+export type MiddlewareWrapper = { commands: ModuleCommand[], ware: Middleware };

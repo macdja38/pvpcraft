@@ -28,7 +28,7 @@ import chalk from "chalk";
 import SlowSender from "./lib/SlowSender";
 import Feeds from "./lib/feeds";
 import R from "rethinkdbdash";
-import { Middleware, Module, ModuleCommand, v2Module } from "./types/moduleDefinition";
+import { Middleware, MiddlewareWrapper, Module, ModuleCommand, ModuleWrapper, v2Module, v2ModuleWrapper } from "./types/moduleDefinition";
 import { translateType } from "./types/translate";
 import fetch, { Headers } from "node-fetch";
 import { DiscordCommandHelper } from "./lib/Command/DiscordCommandHelper";
@@ -46,6 +46,7 @@ import {
   Interaction,
 } from "./lib/Command/CommandTypes";
 import { toJSON } from "./lib/toJSON";
+import { ModuleOptions } from "./types/lib";
 
 require("util").inspect.defaultOptions.depth = 2;
 const cluster = require("cluster");
@@ -81,10 +82,6 @@ process.on('SIGABRT', (...args) => {
   process.exit(128 + 6);
 });
 
-type ModuleWrapper = { commands: ModuleCommand[], module: Module };
-type v2ModuleWrapper = { commands: SlashCommand[], module: v2Module };
-type MiddlewareWrapper = { commands: ModuleCommand[], ware: Middleware };
-
 /**
  * @prop {Config} fileConfig
  * @prop {Eris} client
@@ -103,7 +100,6 @@ class PvPCraft {
   private resolveReadyPromise!: (value: (PromiseLike<boolean> | boolean)) => void;
   private client!: Eris.Client;
   private pvpClient: any;
-  git?: { commit: string, branch: string };
   private configDB!: ConfigDB;
   private translate: (channelID: string, guildID?: string) => translateType;
   private r: any;
@@ -116,6 +112,7 @@ class PvPCraft {
   private analytics!: Analytics;
   name!: string;
   id!: string;
+  git!: { commit: string, branch: string };
   private perms!: Permissions;
 
   /**
@@ -315,7 +312,12 @@ class PvPCraft {
   }
 
   readyTaskQueue() {
-    this.taskQueue = new TaskQueue({ r: this.r, client: this.client, shardCount: this.shardCount, shardID: this.shardID });
+    this.taskQueue = new TaskQueue({
+      r: this.r,
+      client: this.client,
+      shardCount: this.shardCount,
+      shardID: this.shardID,
+    });
   }
 
   resolveWhenReady() {
@@ -591,57 +593,47 @@ class PvPCraft {
     })
   }
 
-  readyRaven() {
-    return new Promise((resolve) => {
-      let sentryEnv = this.fileConfig.get("sentryEnv", "");
+  async readyRaven() {
+    const getLong = new Promise<string>((resolve) => git.long(resolve));
+    const getBranch = new Promise<string>((resolve) => git.branch(resolve));
 
-      if (this.fileAuth.get("sentryURL", "") !== "") {
-        console.log(chalk.yellow("Sentry Started"));
-        git.long((commit) => {
-          git.branch((branch) => {
-            this.git = { commit, branch };
-            let sentryConfig: Record<string, undefined | string | boolean> = {
-              release: commit + "-" + branch,
-              debug: true,
-              dsn: this.fileAuth.get("sentryURL", undefined),
-            };
-            if (sentryEnv) {
-              sentryConfig.environment = sentryEnv
-            }
-            Sentry.init(sentryConfig);
+    const [commit, branch] = await Promise.all([getLong, getBranch])
 
-            Sentry.configureScope(function (scope) {
-              if (process.env.id) {
-                scope.setTag("shardId", process.env.id);
-              }
-              resolve(true);
-            });
+    this.git = { commit, branch };
 
-            Sentry.addGlobalEventProcessor(function (event: Sentry.Event, hint?: Sentry.EventHint) {
-              console.log(chalk.green(`Error reported to sentry!: ${event.event_id}`));
-              if (process.env.dev == "true") {
-                console.log(event);
-              }
-              return event;
-            });
+    let sentryEnv = this.fileConfig.get("sentryEnv", "");
 
-            /* this.raven.on("logged", function (e) {
-              console.log(chalk.green("Error reported to sentry!: ") + e);
-            });
+    if (this.fileAuth.get("sentryURL", "") !== "") {
+      console.log(chalk.yellow("Sentry Started"));
 
-            this.raven.on("error", function (e) {
-              if (process.env.dev == "true") {
-                console.error("Could not report an event to sentry:", e);
-              } else {
-                console.error("Could not report an event to sentry");
-              }
-            }); */
-          })
-        });
-      } else {
-        resolve(true);
+      let sentryConfig: Record<string, undefined | string | boolean> = {
+        release: commit + "-" + branch,
+        debug: true,
+        dsn: this.fileAuth.get("sentryURL", undefined),
+      };
+      if (sentryEnv) {
+        sentryConfig.environment = sentryEnv
       }
-    })
+      Sentry.init(sentryConfig);
+
+      Sentry.configureScope(function (scope) {
+        if (process.env.id) {
+          scope.setTag("shardId", process.env.id);
+        }
+        return true;
+      });
+
+      Sentry.addGlobalEventProcessor(function (event: Sentry.Event, hint?: Sentry.EventHint) {
+        console.log(chalk.green(`Error reported to sentry!: ${event.event_id}`));
+        if (process.env.dev == "true") {
+          console.log(event);
+        }
+        return event;
+      });
+
+    } else {
+      return true;
+    }
   }
 
   captureMissingTranslation(errorType: string, data: { template: string[] } & Record<string, unknown>, message: string) {
@@ -868,7 +860,7 @@ class PvPCraft {
     }).flat());
   }
 
-  getModuleVariables() {
+  getModuleVariables(): ModuleOptions & { raven: typeof Sentry } {
     return {
       client: this.client,
       config: this.fileConfig,
@@ -888,6 +880,8 @@ class PvPCraft {
       taskQueue: this.taskQueue,
       i10010n: this.i10010n,
       getChannelLanguage: this.getChannelLanguage,
+      shardCount: this.shardCount,
+      shardID: this.shardID,
     };
   }
 

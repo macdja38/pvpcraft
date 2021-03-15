@@ -13,7 +13,7 @@ import BaseDB from "./BaseDB";
  */
 class StandardDB extends BaseDB {
   private _ids: string[];
-  private data: { [keyof: string]: any};
+  data: { [keyof: string]: any};
   private _cursor?: any;
 
   /**
@@ -116,7 +116,7 @@ class StandardDB extends BaseDB {
    * @param {Object?} options takes an options value, supports {server: id} to get per server values of config settings.
    *
    */
-  set(key: string, value: any, options: { server?: string } = {}) {
+  set(key: string | null, value: any, options: { server?: string } = {}) {
     if (options.hasOwnProperty("server") && options.server) {
       if (key === null) {
         this.data[options.server] = value;
@@ -127,6 +127,9 @@ class StandardDB extends BaseDB {
         this.data[options.server][key] = value;
       }
     } else {
+      if (!key) {
+        throw new Error("Must supply key when not supplying server.")
+      }
       this.data["*"][key] = value;
     }
     return this.write(options);

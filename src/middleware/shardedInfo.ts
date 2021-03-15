@@ -6,8 +6,38 @@
 import request from "request";
 
 import StandardDB from "../lib/StandardDB";
+import { MiddlewareOptions } from "../types/lib";
+import { Middleware, MiddlewareConstructor, ModuleWrapper } from "../types/moduleDefinition";
+import Config from "../lib/Config";
+import ConfigDB from "../lib/ConfigDB";
+import Eris, { ActivityPartial, BotActivityType, Message } from "eris";
+import { translateTypeCreator } from "../types/translate";
 
-class shardedInfo {
+import * as Sentry from "@sentry/node";
+import Command from "../lib/Command/Command";
+import Permissions from "../lib/Permissions";
+
+const shardedInfo: MiddlewareConstructor = class shardedInfo implements Middleware {
+  private _auth: Config;
+  private _configDB: ConfigDB;
+  private _client: Eris.Client;
+  private _timer: false | NodeJS.Timer;
+  private _ready: Promise<void>;
+  private _modules: ModuleWrapper[];
+  private _lastMessage: number;
+  private _standardDB: StandardDB;
+  private waitBeforeRestart: number | false;
+  private logShardStatus: string | false;
+  private _joinLeaveHooks: any[];
+  private _pmHooks: any[];
+  private currentStatus: null | any;
+  private _statusOverride: ActivityPartial<BotActivityType> | false;
+  private _admins: string[];
+  private botReadyResolve!: (value: unknown) => void;
+  private botReady: Promise<unknown>;
+  private i10010n: translateTypeCreator;
+  private _statusInterval?: NodeJS.Timeout;
+  private shardCount: any;
   /**
    * Instantiates the module
    * @constructor
@@ -25,20 +55,18 @@ class shardedInfo {
    * @param {PvPClient} e.pvpClient PvPCraft client library instance
    * @param {Function} e.i10010n
    */
-  constructor(e) {
+  constructor(e: MiddlewareOptions) {
     this._auth = e.auth;
     this._configDB = e.configDB;
     this._client = e.client;
     this._timer = false;
-    this._raven = e.raven;
-    this._ready = false;
     this._modules = e.modules;
     this._lastMessage = Date.now();
-    this._standardDB = new StandardDB(e.r, e.config.get("shardTable", "shards"), this._getArray(parseInt(process.env.shards || 1)));
+    this._standardDB = new StandardDB(e.r, e.config.get("shardTable", "shards"), this._getArray(e.shardCount));
     this._ready = this._standardDB.reload();
     this.waitBeforeRestart = e.config.get("waitBeforeRestart", 120) * 1000;
     this.logShardStatus = e.config.get("logShardStatus", false);
-    this._joinLeaveHooks = e.config.get("joinLeaveHooks", false);
+    this._joinLeaveHooks = e.config.get("joinLeaveHooks", []);
     this._pmHooks = e.config.get("pmHooks", false);
     this.currentStatus = null;
     this._statusOverride = e.config.get("statusOverride", false);
@@ -47,6 +75,7 @@ class shardedInfo {
       this.botReadyResolve = resolve;
     });
     this.i10010n = e.i10010n;
+    this.shardCount = e.shardCount;
   }
 
   /**
@@ -69,15 +98,13 @@ class shardedInfo {
     }
   }
 
-  _getArray(n) {
+  _getArray(n: number) {
     return [...new Array(n).keys()].map(val => val.toString());
   }
 
   _updateDB() {
     if (Date.now() - this._lastMessage > this.waitBeforeRestart) {
-      if (this._raven) {
-        this._raven.captureMessage("SHARDEDINFO: Did not receive messages in " + this.waitBeforeRestart);
-      }
+      Sentry.captureMessage("SHARDEDINFO: Did not receive messages in " + this.waitBeforeRestart);
       setTimeout(() => process.exit(46), 3000); //allow time to report sentry exception before exiting
     }
     if (!this._ready || !this._ready.then || !this.logShardStatus) return;
@@ -86,9 +113,9 @@ class shardedInfo {
         return this.botReady;
       })
       .then(() => {
-        let musicModule = this._modules.find(m => m && (m.module.constructor.name === "music"));
-        let connectionDiscordsIds = 0;
-        let connectionBoundChannels = 0;
+        let musicModule = this._modules.find(m => m && (m.module.constructor.name === "music")) as any | undefined;
+        let connectionDiscordsIds = [];
+        let connectionBoundChannels = [];
         let playing = 0;
         if (musicModule && musicModule.module.hasOwnProperty("boundChannels")) {
           connectionDiscordsIds = Object.keys(musicModule.module.boundChannels);
@@ -101,7 +128,7 @@ class shardedInfo {
             connections: connectionDiscordsIds.length,
             playing,
             users: this._client.users.size,
-            shards: parseInt(process.env.shards) || 1,
+            shards: this.shardCount,
             lastUpdate: Date.now(),
             lastMessage: this._lastMessage,
           }, {server: process.env.id ? process.env.id : "0"})
@@ -116,11 +143,11 @@ class shardedInfo {
     if (this._statusInterval) clearInterval(this._statusInterval);
   }
 
-  onGuildCreate(server) {
+  onGuildCreate(server: Eris.Guild) {
     if (!this._standardDB.data) return;
     let serverData = [];
     for (let key in this._standardDB.data) {
-      if (this._standardDB.data.hasOwnProperty(key) && parseInt(key) < parseInt(process.env.shards)) {
+      if (this._standardDB.data.hasOwnProperty(key) && parseInt(key) < this.shardCount) {
         serverData[parseInt(key)] = this._standardDB.data[key]
       }
     }
@@ -136,13 +163,13 @@ class shardedInfo {
     this.logServerChange(server, "Added to");
   }
 
-  onGuildDelete(server) {
+  onGuildDelete(server: Eris.Guild) {
     this.logServerChange(server, "Removed from");
   }
 
-  logServerChange(server, type) { // "Added to" or "Removed from"
+  logServerChange(server: Eris.Guild, type: "Added to" | "Removed from") {
     try {
-      let attachment = {
+      let attachment: any = {
         footer: process.env.shardId || "Sharding not active",
         footerIcon: this._client.user.avatarURL,
         ts: Date.now() / 1000
@@ -161,19 +188,19 @@ class shardedInfo {
         text: "",
         icon_url: this._client.user.avatarURL,
         slack: true,
+        attachments: [attachment],
       };
-      hookOptions.attachments = [attachment];
-      this._joinLeaveHooks.forEach(hook => this._client.executeSlackWebhook(hook.id, hook.token, hookOptions).catch(this._raven.captureException))
+      this._joinLeaveHooks.forEach(hook => this._client.executeSlackWebhook(hook.id, hook.token, hookOptions).catch(Sentry.captureException))
     } catch (error) {
-      this._raven.captureException(error);
+      Sentry.captureException(error);
     }
   }
 
-  onMessage(message) {
+  onMessage(message: Message) {
     this._lastMessage = Date.now();
     try {
-      if (!message.channel.guild && this._admins.indexOf(message.author.id) < 0) {
-        let attachment = {text: message.content, ts: Date.now() / 1000};
+      if (!("guild" in message.channel) && this._admins.indexOf(message.author.id) < 0) {
+        let attachment: any = {text: message.content, ts: Date.now() / 1000};
         if (message.hasOwnProperty("author")) {
           attachment.author_name = message.author.username;
           attachment.author_link = `https://bot.pvpcraft.ca/user/${message.author.id}`;
@@ -186,16 +213,16 @@ class shardedInfo {
           text: "",
           icon_url: this._client.user.avatarURL,
           slack: true,
+          attachments: [attachment],
         };
-        hookOptions.attachments = [attachment];
-        this._pmHooks.forEach(hook => this._client.executeSlackWebhook(hook.id, hook.token, hookOptions).catch(this._raven.captureException))
+        this._pmHooks.forEach(hook => this._client.executeSlackWebhook(hook.id, hook.token, hookOptions).catch(Sentry.captureException))
       }
     } catch (error) {
-      this._raven.captureException(error);
+      Sentry.captureException(error);
     }
   }
 
-  updateAbal(servers) {
+  updateAbal(servers: number) {
     let token = this._auth.get("abalKey", false);
     if (token && token.length > 1 && token !== "key") {
       request.post({
@@ -217,8 +244,8 @@ class shardedInfo {
     }
   }
 
-  updateDiscordBotsOrg(servers) {
-    let token = this._auth.get("discordBotsOrgKey");
+  updateDiscordBotsOrg(servers: number) {
+    let token = this._auth.get("discordBotsOrgKey", false);
     if (token && token.length > 1 && token !== "key") {
       request.post({
         url: `https://discordbots.org/api/bots/${this._client.user.id}/stats`,
@@ -239,7 +266,7 @@ class shardedInfo {
     }
   }
 
-  updateCarbonitex(servers) {
+  updateCarbonitex(servers: number) {
     let token = this._auth.get("key", false);
     if (!token || token === "key") return;
     console.log("Attempting to update Carbon".green);
@@ -272,20 +299,20 @@ class shardedInfo {
    * @param command
    * @returns command || Boolean object (may be modified.)
    */
-  changeCommand(msg, command) {
+  changeCommand(msg: Message, command: Command, perms: Permissions): Command | false {
     try {
       if (command.command === "getshardedinfo") {
         if (!this._standardDB.data) {
           command.createMessage(command.translate `Sorry db connection not ready yet`);
-          return true;
+          return false;
         }
         let serverData = [];
         for (let key in this._standardDB.data) {
-          if (this._standardDB.data.hasOwnProperty(key) && parseInt(key) < parseInt(process.env.shards)) {
+          if (this._standardDB.data.hasOwnProperty(key) && parseInt(key) < this.shardCount) {
             serverData[parseInt(key)] = this._standardDB.data[key]
           }
         }
-        let shardsOnline = serverData.filter(s => Date.now() - s.lastUpdate < 30000).length;
+        let shardsOnline = serverData.filter(s => Date.now() - s.lastUpdate < 60000).length;
         let shardsReceivingMessages = serverData.filter(s => Date.now() - s.lastMessage < 60000).length;
         let serverCount = serverData.map(s => s.servers).reduce((total, num) => total + num, 0);
         let connections = serverData.map(s => s.connections).reduce((total, num) => total + num, 0);

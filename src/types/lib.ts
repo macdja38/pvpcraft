@@ -8,6 +8,7 @@ import MessageSender from "../lib/MessageSender";
 import SlowSender from "../lib/SlowSender";
 import PvPCraft from "../PvPCraft";
 import TaskQueue from "../lib/TaskQueue";
+import { MiddlewareWrapper, Module, ModuleWrapper } from "./moduleDefinition";
 
 export type ModuleOptions = {
   taskQueue: TaskQueue;
@@ -25,4 +26,11 @@ export type ModuleOptions = {
   i10010n: translateTypeCreator;
   git: { commit: string, branch: string };
   getChannelLanguage: (channelId: string, guildId?: string) => string
+  shardCount: number;
+  shardID: number;
+  modules: ModuleWrapper[];
+  middleWares: MiddlewareWrapper[];
+}
+
+export type MiddlewareOptions = ModuleOptions & {
 }
