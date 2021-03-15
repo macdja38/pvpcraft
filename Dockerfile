@@ -16,6 +16,6 @@ RUN npm install
 
 ADD . /docker/pvpcraft/pvpcraft/
 
-RUN npm run build
+RUN git config --unset http.https://github.com/.extraheader && npm run build
 
 CMD ["pm2-docker", "pm2.json"]
