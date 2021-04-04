@@ -57,6 +57,11 @@ class Permissions {
     return ["set", "remove", "list"];
   };
 
+  setLoseTypings(node: string, mode: string | number, options: { write: boolean } = { write: true }) {
+    // @ts-ignore
+    return this.set(node, mode, options);
+  }
+
 
   /**
    * Sets a permission node
@@ -81,7 +86,7 @@ class Permissions {
     return this.perms.set(null, pointt, { server: key, conflict: "replace", write: options.write });
   };
 
-  checkAdminServer(msg: Message) {
+  checkAdminServer(msg: { member?: Eris.Member }) {
     return msg?.member?.permission.has("administrator") || false;
   };
 

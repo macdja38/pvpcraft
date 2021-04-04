@@ -1,13 +1,28 @@
 /**
  * Created by macdja38 on 2016-05-04.
  */
+
 "use strict";
 
+import Eris from "eris";
+
 import utils from "../lib/utils";
+import { Module, ModuleCommand, ModuleConstructor } from "../types/moduleDefinition";
+import { ModuleOptions } from "../types/lib";
+import { translateTypeCreator } from "../types/translate";
+import Config from "../lib/Config";
+import Permissions from "../lib/Permissions";
+import { GuildCommand } from "../lib/Command/Command";
 
 let defaultURL = "https://bot.pvpcraft.ca/login/";
 
-class permissionsManager {
+const permissionsManager: ModuleConstructor = class permissionsManager implements Module {
+  private client: Eris.Client;
+  private config: Config;
+  private perms: Permissions;
+  private i10010n: translateTypeCreator;
+  private url: string;
+
   /**
    * Instantiates the module
    * @constructor
@@ -25,14 +40,14 @@ class permissionsManager {
    * @param {PvPClient} e.pvpClient PvPCraft client library instance
    * @param {Function} e.i10010n internationalization function
    */
-  constructor(e) {
+  constructor(e: ModuleOptions) {
     this.client = e.client;
     this.config = e.config;
     this.perms = e.perms;
     this.i10010n = e.i10010n;
 
     //url where permissions are exposed at.
-    this.url = this.config.get("permissions", {url: defaultURL}).url
+    this.url = this.config.get("permissions", { url: defaultURL }).url
   }
 
   /**
@@ -62,13 +77,13 @@ class permissionsManager {
    * Returns an array of commands that can be called by the command handler
    * @returns {[{triggers: [string], permissionCheck: function, channels: [string], execute: function}]}
    */
-  getCommands() {
+  getCommands(): ModuleCommand[] {
     return [{
       triggers: ["setting", "settings"],
-      permissionCheck: () => true,
+      permissionCheck: (perms: any) => true,
       channels: ["guild"],
-      execute: command => {
-        let urlRoot = this.config.get("website", {"settingsRoot": "https://bot.pvpcraft.ca"}).settingsRoot;
+      execute: (command: GuildCommand) => {
+        let urlRoot = this.config.get("website", { "settingsRoot": "https://bot.pvpcraft.ca" }).settingsRoot;
         command.reply(`${urlRoot}/bot/${this.client.user.id}/server/${command.channel.guild.id}/ranks`);
         return true;
       },
@@ -76,9 +91,9 @@ class permissionsManager {
       triggers: ["perms", "perm", "pex"],
       permissionCheck: () => true,
       channels: ["guild"],
-      execute: command => {
+      execute: (command: GuildCommand) => {
         //if no command is supplied supply help url
-        command.reply(command.translate `You need help! visit <https://bot.pvpcraft.ca/docs> for more info`);
+        command.reply(command.translate`You need help! visit <https://bot.pvpcraft.ca/docs> for more info`);
         return true;
       },
       subCommands: [
@@ -86,39 +101,34 @@ class permissionsManager {
           triggers: ["set"],
           permissionCheck: () => true,
           channels: ["guild"],
-          execute: command => {
+          execute: (command: GuildCommand) => {
             //check if they gave us enough args, if not tell them what to give us.
             if (command.args.length < 2) {
-              command.reply("perms set <allow|deny|remove> <node>");
-              return true;
+              return command.reply("perms set <allow|deny|remove> <node>");
             }
             let channel;
             let server;
             if (command.options.channel) {
               //user has specified a channel level permission
-              if (/<#\d+>/.test(command.options.channel)) {
-                channel = command.channel.guild.channels.get(command.options.channel.match(/<#(\d+)>/)[1]);
-              }
-              else {
+              let channelMatch = command.options.channel.match(/<#(\d+)>/);
+              if (channelMatch) {
+                channel = command.channel.guild.channels.get(channelMatch[1]);
+              } else {
                 channel = command.channel.guild.channels.find(c => c.name === command.options.channel);
               }
               if (channel) {
                 server = command.channel.guild.id;
                 channel = channel.id;
+              } else {
+                return command.reply(command.translate`Could not find channel specified please either mention the channel or use it's full name`);
               }
-              else {
-                command.reply(command.translate `Could not find channel specified please either mention the channel or use it's full name`);
-                return true;
-              }
-            }
-            else {
+            } else {
               //user has not specified channel, assume server wide
               channel = "*";
               server = command.channel.guild.id;
             }
-            if (!this.perms.checkAdminServer(command) && this.config.get("permissions", {admins: []}).admins.indexOf(command.author.id) < 0) {
-              command.reply(command.translate `Discord permission \`Admin\` Required`);
-              return true;
+            if (!this.perms.checkAdminServer(command) && this.config.get("permissions", { admins: [] }).admins.indexOf(command.author.id) < 0) {
+              return command.reply(command.translate`Discord permission \`Admin\` Required`);
             }
             //here we find the group's or users effected.
             let target;
@@ -126,76 +136,74 @@ class permissionsManager {
               command.options.role = command.options.group
             }
             if (command.options.user) {
-              if (/<@!?\d+>/.test(command.options.user)) {
-                target = command.channel.guild.members.get(command.options.user.match(/<@!?(\d+)>/)[1]);
-              }
-              else {
-                target = command.channel.guild.members.find(m => m.name === command.options.user)
+              const userMatch = command.options.user.match(/<@!?(\d+)>/)
+              if (userMatch) {
+                target = command.channel.guild.members.get(userMatch[1]);
+              } else {
+                target = command.channel.guild.members.find(m => m.nick === command.options.user || m.username === command.options.user)
               }
               if (target) {
                 target = "u" + target.id
+              } else {
+                return command.reply(command.translate`Could not find user with that name, please try a mention or name, names are case sensitive`);
               }
-              else {
-                command.reply(command.translate `Could not find user with that name, please try a mention or name, names are case sensitive`);
-                return true;
-              }
-            }
-            else if (command.options.role) {
-              if (/<@&\d+>/.test(command.options.role)) {
-                target = command.channel.guild.roles.get(command.options.role.match(/<@&(\d+)>/)[1]);
-              }
-              else {
+            } else if (command.options.role) {
+              const roleMatch = command.options.role.match(/<@&(\d+)>/)
+              if (roleMatch) {
+                target = command.channel.guild.roles.get(roleMatch[1]);
+              } else {
                 target = command.channel.guild.roles.find(r => r.name === command.options.role);
               }
               if (target) {
                 target = "g" + target.id
+              } else {
+                return command.reply(command.translate`Could not find role with that name, please try a mention or name, names are case sensitive`);
               }
-              else {
-                command.reply(command.translate `Could not find role with that name, please try a mention or name, names are case sensitive`);
-                return true;
-              }
-            }
-            else {
+            } else {
               target = "*"
             }
-            let action = command.args.shift().toLowerCase();
+            let action: string | number | undefined = command.args.shift()?.toLowerCase();
+            if (!action) {
+              throw new Error("Something we thought we checked turned out not to be true, this error has been reported.");
+            }
             if (action === "remove") action = "remov";
             const node = server + "." + channel + "." + target + "." + command.args[0];
-            command.reply(command.translate `${utils.clean(action)}ing node \`\`\`xl\n${node}\n\`\`\`\
-${utils.clean(action)}ing permission node ${utils.clean(command.args[0])} in ${channel === "*" ? command.translate `all channels` : channel } for \
-${target === "*" ? command.translate `everyone` : utils.clean(target)}`);
+            command.reply(command.translate`${utils.clean(action)}ing node \`\`\`xl\n${node}\n\`\`\`\;
+${utils.clean(action)}ing permission node ${utils.clean(command.args[0])} in ${channel === "*" ? command.translate`all channels` : channel} for \
+${target === "*" ? command.translate`everyone` : utils.clean(target)}`);
             let numValue = parseInt(action);
             if (!isNaN(numValue)) {
               action = numValue;
             }
-            this.perms.set(utils.stripNull(node), action).then((result) => {
+            this.perms.setLoseTypings(utils.stripNull(node), action).then((result) => {
               if (!result || result === undefined) {
-                command.reply(command.translate `Error: while saving: Database write could not be confirmed. The permissions configuration will be cached locally, but may reset in the future.`)
+                command.reply(command.translate`Error: while saving: Database write could not be confirmed. The permissions configuration will be cached locally, but may reset in the future.`)
               }
             }).catch(console.error);
-          }
+            return true;
+          },
         },
         {
           triggers: ["list"],
           permissionCheck: () => true,
           channels: ["guild"],
-          execute: command => {
+          execute: (command: GuildCommand) => {
             return command.reply(this.url.replace(/\$id/, command.channel.guild.id));
-          }
+          },
         },
         {
           triggers: ["hardreset"],
           permissionCheck: () => true,
           channels: ["guild"],
-          execute: command => {
+          execute: (command: GuildCommand) => {
             if (command.author.id === command.channel.guild.ownerID) {
               this.perms.set(command.channel.guild.id, "remov");
-              command.reply(command.translate `All permissions have been reset!`)
+              return command.reply(command.translate`All permissions have been reset!`)
             } else {
-              command.reply(command.translate `Only the server owner can use this command.`);
+              return command.reply(command.translate`Only the server owner can use this command.`);
             }
-          }
-        }
+          },
+        },
       ],
     }];
   }
