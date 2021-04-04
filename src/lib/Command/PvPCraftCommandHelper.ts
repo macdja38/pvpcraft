@@ -154,7 +154,13 @@ export class PvPInteractiveCommand {
       throw new Error("Files are not supported by Slash Commands.")
     }
 
-    return this.client.requestHandler.request("POST", `/interactions/${this.id}/${this.token}/callback`, false, { type, data: response });
+    const { allowedMentions, ...responseWithCorrectedAllowedMentions } = response;
+    if (response.allowedMentions) {
+      // @ts-ignore
+      responseWithCorrectedAllowedMentions.allowed_mentions = this.client._formatAllowedMentions(allowedMentions);
+    }
+
+    return this.client.requestHandler.request("POST", `/interactions/${this.id}/${this.token}/callback`, false, { type, data: responseWithCorrectedAllowedMentions });
   }
 
   static async optionsArrayToObject(command: PvPInteractiveCommand, commandHandler: SlashCommandCommand, options: ApplicationCommandInteractionDataOption<any>[]) {
