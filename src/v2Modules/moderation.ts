@@ -139,7 +139,8 @@ const moderation: v2ModuleConstructor = class moderation implements v2Module {
               return command.respond(command.translate`This user has the ban immunity permission \`moderation.immunity.ban\`, you may not ban them.`);
             }
 
-            return this.baseModule.moderationActionCore(command.guild, "ban", targetUser.user, command.member.user, targetUser.id, command.opts.time, command.opts.reason);
+            return this.baseModule.moderationActionCore(command.guild, "ban", targetUser.user, command.member.user, targetUser.id, command.opts.time, command.opts.reason)
+              .then(() => command.respond({ content: command.translate `${command.opts.user.mention} banned.`, allowedMentions: {} }));
           }
         }
       })(),
@@ -170,7 +171,8 @@ const moderation: v2ModuleConstructor = class moderation implements v2Module {
               return command.respond(command.translate`This user has the kick immunity permission \`moderation.immunity.kick\`, you may not kick them.`);
             }
 
-            return this.baseModule.moderationActionCore(command.guild, "kick", targetUser.user, command.member.user, targetUser.id, command.opts.reason);
+            return this.baseModule.moderationActionCore(command.guild, "kick", targetUser.user, command.member.user, targetUser.id, command.opts.reason)
+              .then(() => command.respond({ content: command.translate `${command.opts.user.mention} kicked.`, allowedMentions: {} }));
           }
         }
       })(),
@@ -196,7 +198,8 @@ const moderation: v2ModuleConstructor = class moderation implements v2Module {
           execute: (command: PvPInteractiveCommandWithOpts<typeof options>) => {
             const targetUser = command.opts.user
 
-            return this.baseModule.moderationActionCore(command.guild, "unban", targetUser.user, command.member.user, targetUser.id, command.opts.reason);
+            return this.baseModule.moderationActionCore(command.guild, "unban", targetUser.user, command.member.user, targetUser.id, command.opts.reason)
+              .then(() => command.respond({ content: command.translate `${command.opts.user.mention} unbanned.`, allowedMentions: {} }));
           }
         }
       })(),
