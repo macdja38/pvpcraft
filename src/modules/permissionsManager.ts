@@ -168,7 +168,7 @@ const permissionsManager: ModuleConstructor = class permissionsManager implement
             }
             if (action === "remove") action = "remov";
             const node = server + "." + channel + "." + target + "." + command.args[0];
-            command.reply(command.translate`${utils.clean(action)}ing node \`\`\`xl\n${node}\n\`\`\`\;
+            command.reply(command.translate`${utils.clean(action)}ing node \`\`\`xl\n${node}\n\`\`\`\
 ${utils.clean(action)}ing permission node ${utils.clean(command.args[0])} in ${channel === "*" ? command.translate`all channels` : channel} for \
 ${target === "*" ? command.translate`everyone` : utils.clean(target)}`);
             let numValue = parseInt(action);
