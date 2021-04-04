@@ -773,10 +773,10 @@ class PvPCraft {
       } catch (error) {
         console.error(error);
       }
+    }
 
-      if (process.env.dev === "true") {
-        this.syncCommandsToDiscordGuild("97069403178278912", this.v2ModuleList)
-      }
+    if (process.env.dev === "true") {
+      this.syncCommandsToDiscordGuild("97069403178278912", this.v2ModuleList)
     }
 
     for (let middleware of Object.keys(middlewares)) {
