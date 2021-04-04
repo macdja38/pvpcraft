@@ -288,12 +288,75 @@ export class PvPCraftCommandHelper {
     }
   }
 
-  // equal check broken cause optional params are not sent by discord.
-  static equal(command1: CommandRoot, command2: CommandRoot) {
-    const { id: _id1, application_id: _aid1, ...clone1 } = command1;
-    const { id: _id2, application_id: _aid2, ...clone2 } = command2;
+  static optionsEqual(options: CommandRoot["options"], options2: CommandRoot["options"]) {
+    if (options.length !== options2.length) {
+      return false;
+    }
+    for (let i = 0; i < options.length; i++) {
+      if (!this.optionEqual(options[i], options2[i])) {
+        return false;
+      }
+    }
+    return true;
+  }
 
-    return equal(clone1, clone2, { strict: true })
+  static optionEqual(option1: CommandRoot["options"][0], option2: CommandRoot["options"][0]) {
+    const { ...option1Clone } = option1;
+    const { ...option2Clone } = option2
+
+    // compare arrays using array compare function, and then delete them
+    for (let key of ["options", "choices"] as const) {
+      // @ts-ignore
+      if (key in option1Clone && key in option2Clone && option1Clone[key].length > 1 && option2Clone[key].length > 1) {
+        // @ts-ignore
+        if (!this.optionsEqual(option1Clone[key], option2Clone[key])) {
+          return false;
+        }
+      }
+      if (key in option1Clone) {
+        // @ts-ignore
+        delete option1Clone[key];
+      }
+      if (key in option2Clone) {
+        // @ts-ignore
+        delete option2Clone[key];
+      }
+    }
+
+    // delete if false (discord just doesn't send the false properties)
+    for (let key of ["required"] as const) {
+      // @ts-ignore
+      if (key in option1Clone && !option1Clone[key]) {
+        // @ts-ignore
+        delete option1Clone[key];
+      }
+      // @ts-ignore
+      if (key in option2Clone && !option2Clone[key]) {
+        // @ts-ignore
+        delete option2Clone[key];
+      }
+    }
+
+    if (Object.keys(option1Clone).length !== Object.keys(option2Clone).length) {
+      return false;
+    }
+    for (let key of Object.keys(option1Clone)) {
+      // @ts-ignore
+      if (option1Clone[key] !== option2Clone[key]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // equal check broken cause optional params are not sent by discord.
+  static equal(commandFromDiscord: CommandRoot, commandFromLocal: CommandRoot) {
+    // @ts-ignore
+    const { id: _id1, application_id: _aid1, version: _version, guild_id: _guild_id, default_permission: _default_permission, ...clone1 } = commandFromDiscord;
+    const { id: _id2, application_id: _aid2, ...clone2 } = commandFromLocal;
+
+    // @ts-ignore
+    return this.optionEqual(clone1, clone2);
   }
 
   static interactionCommandFromDiscordInteraction(client: Eris.Client, interaction: InteractionCommand, configDB: ConfigDB, i10010n: (language: string) => translateType, getChannelLanguage: (channelID: string) => string): PvPInteractiveCommand | void {
