@@ -19,7 +19,7 @@
     "chalk": "^4.1.0",
     "cheerio": "^1.0.0-rc.3",
     "chess": "^0.4.5",
-    "chrono-node": "^2.1.11",
+    "chrono-node": "^2.2.4",
     "cli-table2": "^0.2.0",
     "deep-equal": "^2.0.4",
     "deepmerge": "^1.5.2",
