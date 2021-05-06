@@ -967,7 +967,7 @@ class PvPCraft {
       // Permissions
       if ("permissionCheck" in commandHandler && commandHandler.permissionCheck) {
         if (!commandHandler.permissionCheck(command)) {
-          return command.respond(INTERACTION_RESPONSE_TYPE.EAT_INPUT_WITH_REPLY, {
+          return command.respond(INTERACTION_RESPONSE_TYPE.REPLY, {
             content: "Sorry, you don't have permission to use that here. If you're an admin you can use /perms to change that.",
             flags: MESSAGE_FLAGS.EPHEMERAL,
           });
@@ -976,7 +976,7 @@ class PvPCraft {
 
       if ("permission" in commandHandler && commandHandler.permission) {
         if (!this.perms.check(command, commandHandler.permission)) {
-          return command.respond(INTERACTION_RESPONSE_TYPE.EAT_INPUT_WITH_REPLY, {
+          return command.respond(INTERACTION_RESPONSE_TYPE.REPLY, {
             content: "Sorry, you don't have permission to use that here.\n"
               + `You're missing the permission node ${commandHandler.permission}.\n`
               + `An admin can give that out with \`/perms set Allow ${commandHandler.permission}\``

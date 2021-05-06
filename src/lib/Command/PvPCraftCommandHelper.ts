@@ -25,12 +25,10 @@ export const MESSAGE_FLAGS = {
   EPHEMERAL: 1 << 6,
 };
 
-export const INTERACTION_RESPONSE_TYPE = {
-  PONG: 1 as 1,                 //	ACK a Ping
-  EAT_INPUT_ACK: 2 as 2,        //	ACK a command without sending a message, eating the user's input
-  EAT_INPUT_WITH_REPLY: 3 as 3, //	respond with a message, eating the user's input
-  REPLY: 4 as 4,                // 	respond with a message, showing the user's input
-  ACK: 5 as 5,                  // 	ACK a command without sending a message, showing the user's input
+export enum INTERACTION_RESPONSE_TYPE {
+  PONG = 1,                 //	ACK a Ping
+  REPLY = 4,                // respond with a message, showing the user's input
+  ACK = 5,                  // ACK a command without sending a message, showing the user's input
 }
 
 export type SlashCommandBase = {
@@ -122,7 +120,7 @@ export class PvPInteractiveCommand {
     }
   }
 
-  respond(typeOrResponse: 2 | 3 | 4 | 5 | WebhookPayloadWithFlags | string, responseOrFile?: WebhookPayloadWithFlags | string | Eris.MessageFile | Eris.MessageFile[], file?: Eris.MessageFile | Eris.MessageFile[]) {
+  respond(typeOrResponse: INTERACTION_RESPONSE_TYPE.REPLY | INTERACTION_RESPONSE_TYPE.ACK | WebhookPayloadWithFlags | string, responseOrFile?: WebhookPayloadWithFlags | string | Eris.MessageFile | Eris.MessageFile[], file?: Eris.MessageFile | Eris.MessageFile[]) {
     let type: number;
     let response: WebhookPayloadWithFlags | string;
 
@@ -145,7 +143,7 @@ export class PvPInteractiveCommand {
         files = file;
       }
     } else {
-      type = ephemeral ? INTERACTION_RESPONSE_TYPE.EAT_INPUT_WITH_REPLY : INTERACTION_RESPONSE_TYPE.REPLY;
+      type = INTERACTION_RESPONSE_TYPE.REPLY;
       response = wrapResponse(typeOrResponse as Eris.WebhookPayload | string, ephemeral);
       files = responseOrFile as MessageFile | MessageFile[];
     }
