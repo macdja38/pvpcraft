@@ -120,7 +120,7 @@ export class PvPInteractiveCommand {
     }
   }
 
-  respond(typeOrResponse: INTERACTION_RESPONSE_TYPE.REPLY | INTERACTION_RESPONSE_TYPE.ACK | WebhookPayloadWithFlags | string, responseOrFile?: WebhookPayloadWithFlags | string | Eris.MessageFile | Eris.MessageFile[], file?: Eris.MessageFile | Eris.MessageFile[]) {
+  respond(typeOrResponse: Exclude<INTERACTION_RESPONSE_TYPE, INTERACTION_RESPONSE_TYPE.PONG> | WebhookPayloadWithFlags | string, responseOrFile?: WebhookPayloadWithFlags | string | Eris.MessageFile | Eris.MessageFile[], file?: Eris.MessageFile | Eris.MessageFile[]) {
     let type: number;
     let response: WebhookPayloadWithFlags | string;
 
