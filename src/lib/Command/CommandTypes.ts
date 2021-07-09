@@ -52,6 +52,7 @@ export type CommandOption = CommandOptionParameter | CommandOptionSubcommandGrou
 
 export type CommandRoot = CommandOptionBase & {
   id?: string;
+  type?: number;
   application_id?: string;
   options: (CommandOptionSubcommandGroup | CommandOptionSubcommand)[] | readonly CommandOptionParameter[]
 }

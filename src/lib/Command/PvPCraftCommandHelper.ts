@@ -287,6 +287,7 @@ export class PvPCraftCommandHelper {
 
     return {
       name: command.name,
+      type: 1,
       description: command.description,
       options: options,
     }
