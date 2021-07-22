@@ -147,6 +147,10 @@ class Utils {
     return new Date(Utils.idToUnixTime(id)).toUTCString()
   }
 
+  static idToDiscordLongDateString(id: string) {
+    return `<t:${Math.round(Utils.idToUnixTime(id) / 1000)}:F>`
+  }
+
   /**
    * Nullifies codeblocks and Mentions
    * @param {string} text

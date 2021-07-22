@@ -788,7 +788,7 @@ export class moderationV2 {
     if (message.id) {
       fields.push({
         title: translate`Age`,
-        value: utils.idToUTCString(message.id),
+        value: utils.idToDiscordLongDateString(message.id),
         short: true,
       })
     }
@@ -872,7 +872,7 @@ export class moderationV2 {
     if (message.id) {
       fields.push({
         title: translate`Age`,
-        value: utils.idToUTCString(message.id),
+        value: utils.idToDiscordLongDateString(message.id),
         short: true,
       })
     }
@@ -923,7 +923,7 @@ export class moderationV2 {
       short: true,
     }, {
       title: translate`Age`,
-      value: utils.idToUTCString(channel.id),
+      value: utils.idToDiscordLongDateString(channel.id),
       short: true,
     }];
     if ("topic" in channel && channel.topic) {
@@ -966,7 +966,7 @@ export class moderationV2 {
       short: true,
     }, {
       title: translate`Age`,
-      value: utils.idToUTCString(channel.id),
+      value: utils.idToDiscordLongDateString(channel.id),
       short: true,
     }];
     if (oldChannel.name !== channel.name) {
@@ -1383,7 +1383,7 @@ export class moderationV2 {
       short: true,
     }, {
       title: translate`Age`,
-      value: utils.idToUTCString(userID),
+      value: utils.idToDiscordLongDateString(userID),
       short: true,
     }];
 
