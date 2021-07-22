@@ -113,8 +113,12 @@ class MessageSender {
       throw "Insufficient permissions to create a webhook";
     }
     let existingHooks = await channel.getWebhooks();
-    if (existingHooks && existingHooks.length > 0) {
-      return existingHooks[0];
+
+    // @ts-ignore
+    const candidateHook = existingHooks && existingHooks.find(hook => hook.type === 1 && hook.token)
+
+    if (candidateHook) {
+      return candidateHook;
     }
     return channel.createWebhook({ name: this._client.user.username, avatar: this._client.user.avatarURL });
   }
