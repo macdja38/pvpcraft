@@ -1599,7 +1599,7 @@ function findOverrideChanges(thing1: Eris.Collection<Eris.PermissionOverwrite>, 
  * @param {number} permissions
  * @returns {string} array of trues
  */
-function permissionsListFromNumber(permissions: number) {
+function permissionsListFromNumber(permissions: bigint) {
   return arrayOfTrues(new Eris.Permission(permissions, 0).json).toString();
 }
 

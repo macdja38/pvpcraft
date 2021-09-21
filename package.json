@@ -24,7 +24,7 @@
     "deep-equal": "^2.0.4",
     "deepmerge": "^1.5.2",
     "ebml": "^3.0.0",
-    "eris": "github:Khaaz/eris#v8",
+    "eris": "github:abalabahaha/eris#dev",
     "eris-errors": "^1.0.1",
     "esm": "^3.2.25",
     "eventemitter3": "^4.0.7",
