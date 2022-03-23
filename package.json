@@ -49,7 +49,7 @@
     "superagent": "^6.1.0",
     "universal-analytics": "^0.4.23",
     "uuid": "^8.3.1",
-    "youtube-dl": "^3.0.2",
+    "youtube-dl": "^3.5.0",
     "ytdl-core": "^4.0.3"
   },
   "devDependencies": {
@@ -64,7 +64,7 @@
     "@types/rethinkdbdash": "git+https://github.com/typed-typings/rethinkdbdash.git",
     "@types/universal-analytics": "^0.4.4",
     "@types/ws": "^7.4.0",
-    "@types/youtube-dl": "^3.0.0",
+    "@types/youtube-dl": "^3.0.1",
     "docma": "^2.1.0",
     "eslint": "^7.13.0",
     "jest-cli": "^26.6.3",

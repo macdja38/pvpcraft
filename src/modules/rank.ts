@@ -12,13 +12,14 @@ import Eris, { Guild, Member, Message } from "eris";
 import Permissions from "../lib/Permissions";
 import Command from "../lib/Command/Command";
 import { isGuildChannel } from "../types/utils";
+import { translateTypeCreator } from "../types/translate";
 
 const rank: ModuleConstructor = class rank implements Module {
   private client: Eris.Client;
   private pvpClient: any;
   private config: ConfigDB;
   private perms: Permissions;
-  private i10010n: any;
+  private i10010n: translateTypeCreator;
   private onJoin: (guild: Guild, member: Member) => void;
   /**
    * Instantiates the module

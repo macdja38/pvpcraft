@@ -3,7 +3,18 @@
  */
 "use strict";
 
-class music {
+import { Module, ModuleCommand, ModuleConstructor } from "../types/moduleDefinition";
+import { ModuleOptions } from "../types/lib";
+import Permissions from "../lib/Permissions";
+import { translateTypeCreator } from "../types/translate";
+import Command from "../lib/Command/Command";
+import ConfigDB from "../lib/ConfigDB";
+import { isGuildChannel } from "../types/utils";
+
+const musicDisabled: ModuleConstructor = class musicDisabled implements Module {
+  private perms: Permissions;
+  private i10010n: translateTypeCreator;
+  private configDB: ConfigDB;
   /**
    * Instantiates the module
    * @constructor
@@ -21,25 +32,33 @@ class music {
    * @param {PvPClient} e.pvpClient PvPCraft client library instance
    * @param {Function} e.i10010n internationalization function
    */
-  constructor(e) {
+  constructor(e: ModuleOptions) {
     this.perms = e.perms;
     this.i10010n = e.i10010n;
+    this.configDB = e.configDB;
   }
 
   /**
    * Returns an array of commands that can be called by the command handler
    * @returns {[{triggers: [string], permissionCheck: function, channels: [string], execute: function}]}
    */
-  getCommands() {
+  getCommands(): ModuleCommand[] {
     return [{
       triggers: ["init", "play", "list", "time", "pause", "resume", "volume", "shuffle", "next", "destroy", "logchannel", "link"],
       permissionCheck: (command) => this.perms.check(command, `music.${command.command}`),
       channels: ["guild"],
-      execute: command => {
+      execute: (command: Command) => {
+        if (!isGuildChannel(command.channel)) throw new Error("TypeGuard Failed");
+        const premium = this.configDB.get("premium", false, {server: command.channel.guild.id});
+
+        if (premium === true) {
+          return false;
+        }
+
         return command.replyAutoDeny(command.translate `Sorry music is currently disabled at the moment, please join https://join.pvpcraft.ca and check the #announcements chat for info on why and status updates`);
       },
     }];
   }
 }
 
-module.exports = music;
+module.exports = musicDisabled;
