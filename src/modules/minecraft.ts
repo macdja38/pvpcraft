@@ -138,6 +138,11 @@ export const minecraft: ModuleConstructor = class minecraft implements Module {
       }
       return request.follow(mcauth, this.minecraftMessage.bind(this, mcauth));
     })
+    this.minecraftConnections.forEach(ws => {
+      ws.on('error', (error) => {
+        console.error(error);
+      });
+    })
   }
 
   onDisconnect() {
