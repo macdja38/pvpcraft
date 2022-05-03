@@ -311,7 +311,7 @@ class evaluate {
     if (object.toJSON && typeof object.toJSON) {
       object = object.toJSON();
     }
-    return util.inspect(object, { depth: 2 }).replace(new RegExp(this.client.token, "g"), "[ Token ]");
+    return util.inspect(object, { depth: 2 }).replace(new RegExp(this.client.token || this.client._token, "g"), "[ Token ]");
   }
 }
 
