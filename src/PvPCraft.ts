@@ -551,7 +551,7 @@ class PvPCraft {
       // getAllUsers: true,
       autoreconnect: true,
       // @ts-ignore
-      intents: 0b111111011111111,
+      intents: 0b1111110111111111,
       compress: true,
       allowedMentions: {
         everyone: true,
@@ -673,7 +673,7 @@ class PvPCraft {
 
   shutDown() {
     setTimeout(() => {
-      process.exit(1)
+      process.exit(1);
     }, 5000);
     console.log("Logging out.");
     for (let middleware of this.middlewareList) {
