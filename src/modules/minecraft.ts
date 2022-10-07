@@ -84,6 +84,8 @@ export const minecraft: ModuleConstructor = class minecraft implements Module {
             [{ text: description, ts: new Date(message.time * 1000).getTime() / 1000 }],
         });
       } else if (messages.source === "chat" && "player" in message) {
+        // messages that come from discord have a user that starts with "discord" we don't need to send them back to discord"
+        if (message.player.startsWith("discord")) return;
         let webhook = await minecraft._getWebhook(this.client, channel);
         if (!webhook) return;
         this.client.executeWebhook(webhook.id, webhook.token, {
@@ -97,6 +99,20 @@ export const minecraft: ModuleConstructor = class minecraft implements Module {
         })
       }
     }
+  }
+
+  checkMisc(msg: Eris.Message, perms: Permissions, prefixes: string[]): boolean | Promise<any> {
+    const member = msg.member;
+    if (!("guild" in msg.channel) || !member) {
+      return false;
+    }
+    const options = this.configDB.get("mcauth", false, { server: msg.channel.guild.id });
+    if (!options || !options.hasOwnProperty("host")) {
+      return false;
+    }
+    return mcapi.createRequest()
+      .add("chat.with_name", [msg.content.replace(/^\/*/g, ""), `discord:${member.nick || member.username}`])
+      .dispatch(options).then(console.log).catch(console.error);
   }
 
   /**
@@ -114,8 +130,9 @@ export const minecraft: ModuleConstructor = class minecraft implements Module {
       throw "Insufficient permissions to create a webhook";
     }
     let existingHooks = await channel.getWebhooks();
-    if (existingHooks && existingHooks.length > 0) {
-      return existingHooks[0];
+    const hooksWithToken = existingHooks.filter(hook => hook.token ?? false)
+    if (hooksWithToken && hooksWithToken.length > 0) {
+      return hooksWithToken[0];
     }
     return channel.createWebhook({ name: client.user.username, avatar: client.user.avatarURL });
   }
@@ -288,6 +305,7 @@ export const minecraft: ModuleConstructor = class minecraft implements Module {
           port: command.options.port !== "none" ? "" : parseInt(command.options.port, 10) || 25565,
           username: command.options.username,
           password: command.options.password,
+          bridgeAllMessages: command.options.bridgeAllMessages === "true",
         };
         console.log(options);
         return mcapi.createRequest().add("server.version").dispatch(options).then((result: { result: string }[]) => {
