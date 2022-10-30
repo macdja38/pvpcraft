@@ -3,9 +3,20 @@
  */
 "use strict";
 
+import Eris from "eris";
 import utils from "../lib/utils";
+import Permissions from "../lib/Permissions";
+import { Module, ModuleCommand, ModuleConstructor } from "../types/moduleDefinition";
+import { translateTypeCreator } from "../types/translate";
+import { ModuleOptions } from "../types/lib";
+import Feeds from "../lib/feeds";
+import Command, { GuildCommand } from "../lib/Command/Command";
 
-class feedManager {
+const feedManager: ModuleConstructor = class feedManager implements Module {
+  private _client: Eris.Client;
+  private _feeds: Feeds;
+  private perms: Permissions;
+  private i10010n: translateTypeCreator;
   /**
    * Instantiates the module
    * @constructor
@@ -23,14 +34,14 @@ class feedManager {
    * @param {PvPClient} e.pvpClient PvPCraft client library instance
    * @param {Function} e.i10010n internationalization function
    */
-  constructor(e) {
+  constructor(e: ModuleOptions) {
     this._client = e.client;
     this._feeds = e.feeds;
     this.perms = e.perms;
     this.i10010n = e.i10010n;
   }
 
-  addOrRemoveFeed(adding, command) {
+  addOrRemoveFeed(adding: boolean, command: GuildCommand) {
     if (!command.args[0]) {
       command.reply(command.translate `Usage ${command.prefix}${command.command} <start|stop> <node>[ --channel <channel>]`);
       return true;
@@ -41,11 +52,11 @@ class feedManager {
       let matches = command.options.webhook
         .match(/https:\/\/(?:ptb.|canary\.)?discordapp\.com\/api\/webhooks\/(\d+)\/(.+)/i);
       channel = {
+        // @ts-ignore
         id: `https://discordapp.com/api/webhooks/${matches[1]}/${matches[2]}`,
-        server: {id: command.channel.guild.id},
-        mention: function mention() {
-          return `another Discord`;
-        }
+        // @ts-ignore
+        guild: {id: command.channel.guild.id},
+        mention: `another Discord`,
       };
     }
     else if (!channel) {
@@ -74,7 +85,7 @@ class feedManager {
    * Returns an array of commands that can be called by the command handler
    * @returns {[{triggers: [string], permissionCheck: function, channels: [string], execute: function}]}
    */
-  getCommands() {
+  getCommands(): ModuleCommand[] {
     return [{
       triggers: ["feed", "feeds"],
       permissionCheck: this.perms.genCheckCommand("feeds.manage"),
@@ -84,7 +95,7 @@ class feedManager {
           triggers: ["list"],
           permissionCheck: this.perms.genCheckCommand("feeds.manage"),
           channels: ["guild"],
-          execute: command => {
+          execute: (command: GuildCommand) => {
             let data = this._feeds.list(command.channel.guild.id);
             if (data && data.hasOwnProperty("feeds")) {
               console.log(data.feeds);
@@ -99,7 +110,7 @@ class feedManager {
           triggers: ["start"],
           permissionCheck: this.perms.genCheckCommand("feeds.manage"),
           channels: ["guild"],
-          execute: command => {
+          execute: (command: GuildCommand) => {
             return this.addOrRemoveFeed(true, command);
           }
         },
@@ -107,12 +118,12 @@ class feedManager {
           triggers: ["stop"],
           permissionCheck: this.perms.genCheckCommand("feeds.manage"),
           channels: ["guild"],
-          execute: command => {
+          execute: (command: GuildCommand) => {
             return this.addOrRemoveFeed(false, command);
           }
         }
       ],
-      execute: command => {
+      execute: (command: Command) => {
         command.reply(command.translate `Usage ${command.prefix}${command.command} <start|stop> <node>[ --channel <channel>]`);
         return true;
       },
@@ -120,7 +131,7 @@ class feedManager {
       triggers: ["find"],
       permissionCheck: this.perms.genCheckCommand("feeds.find"),
       channels: ["guild"],
-      execute: command => {
+      execute: (command: GuildCommand) => {
         if (!command.args[0]) {
           return command.replyAutoDeny(command.translate `Usage ${command.prefix}${command.command} <node>`)
         }
