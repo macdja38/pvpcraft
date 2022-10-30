@@ -11,6 +11,7 @@ import Config from "../lib/Config";
 import Permissions from "../lib/Permissions";
 import Eris from "eris";
 import Command, { GuildCommand } from "../lib/Command/Command";
+import { translateTypeCreator } from "../types/translate";
 const now = require('performance-now');
 
 const os = require('os');
@@ -21,7 +22,7 @@ const utilities: ModuleConstructor = class utilities implements Module {
   private perms: Permissions;
   private client: Eris.Client;
   private config: Config;
-  private i10010n: any;
+  private i10010n: translateTypeCreator;
 
   /**
    * Instantiates the module

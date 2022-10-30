@@ -15,6 +15,7 @@ import Eris, { GuildChannel, TextChannel } from "eris";
 import ConfigDB from "../lib/ConfigDB";
 import WebSocket from "ws";
 import Command, { GuildCommand } from "../lib/Command/Command";
+import { translateTypeCreator } from "../types/translate";
 
 type MCAuth = {
   chat?: string;
@@ -36,7 +37,7 @@ export const minecraft: ModuleConstructor = class minecraft implements Module {
   private client: Eris.Client;
   private perms: Permissions;
   private messageSender: any;
-  private i10010n: any;
+  private i10010n: translateTypeCreator;
   private minecraftConnections: WebSocket[];
 
   /**

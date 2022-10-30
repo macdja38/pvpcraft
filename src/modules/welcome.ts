@@ -12,12 +12,13 @@ import ConfigDB from "../lib/ConfigDB";
 import Permissions from "../lib/Permissions";
 import * as Sentry from "@sentry/node";
 import { GuildCommand } from "../lib/Command/Command";
+import { translateTypeCreator } from "../types/translate";
 
 const welcome: ModuleConstructor = class welcome implements Module {
   private client: Eris.Client;
   private config: ConfigDB;
   private perms: Permissions;
-  private i10010n: any;
+  private i10010n: translateTypeCreator;
 
   /**
    * Instantiates the module
