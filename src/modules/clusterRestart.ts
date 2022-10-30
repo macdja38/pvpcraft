@@ -3,16 +3,21 @@
  */
 "use strict";
 
-import utils from "../lib/utils";
+import { Module, ModuleCommand, ModuleConstructor } from "../types/moduleDefinition";
+import { ModuleOptions } from "../types/lib";
+import Config from "../lib/Config";
+import Eris from "eris";
+import Command from "../lib/Command/Command";
 
-class clusterRestart {
+const clusterRestart: ModuleConstructor = class clusterRestart implements Module {
+  private fileConfig: Config;
+  private client: Eris.Client;
   /**
    * Instantiates the module
    * @constructor
    * @param {Object} e
    * @param {Eris} e.client Eris client
    * @param {Config} e.config File based config
-   * @param {Raven?} e.raven Raven error logging system
    * @param {Config} e.auth File based config for keys and tokens and authorisation data
    * @param {ConfigDB} e.configDB database based config system, specifically for per guild settings
    * @param {R} e.r Rethinkdb r
@@ -22,21 +27,20 @@ class clusterRestart {
    * @param {SlowSender} e.slowSender Instantiated slow sender
    * @param {PvPClient} e.pvpClient PvPCraft client library instance
    */
-  constructor(e) {
+  constructor(e: ModuleOptions) {
     //save the client as this.client for later use.
     this.client = e.client;
     this.fileConfig = e.config;
-    //save the bug reporting thing raven for later use.
-    this.raven = e.raven;
   }
 
-  getCommands() {
+  getCommands(): ModuleCommand[] {
     return [{
       triggers: ["restart"],
       permissionCheck: (command) => this.fileConfig.get("permissions", {"permissions": {admins: []}}).admins.includes(command.author.id),
       channels: ["*"],
-      execute: (command) => {
+      execute: (command: Command) => {
         console.log("Triggering restart");
+        // @ts-ignore
         process.send({
           op: 1,
           command: "restart",
