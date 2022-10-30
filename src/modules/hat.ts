@@ -12,11 +12,12 @@ import Permissions from "../lib/Permissions";
 import * as Sentry from "@sentry/node";
 import { combineTwoImages, getImageFromFile, getImageFromUrl } from "../lib/hats";
 import { GuildCommand } from "../lib/Command/Command";
+import { translateTypeCreator } from "../types/translate";
 
 const hat: ModuleConstructor = class hat implements Module {
   private client: Eris.Client;
   private perms: Permissions;
-  private i10010n: any;
+  private i10010n: translateTypeCreator;
 
   /**
    * Instantiates the module
