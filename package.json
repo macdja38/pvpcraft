@@ -64,7 +64,7 @@
     "@types/universal-analytics": "^0.4.4",
     "@types/ws": "^7.4.0",
     "@types/youtube-dl": "^3.0.1",
-    "docma": "^2.1.0",
+    "docma": "^3.2.2",
     "eslint": "^7.13.0",
     "jest-cli": "^26.6.3",
     "jsdoc": "^3.6.6",
