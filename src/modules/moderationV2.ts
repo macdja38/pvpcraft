@@ -18,6 +18,7 @@ import * as Sentry from "@sentry/node";
 import Command, { GuildCommand } from "../lib/Command/Command";
 import Utils from "../lib/utils";
 import TaskQueue from "../lib/TaskQueue";
+import Purger from "../lib/Purger";
 
 interface SlackWebhookField {
   title: string;
@@ -484,7 +485,7 @@ export class moderationV2 {
       triggers: ["purge"],
       permissionCheck: this.perms.genCheckCommand("moderation.tools.purge"),
       channels: ["guild"],
-      execute: (command: GuildCommand) => {
+      execute: async (command: GuildCommand) => {
         if (!("createMessage" in command.channel)) {
           return command.replyAutoDeny(command.translate`Can only purge text channels.`);
         }
@@ -513,13 +514,12 @@ export class moderationV2 {
         if (command.flags.includes("d")) {
           this.updateServerIgnores(1, channel.guild.id);
         }
-        let purgeQueue: Eris.Message[] = [];
-        let totalFetched = 0;
-        let totalPurged = 0;
-        let done = false;
+        
+        // Fetch pinned messages - always ignore them by default in the legacy command
+        const pins = await channel.getPins();
+        const pinnedMessageIds = new Set(pins.map(pin => pin.id));
+        
         let statusMessage: Eris.Message<Eris.TextChannel> | false = false;
-        let errorMessage: string | boolean = false;
-        let oldMessagesFound = false;
 
         const updateStatus = (text: string) => {
           if (statusMessage) {
@@ -530,59 +530,23 @@ export class moderationV2 {
           }
         };
 
-        this.fetchMessages(channel, length, options, (messages, error) => {
-          if (error) {
-            errorMessage = error;
-            done = true;
-            purgeQueue = [];
-            updateStatus(`\`\`\`xl\n${error}\`\`\``);
-          } else {
-            if (messages) {
-              totalFetched += messages.length;
-              purgeQueue = purgeQueue.concat(messages);
-            } else {
-              done = true;
-            }
-          }
+        // Create and start the purger
+        const purger = new Purger({
+          channel,
+          updateStatus,
+          fetchMessages: this.fetchMessages.bind(this),
+          translate: command.translate,
+          pinnedMessageIds,
         });
 
-        const purger = setInterval(() => {
-          if (purgeQueue.length > 0 && !errorMessage) {
-            const messagesToPurge = purgeQueue.splice(0, 100);
-            const twoWeeksAgo = Date.now() - 60 * 60 * 24 * 7 * 2 * 1000;
-            const youngMessagesToPurge = messagesToPurge.filter(msg => msg.timestamp > twoWeeksAgo);
-            if (youngMessagesToPurge.length < messagesToPurge.length) {
-              oldMessagesFound = true;
-            }
-            channel.deleteMessages(youngMessagesToPurge.map(m => m.id)).then(() => {
-              totalPurged += messagesToPurge.length;
-            }).catch((error) => {
-              let responseCode;
-              if (error.response) {
-                responseCode = JSON.parse(error.response).code;
-              }
-              if (responseCode === 50013) {
-                errorMessage = error.response;
-                done = true;
-                purgeQueue = [];
-                updateStatus(command.translate`\`\`\`xl\ndiscord permission Manage Messages required to purge messages.\`\`\``);
-              } else if (responseCode === 429) {
-                purgeQueue = purgeQueue.concat(messagesToPurge);
-              } else {
-                Sentry.captureException(error);
-                console.error(error);
-                console.error(error.response);
-              }
-            })
-          } else if (done) {
-            clearInterval(purger);
-          }
-        }, 1100);
+        purger.start(length, options);
 
         const updateStatusFunction = () => {
-          if (done && purgeQueue.length === 0) {
-            if (!errorMessage) {
-              updateStatus(this.getStatus(totalPurged, totalFetched, length, oldMessagesFound, command));
+          const stats = purger.getStats();
+          
+          if (purger.isDone()) {
+            if (!stats.errorMessage) {
+              updateStatus(this.getStatus(stats.totalPurged, stats.totalFetched, length, stats.oldMessagesFound, stats.purgeOldMessages, command));
             }
             setTimeout(() => {
               if (statusMessage) {
@@ -594,8 +558,8 @@ export class moderationV2 {
             }, 5000);
             clearInterval(status);
           } else {
-            if (!errorMessage) {
-              updateStatus(this.getStatus(totalPurged, totalFetched, length, oldMessagesFound, command));
+            if (!stats.errorMessage) {
+              updateStatus(this.getStatus(stats.totalPurged, stats.totalFetched, length, stats.oldMessagesFound, stats.purgeOldMessages, command));
             }
           }
         };
@@ -606,8 +570,8 @@ export class moderationV2 {
     }];
   }
 
-  getStatus(totalPurged: number, totalFetched: number, total: number, oldMessagesFound: boolean, command: Command) {
-    return command.translate`\`\`\`xl\nStatus:\nPurged: ${getBar(totalPurged, totalFetched, 16)}\nFetched:${getBar(totalFetched, total, 16)}${(oldMessagesFound ? command.translate`\nMessages older than two weeks cannot be purged due to it breaking discord.` : "")}\n\`\`\``;
+  getStatus(totalPurged: number, totalFetched: number, total: number, oldMessagesFound: boolean, purgeOldMessages: boolean, command: Command) {
+    return command.translate`\`\`\`xl\nStatus:\nPurged: ${getBar(totalPurged, totalFetched, 16)}\nFetched:${getBar(totalFetched, total, 16)}${(oldMessagesFound ? purgeOldMessages ? command.translate`\nOld Messages found, purging will be slow`: command.translate`\nMessages older than two weeks cannot be purged due to it breaking discord.` : "")}\n\`\`\``;
   }
 
   updateServerIgnores(count: number, serverId: string) {
