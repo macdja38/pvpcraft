@@ -83,7 +83,6 @@ const utilities: ModuleConstructor = class utilities implements Module {
             `Created: ${new Date(guild.createdAt).toUTCString()}\n` +
             `Owner: ${utils.clean(owner?.username || guild.ownerID)}\n` +
             `Humans: ${(guild.members.size - botCount)} Bots: ${botCount}\n` +
-            `Voice Region: ${guild.region}\n` +
             `Roles: ${utils.clean(guild.roles.map(r => r.name).join(", "))}\n` +
             `Icon URL: ${guild.iconURL}`,
         }

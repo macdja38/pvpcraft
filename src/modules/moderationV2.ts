@@ -5,9 +5,7 @@
 import utils from "../lib/utils";
 import { ModuleOptions } from "../types/lib";
 import PvPCraft from "../PvPCraft";
-import Eris, { TextChannel } from "eris";
-import util from "util";
-import EE from "eris-errors";
+import Eris, {GetMessagesOptions, TextChannel} from "eris";
 import MessageSender from "../lib/MessageSender";
 import { translateType, translateTypeCreator } from "../types/translate";
 import Config from "../lib/Config";
@@ -20,8 +18,6 @@ import * as Sentry from "@sentry/node";
 import Command, { GuildCommand } from "../lib/Command/Command";
 import Utils from "../lib/utils";
 import TaskQueue from "../lib/TaskQueue";
-
-const colors = require('colors');
 
 interface SlackWebhookField {
   title: string;
@@ -59,12 +55,15 @@ const presenceUpdateEmojis = {
   ONLINE: "🟢",
   OFFLINE: "🔳",
   UNKNOWN: "?",
-};
+} as const;
 
-function emojifyPresenceStatus(presenceStatus: string) {
-  const upperCasePresence = presenceStatus.toUpperCase();
+function emojifyPresenceStatus(presenceStatus: Eris.UserStatus) {
+  function presenceToUppercase(presenceStatus: Eris.UserStatus) {
+    return presenceStatus.toUpperCase() as Uppercase<Eris.UserStatus>;
+  }
+
+  const upperCasePresence = presenceToUppercase(presenceStatus);
   if (presenceUpdateEmojis.hasOwnProperty(upperCasePresence)) {
-    // @ts-ignore
     return `${presenceUpdateEmojis[upperCasePresence]} ${presenceStatus}`;
   } else {
     return presenceStatus;
@@ -271,7 +270,7 @@ export class moderationV2 {
       return true;
     }
 
-    let targetUserId = user ? user.id : possibleId;
+    const targetUserId = user ? user.id : possibleId;
 
     if (!targetUserId) {
       command.reply(command.translate`Sorry, user could not be located or their id was not a number. Please try a valid mention or id`);
@@ -291,13 +290,13 @@ export class moderationV2 {
 
     let time = 1;
     if (action === "ban" && command.options.hasOwnProperty("time")) {
-      let time = parseInt(command.options.time, 10);
+      time = parseInt(command.options.time, 10);
       if (isNaN(time)) {
         return command.reply(command.translate`Ban time must be a valid number.`);
       }
     }
 
-    let reason = command.options.reason;
+    const reason = command.options.reason;
     console.log("reason", reason);
     if (!perms.check(msg, "moderation.reasonless")) {
       if (!reason) {
@@ -310,10 +309,28 @@ export class moderationV2 {
   }
 
   moderationActionCore(guild: Eris.Guild, action: "ban" | "unban" | "kick", targetUser: Eris.User | undefined, instigator: Eris.User, targetUserId: string, timeOrReason?: number | string, reasonOrNothing?: string) {
-    let reason: string | null = typeof timeOrReason === "string" ? timeOrReason : (typeof reasonOrNothing === "string" ? reasonOrNothing : null);
+    const reason: string | null = typeof timeOrReason === "string" ? timeOrReason : (typeof reasonOrNothing === "string" ? reasonOrNothing : null);
 
-    // @ts-ignore
-    return guild[`${action}Member` as const](targetUserId, timeOrReason, reason)
+    let moderationActionResult: Promise<void>
+
+    if (action === "ban") {
+      const options: Eris.BanMemberOptions = {};
+
+      if (reason) {
+        options.reason = reason;
+      }
+
+      if (typeof timeOrReason === "number") {
+        const secondsInADay = 24 * 60 * 60;
+        options.deleteMessageSeconds = timeOrReason * secondsInADay;
+      }
+
+      moderationActionResult = guild.banMember(targetUserId, options)
+    } else {
+      moderationActionResult = guild[`${action}Member` as const](targetUserId, reason ?? undefined);
+    }
+
+    return moderationActionResult
       .then(() => {
         return this[moderationMethodNameMap[action]](guild, targetUser ? targetUser : targetUserId, instigator, reason, null);
       })
@@ -328,7 +345,7 @@ export class moderationV2 {
       return translate`This user has the mute immunity permission \`moderation.immunity.mute\`, you may not mute them.`;
     }
 
-    let muteRoleID = this.configDB.get("muteRole", false, { server: guild.id });
+    const muteRoleID = this.configDB.get("muteRole", false, { server: guild.id });
     if (!muteRoleID) {
       return translate`mute role not defined, try using ${prefix !== undefined ? prefix : "/"}setupmute to set it up.`
     }
@@ -338,7 +355,7 @@ export class moderationV2 {
     }
     console.log(muteRoleID);
 
-    let newRoles = member.roles.slice(0);
+    const newRoles = member.roles.slice(0);
     newRoles.push(muteRoleID);
 
     this.memberMuted(guild, member, instigator.user, reason, null);
@@ -438,8 +455,8 @@ export class moderationV2 {
 
         command.replyAutoDeny(command.translate`Muted role created with name ${utils.clean(muteRole.name)}. Now attempting to deny sendMessage in all text channels and speaking in all voice channels.`);
 
-        let muteRoleCreationResults = command.channel.guild.channels.map(channel => {
-          return channel.editPermission(muteRole.id, 0, channel.type === 0 ? Eris.Constants.Permissions.sendMessages : Eris.Constants.Permissions.voiceSpeak, Utils.PERMISSION_OVERWRITE_TYPE.ROLE, `Created in response to ${command.prefix}setupmute run by <@${command.author.id}> in order to make the muted role effective`);
+        const muteRoleCreationResults = command.channel.guild.channels.map((channel: Eris.GuildChannel) => {
+          return this.client.editChannelPermission(channel.id, muteRole.id, 0, channel.type === 0 ? Eris.Constants.Permissions.sendMessages : Eris.Constants.Permissions.voiceSpeak, Utils.PERMISSION_OVERWRITE_TYPE.ROLE, `Created in response to ${command.prefix}setupmute run by <@${command.author.id}> in order to make the muted role effective`);
         });
 
         return utils.resolveAllPromises(muteRoleCreationResults).then(() => {
@@ -469,16 +486,16 @@ export class moderationV2 {
       channels: ["guild"],
       execute: (command: GuildCommand) => {
         if (!("createMessage" in command.channel)) {
-          return command.replyAutoDeny("Can only purge text channels.");
+          return command.replyAutoDeny(command.translate`Can only purge text channels.`);
         }
-        let channel: Eris.TextChannel = command.channel as Eris.TextChannel;
-        let options: Parameters<typeof moderationV2.prototype.fetchMessages>[2] = {};
+        const channel: Eris.TextChannel = command.channel as Eris.TextChannel;
+        const options: Parameters<typeof moderationV2.prototype.fetchMessages>[2] = {};
         if (command.targetUser) {
-          let member = command.targetUser;
+          const member = command.targetUser;
           if (member) {
             options.user = member.user;
           } else {
-            command.reply(command.translate`Cannot find that user.`)
+            return command.replyAutoDeny(command.translate`Cannot find that user.`)
           }
         }
         if (!isNaN(parseInt(command.options.before, 10))) {
@@ -496,8 +513,6 @@ export class moderationV2 {
         if (command.flags.includes("d")) {
           this.updateServerIgnores(1, channel.guild.id);
         }
-        let purger: NodeJS.Timeout;
-        let status: NodeJS.Timeout;
         let purgeQueue: Eris.Message[] = [];
         let totalFetched = 0;
         let totalPurged = 0;
@@ -506,7 +521,7 @@ export class moderationV2 {
         let errorMessage: string | boolean = false;
         let oldMessagesFound = false;
 
-        let updateStatus = (text: string) => {
+        const updateStatus = (text: string) => {
           if (statusMessage) {
             utils.handleErisRejection(statusMessage.channel.editMessage(statusMessage.id, text));
           } else {
@@ -530,7 +545,8 @@ export class moderationV2 {
             }
           }
         });
-        purger = setInterval(() => {
+
+        const purger = setInterval(() => {
           if (purgeQueue.length > 0 && !errorMessage) {
             const messagesToPurge = purgeQueue.splice(0, 100);
             const twoWeeksAgo = Date.now() - 60 * 60 * 24 * 7 * 2 * 1000;
@@ -563,7 +579,7 @@ export class moderationV2 {
           }
         }, 1100);
 
-        let updateStatusFunction = () => {
+        const updateStatusFunction = () => {
           if (done && purgeQueue.length === 0) {
             if (!errorMessage) {
               updateStatus(this.getStatus(totalPurged, totalFetched, length, oldMessagesFound, command));
@@ -584,7 +600,7 @@ export class moderationV2 {
           }
         };
         setTimeout(updateStatusFunction, 500);
-        status = setInterval(updateStatusFunction, 2500);
+        const status = setInterval(updateStatusFunction, 2500);
         return true;
       },
     }];
@@ -599,7 +615,7 @@ export class moderationV2 {
       this.tempServerIgnores[serverId] = count;
       return;
     }
-    let thisServerTempIgnores = this.tempServerIgnores[serverId];
+    const thisServerTempIgnores = this.tempServerIgnores[serverId];
     if (thisServerTempIgnores !== undefined) {
       this.tempServerIgnores[serverId] = thisServerTempIgnores + count;
       if (thisServerTempIgnores < 1) {
@@ -614,12 +630,14 @@ export class moderationV2 {
     return this.tempServerIgnores.hasOwnProperty(serverId);
   }
 
-  fetchMessages(channel: Eris.TextChannel, count: number, options: { before?: string, after?: string, user?: Eris.User } = {}, cb: (messages: Eris.Message[] | false, error: string | false) => void) {
-    channel.getMessages(Math.min(100, count), options.before).then((newMessages) => {
-      let newMessagesLength = newMessages.length;
-      let highestMessage = newMessages[newMessages.length - 1];
-      if (options.hasOwnProperty("after")) {
-        let index = newMessages.findIndex((m) => m.id === options.after);
+  fetchMessages(channel: Eris.TextChannel | Eris.ThreadChannel, count: number, options: GetMessagesOptions & { user?: Eris.User } = {}, cb: (messages: Eris.Message[] | false, error: string | false) => void) {
+    const { user, ...optionsForEris } = { ...options, limit: Math.min(100, count) };
+    channel.getMessages(optionsForEris).then((newMessages) => {
+      const newMessagesLength = newMessages.length;
+      const highestMessage = newMessages[newMessages.length - 1];
+      const lowestMessage = newMessages[0];
+      if (options.hasOwnProperty("after") && options.after !== undefined) {
+        const index = newMessages.findIndex((m) => m.id === options.after);
         if (index > -1) {
           count = 0;
           newMessages.splice(index);
@@ -627,13 +645,18 @@ export class moderationV2 {
       } else {
         count -= 100;
       }
-      if ("user" in options) {
-        newMessages = newMessages.filter((m) => m.author.id === options.user?.id);
+      if (user) {
+        newMessages = newMessages.filter((m) => m.author.id === user?.id);
       }
       cb(newMessages, false);
       if (count > 0 && newMessagesLength === 100) {
-        options.before = highestMessage.id;
+        if (options.after) {
+          options.after = lowestMessage.id;
+        } else {
+          options.before = highestMessage.id;
+        }
         process.nextTick(() => {
+          console.log("NextTick", count, options);
           this.fetchMessages(channel, count, options, cb)
         });
       } else {
@@ -680,7 +703,7 @@ export class moderationV2 {
     if (!attachment.color && colorMap.hasOwnProperty(eventName)) {
       attachment.color = colorMap[eventName];
     }
-    let payload = {
+    const payload = {
       username: options.username || this.client.user.username,
       attachments: [attachment],
       icon_url: options.icon_url || this.client.user.avatarURL,
@@ -702,10 +725,10 @@ export class moderationV2 {
       }))
     }
     const feedNode = options.overrideRoot ? `${options.overrideRoot}.${eventName}` : `moderation.${eventName}`;
-    this.feeds.find(feedNode, serverId).forEach((channel) => {
+    this.feeds.find(feedNode, serverId).forEach((channel: string) => {
       let target: string | Eris.TextChannel = channel;
       if (channel.indexOf("http") < 0) {
-        let guild = this.client.guilds.get(serverId);
+        const guild = this.client.guilds.get(serverId);
         if (guild) {
           target = guild.channels.get(channel) as TextChannel;
         }
@@ -717,18 +740,18 @@ export class moderationV2 {
 
   messageDeletedBulk(messages: Eris.Message<Eris.TextChannel>[]) {
     if (!("guild" in messages[0].channel)) return;
-    let message = messages[0];
-    let cached = messages.filter(m => m.hasOwnProperty("content"));
+    const message = messages[0];
+    const cached = messages.filter(m => m.hasOwnProperty("content"));
     const translate = this.i10010n(this.pvpcraft.getChannelLanguage(message.channel.id));
 
-    let channelIgnored = this.isServerIgnored(message.channel.guild.id);
+    const channelIgnored = this.isServerIgnored(message.channel.guild.id);
     if (!channelIgnored) {
       cached.forEach(this.messageDeleted);
     }
 
     //grab url's to the message's attachments
-    let fields: SlackWebhookField[] = [];
-    let attachment = {
+    const fields: SlackWebhookField[] = [];
+    const attachment = {
       title: translate`Bulk Delete`,
       fields,
     };
@@ -776,9 +799,9 @@ export class moderationV2 {
     if (message.author && this.perms.checkUserChannel(message.author, message.channel, "msglog.whitelist.message.deleted")) return;
     const translate = this.i10010n(this.pvpcraft.getChannelLanguage(message.channel.id));
     //grab url's to the message's attachments
-    let options: Parameters<typeof moderationV2.prototype.sendHookedMessage>[1] = {};
-    let fields: SlackWebhookField[] = [];
-    let attachment = {
+    const options: Parameters<typeof moderationV2.prototype.sendHookedMessage>[1] = {};
+    const fields: SlackWebhookField[] = [];
+    const attachment = {
       title: translate`Message Deleted`,
       fields,
     };
@@ -807,7 +830,7 @@ export class moderationV2 {
       })
     }
     if (message.content) {
-      let field: Partial<SlackWebhookField> = {
+      const field: Partial<SlackWebhookField> = {
         title: translate`Content`,
         short: true,
       };
@@ -827,9 +850,9 @@ export class moderationV2 {
         short: true,
       })
     }
-    //if their are attachments log them.
+    //if there are attachments log them.
     if (message.attachments) {
-      for (let i in message.attachments) {
+      for (const i in message.attachments) {
         if (message.attachments.hasOwnProperty(i)) {
           fields.push({
             title: translate`Attachment`,
@@ -848,10 +871,10 @@ export class moderationV2 {
     if (oldMessage && message.content === oldMessage.content) return;
     if (message.author && this.perms.checkUserChannel(message.author, message.channel, "msglog.whitelist.message.updated")) return;
     const translate = this.i10010n(this.pvpcraft.getChannelLanguage(message.channel.id));
-    //grab url's to the message's attachments
-    let options: any = {};
-    let fields: SlackWebhookField[] = [];
-    let attachment: SlackWebhookBody = {
+    // Grab url's to the message's attachments
+    const options: { user?: Eris.Member } = {};
+    const fields: SlackWebhookField[] = [];
+    const attachment: SlackWebhookBody = {
       title: translate`Message Updated`,
       fields,
     };
@@ -859,7 +882,7 @@ export class moderationV2 {
       options.user = message.member;
     }
     let content: string | boolean = false;
-    let changeThresh = this.configDB.get("changeThresh", this.configDB.get("changeThresh", 1), { server: message.channel.guild.id });
+    const changeThresh = this.configDB.get("changeThresh", this.configDB.get("changeThresh", 1), { server: message.channel.guild.id });
     if (oldMessage && oldMessage.content) {
       if (utils.compare(message.content, oldMessage.content) > changeThresh) {
         content = `${utils.bubble(oldMessage.content)} to ${utils.bubble(message.content)}`;
@@ -891,16 +914,16 @@ export class moderationV2 {
       })
     }
     if (content) {
-      let field = {
+      const field = {
         title: translate`Content`,
         value: content,
         short: true,
       };
       fields.push(field)
     }
-    //if their are attachments log them.
+    // If there are attachments log them.
     if (message.attachments) {
-      for (let i in message.attachments) {
+      for (const i in message.attachments) {
         if (message.attachments.hasOwnProperty(i)) {
           fields.push({
             title: translate`Attachment`,
@@ -910,14 +933,14 @@ export class moderationV2 {
         }
       }
     }
-    //send everything off.
+    // Send everything off.
     this.sendHookedMessage("message.updated", options, attachment, message.channel.guild.id)
   };
 
   channelDeleted(channel: Eris.GuildChannel | Eris.TextChannel) {
     if (!channel.guild) return;
     const translate = this.i10010n(this.pvpcraft.getChannelLanguage(channel.id));
-    let fields: SlackWebhookField[] = [{
+    const fields: SlackWebhookField[] = [{
       title: translate`Name`,
       value: channel.name,
       short: true,
@@ -960,7 +983,7 @@ export class moderationV2 {
 
     const translate = this.i10010n(this.pvpcraft.getChannelLanguage(channel.id));
 
-    let fields: SlackWebhookField[] = [{
+    const fields: SlackWebhookField[] = [{
       title: translate`Channel`,
       value: channel.mention,
       short: true,
@@ -985,10 +1008,10 @@ export class moderationV2 {
     }
 
     if ("permissionOverwrites" in channel && "permissionOverwrites" in oldChannel) {
-      let changes = findOverrideChanges(channel.permissionOverwrites, oldChannel.permissionOverwrites);
+      const changes = findOverrideChanges(channel.permissionOverwrites, oldChannel.permissionOverwrites);
 
-      for (let change of changes) {
-        let newField: Partial<SlackWebhookField> = { short: true, value: "" };
+      for (const change of changes) {
+        const newField: Partial<SlackWebhookField> = { short: true, value: "" };
         if (change.overwrite.type === Utils.PERMISSION_OVERWRITE_TYPE.MEMBER) {
           newField.title = translate`User Overwrite`;
           newField.value = `<@${change.overwrite.id}>`;
@@ -1002,8 +1025,8 @@ export class moderationV2 {
         } else if (change.change === "remove") {
           newField.value += translate` removed ${permissionsListFromNumber(change.overwrite.allow)}`;
         } else {
-          let before = change.from;
-          let after = change.to;
+          const before = change.from;
+          const after = change.to;
 
           if (before.allow !== after.allow) {
             if (before.allow > after.allow) {
@@ -1035,12 +1058,12 @@ export class moderationV2 {
         if (this.perms.checkUserGuild(user, guild, "msglog.whitelist.user")) return;
         const translate = this.i10010n(this.pvpcraft.getChannelLanguage("*", guild.id));
         if (!oldUser) return;
-        let fields: SlackWebhookField[] = [{
+        const fields: SlackWebhookField[] = [{
           title: translate`User`,
           value: user.mention,
           short: true,
         }];
-        let embed: SlackWebhookBody = { title: translate`Member Updated`, fields };
+        const embed: SlackWebhookBody = { title: translate`Member Updated`, fields };
         if (oldUser.username !== user.username) {
           fields.push({
             title: translate`Username`,
@@ -1082,12 +1105,12 @@ export class moderationV2 {
         if (this.perms.checkUserGuild(user, guild, "msglog.whitelist.presence")) return;
         const translate = this.i10010n(this.pvpcraft.getChannelLanguage("*", guild.id));
         if (!oldPresence) return;
-        let fields: SlackWebhookField[] = [{
+        const fields: SlackWebhookField[] = [{
           title: translate`User`,
           value: user.mention,
           short: true,
         }];
-        let embed = { title: translate`Presence Updated`, fields };
+        const embed = { title: translate`Presence Updated`, fields };
         if (oldPresence.status !== user.status) {
           fields.push({
             title: translate`Status`,
@@ -1140,7 +1163,7 @@ export class moderationV2 {
 
   roleUpdated(guild: Eris.Guild, role: Eris.Role, oldRole: Eris.Role) {
     const translate = this.i10010n(this.pvpcraft.getChannelLanguage("*", guild.id));
-    let fields: SlackWebhookField[] = [{
+    const fields: SlackWebhookField[] = [{
       title: translate`Role`,
       value: role.mention,
       short: true,
@@ -1149,8 +1172,8 @@ export class moderationV2 {
       value: utils.idToUTCString(role.id),
       short: true,
     }];
-    let oldPerms = arrayOfTrues(oldRole.permissions.json).toString();
-    let newPerms = arrayOfTrues(role.permissions.json).toString();
+    const oldPerms = arrayOfTrues(oldRole.permissions.json).toString();
+    const newPerms = arrayOfTrues(role.permissions.json).toString();
     if (oldPerms !== newPerms) {
       fields.push({
         title: translate`Permissions`,
@@ -1306,7 +1329,7 @@ export class moderationV2 {
    */
   memberUnbanned(server: Eris.Guild, user: Eris.User | string, instigator: Eris.User | null, reason: string | null, error: Error | null) {
     const translate = this.i10010n(this.pvpcraft.getChannelLanguage("*", server.id));
-    let fields: SlackWebhookField[] = [{
+    const fields: SlackWebhookField[] = [{
       title: translate`User`,
       value: typeof user === "string" ? `<@${user}>` : user.mention,
       short: true,
@@ -1377,7 +1400,7 @@ export class moderationV2 {
 
     const userID = typeof user === "string" ? user : user.id;
 
-    let fields: SlackWebhookField[] = [{
+    const fields: SlackWebhookField[] = [{
       title: translate`User`,
       value: `<@${userID}>`,
       short: true,
@@ -1437,7 +1460,7 @@ export class moderationV2 {
     const translate = this.i10010n(this.pvpcraft.getChannelLanguage("*", guild.id));
     if (this.perms.checkUserGuild(member, guild, "msglog.whitelist.member.updated")) return;
     if (!oldMember) return;
-    let fields: SlackWebhookField[] = [{
+    const fields: SlackWebhookField[] = [{
       title: translate`User`,
       value: member.mention,
       short: true,
@@ -1471,14 +1494,14 @@ export class moderationV2 {
       }
     }
     if (oldMember.roles && oldMember.roles.length < member.roles.length) {
-      let newRole = findNewRoles(member.roles, oldMember.roles);
+      const newRole = findNewRoles(member.roles, oldMember.roles);
       fields.push({
         title: translate`Role Added`,
         value: `<@&${newRole}>`,
         short: true,
       });
     } else if (oldMember.roles && oldMember.roles.length > member.roles.length) {
-      let oldRole = findNewRoles(oldMember.roles, member.roles);
+      const oldRole = findNewRoles(oldMember.roles, member.roles);
       fields.push({
         title: translate`Role Removed`,
         value: `<@&${oldRole}>`,
@@ -1568,9 +1591,9 @@ function findOverrideChanges(thing1: Eris.Collection<Eris.PermissionOverwrite>, 
     to: Eris.PermissionOverwrite;
   }
 
-  let changes: (Added | Removed | Changed)[] = [];
+  const changes: (Added | Removed | Changed)[] = [];
   thing1.forEach(permissionOverwrite => {
-    let thing2Overwrite = thing2.get(permissionOverwrite.id);
+    const thing2Overwrite = thing2.get(permissionOverwrite.id);
     if (thing2Overwrite) {
       if (thing2Overwrite.allow !== permissionOverwrite.allow || thing2Overwrite.deny !== permissionOverwrite.deny) {
         changes.push({
@@ -1586,7 +1609,7 @@ function findOverrideChanges(thing1: Eris.Collection<Eris.PermissionOverwrite>, 
     }
   });
   thing2.forEach(permissionOverwrite => {
-    let thing1Overwrite = thing1.get(permissionOverwrite.id);
+    const thing1Overwrite = thing1.get(permissionOverwrite.id);
     if (!thing1Overwrite) {
       changes.push({ change: "remove", overwrite: permissionOverwrite, type: permissionOverwrite.type });
     }
@@ -1679,7 +1702,7 @@ function getAuditLogReason(event: Eris.GuildAuditLog) {
  * @returns {string}
  */
 function getBar(current: number, total: number, length: number, char: string = "=") {
-  let progress = Math.ceil(current / total * length);
+  const progress = Math.ceil(current / total * length);
   return `[${char.repeat(progress)}${" ".repeat(length - progress)}] ${current}/${total}`;
 }
 

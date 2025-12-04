@@ -4,7 +4,7 @@
 
 "use strict";
 
-import utils from "../lib/utils";
+import utils from "../lib/utils.js";
 import { ModuleConstructor, v2Module, v2ModuleConstructor } from "../types/moduleDefinition";
 import { ModuleOptions } from "../types/lib";
 import ConfigDB from "../lib/ConfigDB";
@@ -51,7 +51,7 @@ const role: v2ModuleConstructor = class role implements v2Module {
     this.i10010n = e.i10010n;
 
     this.onJoin = (guild, member) => {
-      let roles = this.config.get("roles", false, { server: guild.id });
+      const roles = this.config.get("roles", false, { server: guild.id });
       if (roles && roles.hasOwnProperty("joinrole")) {
         utils.handleErisRejection(guild.addMemberRole(member.id, roles.joinrole, "Automated joinrole, use `/role remove joinrole` to disable"));
       }
@@ -102,9 +102,9 @@ const role: v2ModuleConstructor = class role implements v2Module {
             channels: "guild" as const,
             options: options,
             execute: (command: PvPInteractiveCommandWithOpts<typeof options>) => {
-              let roles = this.config.get("roles", {}, { server: command.guild.id });
+              const roles = this.config.get("roles", {}, { server: command.guild.id });
               let coloredRolesList = "";
-              for (let role in roles) {
+              for (const role in roles) {
                 if (roles.hasOwnProperty(role) && role !== "joinrole") {
                   if (this.perms.check(command, `role.join.${role}`)) {
                     coloredRolesList += `+${role}\n`;
@@ -123,31 +123,31 @@ const role: v2ModuleConstructor = class role implements v2Module {
         })(),
         (() => {
           const options = [{
-            name: "name" as "name",
+            name: "name" as const,
             description: "The role to join. `/role list` for a list.",
             type: APPLICATION_COMMAND_TYPES.STRING,
-            required: true as true,
+            required: true as const,
           }];
 
           return {
             name: "join",
             description: "Allows you to join a role.",
             permission: "role.join.use",
-            channels: "guild" as "guild",
+            channels: "guild" as const,
             options: options,
             execute: (command: PvPInteractiveCommandWithOpts<typeof options>) => {
               let roleToJoin = command.opts.name.toLowerCase();
               if (roleToJoin[0] === "+" || roleToJoin[0] === "-") {
                 roleToJoin = roleToJoin.substring(1);
               }
-              let roles = this.config.get("roles", {}, { server: command.guild.id });
+              const roles = this.config.get("roles", {}, { server: command.guild.id });
               if (!roles[roleToJoin]) {
                 return command.respond(command.translate`Invalid role name, for a list of roles use \`/role list\``)
               }
               if (!this.perms.check(command, `role.join.${roleToJoin}`)) {
                 return command.respond(command.translate`You do not have perms to join this role for a list of roles use \`/role list\``)
               }
-              let role = command.guild.roles.get(roles[roleToJoin]);
+              const role = command.guild.roles.get(roles[roleToJoin]);
               if (role) {
                 return command.guild.addMemberRole(command.member.id, role.id).then(() => {
                   return command.respond(command.translate`:thumbsup::skin-tone-2:`)
@@ -165,31 +165,31 @@ const role: v2ModuleConstructor = class role implements v2Module {
 
         (() => {
           const options = [{
-            name: "name" as "name",
+            name: "name" as const,
             description: "The role to leave. /role list for a list.",
             type: APPLICATION_COMMAND_TYPES.STRING,
-            required: true as true,
+            required: true as const,
           }];
 
           return {
             name: "leave",
             description: "Allows you to leave a role.",
             permission: "role.leave.use",
-            channels: "guild" as "guild",
+            channels: "guild" as const,
             options: options,
             execute: (command: PvPInteractiveCommandWithOpts<typeof options>) => {
               let roleToLeave = command.opts.name.toLowerCase();
               if (roleToLeave[0] === "+" || roleToLeave[0] === "-") {
                 roleToLeave = roleToLeave.substring(1);
               }
-              let roles = this.config.get("roles", {}, { server: command.guild.id });
+              const roles = this.config.get("roles", {}, { server: command.guild.id });
               if (!roles[roleToLeave]) {
                 return command.respond(command.translate`Invalid role, for a list of roles use \`/role list\``)
               }
               if (!this.perms.check(command, `role.leave.${roleToLeave}`)) {
                 return command.respond(command.translate`You do not have perms to leave this role for a list of roles use \`/role list\``)
               }
-              let role = command.guild.roles.get(roles[roleToLeave]);
+              const role = command.guild.roles.get(roles[roleToLeave]);
               if (role) {
                 return command.guild.removeMemberRole(command.member.id, role.id).then(() => {
                   return command.respond(command.translate`:thumbsup::skin-tone-2:`)
@@ -223,7 +223,7 @@ const role: v2ModuleConstructor = class role implements v2Module {
             options: options,
             execute: (command: PvPInteractiveCommandWithOpts<typeof options>) => {
               const roleName = command.opts.name.toLowerCase();
-              let oldRoles = this.config.get("roles", {}, { server: command.guild.id });
+              const oldRoles = this.config.get("roles", {}, { server: command.guild.id });
               oldRoles[roleName] = command.opts.role.id;
               this.config.set("roles", oldRoles, { server: command.guild.id });
               return command.respond(command.translate`Role added to list of join-able roles`);
@@ -232,10 +232,10 @@ const role: v2ModuleConstructor = class role implements v2Module {
         })(),
         (() => {
           const options = [{
-            name: "name" as "name",
+            name: "name" as const,
             description: "The name users type to join this role.",
             type: APPLICATION_COMMAND_TYPES.STRING,
-            required: true as true,
+            required: true as const,
           }];
 
           return {
@@ -245,8 +245,8 @@ const role: v2ModuleConstructor = class role implements v2Module {
             channels: "guild" as const,
             options: options,
             execute: (command: PvPInteractiveCommandWithOpts<typeof options>) => {
-              let roleToJoin = command.opts.name.toLowerCase();
-              let oldRoles = this.config.get("roles", {}, { server: command.guild.id });
+              const roleToJoin = command.opts.name.toLowerCase();
+              const oldRoles = this.config.get("roles", {}, { server: command.guild.id });
               if (oldRoles.hasOwnProperty(roleToJoin)) {
                 delete oldRoles[roleToJoin];
                 this.config.set("roles", oldRoles, { server: command.guild.id, conflict: "replace" });
@@ -265,10 +265,10 @@ const role: v2ModuleConstructor = class role implements v2Module {
     return (msg: Message | null) => {
       if (msg == null) return;
       if (!isGuildChannel(msg.channel)) return;
-      let serverId = msg.channel.guild.id;
-      let deleteAfter = this.pvpClient.get(`${serverId}.ranks.deleteAfter.value`, { fallBack: false });
+      const serverId = msg.channel.guild.id;
+      const deleteAfter = this.pvpClient.get(`${serverId}.ranks.deleteAfter.value`, { fallBack: false });
       if (deleteAfter) {
-        let deleteDelay = this.pvpClient.get(`${serverId}.ranks.deleteDelay.value`, { fallBack: 5 });
+        const deleteDelay = this.pvpClient.get(`${serverId}.ranks.deleteDelay.value`, { fallBack: 5 });
         setTimeout(() => {
           msg.delete();
           // command.delete();

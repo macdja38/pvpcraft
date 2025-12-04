@@ -137,7 +137,7 @@ const feedManager: ModuleConstructor = class feedManager implements Module {
         }
         return command.replyAutoDeny(`${
           this._feeds.find(command.args[0].toLowerCase(), command.channel.id)
-            .map(channelId => command.channel.guild.channels.get(channelId) || channelId)
+            .map((channelId: string) => command.channel.guild.channels.get(channelId) || channelId)
           }`);
       },
     }];

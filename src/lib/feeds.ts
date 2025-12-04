@@ -61,15 +61,15 @@ class Feeds extends EventEmitter {
    * @param {string} serverId Id of the Guild to check for.
    * @returns {Array<string>} returns an array of channel IDs containing that feed node.
    */
-  find(node: string, serverId: string) {
+  find(node: string, serverId: string): string[] {
     if (serverId) {
-      let feedsData = this._configDB.get("feeds", {}, { server: serverId });
+      const feedsData = this._configDB.get("feeds", {}, { server: serverId });
       return findNode(feedsData, node.split("."))
     } else {
-      let array: string[] = [];
-      for (let serverIdentifier in this._configDB.data) {
+      const array: string[] = [];
+      for (const serverIdentifier in this._configDB.data) {
         if (this._configDB.data.hasOwnProperty(serverIdentifier)) {
-          let server = this._configDB.data[serverIdentifier];
+          const server = this._configDB.data[serverIdentifier];
           if (server.hasOwnProperty("feeds")) {
             findNode(server["feeds"], node.split("."), array);
           }
