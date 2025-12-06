@@ -8,9 +8,10 @@ import { ModuleOptions } from "../types/lib";
 import Eris from "eris";
 import { Module, ModuleCommand, ModuleConstructor } from "../types/moduleDefinition";
 import Command from "../lib/Command/Command";
+import { translateTypeCreator } from "../types/translate";
 
 const help: ModuleConstructor = class help implements Module {
-  private i10010n: any;
+  private i10010n: translateTypeCreator;
 
   /**
    * Instantiates the module

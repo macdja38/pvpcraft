@@ -13,6 +13,7 @@ import * as Eris from "eris";
 import ConfigDB from "../lib/ConfigDB";
 import Permissions from "../lib/Permissions";
 import { ModuleOptions } from "../types/lib";
+import { translateTypeCreator } from "../types/translate";
 
 let table = "chess";
 
@@ -180,7 +181,7 @@ class chess {
   private games: { [keyof: string]: any };
   private client: Eris.Client;
   private pvpcraft: any;
-  private i10010n: any;
+  private i10010n: translateTypeCreator;
   private r: any;
   private perms: Permissions;
   private messageSender: any;
