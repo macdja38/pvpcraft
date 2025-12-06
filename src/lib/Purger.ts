@@ -88,13 +88,13 @@ export class Purger {
         }
         
         // Filter out old messages and pinned messages
-        const youngMessagesToPurge = messagesToPurge.filter(msg => {
+        const youngMessagesToPurge = messagesToPurge.filter(msg => msg).filter(msg => {
           const isPinned = this.pinnedMessageIds.has(msg.id);
           return isYoung(msg) && !isPinned;
         });
 
         if (purgeOldMessages) {
-          this.oldMessagePurgeQueue.push(...messagesToPurge.filter(msg => {
+          this.oldMessagePurgeQueue.push(...messagesToPurge.filter(msg => msg).filter(msg => {
             const isPinned = this.pinnedMessageIds.has(msg.id);
             return !isYoung(msg) && !isPinned;
           }))
@@ -132,7 +132,8 @@ export class Purger {
 
     if (purgeOldMessages) {
       // Start the purger interval
-      this.purgerOldInterval = setInterval(() => {
+      const runPurgeOldCycle = async () => {
+        console.log("Running purge cycle");
         if (!this.errorMessage) {
           let messageToPurge: Eris.Message<Eris.TextableChannel> | null = null;
           while (messageToPurge == null) {
@@ -142,6 +143,8 @@ export class Purger {
               if (this.doneNew) {
                 this.doneOld = true;
                 this.stopOld();
+              } else {
+                setTimeout(runPurgeOldCycle, 1100);
               }
               return;
             }
@@ -151,9 +154,10 @@ export class Purger {
             messageToPurge = candidateMessage
           }
 
-          this.channel.deleteMessage(messageToPurge.id).then(() => {
+          try {
+            await this.channel.deleteMessage(messageToPurge.id);
             this.totalPurged += 1;
-          }).catch((error) => {
+          } catch(error) {
             let responseCode;
             if (error.response) {
               responseCode = error.response.code;
@@ -171,11 +175,13 @@ export class Purger {
               console.error(error);
               console.error(error.response);
             }
-          });
+          }
         } else {
           this.stopOld();
         }
-      }, 1100);
+        setTimeout(runPurgeOldCycle, 1100);
+      };
+      setTimeout(runPurgeOldCycle, 1000);
     }
   }
 

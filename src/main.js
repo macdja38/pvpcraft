@@ -6,8 +6,8 @@
  Object.freeze(module.wrap);
  */
 "use strict";
-const cluster = require('cluster');
-const inspector = require("inspector");
+import cluster from "cluster"
+import inspector from "inspector";
 
 import Config from "./lib/Config";
 const fileConfig = new Config("config");

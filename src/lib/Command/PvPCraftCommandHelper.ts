@@ -161,6 +161,47 @@ export class PvPInteractiveCommand {
     return this.client.requestHandler.request("POST", `/interactions/${this.id}/${this.token}/callback`, false, { type, data: responseWithCorrectedAllowedMentions });
   }
 
+  editResponse(typeOrResponse: Exclude<INTERACTION_RESPONSE_TYPE, INTERACTION_RESPONSE_TYPE.PONG> | WebhookPayloadWithFlags | string, responseOrFile?: WebhookPayloadWithFlags | string | Eris.MessageFile | Eris.MessageFile[], file?: Eris.MessageFile | Eris.MessageFile[]) {
+    let type: number;
+    let response: WebhookPayloadWithFlags | string;
+
+    const ephemeralChannels = this.configDB.get("ephemeralChannels", {}, { server: this.guild.id });
+
+    let ephemeral = false;
+    if (ephemeralChannels.hasOwnProperty(this.channel.id)) {
+      ephemeral = ephemeralChannels[this.channel.id];
+    }
+
+    let files = undefined;
+
+    if (typeof typeOrResponse === "number") {
+      type = typeOrResponse
+      if (!responseOrFile) {
+        throw new Error("Response is required when supplying type as a number");
+      }
+      response = wrapResponse(responseOrFile as string | WebhookPayloadWithFlags, ephemeral);
+      if (file) {
+        files = file;
+      }
+    } else {
+      type = INTERACTION_RESPONSE_TYPE.REPLY;
+      response = wrapResponse(typeOrResponse as Eris.WebhookPayload | string, ephemeral);
+      files = responseOrFile as MessageFile | MessageFile[];
+    }
+
+    if (files) {
+      throw new Error("Files are not supported by Slash Commands.")
+    }
+
+    const { allowedMentions, ...responseWithCorrectedAllowedMentions } = response;
+    if (response.allowedMentions) {
+      // @ts-ignore
+      responseWithCorrectedAllowedMentions.allowed_mentions = this.client._formatAllowedMentions(allowedMentions);
+    }
+
+    return this.client.requestHandler.request("PATCH", `/webhooks/${this.client.application.id}/${this.token}/messages/@original`, false, responseWithCorrectedAllowedMentions);
+  }
+
   static async optionsArrayToObject(command: PvPInteractiveCommand, commandHandler: SlashCommandCommand, options: ApplicationCommandInteractionDataOption<any>[]) {
     return options.reduce(async (acc: Promise<Record<string, unknown>>, option: ApplicationCommandInteractionDataOption<any>) => {
       const resolvedAcc = await acc;
@@ -282,6 +323,11 @@ export class PvPCraftCommandHelper {
             throw new Error("invalid type")
           })
     } else {
+      for (const option of command.options) {
+        if (option.name !== option.name.toLowerCase()) {
+          throw new Error(`${command.name}.${option.name} cannot contain uppercase letters`);
+        }
+      }
       options = command.options;
     }
 
@@ -357,11 +403,18 @@ export class PvPCraftCommandHelper {
   // equal check broken cause optional params are not sent by discord.
   static equal(commandFromDiscord: CommandRoot, commandFromLocal: CommandRoot) {
     // @ts-ignore
-    const { id: _id1, application_id: _aid1, version: _version, guild_id: _guild_id, default_permission: _default_permission, ...clone1 } = commandFromDiscord;
+    const { id: _id1, application_id: _aid1, nsfw: _nsfw, version: _version, guild_id: _guild_id, default_permission: _default_permission, default_member_permissions: _default_member_permissions,  ...clone1 } = commandFromDiscord;
     const { id: _id2, application_id: _aid2, ...clone2 } = commandFromLocal;
 
     // @ts-ignore
-    return this.optionEqual(clone1, clone2);
+    const equal = this.optionEqual(clone1, clone2);
+    if (!equal) {
+      console.log(`${commandFromDiscord.name} is not equal`);
+      console.log("first is from discord, second is from local")
+      console.log(clone1);
+      console.log(clone2);
+    }
+    return equal;
   }
 
   static interactionCommandFromDiscordInteraction(client: Eris.Client, interaction: InteractionCommand, configDB: ConfigDB, i10010n: (language: string) => translateType, getChannelLanguage: (channelID: string) => string): PvPInteractiveCommand | void {

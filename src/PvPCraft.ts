@@ -28,8 +28,16 @@ import chalk from "chalk";
 import SlowSender from "./lib/SlowSender";
 import Feeds from "./lib/feeds";
 import R from "rethinkdbdash";
-import { Middleware, MiddlewareWrapper, Module, ModuleCommand, ModuleWrapper, v2Module, v2ModuleWrapper } from "./types/moduleDefinition";
-import { translateType } from "./types/translate";
+import {
+  Middleware,
+  MiddlewareWrapper,
+  Module,
+  ModuleCommand,
+  ModuleWrapper,
+  v2Module,
+  v2ModuleWrapper
+} from "./types/moduleDefinition";
+import {translateType} from "./types/translate";
 import fetch, { Headers } from "node-fetch";
 import { DiscordCommandHelper } from "./lib/Command/DiscordCommandHelper";
 import {

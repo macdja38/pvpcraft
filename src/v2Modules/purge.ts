@@ -179,8 +179,28 @@ const purge: v2ModuleConstructor = class moderation implements v2Module {
             // Translate function for the purger
             const translate = command.translate.bind(command);
 
-            const updateStatus = (text: string) => {
-              Utils.handleErisRejection(command.editResponse(text));
+            let statusMessage: Eris.Message<Eris.TextableChannel> | null = null;
+
+            const updateStatus = async (text: string) => {
+              if (statusMessage) {
+                Utils.handleErisRejection(this.client.editMessage(channel.id, statusMessage.id, text));
+              } else {
+                try {
+                  await command.editResponse(text)
+                } catch (error) {
+                  let responseCode;
+                  if (error.response) {
+                    responseCode = error.response.code;
+                  }
+                  if (responseCode === 50027) {
+                    try {
+                      statusMessage = await this.client.createMessage(channel.id, text)
+                    } catch (error) {
+                      Utils.handleErisRejection(Promise.reject(error));
+                    }
+                  }
+                }
+              }
             };
 
             // Create a Set of pinned message IDs if we should ignore pins (default behavior)
@@ -202,7 +222,7 @@ const purge: v2ModuleConstructor = class moderation implements v2Module {
             purger.start(command.opts.count, fetchOptions, command.opts.purgeoldmessages);
 
             // Set up status updates
-            const updateStatusFunction = () => {
+            const updateStatusFunction = async () => {
               const stats = purger.getStats();
               
               if (purger.isDone()) {
@@ -224,7 +244,7 @@ const purge: v2ModuleConstructor = class moderation implements v2Module {
                     this.baseModule.updateServerIgnores(-1, channel.guild.id);
                   }
                 }, 5000);
-                clearInterval(statusInterval);
+                return;
               } else {
                 if (!stats.errorMessage) {
                   const currentStatus = this.baseModule.getStatus(
@@ -235,14 +255,13 @@ const purge: v2ModuleConstructor = class moderation implements v2Module {
                     stats.purgeOldMessages,
                     { translate: (s: TemplateStringsArray, ...v: any[]) => s.reduce((r, str, i) => r + str + (v[i] || ''), '') } as any
                   );
-                  updateStatus(currentStatus);
+                  await updateStatus(currentStatus);
                 }
               }
+              setTimeout(updateStatusFunction, 2500);
             };
             
             setTimeout(updateStatusFunction, 500);
-            const statusInterval = setInterval(updateStatusFunction, 2500);
-
             return command.respond(`Starting purge of ${command.opts.count} messages...`);
           }
         }

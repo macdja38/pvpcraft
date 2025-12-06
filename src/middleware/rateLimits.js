@@ -3,8 +3,6 @@
  */
 "use strict";
 
-let colors = require('colors');
-
 class rateLimits {
   /**
    * Instantiates the module

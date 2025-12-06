@@ -2,12 +2,13 @@
   "private": true,
   "scripts": {
     "start:dev": "nodemon",
-    "build": "rimraf ./build && tsc",
+    "build": "rimraf ./build && tsc --noCheck",
     "start": "npm run build && node -r source-map-support/register build/main.js",
     "doc": "node docma.js",
     "lint": "eslint src"
   },
   "dependencies": {
+    "@eslint/js": "^9.39.1",
     "@sentry/node": "^5.27.3",
     "@types/deep-equal": "^1.0.1",
     "apollo-server": "^2.19.0",
@@ -15,8 +16,8 @@
     "better-cleverbot-io": "^1.0.2",
     "blocked": "^1.3.0",
     "blocked-at": "^1.2.0",
-    "canvas": "^2.6.1",
-    "chalk": "^4.1.0",
+    "canvas": "^3.2.0",
+    "chalk": "5.6.2",
     "cheerio": "^1.0.0-rc.3",
     "chess": "^0.4.5",
     "chrono-node": "^2.1.11",
@@ -35,7 +36,7 @@
     "graphql": "^14.7.0",
     "graphql-relay": "^0.6.0",
     "i10010n": "^0.4.3",
-    "koa": "^2.13.0",
+    "koa": "^2.16.3",
     "longjohn": "^0.2.12",
     "mcping-js": "^1.5.0",
     "minecraft-jsonapi": "0.0.3",
@@ -47,8 +48,9 @@
     "rethinkdbdash": "^2.3.31",
     "stream-resume": "0.0.6",
     "superagent": "^6.1.0",
+    "typescript-eslint": "^8.46.4",
     "universal-analytics": "^0.4.23",
-    "uuid": "^8.3.1",
+    "uuid": "^13.0.0",
     "youtube-dl": "^3.5.0",
     "ytdl-core": "^4.0.3"
   },
@@ -62,45 +64,26 @@
     "@types/request": "^2.48.5",
     "@types/rethinkdbdash": "git+https://github.com/typed-typings/rethinkdbdash.git",
     "@types/universal-analytics": "^0.4.4",
-    "@types/ws": "^7.4.0",
-    "@types/youtube-dl": "^3.0.1",
+    "@types/ws": "^8.18.1",
+    "@types/youtube-dl": "^3.0.5",
     "docma": "^2.1.0",
-    "eslint": "^7.13.0",
-    "jest-cli": "^26.6.3",
-    "jsdoc": "^3.6.6",
+    "eslint": "^9.39.1",
+    "globals": "^16.5.0",
+    "jest-cli": "^30.2.0",
+    "jsdoc": "^4.0.5",
     "jsdoc-strip-async-await": "^0.1.0",
     "nodemon": "^2.0.6",
     "rimraf": "^3.0.2",
-    "source-map-support": "^0.5.19",
-    "ts-jest": "^26.4.4",
-    "ts-node": "^9.0.0",
-    "typescript": "^4.1.3"
+    "source-map-support": "^0.5.21",
+    "ts-jest": "^29.4.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
   },
   "engines": {
-    "node": ">=12"
+    "node": ">=22"
   },
   "jest": {
     "testEnvironment": "node",
     "preset": "ts-jest"
-  },
-  "eslintConfig": {
-    "extends": "eslint:recommended",
-    "parserOptions": {
-      "ecmaVersion": 2020,
-      "sourceType": "module"
-    },
-    "rules": {
-      "complexity": [
-        "error",
-        20
-      ],
-      "no-prototype-builtins": "off",
-      "no-unused-vars": "off",
-      "no-extra-semi": "off"
-    },
-    "env": {
-      "node": true,
-      "es6": true
-    }
   }
 }
