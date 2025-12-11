@@ -10,6 +10,7 @@ import { ModuleOptions } from "../types/lib";
 import Permissions from "../lib/Permissions";
 import Eris from "eris";
 import Command from "../lib/Command/Command";
+import { translateTypeCreator } from "../types/translate";
 
 let google = require("google");
 
@@ -20,7 +21,7 @@ let cheerio = require("cheerio");
 const search: ModuleConstructor = class search implements Module {
   private client: Eris.Client;
   private perms: Permissions;
-  private i10010n: any;
+  private i10010n: translateTypeCreator;
 
   /**
    * Instantiates the module
