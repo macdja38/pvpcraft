@@ -158,8 +158,12 @@ const purge: v2ModuleConstructor = class moderation implements v2Module {
             const targetUser = command.opts.user
 
             const channel = command.opts.channel || command.channel;
+            const commandChannel = command.channel;
 
             if (!(channel instanceof Eris.TextChannel || channel instanceof Eris.ThreadChannel)) {
+              return command.respond(`Must target a guild text channel`)
+            }
+            if (!(commandChannel instanceof Eris.TextChannel || channel instanceof Eris.ThreadChannel)) {
               return command.respond(`Must be run in a guild text channel`)
             }
 
@@ -183,7 +187,7 @@ const purge: v2ModuleConstructor = class moderation implements v2Module {
 
             const updateStatus = async (text: string) => {
               if (statusMessage) {
-                Utils.handleErisRejection(this.client.editMessage(channel.id, statusMessage.id, text));
+                Utils.handleErisRejection(this.client.editMessage(commandChannel.id, statusMessage.id, text));
               } else {
                 try {
                   await command.editResponse(text)
@@ -194,7 +198,7 @@ const purge: v2ModuleConstructor = class moderation implements v2Module {
                   }
                   if (responseCode === 50027) {
                     try {
-                      statusMessage = await this.client.createMessage(channel.id, text)
+                      statusMessage = await this.client.createMessage(commandChannel.id, text)
                     } catch (error) {
                       Utils.handleErisRejection(Promise.reject(error));
                     }
